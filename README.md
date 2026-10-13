@@ -30,6 +30,17 @@ A coding agent reads tool output as context. That output is written for humans o
 
 Every token spent on noise costs money, pushes useful context out of the window and gives the model more text to misread. squeeze sits in the pipe between the tool and the agent. It keeps what the agent acts on, drops the rest, never prints secrets, and says what it cut and how to get it back. It works with any agent that runs shell commands, since it needs no integration.
 
+### What makes it different
+
+- **It understands the output; it does not truncate it.** An agent's byte cap or `tail -n 100` cuts blindly, and the failing line is often past the cut. squeeze parses the format and keeps every change, failure or decision, then says what it left out and which flag shows it.
+- **The output is written for a model.** One line per item, no color codes, no box drawing, the same bytes for the same input. Tools such as `tf-summarize` and `tfplan2md` summarize Terraform plans for people, with colors or Markdown tables; the agent still pays for the layout.
+- **Secrets stay out.** Values the tool marks as sensitive are never printed or stored, at any nesting depth. A head, tail or byte cap does not know which values those are.
+- **The tool's own semantics.** The `tfplan` format uses Terraform's counts and symbols and shows drift the way `terraform plan` does, and `just conformance` runs it against Terraform's own test corpus. An agent reading squeeze sees what the operator would see.
+- **A pipe, not a platform.** No MCP server, no editor plugin, no hook configuration. Any agent or script that can run `tool | squeeze` can use it, and `--output json` gives scripts the same data with the compression ratio.
+- **One binary, more formats.** Each format is a package behind the same interface and contract tests; the agent learns one command.
+
+The name is the action: you squeeze a tool's output to keep the juice and drop the pulp. It is also where the tool sits, in the pipe, `tool | squeeze`, and what the agent is short of, room in its context.
+
 ## Install
 
 ```
