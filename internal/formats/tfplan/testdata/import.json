@@ -1,0 +1,197 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.legacy",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "legacy",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "legacy-bucket",
+            "id": "legacy-bucket",
+            "tags": {}
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_iam_role.ci",
+          "mode": "managed",
+          "type": "aws_iam_role",
+          "name": "ci",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "name": "ci",
+            "id": "ci",
+            "tags": {
+              "Team": "platform",
+              "ManagedBy": "terraform"
+            }
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.legacy",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "legacy",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "bucket": "legacy-bucket",
+          "id": "legacy-bucket",
+          "tags": {}
+        },
+        "after": {
+          "bucket": "legacy-bucket",
+          "id": "legacy-bucket",
+          "tags": {}
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {},
+        "importing": {
+          "id": "legacy-bucket"
+        }
+      }
+    },
+    {
+      "address": "aws_iam_role.ci",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "ci",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "ci",
+          "id": "ci",
+          "tags": {
+            "Team": "platform"
+          }
+        },
+        "after": {
+          "name": "ci",
+          "id": "ci",
+          "tags": {
+            "Team": "platform",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "tags": {}
+        },
+        "before_sensitive": {},
+        "after_sensitive": {},
+        "importing": {
+          "id": "ci"
+        }
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_s3_bucket.legacy",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "legacy",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "bucket": "legacy-bucket",
+              "id": "legacy-bucket",
+              "tags": {}
+            },
+            "sensitive_values": {}
+          },
+          {
+            "address": "aws_iam_role.ci",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "ci",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "name": "ci",
+              "id": "ci",
+              "tags": {
+                "Team": "platform"
+              }
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.legacy",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "legacy",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        },
+        {
+          "address": "aws_iam_role.ci",
+          "mode": "managed",
+          "type": "aws_iam_role",
+          "name": "ci",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

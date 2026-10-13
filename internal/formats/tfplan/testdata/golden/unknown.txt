@@ -1,0 +1,7 @@
+terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy
+~ aws_lambda_function.api
+  ~ last_modified: "2026-10-01T10:00:00.000+0000" -> (known after apply)
+  ~ memory_size: 256 -> 512
+  ~ qualified_arn: (known after apply)
+  ~ source_code_hash: "u4p1tq3iTr6OgERiTYXKCH5mYa3tGCaaKMr8kCH6Z2o=" -> "Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5"
+  ~ version: "7" -> (known after apply)

@@ -1,0 +1,3 @@
+plan errored
+terraform 1.9.5 plan: 1 to add, 0 to change, 0 to destroy; incomplete
++ aws_sqs_queue.jobs

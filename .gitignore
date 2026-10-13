@@ -1,0 +1,8 @@
+/bin/
+coverage.out
+internal/formats/*/testdata/real/
+notes/
+research/
+*.tfplan
+plan.out
+.DS_Store

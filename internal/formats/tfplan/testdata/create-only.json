@@ -1,0 +1,207 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.logs",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "logs",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "acme-staging-logs",
+            "bucket_prefix": null,
+            "force_destroy": false,
+            "object_lock_enabled": null,
+            "tags": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Name": "logs"
+            },
+            "tags_all": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Name": "logs"
+            },
+            "timeouts": null
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "data.aws_iam_policy_document.logs",
+          "mode": "data",
+          "type": "aws_iam_policy_document",
+          "name": "logs",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "statement": [
+              {
+                "actions": [
+                  "s3:PutObject"
+                ],
+                "effect": "Allow",
+                "resources": null
+              }
+            ]
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.logs",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "bucket": "acme-staging-logs",
+          "bucket_prefix": null,
+          "force_destroy": false,
+          "object_lock_enabled": null,
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "logs"
+          },
+          "tags_all": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "logs"
+          },
+          "timeouts": null
+        },
+        "after_unknown": {
+          "acceleration_status": true,
+          "arn": true,
+          "bucket_domain_name": true,
+          "bucket_regional_domain_name": true,
+          "cors_rule": true,
+          "grant": true,
+          "hosted_zone_id": true,
+          "id": true,
+          "lifecycle_rule": true,
+          "logging": true,
+          "policy": true,
+          "region": true,
+          "replication_configuration": true,
+          "request_payer": true,
+          "server_side_encryption_configuration": true,
+          "tags": {},
+          "tags_all": {},
+          "versioning": true,
+          "website": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "data.aws_iam_policy_document.logs",
+      "mode": "data",
+      "type": "aws_iam_policy_document",
+      "name": "logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "read"
+        ],
+        "before": null,
+        "after": {
+          "statement": [
+            {
+              "actions": [
+                "s3:PutObject"
+              ],
+              "effect": "Allow",
+              "resources": null
+            }
+          ]
+        },
+        "after_unknown": {
+          "id": true,
+          "json": true,
+          "statement": [
+            {
+              "resources": true
+            }
+          ]
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "action_reason": "read_because_config_unknown"
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": []
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.logs",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "logs",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        },
+        {
+          "address": "data.aws_iam_policy_document.logs",
+          "mode": "data",
+          "type": "aws_iam_policy_document",
+          "name": "logs",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

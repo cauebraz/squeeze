@@ -1,0 +1,381 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "module.vpc.aws_security_group.web",
+          "mode": "managed",
+          "type": "aws_security_group",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "id": "sg-0a1b2c3d4e5f60718",
+            "name": "web",
+            "description": "web tier",
+            "vpc_id": "vpc-0123456789abcdef0",
+            "ingress": [
+              {
+                "cidr_blocks": [
+                  "10.0.0.0/16"
+                ],
+                "from_port": 443,
+                "to_port": 443,
+                "protocol": "tcp",
+                "description": "https"
+              },
+              {
+                "cidr_blocks": [
+                  "10.1.0.0/16"
+                ],
+                "from_port": 80,
+                "to_port": 80,
+                "protocol": "tcp",
+                "description": "http"
+              }
+            ],
+            "egress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "from_port": 0,
+                "to_port": 0,
+                "protocol": "-1",
+                "description": ""
+              }
+            ],
+            "tags": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Name": "web-tier",
+              "kubernetes.io/role": "internal-elb"
+            },
+            "tags_all": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Name": "web-tier",
+              "kubernetes.io/role": "internal-elb"
+            }
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_instance.web",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "ami": "ami-0abcdef1234567890",
+            "instance_type": "t3.medium",
+            "id": "i-0123456789abcdef0",
+            "monitoring": true,
+            "user_data": "IyEvYmluL2Jhc2gKZWNobyAiaGVsbG8gZnJvbSB2MiIgPiAvdmFyL3d3dy9pbmRleC5odG1sCg==",
+            "tags": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Name": "web"
+            }
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "module.vpc.aws_security_group.web",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "id": "sg-0a1b2c3d4e5f60718",
+          "name": "web",
+          "description": "web tier",
+          "vpc_id": "vpc-0123456789abcdef0",
+          "ingress": [
+            {
+              "cidr_blocks": [
+                "10.0.0.0/8"
+              ],
+              "from_port": 443,
+              "to_port": 443,
+              "protocol": "tcp",
+              "description": "https"
+            }
+          ],
+          "egress": [
+            {
+              "cidr_blocks": [
+                "0.0.0.0/0"
+              ],
+              "from_port": 0,
+              "to_port": 0,
+              "protocol": "-1",
+              "description": ""
+            }
+          ],
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "web",
+            "kubernetes.io/role": "elb"
+          },
+          "tags_all": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "web",
+            "kubernetes.io/role": "elb"
+          }
+        },
+        "after": {
+          "id": "sg-0a1b2c3d4e5f60718",
+          "name": "web",
+          "description": "web tier",
+          "vpc_id": "vpc-0123456789abcdef0",
+          "ingress": [
+            {
+              "cidr_blocks": [
+                "10.0.0.0/16"
+              ],
+              "from_port": 443,
+              "to_port": 443,
+              "protocol": "tcp",
+              "description": "https"
+            },
+            {
+              "cidr_blocks": [
+                "10.1.0.0/16"
+              ],
+              "from_port": 80,
+              "to_port": 80,
+              "protocol": "tcp",
+              "description": "http"
+            }
+          ],
+          "egress": [
+            {
+              "cidr_blocks": [
+                "0.0.0.0/0"
+              ],
+              "from_port": 0,
+              "to_port": 0,
+              "protocol": "-1",
+              "description": ""
+            }
+          ],
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "web-tier",
+            "kubernetes.io/role": "internal-elb"
+          },
+          "tags_all": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "web-tier",
+            "kubernetes.io/role": "internal-elb"
+          }
+        },
+        "after_unknown": {
+          "egress": [
+            {
+              "cidr_blocks": [
+                false
+              ]
+            }
+          ],
+          "ingress": [
+            {
+              "cidr_blocks": [
+                false
+              ]
+            },
+            {
+              "cidr_blocks": [
+                false
+              ]
+            }
+          ],
+          "tags": {},
+          "tags_all": {}
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      },
+      "module_address": "module.vpc"
+    },
+    {
+      "address": "aws_instance.web",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "ami": "ami-0abcdef1234567890",
+          "instance_type": "t3.small",
+          "id": "i-0123456789abcdef0",
+          "monitoring": false,
+          "user_data": "IyEvYmluL2Jhc2gKZWNobyAiaGVsbG8gZnJvbSB2MSIgPiAvdmFyL3d3dy9pbmRleC5odG1sCg==",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "web"
+          }
+        },
+        "after": {
+          "ami": "ami-0abcdef1234567890",
+          "instance_type": "t3.medium",
+          "id": "i-0123456789abcdef0",
+          "monitoring": true,
+          "user_data": "IyEvYmluL2Jhc2gKZWNobyAiaGVsbG8gZnJvbSB2MiIgPiAvdmFyL3d3dy9pbmRleC5odG1sCg==",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "web"
+          }
+        },
+        "after_unknown": {
+          "tags": {}
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "module.vpc.aws_security_group.web",
+            "mode": "managed",
+            "type": "aws_security_group",
+            "name": "web",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "id": "sg-0a1b2c3d4e5f60718",
+              "name": "web",
+              "description": "web tier",
+              "vpc_id": "vpc-0123456789abcdef0",
+              "ingress": [
+                {
+                  "cidr_blocks": [
+                    "10.0.0.0/8"
+                  ],
+                  "from_port": 443,
+                  "to_port": 443,
+                  "protocol": "tcp",
+                  "description": "https"
+                }
+              ],
+              "egress": [
+                {
+                  "cidr_blocks": [
+                    "0.0.0.0/0"
+                  ],
+                  "from_port": 0,
+                  "to_port": 0,
+                  "protocol": "-1",
+                  "description": ""
+                }
+              ],
+              "tags": {
+                "Environment": "staging",
+                "ManagedBy": "terraform",
+                "Name": "web",
+                "kubernetes.io/role": "elb"
+              },
+              "tags_all": {
+                "Environment": "staging",
+                "ManagedBy": "terraform",
+                "Name": "web",
+                "kubernetes.io/role": "elb"
+              }
+            },
+            "sensitive_values": {}
+          },
+          {
+            "address": "aws_instance.web",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "web",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "ami": "ami-0abcdef1234567890",
+              "instance_type": "t3.small",
+              "id": "i-0123456789abcdef0",
+              "monitoring": false,
+              "user_data": "IyEvYmluL2Jhc2gKZWNobyAiaGVsbG8gZnJvbSB2MSIgPiAvdmFyL3d3dy9pbmRleC5odG1sCg==",
+              "tags": {
+                "Environment": "staging",
+                "ManagedBy": "terraform",
+                "Name": "web"
+              }
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.web",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "web",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

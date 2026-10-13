@@ -1,0 +1,141 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_lambda_function.api",
+          "mode": "managed",
+          "type": "aws_lambda_function",
+          "name": "api",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "function_name": "api",
+            "runtime": "python3.12",
+            "handler": "app.handler",
+            "memory_size": 512,
+            "source_code_hash": "Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5",
+            "last_modified": null,
+            "version": null,
+            "qualified_arn": null
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_lambda_function.api",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "api",
+          "runtime": "python3.12",
+          "handler": "app.handler",
+          "memory_size": 256,
+          "source_code_hash": "u4p1tq3iTr6OgERiTYXKCH5mYa3tGCaaKMr8kCH6Z2o=",
+          "last_modified": "2026-10-01T10:00:00.000+0000",
+          "version": "7",
+          "qualified_arn": "arn:aws:lambda:us-east-1:111122223333:function:api:7"
+        },
+        "after": {
+          "function_name": "api",
+          "runtime": "python3.12",
+          "handler": "app.handler",
+          "memory_size": 512,
+          "source_code_hash": "Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5",
+          "last_modified": null,
+          "version": null,
+          "qualified_arn": null
+        },
+        "after_unknown": {
+          "last_modified": true,
+          "version": true,
+          "qualified_arn": true
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_lambda_function.api",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "api",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "function_name": "api",
+              "runtime": "python3.12",
+              "handler": "app.handler",
+              "memory_size": 256,
+              "source_code_hash": "u4p1tq3iTr6OgERiTYXKCH5mYa3tGCaaKMr8kCH6Z2o=",
+              "last_modified": "2026-10-01T10:00:00.000+0000",
+              "version": "7",
+              "qualified_arn": "arn:aws:lambda:us-east-1:111122223333:function:api:7"
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_lambda_function.api",
+          "mode": "managed",
+          "type": "aws_lambda_function",
+          "name": "api",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

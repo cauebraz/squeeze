@@ -1,0 +1,219 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_iam_role.app",
+          "mode": "managed",
+          "type": "aws_iam_role",
+          "name": "app",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "name": "app",
+            "assume_role_policy": "{}",
+            "id": "app",
+            "max_session_duration": 3600
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "module.storage.aws_s3_bucket.this[0]",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "this[0]",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "b",
+            "id": "b",
+            "force_destroy": true
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_iam_role.app",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "name": "app",
+          "assume_role_policy": "{}",
+          "id": "app",
+          "max_session_duration": 3600
+        },
+        "after": {
+          "name": "app",
+          "assume_role_policy": "{}",
+          "id": "app",
+          "max_session_duration": 3600
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      },
+      "previous_address": "aws_iam_role.legacy"
+    },
+    {
+      "address": "module.storage.aws_s3_bucket.this[0]",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "this[0]",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "bucket": "b",
+          "id": "b",
+          "force_destroy": false
+        },
+        "after": {
+          "bucket": "b",
+          "id": "b",
+          "force_destroy": true
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      },
+      "module_address": "module.storage",
+      "previous_address": "aws_s3_bucket.data"
+    },
+    {
+      "address": "aws_s3_bucket.archive",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "archive",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "forget"
+        ],
+        "before": {
+          "bucket": "acme-archive",
+          "id": "acme-archive"
+        },
+        "after": null,
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": false
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_iam_role.legacy",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "app",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "name": "app",
+              "assume_role_policy": "{}",
+              "id": "app",
+              "max_session_duration": 3600
+            },
+            "sensitive_values": {}
+          },
+          {
+            "address": "aws_s3_bucket.data",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "this[0]",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "bucket": "b",
+              "id": "b",
+              "force_destroy": false
+            },
+            "sensitive_values": {}
+          },
+          {
+            "address": "aws_s3_bucket.archive",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "archive",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "bucket": "acme-archive",
+              "id": "acme-archive"
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_iam_role.app",
+          "mode": "managed",
+          "type": "aws_iam_role",
+          "name": "app",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        },
+        {
+          "address": "aws_s3_bucket.archive",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "archive",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

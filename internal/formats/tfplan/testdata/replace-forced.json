@@ -1,0 +1,235 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_db_instance.main",
+          "mode": "managed",
+          "type": "aws_db_instance",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "identifier": "acme-staging",
+            "engine": "postgres",
+            "engine_version": "16.1",
+            "instance_class": "db.t3.small",
+            "allocated_storage": 20,
+            "multi_az": false,
+            "id": null,
+            "endpoint": null,
+            "password": "new-secret",
+            "tags": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Name": "db"
+            }
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.main",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "identifier": "acme-staging",
+          "engine": "postgres",
+          "engine_version": "15.4",
+          "instance_class": "db.t3.micro",
+          "allocated_storage": 20,
+          "multi_az": false,
+          "id": "db-ABCDEFGHIJKLMNOP",
+          "endpoint": "acme-staging.abc.us-east-1.rds.amazonaws.com:5432",
+          "password": "old-secret",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "db"
+          }
+        },
+        "after": {
+          "identifier": "acme-staging",
+          "engine": "postgres",
+          "engine_version": "16.1",
+          "instance_class": "db.t3.small",
+          "allocated_storage": 20,
+          "multi_az": false,
+          "id": null,
+          "endpoint": null,
+          "password": "new-secret",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "db"
+          }
+        },
+        "after_unknown": {
+          "id": true,
+          "endpoint": true,
+          "address": true,
+          "arn": true,
+          "tags": {}
+        },
+        "before_sensitive": {
+          "password": true,
+          "tags": {}
+        },
+        "after_sensitive": {
+          "password": true,
+          "tags": {}
+        },
+        "replace_paths": [
+          [
+            "engine_version"
+          ]
+        ]
+      },
+      "action_reason": "replace_because_cannot_update"
+    },
+    {
+      "address": "aws_instance.old",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "old",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete"
+        ],
+        "before": {
+          "ami": "ami-0abcdef1234567890",
+          "instance_type": "t2.micro",
+          "id": "i-0fedcba9876543210",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "old"
+          }
+        },
+        "after": null,
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": false
+      },
+      "action_reason": "delete_because_no_resource_config"
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_db_instance.main",
+            "mode": "managed",
+            "type": "aws_db_instance",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "identifier": "acme-staging",
+              "engine": "postgres",
+              "engine_version": "15.4",
+              "instance_class": "db.t3.micro",
+              "allocated_storage": 20,
+              "multi_az": false,
+              "id": "db-ABCDEFGHIJKLMNOP",
+              "endpoint": "acme-staging.abc.us-east-1.rds.amazonaws.com:5432",
+              "password": "old-secret",
+              "tags": {
+                "Environment": "staging",
+                "ManagedBy": "terraform",
+                "Name": "db"
+              }
+            },
+            "sensitive_values": {}
+          },
+          {
+            "address": "aws_instance.old",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "old",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "ami": "ami-0abcdef1234567890",
+              "instance_type": "t2.micro",
+              "id": "i-0fedcba9876543210",
+              "tags": {
+                "Environment": "staging",
+                "ManagedBy": "terraform",
+                "Name": "old"
+              }
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_db_instance.main",
+          "mode": "managed",
+          "type": "aws_db_instance",
+          "name": "main",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        },
+        {
+          "address": "aws_instance.old",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "old",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

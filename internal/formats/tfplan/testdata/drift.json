@@ -1,0 +1,253 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.assets",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "assets",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "acme-staging-assets",
+            "id": "acme-staging-assets",
+            "tags": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Name": "assets"
+            }
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_s3_bucket.static",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "static",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "acme-static",
+            "id": "acme-static"
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_drift": [
+    {
+      "address": "aws_s3_bucket.assets",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "assets",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "bucket": "acme-staging-assets",
+          "id": "acme-staging-assets",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "assets"
+          }
+        },
+        "after": {
+          "bucket": "acme-staging-assets",
+          "id": "acme-staging-assets",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "assets",
+            "Owner": "someone"
+          }
+        },
+        "after_unknown": {
+          "tags": {}
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_instance.bastion",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "bastion",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete"
+        ],
+        "before": {
+          "id": "i-0bbbbbbbbbbbbbbbb",
+          "instance_type": "t3.nano"
+        },
+        "after": null,
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": false
+      }
+    }
+  ],
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.assets",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "assets",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "bucket": "acme-staging-assets",
+          "id": "acme-staging-assets",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "assets",
+            "Owner": "someone"
+          }
+        },
+        "after": {
+          "bucket": "acme-staging-assets",
+          "id": "acme-staging-assets",
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Name": "assets"
+          }
+        },
+        "after_unknown": {
+          "tags": {}
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_s3_bucket.static",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "static",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "bucket": "acme-static",
+          "id": "acme-static"
+        },
+        "after": {
+          "bucket": "acme-static",
+          "id": "acme-static"
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_s3_bucket.assets",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "assets",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "bucket": "acme-staging-assets",
+              "id": "acme-staging-assets",
+              "tags": {
+                "Environment": "staging",
+                "ManagedBy": "terraform",
+                "Name": "assets",
+                "Owner": "someone"
+              }
+            },
+            "sensitive_values": {}
+          },
+          {
+            "address": "aws_s3_bucket.static",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "static",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "bucket": "acme-static",
+              "id": "acme-static"
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.assets",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "assets",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        },
+        {
+          "address": "aws_s3_bucket.static",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "static",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

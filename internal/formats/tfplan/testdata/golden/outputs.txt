@@ -1,0 +1,3 @@
+terraform 1.9.5 plan: 1 to add, 0 to change, 0 to destroy; 3 outputs changed
++ aws_db_instance.main
+outputs: - bucket_name, + db_endpoint (known after apply), ~ db_password (sensitive)
