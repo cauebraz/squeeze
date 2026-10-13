@@ -14,7 +14,7 @@ type Format interface {
 
 - `Name` is the subcommand: lowercase letters, digits and hyphens, starting with a letter.
 - `Description` is one line for `squeeze -h`.
-- `Detect` gets the first 64 KiB of the input and answers from markers the tool always prints. It must reject input of every other registered format.
+- `Detect` gets the first 64 KiB of the input and answers from markers the tool always prints. It must reject input of every other registered format. The one exception is the registry's fallback, `generic`, which detects any text and runs only when no other format detects the input.
 - `Conditions` lists, sorted, every condition name the format can report for `--fail-on`: lowercase words joined by `_`. Each one needs a row in the format's docs page and a fixture that produces it.
 - `Configure` registers the format's own flags on `fs` and returns the function that squeezes the input. Auto-detection calls it with an empty flag set, so the defaults must suit an agent that passes no flags.
 
@@ -47,7 +47,7 @@ A flag variant is a new case with an `args` file and a symlinked input, so every
 
 4. Add `FuzzSqueeze`, seeded with `formattest.Inputs`; `just fuzz-all` fails for a format without it. Assert properties in the fuzz body, not only the absence of a crash.
 5. If the tool marks secrets, add a test that extracts every marked value from the input and asserts none appears in the text or the envelope.
-6. Register the format in `DefaultRegistry` in `internal/cli/cli.go`. Order matters only when two formats could detect the same input; a test fails when a case is detected by any other format.
+6. Register the format in `DefaultRegistry` in `internal/cli/cli.go`. Order matters only when two formats could detect the same input; a test fails when a case is detected by any other format. `WithFallback` registers the fallback, which the registry tries last; a registry has at most one.
 7. Run `just golden`, read every file it wrote, then `just check` and `just cover`.
 8. Add `docs/formats/<name>.md` (input, detection, output, flags, JSON data, limitations) and a row in the README's format table.
 

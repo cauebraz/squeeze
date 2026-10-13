@@ -49,6 +49,26 @@ func TestRunAutoDetect(t *testing.T) {
 	}
 }
 
+func TestRunFallback(t *testing.T) {
+	t.Parallel()
+	input := []byte("\x1b[32mok\x1b[0m 3 tests\nok 3 tests\nok 3 tests\nok 3 tests\n")
+	want := "ok 3 tests\n... 3 more identical lines (--no-fold)\n"
+	auto := runCLI(t, input)
+	if auto.code != ExitOK || auto.stdout != want {
+		t.Errorf("auto: code = %d, stdout = %q", auto.code, auto.stdout)
+	}
+	if auto.stderr != "squeeze: input matches no known format; printed as generic text (formats: tfplan, tfvalidate, tfjson, generic)\n" {
+		t.Errorf("auto: stderr = %q", auto.stderr)
+	}
+	named := runCLI(t, input, "generic")
+	if named.code != ExitOK || named.stdout != want || named.stderr != "" {
+		t.Errorf("named: code = %d, stdout = %q, stderr = %q", named.code, named.stdout, named.stderr)
+	}
+	if r := runCLI(t, input, "generic", "--fail-on", "error"); r.code != ExitUsage || !strings.Contains(r.stderr, `generic has no condition "error"`) {
+		t.Errorf("named --fail-on: code = %d, stderr = %q", r.code, r.stderr)
+	}
+}
+
 func TestRunNamedFormatMatchesAutoDetect(t *testing.T) {
 	t.Parallel()
 	input := readFixture(t, "tfplan", "update-nested")
@@ -106,14 +126,15 @@ func TestRunErrors(t *testing.T) {
 	}{
 		{"unknown flag", plan, []string{"--bogus"}, ExitUsage, "flag provided but not defined"},
 		{"format flag without format", plan, []string{"--max-attrs", "1"}, ExitUsage, "flag provided but not defined: -max-attrs"},
-		{"unknown format", plan, []string{"pytest"}, ExitUsage, `unknown format "pytest" (formats: tfplan, tfvalidate, tfjson)`},
+		{"unknown format", plan, []string{"pytest"}, ExitUsage, `unknown format "pytest" (formats: tfplan, tfvalidate, tfjson, generic)`},
 		{"version under a format", plan, []string{"tfplan", "--version"}, ExitUsage, "flag provided but not defined: -version"},
 		{"bad format flag value", plan, []string{"tfplan", "--max-attrs", "-1"}, ExitUsage, "must be 0 or more"},
 		{"extra argument", plan, []string{"tfplan", "plan.json"}, ExitUsage, `unexpected argument "plan.json"`},
 		{"bad output", plan, []string{"--output", "yaml"}, ExitUsage, "--output must be text or json"},
 		{"empty input", nil, nil, ExitError, "empty input"},
 		{"whitespace input", []byte(" \n\t"), []string{"tfplan"}, ExitError, "empty input"},
-		{"undetected input", []byte("collected 3 items\n"), nil, ExitUnknownFormat, "input matches no known format; name it: squeeze <format> (formats: tfplan, tfvalidate, tfjson)"},
+		{"binary input", []byte("\x7fELF\x00\x01"), nil, ExitUnknownFormat, "input matches no known format and is not text; name it: squeeze <format> (formats: tfplan, tfvalidate, tfjson, generic)"},
+		{"fallback with --fail-on", []byte("collected 3 items\n"), []string{"--fail-on", "error"}, ExitUnknownFormat, "input matches no known format and --fail-on needs one; name it: squeeze <format>"},
 		{"named format on other input", []byte("collected 3 items\n"), []string{"tfplan"}, ExitError, "squeeze: tfplan: decode"},
 		{"state file", []byte(`{"format_version":"1.0","values":{}}`), []string{"tfplan"}, ExitError, "terraform state, not a plan"},
 		{"truncated plan", plan[:len(plan)/2], []string{"tfplan"}, ExitError, "decode"},
@@ -254,7 +275,7 @@ func TestRunRawDir(t *testing.T) {
 func TestRunRawDirSavedBeforeFailure(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
-	r := runCLI(t, []byte("not a known format\n"), "--raw-dir", dir)
+	r := runCLI(t, []byte("\x00binary"), "--raw-dir", dir)
 	if r.code != ExitUnknownFormat {
 		t.Fatalf("code = %d, want %d", r.code, ExitUnknownFormat)
 	}
@@ -327,11 +348,18 @@ func TestRunRenderError(t *testing.T) {
 
 func TestEveryFixtureIsDetectedByExactlyItsOwnFormat(t *testing.T) {
 	t.Parallel()
-	formats := DefaultRegistry().Formats()
+	reg := DefaultRegistry()
+	formats := reg.Formats()
 	for _, owner := range formats {
 		for _, c := range formattest.Cases(t, filepath.Join(formatsDir, owner.Name(), "testdata")) {
 			head := core.Head(c.Input)
+			if f, err := reg.Detect(c.Input); err != nil || f.Name() != owner.Name() {
+				t.Errorf("%s/%s: registry detects %v, %v", owner.Name(), c.Name, f, err)
+			}
 			for _, f := range formats {
+				if reg.IsFallback(f) && f.Name() != owner.Name() {
+					continue
+				}
 				if got, want := f.Detect(head), f.Name() == owner.Name(); got != want {
 					t.Errorf("%s/%s: %s.Detect() = %v, want %v", owner.Name(), c.Name, f.Name(), got, want)
 				}
@@ -361,7 +389,7 @@ func TestRunHints(t *testing.T) {
 		},
 		"misspelled format": {
 			[]string{"tfpaln"},
-			[]string{`unknown format "tfpaln" (formats: tfplan, tfvalidate, tfjson); did you mean "tfplan"?`},
+			[]string{`unknown format "tfpaln" (formats: tfplan, tfvalidate, tfjson, generic); did you mean "tfplan"?`},
 		},
 		"file as format": {
 			[]string{file},

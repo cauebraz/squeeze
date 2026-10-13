@@ -1,0 +1,7 @@
+Building app
+Downloading deps 100%
+[ok] deps ready
+
+    step: compile
+docs at example.com
+error: cannot find module 'left-pad'

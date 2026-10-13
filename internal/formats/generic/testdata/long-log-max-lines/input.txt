@@ -1,0 +1,1 @@
+../long-log/input.txt

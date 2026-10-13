@@ -1,0 +1,9 @@
+[1mBuilding app[0m
+Downloading deps  10%Downloading deps  55%Downloading deps 100%
+[32m[ok][0m deps ready
+
+
+
+	step: compile   
+]8;;https://example.com/docs\docs]8;;\ at example.com
+[31merror[0m: cannot find module 'left-pad'

@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/formats/generic"
 	"github.com/cauebraz/squeeze/internal/formats/tfjson"
 	"github.com/cauebraz/squeeze/internal/formats/tfplan"
 	"github.com/cauebraz/squeeze/internal/formats/tfvalidate"
@@ -30,7 +31,7 @@ const (
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{}, tfvalidate.Format{}, tfjson.Format{})
+	return core.NewRegistry(tfplan.Format{}, tfvalidate.Format{}, tfjson.Format{}).WithFallback(generic.Format{})
 }
 
 type invocation struct {
@@ -73,10 +74,22 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 		return ExitError
 	}
 	if inv.format == nil {
+		names := strings.Join(reg.Names(), ", ")
 		f, err := reg.Detect(input)
 		if err != nil {
-			fmt.Fprintf(stderr, "squeeze: %v; name it: squeeze <format> (formats: %s)\n", err, strings.Join(reg.Names(), ", "))
+			reason := err.Error()
+			if reg.Fallback() != nil {
+				reason += " and is not text"
+			}
+			fmt.Fprintf(stderr, "squeeze: %s; name it: squeeze <format> (formats: %s)\n", reason, names)
 			return ExitUnknownFormat
+		}
+		if reg.IsFallback(f) {
+			if len(inv.failOn) > 0 {
+				fmt.Fprintf(stderr, "squeeze: input matches no known format and --fail-on needs one; name it: squeeze <format> (formats: %s)\n", names)
+				return ExitUnknownFormat
+			}
+			fmt.Fprintf(stderr, "squeeze: input matches no known format; printed as %s text (formats: %s)\n", f.Name(), names)
 		}
 		inv.format = f
 		inv.squeeze = f.Configure(flag.NewFlagSet(f.Name(), flag.ContinueOnError))
@@ -203,7 +216,8 @@ func rootUsage(w io.Writer, fs *flag.FlagSet, reg *core.Registry) {
        squeeze <format> [flags] < input
 
 Reads a tool's output on stdin and prints the smallest text that keeps every change.
-Without a format, squeeze detects it and uses the format's defaults.
+Without a format, squeeze detects it and uses the format's defaults;
+text that no format matches goes through the generic format.
 
 Formats:
 `)

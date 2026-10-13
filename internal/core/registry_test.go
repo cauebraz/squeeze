@@ -98,3 +98,57 @@ func TestNewRegistryPanics(t *testing.T) {
 		})
 	}
 }
+
+func TestRegistryFallback(t *testing.T) {
+	t.Parallel()
+	r := NewRegistry(fake{"a", "A"}).WithFallback(fake{"rest", "R"})
+	if got := r.Names(); !slices.Equal(got, []string{"a", "rest"}) {
+		t.Errorf("Names() = %v", got)
+	}
+	if f := r.Fallback(); f == nil || f.Name() != "rest" {
+		t.Errorf("Fallback() = %v", f)
+	}
+	if f, ok := r.Lookup("rest"); !ok || f.Name() != "rest" {
+		t.Errorf("Lookup(rest) = %v, %v", f, ok)
+	}
+	tests := []struct {
+		input string
+		want  string
+		err   error
+	}{
+		{"A...", "a", nil},
+		{"R...", "rest", nil},
+		{"Z...", "", ErrUnknownFormat},
+	}
+	for _, tt := range tests {
+		f, err := r.Detect([]byte(tt.input))
+		if !errors.Is(err, tt.err) || (err == nil && f.Name() != tt.want) {
+			t.Errorf("Detect(%q) = %v, %v; want %s, %v", tt.input, f, err, tt.want, tt.err)
+		}
+	}
+	first := NewRegistry(fake{"rest", "A"}).WithFallback(fake{"later", "A"})
+	if f, _ := first.Detect([]byte("A")); f.Name() != "rest" {
+		t.Errorf("fallback detected before a regular format: %s", f.Name())
+	}
+	if NewRegistry(fake{"a", "A"}).Fallback() != nil {
+		t.Error("Fallback() without WithFallback is not nil")
+	}
+}
+
+func TestRegistryFallbackPanics(t *testing.T) {
+	t.Parallel()
+	for name, build := range map[string]func(){
+		"twice":     func() { NewRegistry().WithFallback(fake{"a", ""}).WithFallback(fake{"b", ""}) },
+		"duplicate": func() { NewRegistry(fake{"a", ""}).WithFallback(fake{"a", ""}) },
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			defer func() {
+				if recover() == nil {
+					t.Error("WithFallback() did not panic")
+				}
+			}()
+			build()
+		})
+	}
+}

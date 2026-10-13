@@ -8,6 +8,14 @@ import (
 const esc = 0x1b
 
 func Clean(s string) string {
+	return strings.TrimSpace(scrub(s, " "))
+}
+
+func Line(s string) string {
+	return strings.TrimRight(scrub(s, "    "), " ")
+}
+
+func scrub(s, tab string) string {
 	var b strings.Builder
 	b.Grow(len(s))
 	for i := 0; i < len(s); {
@@ -18,14 +26,16 @@ func Clean(s string) string {
 		r, size := utf8.DecodeRuneInString(s[i:])
 		i += size
 		switch {
-		case r == '\t' || r == '\n' || r == '\r':
+		case r == '\t':
+			b.WriteString(tab)
+		case r == '\n' || r == '\r':
 			b.WriteByte(' ')
 		case r < 0x20 || r == 0x7f || (r >= 0x80 && r < 0xa0):
 		default:
 			b.WriteRune(r)
 		}
 	}
-	return strings.TrimSpace(b.String())
+	return b.String()
 }
 
 func skipEscape(s string, i int) int {

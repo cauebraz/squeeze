@@ -50,7 +50,7 @@ go install github.com/cauebraz/squeeze/cmd/squeeze@latest
 ## Usage
 
 ```
-tool | squeeze [flags]                     detect the format, use its defaults
+tool | squeeze [flags]                     detect the format, use its defaults; any other text goes through generic
 tool | squeeze <format> [flags]            name the format, unlock its flags
 squeeze <format> -h                        list a format's flags
 ```
@@ -63,6 +63,8 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 - Run Terraform with `-json` and pipe it through `squeeze`: `terraform validate -json | squeeze`,
   `terraform plan -json | squeeze`, `terraform test -json | squeeze`, `terraform show -json <planfile> | squeeze`.
   Read squeeze's output instead of Terraform's.
+- Pipe other long output through `squeeze` too, for example `npm test 2>&1 | squeeze`: text that no format
+  knows goes through `generic`, which strips colors, folds repeats and keeps error lines when it cuts.
 - To stop on a condition, add `--fail-on`, for example `--fail-on destroy,error`; exit code 3 means it matched.
 - When squeeze reports cut lines, rerun with the flag it names, for example `squeeze tfplan --max-attrs 0`.
 - Add `--raw-dir .squeeze` to keep the full input (ignore `.squeeze/` in git); read that file only when the squeezed output lacks what you need.
@@ -75,13 +77,14 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `tfplan` | `terraform show -json <planfile>` | [docs/formats/tfplan.md](docs/formats/tfplan.md) |
 | `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
 | `tfjson` | `terraform plan`, `apply`, `destroy`, `init` or `test` with `-json` | [docs/formats/tfjson.md](docs/formats/tfjson.md) |
+| `generic` | any other text, when no format above detects it | [docs/formats/generic.md](docs/formats/generic.md) |
 
 Each format decides what to keep. Every format guarantees:
 
 - Output is plain text with no control characters or color codes, is the same for the same input, and ends with a newline.
 - Secrets the tool marks as sensitive never reach stdout.
 - Anything cut for size is announced with a count and the flag that shows it.
-- Errors and warnings are never dropped, whatever their shape.
+- Errors and warnings are never dropped, whatever their shape. `generic` has no tool to mark them, so it keeps lines with error or warning words first and counts the ones past its line limit in the cut notice.
 - Names and addresses from the input are printed on one line without control characters or terminal escape sequences, so the input cannot forge a line of output.
 
 ## Common flags
@@ -107,7 +110,7 @@ Each format decides what to keep. Every format guarantees:
 |---|---|
 | 0 | output written |
 | 1 | read, parse or write error; stdout is empty |
-| 2 | the input matches no known format; name one |
+| 2 | the input matches no known format and is not text, or no format detects it and `--fail-on` needs one; name one |
 | 3 | `--fail-on` matched; stdout holds the full output and stderr names the conditions |
 | 64 | invalid flags or arguments, including an unknown `--fail-on` condition |
 
@@ -132,7 +135,6 @@ New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding ag
 
 - `pytest`, `gotest` and `cargotest` formats
 - `tflint`, `checkov` and `trivy` JSON output
-- generic fallback: color-code removal, repeated-line folding, byte cap
 
 ## License
 

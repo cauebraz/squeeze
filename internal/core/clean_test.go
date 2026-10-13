@@ -28,3 +28,20 @@ func TestClean(t *testing.T) {
 		}
 	}
 }
+
+func TestLine(t *testing.T) {
+	t.Parallel()
+	tests := map[string]string{
+		"  indented":               "  indented",
+		"\tcode\t ":                "    code",
+		"\x1b[32mPASS\x1b[0m ok  ": "PASS ok",
+		"a\rb":                     "a b",
+		"nul\x00":                  "nul",
+		"":                         "",
+	}
+	for in, want := range tests {
+		if got := Line(in); got != want {
+			t.Errorf("Line(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

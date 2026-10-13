@@ -1,0 +1,10 @@
+alpha alpha handled by alpha worker
+bravo hotel handled by november worker
+... 248 lines cut (--max-lines 0)
+ERROR db: timeout after 30s on query users
+WARNING retrying query users
+... 245 lines cut, 1 with error or warning words (--max-lines 0)
+romeo tango handled by bravo worker
+sierra golf handled by oscar worker
+tango november handled by hotel worker
+exit status 2
