@@ -46,7 +46,7 @@ error tests/network.tftest.hcl
 - Test runs that fail or error are listed with their diagnostics; a test file that errors outside a run is listed with its own diagnostics. Passing runs appear with `--all`.
 - Sensitive output values are never printed or stored; other scalar outputs print their value up to 48 bytes.
 - Every line at level `error` or `warn` becomes a diagnostic, whatever its type, so a message type squeeze does not know cannot hide a failure. A diagnostic severity other than `warning` counts as an error.
-- Strings from the stream are reduced to one line without control characters before they are printed, so an address or a name cannot forge a line of output.
+- Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed, so an address or a name cannot forge a line of output.
 - Everything else is counted in `... N other messages: <type> <count>, ... (--all)`; `--all` prints those messages.
 
 ## Flags

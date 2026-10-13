@@ -82,7 +82,7 @@ Each format decides what to keep. Every format guarantees:
 - Secrets the tool marks as sensitive never reach stdout.
 - Anything cut for size is announced with a count and the flag that shows it.
 - Errors and warnings are never dropped, whatever their shape.
-- Names and addresses from the input are printed on one line without control characters, so the input cannot forge a line of output.
+- Names and addresses from the input are printed on one line without control characters or terminal escape sequences, so the input cannot forge a line of output.
 
 ## Common flags
 

@@ -108,7 +108,7 @@ func (b *builder) add(l Line) {
 	case l.Type == "change_summary" && l.Changes != nil:
 		c := l.Changes
 		b.r.Summary = &Summary{
-			Operation: c.Operation, Add: c.Add, Change: c.Change, Remove: c.Remove,
+			Operation: clean(c.Operation), Add: c.Add, Change: c.Change, Remove: c.Remove,
 			Import: c.Import, ActionInvocation: c.ActionInvocation, ActionFail: c.ActionFail,
 		}
 	case l.Type == "apply_complete" && l.Hook != nil:

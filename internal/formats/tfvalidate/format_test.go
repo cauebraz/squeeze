@@ -161,6 +161,34 @@ func TestDuplicatesAreFolded(t *testing.T) {
 	}
 }
 
+func TestCountsCoverDiagnostics(t *testing.T) {
+	t.Parallel()
+	input := []byte(`{"format_version":"1.0","valid":false,"error_count":0,"warning_count":0,"diagnostics":[` +
+		`{"severity":"error","summary":"a"},{"severity":"error","summary":"b"},{"severity":"warning","summary":"c"}]}`)
+	r, err := Squeeze(input, Options{MaxDiagnostics: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := r.Data.(Report)
+	if report.Errors != 2 || report.Warnings != 1 {
+		t.Errorf("errors = %d, warnings = %d, want 2 and 1", report.Errors, report.Warnings)
+	}
+	if diff := cmp.Diff([]string{"error", "invalid", "warning"}, r.Conditions); diff != "" {
+		t.Errorf("conditions (-want +got):\n%s", diff)
+	}
+	if !strings.HasPrefix(r.Text, "terraform validate: invalid, 2 errors, 1 warning\n") {
+		t.Errorf("text:\n%s", r.Text)
+	}
+	more := []byte(`{"format_version":"1.0","valid":false,"error_count":5,"warning_count":0,"diagnostics":[{"severity":"error","summary":"a"}]}`)
+	r, err = Squeeze(more, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report := r.Data.(Report); report.Errors != 5 {
+		t.Errorf("errors = %d, want Terraform's count 5", report.Errors)
+	}
+}
+
 func TestConfigureFlags(t *testing.T) {
 	t.Parallel()
 	for _, tt := range []struct {

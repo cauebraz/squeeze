@@ -55,12 +55,13 @@ func Build(v *Validation, o Options) Report {
 		ds = append(ds, tfdiag.Convert(raw))
 	}
 	ds = tfdiag.Normalize(ds)
+	errorCount, warningCount := tfdiag.Count(ds)
 	kept, omitted := tfdiag.Limit(ds, o.MaxDiagnostics)
 	return Report{
 		Tool:        "terraform",
 		Valid:       *v.Valid,
-		Errors:      v.ErrorCount,
-		Warnings:    v.WarningCount,
+		Errors:      max(v.ErrorCount, errorCount),
+		Warnings:    max(v.WarningCount, warningCount),
 		Diagnostics: kept,
 		Omitted:     omitted,
 	}

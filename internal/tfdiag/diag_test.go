@@ -40,7 +40,7 @@ func TestConvert(t *testing.T) {
 		},
 		"control characters removed": {
 			"{\"severity\":\"error\",\"summary\":\"bad\\u001b[31m color\\tand tab\"}",
-			Diagnostic{Severity: "error", Summary: "bad[31m color and tab"},
+			Diagnostic{Severity: "error", Summary: "bad color and tab"},
 		},
 	}
 	for name, tt := range tests {

@@ -31,7 +31,7 @@ warning: Argument is deprecated (storage.tf:7:3)
   > versioning {
 ```
 
-- The header gives `valid` or `invalid` and Terraform's own error and warning counts.
+- The header gives `valid` or `invalid` and the error and warning counts: Terraform's own, or the diagnostics counted when those are higher, so a missing count cannot hide an error from `--fail-on`.
 - A severity other than `warning` counts as an error, so an unexpected value cannot hide a failure.
 - Diagnostics are sorted errors first, then by file, line and column.
 - Identical diagnostics (same severity, summary, detail and location) are printed once with `(xN)`.

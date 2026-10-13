@@ -227,6 +227,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`{"@level":"info","type":"planned_change","change":{"resource":{"addr":"a.b\nerror: forged"},"action":"create\nerror: forged"}}`,
 		`{"@level":"info","type":"outputs","outputs":{"o\nerror: forged":{"sensitive":false,"value":1}}}`,
 		`{"@level":"info","@message":"x\nerror: forged","type":"future\nerror: forged"}`,
+		`{"@level":"info","type":"change_summary","changes":{"add":1,"operation":"plan\nerror: forged\u001b"}}`,
 		"text line \x00\x1b[31m",
 	)
 	for _, o := range []Options{DefaultOptions(), {All: true}} {
