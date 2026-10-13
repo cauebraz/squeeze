@@ -44,6 +44,16 @@ tool | squeeze <format> [flags]            name the format, unlock its flags
 squeeze <format> -h                        list a format's flags
 ```
 
+## Use from an agent
+
+Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool output:
+
+```
+- Pipe `terraform show -json <planfile>` through `squeeze` and read its output instead of the JSON.
+- When squeeze reports cut lines, rerun with the flag it names, for example `squeeze tfplan --max-attrs 0`.
+- Add `--raw-dir .squeeze` to keep the full input (ignore `.squeeze/` in git); read that file only when the squeezed output lacks what you need.
+```
+
 ## Formats
 
 | Format | Input | Docs |
@@ -93,7 +103,7 @@ just fuzz tfplan 30 # fuzz one format for 30 seconds
 just bench          # benchmarks of every format
 ```
 
-New formats follow [docs/adding-a-format.md](docs/adding-a-format.md).
+New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding agents working on this repository follow [AGENTS.md](AGENTS.md).
 
 ## Roadmap
 
