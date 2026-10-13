@@ -1,0 +1,8 @@
+{"Time":"2026-10-13T18:59:48.85454Z","Action":"start","Package":"example.com/shop/bench"}
+{"Time":"2026-10-13T18:59:48.854665Z","Action":"run","Package":"example.com/shop/bench","Test":"TestOK"}
+{"Time":"2026-10-13T18:59:48.854671Z","Action":"output","Package":"example.com/shop/bench","Test":"TestOK","Output":"=== RUN   TestOK\n","OutputType":"frame"}
+{"Time":"2026-10-13T18:59:48.854682Z","Action":"output","Package":"example.com/shop/bench","Test":"TestOK","Output":"--- PASS: TestOK (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-13T18:59:48.854686Z","Action":"pass","Package":"example.com/shop/bench","Test":"TestOK","Elapsed":0}
+{"Time":"2026-10-13T18:59:48.854691Z","Action":"output","Package":"example.com/shop/bench","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-13T18:59:48.854695Z","Action":"output","Package":"example.com/shop/bench","Output":"ok  \texample.com/shop/bench\t(cached)\n"}
+{"Time":"2026-10-13T18:59:48.854699Z","Action":"pass","Package":"example.com/shop/bench","Elapsed":0}

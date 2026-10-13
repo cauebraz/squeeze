@@ -1,0 +1,17 @@
+{"Time":"2026-10-13T18:59:48.701426Z","Action":"start","Package":"example.com/shop/bench"}
+{"Time":"2026-10-13T18:59:48.784668Z","Action":"run","Package":"example.com/shop/bench","Test":"TestOK"}
+{"Time":"2026-10-13T18:59:48.78473Z","Action":"output","Package":"example.com/shop/bench","Test":"TestOK","Output":"=== RUN   TestOK\n","OutputType":"frame"}
+{"Time":"2026-10-13T18:59:48.784763Z","Action":"output","Package":"example.com/shop/bench","Test":"TestOK","Output":"--- PASS: TestOK (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-13T18:59:48.784772Z","Action":"pass","Package":"example.com/shop/bench","Test":"TestOK","Elapsed":0}
+{"Time":"2026-10-13T18:59:48.785012Z","Action":"output","Package":"example.com/shop/bench","Output":"goos: darwin\n"}
+{"Time":"2026-10-13T18:59:48.785028Z","Action":"output","Package":"example.com/shop/bench","Output":"goarch: arm64\n"}
+{"Time":"2026-10-13T18:59:48.785033Z","Action":"output","Package":"example.com/shop/bench","Output":"pkg: example.com/shop/bench\n"}
+{"Time":"2026-10-13T18:59:48.785039Z","Action":"output","Package":"example.com/shop/bench","Output":"cpu: Example CPU\n"}
+{"Time":"2026-10-13T18:59:48.785044Z","Action":"run","Package":"example.com/shop/bench","Test":"BenchmarkJoin"}
+{"Time":"2026-10-13T18:59:48.785049Z","Action":"output","Package":"example.com/shop/bench","Test":"BenchmarkJoin","Output":"=== RUN   BenchmarkJoin\n","OutputType":"frame"}
+{"Time":"2026-10-13T18:59:48.785058Z","Action":"output","Package":"example.com/shop/bench","Test":"BenchmarkJoin","Output":"BenchmarkJoin\n"}
+{"Time":"2026-10-13T18:59:48.78537Z","Action":"output","Package":"example.com/shop/bench","Test":"BenchmarkJoin","Output":"    bench_test.go:11: joining\n"}
+{"Time":"2026-10-13T18:59:48.785445Z","Action":"output","Package":"example.com/shop/bench","Test":"BenchmarkJoin","Output":"BenchmarkJoin-18    \t     100\t        28.75 ns/op\n"}
+{"Time":"2026-10-13T18:59:48.785474Z","Action":"output","Package":"example.com/shop/bench","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-13T18:59:48.78596Z","Action":"output","Package":"example.com/shop/bench","Output":"ok  \texample.com/shop/bench\t0.084s\n"}
+{"Time":"2026-10-13T18:59:48.785979Z","Action":"pass","Package":"example.com/shop/bench","Elapsed":0.085}

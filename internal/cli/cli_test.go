@@ -57,7 +57,7 @@ func TestRunFallback(t *testing.T) {
 	if auto.code != ExitOK || auto.stdout != want {
 		t.Errorf("auto: code = %d, stdout = %q", auto.code, auto.stdout)
 	}
-	if auto.stderr != "squeeze: input matches no known format; printed as generic text (formats: tfplan, tfvalidate, tfjson, generic)\n" {
+	if auto.stderr != "squeeze: input matches no known format; printed as generic text (formats: tfplan, tfvalidate, tfjson, gotest, generic)\n" {
 		t.Errorf("auto: stderr = %q", auto.stderr)
 	}
 	named := runCLI(t, input, "generic")
@@ -126,14 +126,14 @@ func TestRunErrors(t *testing.T) {
 	}{
 		{"unknown flag", plan, []string{"--bogus"}, ExitUsage, "flag provided but not defined"},
 		{"format flag without format", plan, []string{"--max-attrs", "1"}, ExitUsage, "flag provided but not defined: -max-attrs"},
-		{"unknown format", plan, []string{"pytest"}, ExitUsage, `unknown format "pytest" (formats: tfplan, tfvalidate, tfjson, generic)`},
+		{"unknown format", plan, []string{"pytest"}, ExitUsage, `unknown format "pytest" (formats: tfplan, tfvalidate, tfjson, gotest, generic)`},
 		{"version under a format", plan, []string{"tfplan", "--version"}, ExitUsage, "flag provided but not defined: -version"},
 		{"bad format flag value", plan, []string{"tfplan", "--max-attrs", "-1"}, ExitUsage, "must be 0 or more"},
 		{"extra argument", plan, []string{"tfplan", "plan.json"}, ExitUsage, `unexpected argument "plan.json"`},
 		{"bad output", plan, []string{"--output", "yaml"}, ExitUsage, "--output must be text or json"},
 		{"empty input", nil, nil, ExitError, "empty input"},
 		{"whitespace input", []byte(" \n\t"), []string{"tfplan"}, ExitError, "empty input"},
-		{"binary input", []byte("\x7fELF\x00\x01"), nil, ExitUnknownFormat, "input matches no known format and is not text; name it: squeeze <format> (formats: tfplan, tfvalidate, tfjson, generic)"},
+		{"binary input", []byte("\x7fELF\x00\x01"), nil, ExitUnknownFormat, "input matches no known format and is not text; name it: squeeze <format> (formats: tfplan, tfvalidate, tfjson, gotest, generic)"},
 		{"fallback with --fail-on", []byte("collected 3 items\n"), []string{"--fail-on", "error"}, ExitUnknownFormat, "input matches no known format and --fail-on needs one; name it: squeeze <format>"},
 		{"named format on other input", []byte("collected 3 items\n"), []string{"tfplan"}, ExitError, "squeeze: tfplan: decode"},
 		{"state file", []byte(`{"format_version":"1.0","values":{}}`), []string{"tfplan"}, ExitError, "terraform state, not a plan"},
@@ -381,7 +381,7 @@ func TestRunHints(t *testing.T) {
 	}{
 		"format flag without format": {
 			[]string{"--all"},
-			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of formats tfplan, tfjson: squeeze <format> -all\n", "run 'squeeze -h' for usage\n"},
+			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of formats tfplan, tfjson, gotest: squeeze <format> -all\n", "run 'squeeze -h' for usage\n"},
 		},
 		"version under a format": {
 			[]string{"tfplan", "-version"},
@@ -389,7 +389,7 @@ func TestRunHints(t *testing.T) {
 		},
 		"misspelled format": {
 			[]string{"tfpaln"},
-			[]string{`unknown format "tfpaln" (formats: tfplan, tfvalidate, tfjson, generic); did you mean "tfplan"?`},
+			[]string{`unknown format "tfpaln" (formats: tfplan, tfvalidate, tfjson, gotest, generic); did you mean "tfplan"?`},
 		},
 		"file as format": {
 			[]string{file},

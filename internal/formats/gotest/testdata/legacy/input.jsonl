@@ -1,0 +1,15 @@
+# example.com/legacy/broken
+broken/broken.go:3:28: undefined: undefinedName
+{"Action": "output", "Package": "example.com/legacy/broken", "Output": "FAIL\texample.com/legacy/broken [build failed]\n"}
+{"Action": "fail", "Package": "example.com/legacy/broken", "Elapsed": 0}
+{"Action": "run", "Package": "example.com/legacy/calc", "Test": "TestAdd"}
+{"Action": "output", "Package": "example.com/legacy/calc", "Test": "TestAdd", "Output": "=== RUN   TestAdd\n"}
+{"Action": "output", "Package": "example.com/legacy/calc", "Test": "TestAdd", "Output": "    calc_test.go:9: setting up\n"}
+{"Action": "output", "Package": "example.com/legacy/calc", "Test": "TestAdd", "Output": "    calc_test.go:10: Add(2, 2) = 5, want 4\n"}
+{"Action": "output", "Package": "example.com/legacy/calc", "Test": "TestAdd", "Output": "--- FAIL: TestAdd (0.01s)\n"}
+{"Action": "fail", "Package": "example.com/legacy/calc", "Test": "TestAdd", "Elapsed": 0.01}
+{"Action": "output", "Package": "example.com/legacy/calc", "Output": "FAIL\n"}
+{"Action": "output", "Package": "example.com/legacy/calc", "Output": "FAIL\texample.com/legacy/calc\t0.012s\n"}
+{"Action": "fail", "Package": "example.com/legacy/calc", "Elapsed": 0.012}
+{"Action": "output", "Package": "example.com/legacy/util", "Output": "ok  \texample.com/legacy/util\t(cached)\n"}
+{"Action": "pass", "Package": "example.com/legacy/util", "Elapsed": 0}

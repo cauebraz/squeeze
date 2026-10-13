@@ -1,0 +1,13 @@
+go test: fail; 8 tests: 4 passed, 3 failed, 1 skipped; 4 packages: 1 ok, 1 failed, 1 build failed, 1 without tests
+build failed: example.com/shop/broken
+  broken/broken.go:3:28: undefined: undefinedName
+fail example.com/shop/calc TestAddNegative
+  calc_test.go:17: Add(-2, -3) = -5, want -6
+      second line of the message
+  ... 1 log line (--logs)
+fail example.com/shop/calc TestDivByZero
+  panic: runtime error: integer divide by zero [recovered, repanicked]
+  goroutine 21 [running]:
+  ... 4 more lines (--max-output 0)
+  ... 10 runtime and testing stack lines (--logs)
+... 1 more failed test (--max-tests 0)

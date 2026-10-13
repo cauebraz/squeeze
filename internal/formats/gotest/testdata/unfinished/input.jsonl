@@ -1,0 +1,6 @@
+{"Action": "start", "Package": "example.com/shop/api"}
+{"Action": "run", "Package": "example.com/shop/api", "Test": "TestServe"}
+{"Action": "output", "Package": "example.com/shop/api", "Test": "TestServe", "Output": "=== RUN   TestServe\n", "OutputType": "frame"}
+{"Action": "output", "Package": "example.com/shop/api", "Test": "TestServe", "Output": "    api_test.go:20: listening on :8080\n"}
+{"Action": "future", "Package": "example.com/shop/api", "Test": "TestServe"}
+{"Action": "output", "Package": "example.com/shop/api", "Output": "signal: killed\n"}

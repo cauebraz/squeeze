@@ -1,0 +1,27 @@
+go test: fail; 8 tests: 4 passed, 3 failed, 1 skipped; 4 packages: 1 ok, 1 failed, 1 build failed, 1 without tests
+build failed: example.com/shop/broken
+  broken/broken.go:3:28: undefined: undefinedName
+fail example.com/shop/calc TestAddNegative
+  calc_test.go:15: checking negative numbers
+  calc_test.go:17: Add(-2, -3) = -5, want -6
+      second line of the message
+fail example.com/shop/calc TestDivByZero
+  panic: runtime error: integer divide by zero [recovered, repanicked]
+  goroutine 21 [running]:
+  testing.tRunner.func1.2({0x1004466d8, 0x100480fa0})
+      /usr/local/go/src/testing/testing.go:2123 +0x1a0
+  testing.tRunner.func1()
+      /usr/local/go/src/testing/testing.go:2126 +0x2c8
+  panic({0x1004466d8?, 0x100480fa0?})
+      /usr/local/go/src/runtime/panic.go:859 +0x120
+  example.com/shop/calc.Div(...)
+      /home/dev/shop/calc/calc.go:5
+  example.com/shop/calc.TestDivByZero(0x21448553a248?)
+      /home/dev/shop/calc/calc_test.go:43 +0x20
+  testing.tRunner(0x21448553a248, 0x100463668)
+      /usr/local/go/src/testing/testing.go:2193 +0xc4
+  created by testing.(*T).Run in goroutine 1
+      /usr/local/go/src/testing/testing.go:2258 +0x3b8
+fail example.com/shop/calc TestTable/one
+  attr case=one
+  calc_test.go:32: Add(1, 0) = 1, want 2

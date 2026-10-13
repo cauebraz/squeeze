@@ -1,0 +1,35 @@
+{"Time":"2026-10-13T19:03:41.824292Z","Action":"start","Package":"example.com/shop/racy"}
+{"Time":"2026-10-13T19:03:42.066656Z","Action":"run","Package":"example.com/shop/racy","Test":"TestCounter"}
+{"Time":"2026-10-13T19:03:42.066726Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"=== RUN   TestCounter\n","OutputType":"frame"}
+{"Time":"2026-10-13T19:03:42.066994Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"==================\n"}
+{"Time":"2026-10-13T19:03:42.067025Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"WARNING: DATA RACE\n"}
+{"Time":"2026-10-13T19:03:42.067034Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"Read at 0x00c0000122a8 by goroutine 8:\n"}
+{"Time":"2026-10-13T19:03:42.067043Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  example.com/shop/racy.TestCounter.func1()\n"}
+{"Time":"2026-10-13T19:03:42.06705Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /home/dev/shop/racy/racy_test.go:15 +0x68\n"}
+{"Time":"2026-10-13T19:03:42.067063Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"\n"}
+{"Time":"2026-10-13T19:03:42.067068Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"Previous write at 0x00c0000122a8 by goroutine 9:\n"}
+{"Time":"2026-10-13T19:03:42.067082Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  example.com/shop/racy.TestCounter.func1()\n"}
+{"Time":"2026-10-13T19:03:42.067087Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /home/dev/shop/racy/racy_test.go:15 +0x78\n"}
+{"Time":"2026-10-13T19:03:42.067091Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"\n"}
+{"Time":"2026-10-13T19:03:42.067097Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"Goroutine 8 (running) created at:\n"}
+{"Time":"2026-10-13T19:03:42.067114Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  example.com/shop/racy.TestCounter()\n"}
+{"Time":"2026-10-13T19:03:42.06712Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /home/dev/shop/racy/racy_test.go:13 +0x6c\n"}
+{"Time":"2026-10-13T19:03:42.067134Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  testing.tRunner()\n"}
+{"Time":"2026-10-13T19:03:42.067139Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /usr/local/go/src/testing/testing.go:2193 +0x164\n"}
+{"Time":"2026-10-13T19:03:42.067155Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  testing.(*T).Run.gowrap1()\n"}
+{"Time":"2026-10-13T19:03:42.06716Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /usr/local/go/src/testing/testing.go:2258 +0x34\n"}
+{"Time":"2026-10-13T19:03:42.067172Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"\n"}
+{"Time":"2026-10-13T19:03:42.067182Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"Goroutine 9 (finished) created at:\n"}
+{"Time":"2026-10-13T19:03:42.067191Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  example.com/shop/racy.TestCounter()\n"}
+{"Time":"2026-10-13T19:03:42.067197Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /home/dev/shop/racy/racy_test.go:13 +0x6c\n"}
+{"Time":"2026-10-13T19:03:42.067224Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  testing.tRunner()\n"}
+{"Time":"2026-10-13T19:03:42.067237Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /usr/local/go/src/testing/testing.go:2193 +0x164\n"}
+{"Time":"2026-10-13T19:03:42.067241Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"  testing.(*T).Run.gowrap1()\n"}
+{"Time":"2026-10-13T19:03:42.067245Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"      /usr/local/go/src/testing/testing.go:2258 +0x34\n"}
+{"Time":"2026-10-13T19:03:42.067254Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"==================\n"}
+{"Time":"2026-10-13T19:03:42.067258Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"    testing.go:1865: race detected during execution of test\n","OutputType":"error"}
+{"Time":"2026-10-13T19:03:42.067274Z","Action":"output","Package":"example.com/shop/racy","Test":"TestCounter","Output":"--- FAIL: TestCounter (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-13T19:03:42.067279Z","Action":"fail","Package":"example.com/shop/racy","Test":"TestCounter","Elapsed":0}
+{"Time":"2026-10-13T19:03:42.067287Z","Action":"output","Package":"example.com/shop/racy","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-13T19:03:42.068167Z","Action":"output","Package":"example.com/shop/racy","Output":"FAIL\texample.com/shop/racy\t0.244s\n","OutputType":"frame"}
+{"Time":"2026-10-13T19:03:42.068202Z","Action":"fail","Package":"example.com/shop/racy","Elapsed":0.244}

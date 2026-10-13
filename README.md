@@ -63,6 +63,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 - Run Terraform with `-json` and pipe it through `squeeze`: `terraform validate -json | squeeze`,
   `terraform plan -json | squeeze`, `terraform test -json | squeeze`, `terraform show -json <planfile> | squeeze`.
   Read squeeze's output instead of Terraform's.
+- Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names.
 - Pipe other long output through `squeeze` too, for example `npm test 2>&1 | squeeze`: text that no format
   knows goes through `generic`, which strips colors, folds repeats and keeps error lines when it cuts.
 - To stop on a condition, add `--fail-on`, for example `--fail-on destroy,error`; exit code 3 means it matched.
@@ -77,6 +78,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `tfplan` | `terraform show -json <planfile>` | [docs/formats/tfplan.md](docs/formats/tfplan.md) |
 | `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
 | `tfjson` | `terraform plan`, `apply`, `destroy`, `init` or `test` with `-json` | [docs/formats/tfjson.md](docs/formats/tfjson.md) |
+| `gotest` | `go test -json` | [docs/formats/gotest.md](docs/formats/gotest.md) |
 | `generic` | any other text, when no format above detects it | [docs/formats/generic.md](docs/formats/generic.md) |
 
 Each format decides what to keep. Every format guarantees:
@@ -133,7 +135,7 @@ New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding ag
 
 ## Roadmap
 
-- `pytest`, `gotest` and `cargotest` formats
+- `pytest` and `cargotest` formats
 - `tflint`, `checkov` and `trivy` JSON output
 
 ## License
