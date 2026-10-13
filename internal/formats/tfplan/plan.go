@@ -1,11 +1,31 @@
 package tfplan
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/cauebraz/squeeze/internal/core"
+)
+
+func conditions(r Report) []string {
+	s := r.Summary
+	return core.Conditions(map[string]bool{
+		"change":     s.Changed(),
+		"deferred":   s.Deferred > 0,
+		"destroy":    s.Destroy > 0,
+		"drift":      s.Drift > 0,
+		"errored":    s.Errored,
+		"forget":     s.Forget > 0,
+		"import":     s.Import > 0,
+		"incomplete": !s.Complete,
+		"move":       s.Move > 0,
+		"replace":    s.Replace > 0,
+	})
+}
 
 func Build(p *Plan, o Options) (Report, error) {
 	r := Report{
 		Tool:        "terraform",
-		ToolVersion: p.TerraformVersion,
+		ToolVersion: core.Clean(p.TerraformVersion),
 		Summary: Summary{
 			Errored:  p.Errored,
 			Complete: p.Complete == nil || *p.Complete,
@@ -127,7 +147,7 @@ func buildDeferred(r *Report, p *Plan) error {
 		if action == Noop && !isMoved {
 			continue
 		}
-		r.Deferred = append(r.Deferred, DeferredChange{Address: rc.Address, Action: action, Reason: d.Reason})
+		r.Deferred = append(r.Deferred, DeferredChange{Address: core.Clean(rc.Address), Action: action, Reason: core.Clean(d.Reason)})
 	}
 	sort.SliceStable(r.Deferred, func(i, j int) bool {
 		a, b := r.Deferred[i], r.Deferred[j]
@@ -143,11 +163,11 @@ func buildDeferred(r *Report, p *Plan) error {
 func convertActions(actions []PlanAction) []ActionInvocation {
 	out := make([]ActionInvocation, 0, len(actions))
 	for _, a := range actions {
-		inv := ActionInvocation{Address: a.Address}
+		inv := ActionInvocation{Address: core.Clean(a.Address)}
 		switch {
 		case a.LifecycleActionTrigger != nil:
-			inv.Event = a.LifecycleActionTrigger.ActionTriggerEvent
-			inv.Resource = a.LifecycleActionTrigger.TriggeringResourceAddress
+			inv.Event = core.Clean(a.LifecycleActionTrigger.ActionTriggerEvent)
+			inv.Resource = core.Clean(a.LifecycleActionTrigger.TriggeringResourceAddress)
 		case a.InvokeActionTrigger != nil:
 			inv.Invoked = true
 		}
@@ -167,12 +187,12 @@ func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, 
 		return ResourceChange{}, err
 	}
 	c := ResourceChange{
-		Address:         pr.Address,
-		PreviousAddress: pr.PreviousAddress,
-		Deposed:         pr.Deposed,
+		Address:         core.Clean(pr.Address),
+		PreviousAddress: core.Clean(pr.PreviousAddress),
+		Deposed:         core.Clean(pr.Deposed),
 		Action:          action,
 		Importing:       importing,
-		Reason:          pr.ActionReason,
+		Reason:          core.Clean(pr.ActionReason),
 	}
 	if hasAttrDiff(action) {
 		c.Attrs, c.ReplacedBy = diffAttrs(pr.Change, !o.NoValues)
@@ -259,7 +279,7 @@ func convertOutputs(changes map[string]PlanChange, includeNoop bool) ([]OutputCh
 			continue
 		}
 		out = append(out, OutputChange{
-			Name:      name,
+			Name:      core.Clean(name),
 			Action:    action,
 			Unknown:   isTrue(ch.AfterUnknown),
 			Sensitive: isTrue(ch.BeforeSensitive) || isTrue(ch.AfterSensitive),

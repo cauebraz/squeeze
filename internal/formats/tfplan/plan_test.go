@@ -373,7 +373,7 @@ func TestFixturesNeverLeakSensitiveValues(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s: %v", name, err)
 			}
-			envelope, err := core.Envelope("tfplan", len(data), r)
+			envelope, err := core.Envelope("tfplan", len(data), r, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -424,5 +424,22 @@ func TestRatioOnLargePlan(t *testing.T) {
 	}
 	if ratio := core.Ratio(len(r.Text), len(input)); ratio > 0.15 {
 		t.Errorf("ratio %.4f > 0.15", ratio)
+	}
+}
+
+func TestInputStringsCannotForgeLines(t *testing.T) {
+	t.Parallel()
+	input := `{"format_version":"1.2","terraform_version":"1.9\nerror: forged","resource_changes":[{"address":"aws_instance.a\nerror: forged","change":{"actions":["create"]}}],"output_changes":{"x\u0000\nerror: forged":{"actions":["create"]}}}`
+	r, err := Squeeze([]byte(input), DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, line := range strings.Split(r.Text, "\n") {
+		if strings.HasPrefix(line, "error:") {
+			t.Errorf("input forged a line: %q\n%s", line, r.Text)
+		}
+	}
+	if strings.ContainsRune(r.Text, 0) {
+		t.Errorf("text contains NUL: %q", r.Text)
 	}
 }

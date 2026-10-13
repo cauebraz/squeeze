@@ -1,0 +1,16 @@
+terraform validate: invalid, 2 errors, 2 warnings
+error: Missing required argument (main.tf:22:34)
+  The argument "ami" is required, but no definition was found.
+  > resource "aws_instance" "worker" {
+error: Reference to undeclared input variable (modules/vpc/main.tf:14:15)
+  An input variable with the name "subnet_ids" has not been declared. This variable can be declared
+  with a variable "subnet_ids" {} block.
+  > subnet_ids = var.subnet_ids
+warning: Redundant ignore_changes element (main.tf:30:7)
+  Adding an attribute name to ignore_changes tells Terraform to ignore future changes to the argument
+  in configuration after the object has been created, retaining the value originally configured. The
+  attribute id is decided by the provider alone and therefore there can never be any configuration...
+  > ignore_changes = [id]
+warning: Argument is deprecated (storage.tf:7:3)
+  Use the aws_s3_bucket_versioning resource instead.
+  > versioning {

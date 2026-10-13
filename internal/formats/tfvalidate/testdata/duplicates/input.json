@@ -1,0 +1,112 @@
+{
+  "format_version": "1.0",
+  "valid": true,
+  "error_count": 0,
+  "warning_count": 4,
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "summary": "Argument is deprecated",
+      "detail": "Use the aws_s3_bucket_versioning resource instead.",
+      "range": {
+        "filename": "storage.tf",
+        "start": {
+          "line": 7,
+          "column": 3,
+          "byte": 0
+        },
+        "end": {
+          "line": 7,
+          "column": 8,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "  versioning {",
+        "start_line": 7,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    },
+    {
+      "severity": "warning",
+      "summary": "Argument is deprecated",
+      "detail": "Use the aws_s3_bucket_versioning resource instead.",
+      "range": {
+        "filename": "storage.tf",
+        "start": {
+          "line": 7,
+          "column": 3,
+          "byte": 0
+        },
+        "end": {
+          "line": 7,
+          "column": 8,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "  versioning {",
+        "start_line": 7,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    },
+    {
+      "severity": "warning",
+      "summary": "Argument is deprecated",
+      "detail": "Use the aws_s3_bucket_versioning resource instead.",
+      "range": {
+        "filename": "storage.tf",
+        "start": {
+          "line": 7,
+          "column": 3,
+          "byte": 0
+        },
+        "end": {
+          "line": 7,
+          "column": 8,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "  versioning {",
+        "start_line": 7,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    },
+    {
+      "severity": "warning",
+      "summary": "Argument is deprecated",
+      "detail": "Use the aws_s3_bucket_versioning resource instead.",
+      "range": {
+        "filename": "storage.tf",
+        "start": {
+          "line": 19,
+          "column": 3,
+          "byte": 0
+        },
+        "end": {
+          "line": 19,
+          "column": 8,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "  versioning {",
+        "start_line": 19,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    }
+  ]
+}

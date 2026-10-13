@@ -13,7 +13,7 @@ just golden         # rewrite golden files after an intended output change
 just fuzz tfplan 30 # fuzz one format
 just fuzz-all 20    # fuzz every format; fails for a format without FuzzSqueeze
 just bench          # benchmarks with the output/input ratio
-just conformance    # tfplan against Terraform's show-json corpus at a pinned commit, in a temp dir
+just conformance    # every format against Terraform's command testdata at a pinned commit, in a temp dir
 ```
 
 Linters are pinned with the `tool` directive in `go.mod` and run through `go tool`; do not install them globally. The module supports Go 1.26 and 1.27; CI runs both with `GOTOOLCHAIN=local`.
@@ -25,7 +25,8 @@ A change is done when `just check` and `just cover` pass after the last edit.
 ```
 cmd/squeeze/            main: wires os.Args and stdio to internal/cli
 internal/cli/           subcommands, common flags, exit codes, --raw-dir
-internal/core/          Format interface, Registry, Result, JSON envelope: knows no tool
+internal/core/          Format interface, Registry, Result, conditions, JSON envelope: knows no tool
+internal/tfdiag/        Terraform diagnostics shared by tfvalidate and tfjson
 internal/formattest/    contract suite every format runs
 internal/formats/<name>/ one package per format; testdata/<case>/ holds input, args, want.txt, want.json
 docs/formats/<name>.md  user documentation of one format
@@ -36,7 +37,8 @@ docs/formats/<name>.md  user documentation of one format
 ## Rules
 
 - Output invariants hold for every format: no secret the tool marks as sensitive reaches stdout; output has no control characters or color codes, is the same for the same input and ends with a newline; anything cut is announced with a count and the flag that shows it.
-- stdout is empty whenever the exit code is not 0. Exit codes are 0, 1, 2 and 64 as listed in the README; a new failure mode reuses one of them.
+- Errors and warnings are never dropped: a line or record the format does not understand but the tool marks as an error or warning becomes a diagnostic.
+- stdout is empty whenever the exit code is not 0 or 3. Exit codes are 0, 1, 2, 3 and 64 as listed in the README; a new failure mode reuses one of them.
 - A golden file change is a behavior change. Run `just golden`, read the whole diff, and state in the PR why each changed line is correct.
 - Fixtures come from public, permissively licensed sources or are written from the tool's published schema. Terraform's own testdata is BUSL-1.1: run squeeze against it locally if useful, never copy it into this repository. Real or private output goes in `internal/formats/<name>/testdata/real/`, which git ignores.
 - A format follows the tool's own semantics where the tool defines them (counts, symbols, which drift to show). Check the tool's source or docs, cite it in the PR, and add a fixture that exercises it.
@@ -46,5 +48,6 @@ docs/formats/<name>.md  user documentation of one format
 - Standard library only in non-test code. `github.com/google/go-cmp` is the test-only dependency; another one needs a reason in the PR.
 - No comments in code. Explanations go in the PR description or in `docs/`.
 - Documents and messages are plain ASCII.
-- A behavior change updates `README.md` or `docs/formats/<name>.md` and adds a line under `Unreleased` in `CHANGELOG.md` in the same change.
+- A behavior change updates `README.md` or `docs/formats/<name>.md` in the same change.
+- Do not edit `CHANGELOG.md`. The project is in development; once public releases start, an automated release tool (semantic-release or release-please) writes the changelog from the commit history.
 - Research notes, plans and drafts stay out of the repository; `notes/` and `research/` are gitignored.

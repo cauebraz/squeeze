@@ -26,7 +26,7 @@ func FuzzSqueeze(f *testing.F) {
 			}
 			res := core.Result{Text: Text(r, o), Data: r}
 			formattest.CheckText(t, res.Text)
-			if _, err := core.Envelope("tfplan", len(input), res); err != nil {
+			if _, err := core.Envelope("tfplan", len(input), res, nil); err != nil {
 				t.Fatalf("Envelope() error after successful Build: %v", err)
 			}
 		}

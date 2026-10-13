@@ -1,0 +1,8 @@
+{"@level":"info","@message":"Terraform 1.9.5","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","terraform":"1.9.5","ui":"1.2","type":"version"}
+{"@level":"info","@message":"A message from a future Terraform","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","future":{"x":1},"type":"future_message"}
+{"@level":"error","@message":"Error: future failure mode","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","future":{"x":2},"type":"future_error"}
+{"@level":"warn","@message":"Warning: deprecated thing in a log","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","type":"log"}
+{"@level":"info","@message":"plain log line","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","type":"log"}
+{"@level":"error","@message":"Error: diagnostic with an unexpected shape","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","diagnostic":"not an object","type":"diagnostic"}
+{"@level":"info","@message":"aws_instance.web: Plan to open","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","change":{"resource":{"addr":"aws_instance.web","module":"","resource":"aws_instance.web","implied_provider":"aws","resource_type":"aws_instance","resource_name":"web","resource_key":null},"action":"open"},"type":"planned_change"}
+{"@level":"info","@message":"aws_instance.web2: Plan to frobnicate","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","change":{"resource":{"addr":"aws_instance.web2","module":"","resource":"aws_instance.web2","implied_provider":"aws","resource_type":"aws_instance","resource_name":"web2","resource_key":null},"action":"frobnicate"},"type":"planned_change"}

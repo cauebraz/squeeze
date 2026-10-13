@@ -106,14 +106,14 @@ func TestRunErrors(t *testing.T) {
 	}{
 		{"unknown flag", plan, []string{"--bogus"}, ExitUsage, "flag provided but not defined"},
 		{"format flag without format", plan, []string{"--max-attrs", "1"}, ExitUsage, "flag provided but not defined: -max-attrs"},
-		{"unknown format", plan, []string{"pytest"}, ExitUsage, `unknown format "pytest" (formats: tfplan)`},
+		{"unknown format", plan, []string{"pytest"}, ExitUsage, `unknown format "pytest" (formats: tfplan, tfvalidate, tfjson)`},
 		{"version under a format", plan, []string{"tfplan", "--version"}, ExitUsage, "flag provided but not defined: -version"},
 		{"bad format flag value", plan, []string{"tfplan", "--max-attrs", "-1"}, ExitUsage, "must be 0 or more"},
 		{"extra argument", plan, []string{"tfplan", "plan.json"}, ExitUsage, `unexpected argument "plan.json"`},
 		{"bad output", plan, []string{"--output", "yaml"}, ExitUsage, "--output must be text or json"},
 		{"empty input", nil, nil, ExitError, "empty input"},
 		{"whitespace input", []byte(" \n\t"), []string{"tfplan"}, ExitError, "empty input"},
-		{"undetected input", []byte("collected 3 items\n"), nil, ExitUnknownFormat, "input matches no known format; name it: squeeze <format> (formats: tfplan)"},
+		{"undetected input", []byte("collected 3 items\n"), nil, ExitUnknownFormat, "input matches no known format; name it: squeeze <format> (formats: tfplan, tfvalidate, tfjson)"},
 		{"named format on other input", []byte("collected 3 items\n"), []string{"tfplan"}, ExitError, "squeeze: tfplan: decode"},
 		{"state file", []byte(`{"format_version":"1.0","values":{}}`), []string{"tfplan"}, ExitError, "terraform state, not a plan"},
 		{"truncated plan", plan[:len(plan)/2], []string{"tfplan"}, ExitError, "decode"},
@@ -302,9 +302,10 @@ func (unmarshalable) MarshalJSON() ([]byte, error) { return nil, errors.New("nop
 
 type stubFormat struct{}
 
-func (stubFormat) Name() string        { return "stub" }
-func (stubFormat) Description() string { return "stub" }
-func (stubFormat) Detect([]byte) bool  { return true }
+func (stubFormat) Name() string         { return "stub" }
+func (stubFormat) Description() string  { return "stub" }
+func (stubFormat) Detect([]byte) bool   { return true }
+func (stubFormat) Conditions() []string { return []string{"hit"} }
 func (stubFormat) Configure(fs *flag.FlagSet) core.Squeezer {
 	fs.Bool("shared", false, "")
 	return func([]byte) (core.Result, error) {
@@ -352,7 +353,7 @@ func TestRunHints(t *testing.T) {
 	}{
 		"format flag without format": {
 			[]string{"--all"},
-			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of format tfplan: squeeze tfplan -all\n", "run 'squeeze -h' for usage\n"},
+			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of formats tfplan, tfjson: squeeze <format> -all\n", "run 'squeeze -h' for usage\n"},
 		},
 		"version under a format": {
 			[]string{"tfplan", "-version"},
@@ -360,7 +361,7 @@ func TestRunHints(t *testing.T) {
 		},
 		"misspelled format": {
 			[]string{"tfpaln"},
-			[]string{`unknown format "tfpaln" (formats: tfplan); did you mean "tfplan"?`},
+			[]string{`unknown format "tfpaln" (formats: tfplan, tfvalidate, tfjson); did you mean "tfplan"?`},
 		},
 		"file as format": {
 			[]string{file},
@@ -400,8 +401,12 @@ func TestFlagHintNone(t *testing.T) {
 		t.Errorf("flagHint(bogus) = %q", got)
 	}
 	tf, _ := reg.Lookup("tfplan")
-	if got := flagHint(errors.New(undefinedFlag+"all"), tf, reg); got != "" {
-		t.Errorf("flagHint(all) under tfplan = %q", got)
+	if got := flagHint(errors.New(undefinedFlag+"no-values"), tf, reg); got != "" {
+		t.Errorf("flagHint(no-values) under tfplan = %q", got)
+	}
+	tj, _ := reg.Lookup("tfjson")
+	if got := flagHint(errors.New(undefinedFlag+"no-values"), tj, reg); got != "-no-values is a flag of format tfplan: squeeze tfplan -no-values" {
+		t.Errorf("flagHint(no-values) under tfjson = %q", got)
 	}
 	two := core.NewRegistry(stubFormat{}, namedStub{"other"})
 	if got := flagHint(errors.New(undefinedFlag+"shared"), nil, two); got != "-shared is a flag of formats stub, other: squeeze <format> -shared" {
@@ -433,7 +438,93 @@ type namedStub struct{ name string }
 func (n namedStub) Name() string        { return n.name }
 func (n namedStub) Description() string { return n.name }
 func (namedStub) Detect([]byte) bool    { return false }
+func (namedStub) Conditions() []string  { return nil }
 func (namedStub) Configure(fs *flag.FlagSet) core.Squeezer {
 	fs.Bool("shared", false, "")
 	return func([]byte) (core.Result, error) { return core.Result{}, nil }
+}
+
+func TestRunFailOn(t *testing.T) {
+	t.Parallel()
+	replace := readFixture(t, "tfplan", "replace-forced")
+	noop := readFixture(t, "tfplan", "noop-only")
+	text := runCLI(t, replace).stdout
+	tests := map[string]struct {
+		input  []byte
+		args   []string
+		code   int
+		stderr string
+	}{
+		"matched":                 {replace, []string{"--fail-on", "destroy"}, ExitCondition, "squeeze: --fail-on matched: destroy\n"},
+		"matched several":         {replace, []string{"--fail-on", "drift,replace", "--fail-on", "destroy"}, ExitCondition, "squeeze: --fail-on matched: destroy, replace\n"},
+		"matched under a format":  {replace, []string{"tfplan", "--fail-on=replace"}, ExitCondition, "squeeze: --fail-on matched: replace\n"},
+		"not matched":             {noop, []string{"--fail-on", "destroy,change"}, ExitOK, ""},
+		"unknown condition auto":  {replace, []string{"--fail-on", "explode"}, ExitUsage, `--fail-on: tfplan has no condition "explode" (conditions: change, deferred`},
+		"unknown condition named": {replace, []string{"tfplan", "--fail-on", "explode"}, ExitUsage, `--fail-on: tfplan has no condition "explode"`},
+		"empty name":              {replace, []string{"--fail-on", "destroy,"}, ExitUsage, "empty condition name"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			r := runCLI(t, tt.input, tt.args...)
+			if r.code != tt.code {
+				t.Errorf("code = %d, want %d; stderr = %q", r.code, tt.code, r.stderr)
+			}
+			if !strings.Contains(r.stderr, tt.stderr) || (tt.stderr == "" && r.stderr != "") {
+				t.Errorf("stderr = %q, want %q", r.stderr, tt.stderr)
+			}
+			switch tt.code {
+			case ExitCondition:
+				if r.stdout != text {
+					t.Errorf("stdout must be the full output on exit 3, got %q", r.stdout)
+				}
+			case ExitUsage:
+				if r.stdout != "" {
+					t.Errorf("stdout = %q, want empty", r.stdout)
+				}
+			}
+		})
+	}
+}
+
+func TestRunFailOnJSON(t *testing.T) {
+	t.Parallel()
+	r := runCLI(t, readFixture(t, "tfplan", "replace-forced"), "--output", "json", "--fail-on", "replace,drift")
+	if r.code != ExitCondition {
+		t.Fatalf("code = %d, stderr = %q", r.code, r.stderr)
+	}
+	var doc struct {
+		Conditions []string `json:"conditions"`
+		FailedOn   []string `json:"failed_on"`
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(doc.Conditions, ",") != "change,destroy,replace" || strings.Join(doc.FailedOn, ",") != "replace" {
+		t.Errorf("conditions = %v, failed_on = %v", doc.Conditions, doc.FailedOn)
+	}
+}
+
+func TestFormatHelpListsConditions(t *testing.T) {
+	t.Parallel()
+	r := runCLI(t, nil, "tfplan", "-h")
+	if !strings.Contains(r.stderr, "Conditions for --fail-on:\n  change, deferred, destroy, drift, errored, forget, import, incomplete, move, replace\n") {
+		t.Errorf("help lacks the condition list:\n%s", r.stderr)
+	}
+	root := runCLI(t, nil, "-h")
+	if !strings.Contains(root.stderr, "-fail-on") || !strings.Contains(root.stderr, "squeeze <format> -h") {
+		t.Errorf("root help lacks --fail-on:\n%s", root.stderr)
+	}
+}
+
+func TestListFlag(t *testing.T) {
+	t.Parallel()
+	var values []string
+	l := listFlag{&values}
+	if err := l.Set("a, b,a"); err != nil || l.String() != "a,b" {
+		t.Errorf("Set() = %v, String() = %q", err, l.String())
+	}
+	if (listFlag{}).String() != "" {
+		t.Error("zero listFlag String() is not empty")
+	}
 }

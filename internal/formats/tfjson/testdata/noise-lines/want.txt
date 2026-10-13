@@ -1,0 +1,3 @@
+terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy
+~ aws_instance.web
+... 2 other messages: text 2 (--all)

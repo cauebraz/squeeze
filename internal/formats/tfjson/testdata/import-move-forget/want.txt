@@ -1,0 +1,4 @@
+terraform 1.9.5 plan: 1 to import, 0 to add, 0 to change, 0 to destroy
+. aws_s3_bucket.archive (removed from state, not destroyed)
+>> aws_s3_bucket.legacy (import id legacy-bucket)
+= aws_iam_role.app (moved from aws_iam_role.legacy)

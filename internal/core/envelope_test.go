@@ -10,7 +10,7 @@ import (
 func TestEnvelope(t *testing.T) {
 	t.Parallel()
 	r := Result{Text: "0123456789", Data: map[string]int{"n": 1}}
-	out, err := Envelope("demo", 100, r)
+	out, err := Envelope("demo", 100, r, nil)
 	if err != nil {
 		t.Fatalf("Envelope() error = %v", err)
 	}
@@ -36,7 +36,7 @@ func TestEnvelope(t *testing.T) {
 
 func TestEnvelopeNilData(t *testing.T) {
 	t.Parallel()
-	out, err := Envelope("demo", 0, Result{})
+	out, err := Envelope("demo", 0, Result{}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func (badJSON) MarshalJSON() ([]byte, error) { return nil, errors.New("nope") }
 
 func TestEnvelopeMarshalError(t *testing.T) {
 	t.Parallel()
-	if _, err := Envelope("demo", 1, Result{Data: badJSON{}}); err == nil {
+	if _, err := Envelope("demo", 1, Result{Data: badJSON{}}, nil); err == nil {
 		t.Fatal("Envelope() returned no error")
 	}
 }
@@ -83,5 +83,47 @@ func TestHead(t *testing.T) {
 	}
 	if got := len(Head(make([]byte, HeadSize+10))); got != HeadSize {
 		t.Errorf("len(Head(big)) = %d, want %d", got, HeadSize)
+	}
+}
+
+func TestConditionsAndMatched(t *testing.T) {
+	t.Parallel()
+	got := Conditions(map[string]bool{"b": true, "a": true, "c": false})
+	if strings.Join(got, ",") != "a,b" {
+		t.Errorf("Conditions() = %v, want [a b]", got)
+	}
+	if got := Conditions(nil); got == nil || len(got) != 0 {
+		t.Errorf("Conditions(nil) = %#v, want empty non-nil", got)
+	}
+	tests := []struct {
+		conditions, failOn []string
+		want               string
+	}{
+		{[]string{"a", "b"}, []string{"b", "z"}, "b"},
+		{[]string{"a"}, nil, ""},
+		{nil, []string{"a"}, ""},
+		{[]string{"a", "b"}, []string{"b", "a"}, "a,b"},
+	}
+	for _, tt := range tests {
+		got := Matched(tt.conditions, tt.failOn)
+		if got == nil || strings.Join(got, ",") != tt.want {
+			t.Errorf("Matched(%v, %v) = %#v, want %q", tt.conditions, tt.failOn, got, tt.want)
+		}
+	}
+}
+
+func TestEnvelopeConditions(t *testing.T) {
+	t.Parallel()
+	r := Result{Text: "x\n", Conditions: []string{"destroy", "drift"}}
+	out, err := Envelope("demo", 10, r, []string{"drift", "error"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(out), `"conditions":["destroy","drift"],"failed_on":["drift"]`) {
+		t.Errorf("Envelope() = %s", out)
+	}
+	empty, _ := Envelope("demo", 10, Result{}, nil)
+	if !strings.Contains(string(empty), `"conditions":[],"failed_on":[]`) {
+		t.Errorf("Envelope() without conditions = %s", empty)
 	}
 }

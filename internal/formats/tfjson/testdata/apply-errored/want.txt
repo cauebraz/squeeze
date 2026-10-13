@@ -1,0 +1,10 @@
+terraform 1.9.5 apply: no apply summary; plan was 2 to add, 0 to change, 0 to destroy; 1 error
++ aws_instance.web
++ aws_s3_bucket.logs
+applied: 1 resource (slowest: aws_s3_bucket.logs 1s)
+error: aws_instance.web: Creation errored after 4s
+error: creating EC2 Instance (main.tf:10:1, aws_instance.web)
+  operation error EC2: RunInstances, https response error StatusCode: 400, api error
+  InvalidAMIID.NotFound: The image id '[ami-0abcdef1234567890]' does not exist
+  > resource "aws_instance" "web" {
+... 2 other messages: apply_start 2 (--all)

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"tYpe\":\"0\"}\n\x00")

@@ -16,6 +16,7 @@ type fake struct {
 func (f fake) Name() string            { return f.name }
 func (f fake) Description() string     { return "fake " + f.name }
 func (f fake) Detect(head []byte) bool { return bytes.HasPrefix(head, []byte(f.prefix)) }
+func (f fake) Conditions() []string    { return nil }
 func (f fake) Configure(*flag.FlagSet) Squeezer {
 	return func([]byte) (Result, error) { return Result{Text: f.name}, nil }
 }

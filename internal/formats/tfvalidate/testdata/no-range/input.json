@@ -1,0 +1,19 @@
+{
+  "format_version": "1.0",
+  "valid": false,
+  "error_count": 1,
+  "warning_count": 1,
+  "diagnostics": [
+    {
+      "severity": "error",
+      "summary": "Module not installed",
+      "detail": "This module is not yet installed. Run \"terraform init\" to install all modules required by this configuration."
+    },
+    {
+      "severity": "warning",
+      "summary": "Deprecated resource",
+      "detail": "The resource is deprecated.",
+      "address": "aws_s3_bucket_object.legacy"
+    }
+  ]
+}

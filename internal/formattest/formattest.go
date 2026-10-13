@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -33,7 +35,7 @@ func Cases(t testing.TB, dir string) []Case {
 	}
 	var cases []Case
 	for _, e := range entries {
-		if !e.IsDir() || e.Name() == "real" {
+		if !e.IsDir() || e.Name() == "real" || e.Name() == "fuzz" {
 			continue
 		}
 		caseDir := filepath.Join(dir, e.Name())
@@ -86,6 +88,13 @@ func Contract(t *testing.T, f core.Format, dir string) {
 		t.Errorf("%s: empty Description()", f.Name())
 	}
 	core.NewRegistry(f)
+	declared := f.Conditions()
+	checkNames(t, f.Name()+": Conditions()", declared)
+	for _, name := range declared {
+		if !conditionName.MatchString(name) {
+			t.Errorf("%s: condition %q must match %s", f.Name(), name, conditionName)
+		}
+	}
 	for _, empty := range []string{"", " \n\t"} {
 		if f.Detect([]byte(empty)) {
 			t.Errorf("%s: Detect(%q) = true", f.Name(), empty)
@@ -106,7 +115,13 @@ func Contract(t *testing.T, f core.Format, dir string) {
 				t.Errorf("output differs between runs")
 			}
 			CheckText(t, first.Text)
-			envelope, err := core.Envelope(f.Name(), len(c.Input), first)
+			checkNames(t, "Result.Conditions", first.Conditions)
+			for _, c := range first.Conditions {
+				if !slices.Contains(declared, c) {
+					t.Errorf("condition %q is not declared by Conditions()", c)
+				}
+			}
+			envelope, err := core.Envelope(f.Name(), len(c.Input), first, nil)
 			if err != nil {
 				t.Fatalf("Envelope() error = %v", err)
 			}
@@ -116,6 +131,18 @@ func Contract(t *testing.T, f core.Format, dir string) {
 			golden(t, filepath.Join(c.Dir, "want.txt"), []byte(first.Text))
 			golden(t, filepath.Join(c.Dir, "want.json"), envelope)
 		})
+	}
+}
+
+var conditionName = regexp.MustCompile(`^[a-z][a-z_]*$`)
+
+func checkNames(t testing.TB, what string, names []string) {
+	t.Helper()
+	if !slices.IsSorted(names) {
+		t.Errorf("%s is not sorted: %v", what, names)
+	}
+	if len(slices.Compact(slices.Clone(names))) != len(names) {
+		t.Errorf("%s has duplicates: %v", what, names)
 	}
 }
 

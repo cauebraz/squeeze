@@ -1,0 +1,7 @@
+terraform 1.9.5: 1 error, 2 warnings
+error: Reference to undeclared resource (main.tf:12:12)
+  A managed resource "aws_vpc" "primary" has not been declared in the root module.
+  > vpc_id = aws_vpc.primary.id
+warning: Argument is deprecated (storage.tf:7:3) (x2)
+  Use the aws_s3_bucket_versioning resource instead.
+  > versioning {

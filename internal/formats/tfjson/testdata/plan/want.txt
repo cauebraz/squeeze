@@ -1,0 +1,7 @@
+terraform 1.9.5 plan: 3 to add, 1 to change, 2 to destroy
+- aws_instance.old (delete_because_no_resource_config)
+-/+ aws_db_instance.main (cannot_update)
+~ aws_instance.web
++ aws_s3_bucket.logs
++ aws_subnet.private["a"]
+... 4 other messages: apply_start 1, refresh 1, refresh_complete 1, refresh_start 1 (--all)

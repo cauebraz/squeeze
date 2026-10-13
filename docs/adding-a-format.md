@@ -7,6 +7,7 @@ type Format interface {
 	Name() string
 	Description() string
 	Detect(head []byte) bool
+	Conditions() []string
 	Configure(fs *flag.FlagSet) Squeezer
 }
 ```
@@ -14,9 +15,10 @@ type Format interface {
 - `Name` is the subcommand: lowercase letters, digits and hyphens, starting with a letter.
 - `Description` is one line for `squeeze -h`.
 - `Detect` gets the first 64 KiB of the input and answers from markers the tool always prints. It must reject input of every other registered format.
+- `Conditions` lists, sorted, every condition name the format can report for `--fail-on`: lowercase words joined by `_`. Each one needs a row in the format's docs page and a fixture that produces it.
 - `Configure` registers the format's own flags on `fs` and returns the function that squeezes the input. Auto-detection calls it with an empty flag set, so the defaults must suit an agent that passes no flags.
 
-The returned `core.Result` holds `Text`, the output for the agent, and `Data`, any JSON-serializable value that `--output json` places under `data`.
+The returned `core.Result` holds `Text`, the output for the agent, `Data`, any JSON-serializable value that `--output json` places under `data`, and `Conditions`, the sorted names present in this input; `core.Conditions` builds that slice from a map. A format whose tool reports diagnostics with file and line uses `internal/tfdiag` or a package like it, so diagnostics read the same across formats.
 
 ## Test layout
 

@@ -1,0 +1,6 @@
+terraform 1.9.5 plan: 2 errors, 1 warning
+? aws_instance.web2 (action frobnicate)
+error: diagnostic with an unexpected shape
+error: future failure mode
+warning: deprecated thing in a log
+... 3 other messages: ephemeral 1, future_message 1, log 1 (--all)

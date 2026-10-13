@@ -1,0 +1,8 @@
+terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy; 2 drifted; 2 deferred
+~ aws_security_group.web
+drift:
+- aws_instance.bastion
+~ aws_security_group.web
+deferred:
++ aws_subnet.private["*"] (instance_count_unknown)
++ kubernetes_namespace.app (provider_config_unknown)

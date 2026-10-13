@@ -1,0 +1,9 @@
+terraform validate: invalid, 2 errors, 2 warnings
+error: Missing required argument (main.tf:22:34)
+  > resource "aws_instance" "worker" {
+error: Reference to undeclared input variable (modules/vpc/main.tf:14:15)
+  > subnet_ids = var.subnet_ids
+warning: Redundant ignore_changes element (main.tf:30:7)
+  > ignore_changes = [id]
+warning: Argument is deprecated (storage.tf:7:3)
+  > versioning {

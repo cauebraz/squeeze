@@ -1,0 +1,5 @@
+terraform 1.9.5 destroy: 2 destroyed
+- aws_instance.web
+- aws_s3_bucket.logs
+applied: 2 resources (slowest: aws_instance.web 41s, aws_s3_bucket.logs 1s)
+... 1 other message: apply_start 1 (--all)

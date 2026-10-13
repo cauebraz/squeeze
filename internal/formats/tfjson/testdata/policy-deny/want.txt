@@ -1,0 +1,4 @@
+terraform 1.16.0 plan: 1 to add, 0 to change, 0 to destroy
++ aws_s3_bucket.public
+policy: policy.no_public_buckets DenyResult for aws_s3_bucket.public (mandatory)
+... 1 other message: policy_result 1 (--all)

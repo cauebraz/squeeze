@@ -60,7 +60,10 @@ squeeze <format> -h                        list a format's flags
 Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool output:
 
 ```
-- Pipe `terraform show -json <planfile>` through `squeeze` and read its output instead of the JSON.
+- Run Terraform with `-json` and pipe it through `squeeze`: `terraform validate -json | squeeze`,
+  `terraform plan -json | squeeze`, `terraform test -json | squeeze`, `terraform show -json <planfile> | squeeze`.
+  Read squeeze's output instead of Terraform's.
+- To stop on a condition, add `--fail-on`, for example `--fail-on destroy,error`; exit code 3 means it matched.
 - When squeeze reports cut lines, rerun with the flag it names, for example `squeeze tfplan --max-attrs 0`.
 - Add `--raw-dir .squeeze` to keep the full input (ignore `.squeeze/` in git); read that file only when the squeezed output lacks what you need.
 ```
@@ -70,12 +73,16 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | Format | Input | Docs |
 |---|---|---|
 | `tfplan` | `terraform show -json <planfile>` | [docs/formats/tfplan.md](docs/formats/tfplan.md) |
+| `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
+| `tfjson` | `terraform plan`, `apply`, `destroy`, `init` or `test` with `-json` | [docs/formats/tfjson.md](docs/formats/tfjson.md) |
 
 Each format decides what to keep. Every format guarantees:
 
 - Output is plain text with no control characters or color codes, is the same for the same input, and ends with a newline.
 - Secrets the tool marks as sensitive never reach stdout.
 - Anything cut for size is announced with a count and the flag that shows it.
+- Errors and warnings are never dropped, whatever their shape.
+- Names and addresses from the input are printed on one line without control characters, so the input cannot forge a line of output.
 
 ## Common flags
 
@@ -83,15 +90,16 @@ Each format decides what to keep. Every format guarantees:
 |---|---|---|
 | `--output` | `text` | `text`, or `json` for the envelope below |
 | `--raw-dir` | none | save the unmodified input as `<sha256 prefix>` (mode 0600) and print the path on stderr, so the full output stays one read away |
+| `--fail-on` | none | exit 3 when the input has any of these comma-separated conditions; each format lists its conditions in `squeeze <format> -h` and on its docs page |
 | `--version` | | print the version; root command only |
 
 `--output json` prints one line:
 
 ```
-{"schema_version":1,"format":"tfplan","input_bytes":6294,"text_bytes":485,"ratio":0.0771,"data":{...}}
+{"schema_version":1,"format":"tfplan","input_bytes":6294,"text_bytes":485,"ratio":0.0771,"conditions":["change","destroy","replace"],"failed_on":[],"data":{...}}
 ```
 
-`data` is the format's own structure, described on its docs page. `ratio` is `text_bytes / input_bytes`.
+`data` is the format's own structure, described on its docs page. `ratio` is `text_bytes / input_bytes`. `conditions` lists every condition present in the input and `failed_on` the ones `--fail-on` matched.
 
 ## Exit codes
 
@@ -100,9 +108,10 @@ Each format decides what to keep. Every format guarantees:
 | 0 | output written |
 | 1 | read, parse or write error; stdout is empty |
 | 2 | the input matches no known format; name one |
-| 64 | invalid flags or arguments |
+| 3 | `--fail-on` matched; stdout holds the full output and stderr names the conditions |
+| 64 | invalid flags or arguments, including an unknown `--fail-on` condition |
 
-The content of the input never changes the exit code.
+Without `--fail-on`, the content of the input never changes the exit code.
 
 ## Development
 
@@ -112,7 +121,7 @@ just cover          # coverage across packages, fails below 85 percent
 just golden         # rewrite golden files after an intended output change
 just fuzz tfplan 30 # fuzz one format for 30 seconds
 just bench          # benchmarks of every format
-just conformance    # run tfplan over Terraform's own show-json outputs at a pinned commit
+just conformance    # run every format over Terraform's own command testdata at a pinned commit
 ```
 
 Go 1.26 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.
@@ -122,8 +131,9 @@ New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding ag
 ## Roadmap
 
 - `pytest`, `gotest` and `cargotest` formats
+- `tflint`, `checkov` and `trivy` JSON output
+- set-aware list comparison in `tfplan`
 - generic fallback: color-code removal, repeated-line folding, byte cap
-- `--fail-on` to set the exit code from the input's content
 
 ## License
 

@@ -1,0 +1,2 @@
+terraform 1.9.5 init: 2 providers installed
+... 5 other messages: init_output 3, provider_query_use_previous_version 1, provider_version_installation_start 1 (--all)

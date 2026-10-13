@@ -1,0 +1,5 @@
+terraform validate: invalid, 2 errors, 2 warnings
+error: Missing required argument (main.tf:22:34)
+  The argument "ami" is required, but no definition was found.
+  > resource "aws_instance" "worker" {
+... 3 more diagnostics (--max-diagnostics)

@@ -59,7 +59,7 @@ conformance ref=terraform_ref:
     trap 'rm -rf "$work"' EXIT
     git -C "$work" init -q
     git -C "$work" remote add origin {{terraform_repo}}
-    git -C "$work" sparse-checkout set internal/command/testdata/show-json
+    git -C "$work" sparse-checkout set internal/command/testdata
     git -C "$work" fetch -q --depth 1 --filter=blob:none origin {{ref}}
     git -C "$work" checkout -q FETCH_HEAD
-    SQUEEZE_REAL_DIR="$work/internal/command/testdata/show-json" go test ./internal/formats/tfplan -run '^TestRealInputs$' -count=1 -v | grep -E '^(=== RUN|--- |ok|FAIL|PASS)|ratio|leaks|: '
+    SQUEEZE_REAL_DIR="$work/internal/command/testdata" go test ./internal/formats/... -run '^TestRealInputs$' -count=1 -v | grep -E '^(=== RUN|--- |ok|FAIL|PASS)|ratio|leaks|: '

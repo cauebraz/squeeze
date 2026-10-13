@@ -1,0 +1,6 @@
+terraform validate: invalid, 1 error, 1 warning
+error: Module not installed
+  This module is not yet installed. Run "terraform init" to install all modules required by this
+  configuration.
+warning: Deprecated resource (aws_s3_bucket_object.legacy)
+  The resource is deprecated.

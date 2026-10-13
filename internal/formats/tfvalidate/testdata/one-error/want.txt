@@ -1,0 +1,4 @@
+terraform validate: invalid, 1 error
+error: Unsupported block type (main.tf:1:1)
+  Blocks of type "resorce" are not expected here. Did you mean "resource"?
+  > resorce "aws_instance" "web" {

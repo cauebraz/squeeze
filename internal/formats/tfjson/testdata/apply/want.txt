@@ -1,0 +1,7 @@
+terraform 1.9.5 apply: 2 added, 1 changed, 0 destroyed
+~ aws_instance.web
++ aws_db_instance.main
++ aws_s3_bucket.logs
+applied: 3 resources (slowest: aws_db_instance.main 31s, aws_instance.web 9.1s, aws_s3_bucket.logs 2s)
+outputs: bucket_name = "acme-staging-logs", db_password (sensitive), replicas = 2, subnet_ids
+... 6 other messages: apply_progress 3, apply_start 3 (--all)

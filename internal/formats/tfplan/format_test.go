@@ -25,7 +25,7 @@ func TestRealInputs(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		envelope, err := core.Envelope("tfplan", len(input), r)
+		envelope, err := core.Envelope("tfplan", len(input), r, nil)
 		if err != nil {
 			t.Errorf("%s: %v", name, err)
 			continue
@@ -135,5 +135,40 @@ func TestDataPayloadInvalidEnums(t *testing.T) {
 	}
 	if _, err := json.Marshal(AttrChange{Kind: AttrKind(9)}); err == nil {
 		t.Error("Marshal() with an invalid kind returned no error")
+	}
+}
+
+func TestConditions(t *testing.T) {
+	t.Parallel()
+	tests := map[string][]string{
+		"noop-only":      {},
+		"create-only":    {"change"},
+		"replace-forced": {"change", "destroy", "replace"},
+		"drift":          {"change", "drift"},
+		"deferred":       {"change", "deferred", "incomplete"},
+		"errored":        {"change", "errored", "incomplete"},
+		"forget-replace": {"change", "forget", "replace"},
+		"import":         {"change", "import"},
+		"moved":          {"change", "forget", "move"},
+	}
+	for name, want := range tests {
+		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if strings.Join(r.Conditions, ",") != strings.Join(want, ",") {
+			t.Errorf("%s: Conditions = %v, want %v", name, r.Conditions, want)
+		}
+	}
+	seen := map[string]bool{}
+	for _, want := range tests {
+		for _, c := range want {
+			seen[c] = true
+		}
+	}
+	for _, c := range (Format{}).Conditions() {
+		if !seen[c] {
+			t.Errorf("declared condition %q has no fixture that produces it", c)
+		}
 	}
 }

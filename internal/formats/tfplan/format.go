@@ -28,6 +28,10 @@ func (Format) Name() string { return "tfplan" }
 
 func (Format) Description() string { return "Terraform plan JSON from terraform show -json" }
 
+var conditionNames = []string{"change", "deferred", "destroy", "drift", "errored", "forget", "import", "incomplete", "move", "replace"}
+
+func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+
 func (Format) Detect(head []byte) bool {
 	trimmed := bytes.TrimLeft(head, " \t\r\n")
 	if len(trimmed) == 0 || trimmed[0] != '{' {
@@ -60,7 +64,7 @@ func Squeeze(input []byte, o Options) (core.Result, error) {
 	if err != nil {
 		return core.Result{}, err
 	}
-	return core.Result{Text: Text(r, o), Data: r}, nil
+	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}, nil
 }
 
 func countFlag(fs *flag.FlagSet, p *int, name, usage string) {

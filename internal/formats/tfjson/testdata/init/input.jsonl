@@ -1,0 +1,8 @@
+{"@level":"info","@message":"Terraform 1.9.5","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","terraform":"1.9.5","ui":"1.2","type":"version"}
+{"@level":"info","@message":"Initializing the backend...","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","message_code":"initializing_backend_message","type":"init_output"}
+{"@level":"info","@message":"Initializing provider plugins...","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","message_code":"initializing_provider_plugin_message","type":"init_output"}
+{"@level":"info","@message":"hashicorp/aws: Reusing previous version from the dependency lock file","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","type":"provider_query_use_previous_version"}
+{"@level":"info","@message":"hashicorp/aws v5.70.0: Installing...","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","type":"provider_version_installation_start"}
+{"@level":"info","@message":"hashicorp/aws v5.70.0: Installed (signed by HashiCorp)","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","type":"provider_version_installation_complete"}
+{"@level":"info","@message":"hashicorp/random v3.6.3: Installed (signed by HashiCorp)","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","type":"provider_version_installation_complete"}
+{"@level":"info","@message":"Terraform has been successfully initialized!","@module":"terraform.ui","@timestamp":"2026-10-13T12:00:00.000000Z","message_code":"output_init_success_message","type":"init_output"}

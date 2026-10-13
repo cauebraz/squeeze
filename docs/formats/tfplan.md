@@ -75,6 +75,21 @@ Attribute symbols:
 | `--no-values` | off | print attribute paths only |
 | `--drift` | off | list drifted resources instead of counting them |
 
+## Conditions for `--fail-on`
+
+| Condition | Present when |
+|---|---|
+| `change` | the plan creates, updates, destroys, replaces, imports, moves, forgets or reads anything |
+| `deferred` | a change was deferred |
+| `destroy` | a resource is deleted or replaced by destroying it |
+| `drift` | drift that affects the plan |
+| `errored` | Terraform reports `errored: true` |
+| `forget` | a resource is removed from state without being destroyed |
+| `import` | a resource is imported |
+| `incomplete` | Terraform reports `complete: false` |
+| `move` | a resource moves to a new address |
+| `replace` | a resource is replaced |
+
 ## JSON data
 
 `data` in the `--output json` envelope holds:

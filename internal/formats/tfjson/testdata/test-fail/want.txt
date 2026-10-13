@@ -1,0 +1,10 @@
+terraform 1.9.5 test: error, 1 passed, 1 failed, 1 errored, 0 skipped; 2 errors
+fail tests/bucket.tftest.hcl "versioning" 2.1s
+  error: Test assertion failed (tests/bucket.tftest.hcl:14:5)
+    bucket versioning must be enabled
+    > condition     = aws_s3_bucket_versioning.this.versioning_configuration[0].status == "Enabled"
+error tests/network.tftest.hcl
+  error: Invalid value for variable (tests/network.tftest.hcl:3:3)
+    cidr_block must be a valid IPv4 CIDR.
+    > cidr_block = "10.0.0.0/33"
+... 1 other message: test_abstract 1 (--all)

@@ -1,0 +1,112 @@
+{
+  "format_version": "1.0",
+  "valid": false,
+  "error_count": 2,
+  "warning_count": 2,
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "summary": "Argument is deprecated",
+      "detail": "Use the aws_s3_bucket_versioning resource instead.",
+      "range": {
+        "filename": "storage.tf",
+        "start": {
+          "line": 7,
+          "column": 3,
+          "byte": 0
+        },
+        "end": {
+          "line": 7,
+          "column": 8,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "  versioning {",
+        "start_line": 7,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    },
+    {
+      "severity": "error",
+      "summary": "Reference to undeclared input variable",
+      "detail": "An input variable with the name \"subnet_ids\" has not been declared. This variable can be declared with a variable \"subnet_ids\" {} block.",
+      "range": {
+        "filename": "modules/vpc/main.tf",
+        "start": {
+          "line": 14,
+          "column": 15,
+          "byte": 0
+        },
+        "end": {
+          "line": 14,
+          "column": 20,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "  subnet_ids = var.subnet_ids",
+        "start_line": 14,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    },
+    {
+      "severity": "error",
+      "summary": "Missing required argument",
+      "detail": "The argument \"ami\" is required, but no definition was found.",
+      "range": {
+        "filename": "main.tf",
+        "start": {
+          "line": 22,
+          "column": 34,
+          "byte": 0
+        },
+        "end": {
+          "line": 22,
+          "column": 39,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "resource \"aws_instance\" \"worker\" {",
+        "start_line": 22,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    },
+    {
+      "severity": "warning",
+      "summary": "Redundant ignore_changes element",
+      "detail": "Adding an attribute name to ignore_changes tells Terraform to ignore future changes to the argument in configuration after the object has been created, retaining the value originally configured. The attribute id is decided by the provider alone and therefore there can never be any configuration value to ignore.",
+      "range": {
+        "filename": "main.tf",
+        "start": {
+          "line": 30,
+          "column": 7,
+          "byte": 0
+        },
+        "end": {
+          "line": 30,
+          "column": 12,
+          "byte": 5
+        }
+      },
+      "snippet": {
+        "context": null,
+        "code": "    ignore_changes = [id]",
+        "start_line": 30,
+        "highlight_start_offset": 0,
+        "highlight_end_offset": 5,
+        "values": []
+      }
+    }
+  ]
+}

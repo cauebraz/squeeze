@@ -1,0 +1,7 @@
+terraform validate: valid, 4 warnings
+warning: Argument is deprecated (storage.tf:7:3) (x3)
+  Use the aws_s3_bucket_versioning resource instead.
+  > versioning {
+warning: Argument is deprecated (storage.tf:19:3)
+  Use the aws_s3_bucket_versioning resource instead.
+  > versioning {

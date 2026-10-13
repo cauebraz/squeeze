@@ -10,10 +10,13 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/formats/tfjson"
 	"github.com/cauebraz/squeeze/internal/formats/tfplan"
+	"github.com/cauebraz/squeeze/internal/formats/tfvalidate"
 )
 
 var Version = "dev"
@@ -22,11 +25,12 @@ const (
 	ExitOK            = 0
 	ExitError         = 1
 	ExitUnknownFormat = 2
+	ExitCondition     = 3
 	ExitUsage         = 64
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{})
+	return core.NewRegistry(tfplan.Format{}, tfvalidate.Format{}, tfjson.Format{})
 }
 
 type invocation struct {
@@ -34,6 +38,7 @@ type invocation struct {
 	squeeze core.Squeezer
 	output  string
 	rawDir  string
+	failOn  []string
 	version bool
 }
 
@@ -75,6 +80,10 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 		}
 		inv.format = f
 		inv.squeeze = f.Configure(flag.NewFlagSet(f.Name(), flag.ContinueOnError))
+		if err := checkConditions(f, inv.failOn); err != nil {
+			fmt.Fprintf(stderr, "squeeze: %v\n", err)
+			return ExitUsage
+		}
 	}
 	res, err := inv.squeeze(input)
 	if err != nil {
@@ -83,7 +92,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 	}
 	out := []byte(res.Text)
 	if inv.output == "json" {
-		out, err = core.Envelope(inv.format.Name(), len(input), res)
+		out, err = core.Envelope(inv.format.Name(), len(input), res, inv.failOn)
 		if err != nil {
 			fmt.Fprintf(stderr, "squeeze: render: %v\n", err)
 			return ExitError
@@ -93,7 +102,43 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 		fmt.Fprintf(stderr, "squeeze: write stdout: %v\n", err)
 		return ExitError
 	}
+	if matched := core.Matched(res.Conditions, inv.failOn); len(matched) > 0 {
+		fmt.Fprintf(stderr, "squeeze: --fail-on matched: %s\n", strings.Join(matched, ", "))
+		return ExitCondition
+	}
 	return ExitOK
+}
+
+func checkConditions(f core.Format, failOn []string) error {
+	known := f.Conditions()
+	for _, name := range failOn {
+		if !slices.Contains(known, name) {
+			return fmt.Errorf("--fail-on: %s has no condition %q (conditions: %s)", f.Name(), name, strings.Join(known, ", "))
+		}
+	}
+	return nil
+}
+
+type listFlag struct{ values *[]string }
+
+func (l listFlag) String() string {
+	if l.values == nil {
+		return ""
+	}
+	return strings.Join(*l.values, ",")
+}
+
+func (l listFlag) Set(s string) error {
+	for _, part := range strings.Split(s, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			return errors.New("empty condition name")
+		}
+		if !slices.Contains(*l.values, part) {
+			*l.values = append(*l.values, part)
+		}
+	}
+	return nil
 }
 
 func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int, bool) {
@@ -113,6 +158,7 @@ func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int
 	fs.SetOutput(io.Discard)
 	fs.StringVar(&inv.output, "output", "text", "text, or json for the envelope with the format's data")
 	fs.StringVar(&inv.rawDir, "raw-dir", "", "save the unmodified input to this directory and print its path on stderr")
+	fs.Var(listFlag{&inv.failOn}, "fail-on", "exit 3 when the input has any of these comma-separated conditions; names in squeeze <format> -h")
 	if inv.format == nil {
 		fs.BoolVar(&inv.version, "version", false, "print the version and exit")
 	} else {
@@ -143,6 +189,12 @@ func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int
 		fmt.Fprintf(stderr, "squeeze: --output must be text or json, got %q\n", inv.output)
 		return inv, ExitUsage, false
 	}
+	if inv.format != nil {
+		if err := checkConditions(inv.format, inv.failOn); err != nil {
+			fmt.Fprintf(stderr, "squeeze: %v\n", err)
+			return inv, ExitUsage, false
+		}
+	}
 	return inv, ExitOK, true
 }
 
@@ -165,6 +217,7 @@ Formats:
 func formatUsage(w io.Writer, fs *flag.FlagSet, f core.Format) {
 	fmt.Fprintf(w, "usage: squeeze %s [flags] < input\n\n%s\n\nFlags:\n", f.Name(), f.Description())
 	fs.PrintDefaults()
+	fmt.Fprintf(w, "\nConditions for --fail-on:\n  %s\n", strings.Join(f.Conditions(), ", "))
 }
 
 func saveRaw(dir string, input []byte) (string, error) {
