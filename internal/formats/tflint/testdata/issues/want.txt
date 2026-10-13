@@ -1,0 +1,7 @@
+tflint: 6 issues: 4 warnings, 2 notices; 2 fixable with tflint --fix
+warning: `region` variable has no type (main.tf:5:1, terraform_typed_variables)
+warning: variable "unused" is declared but not used (main.tf:9:1, terraform_unused_declarations, fixable)
+warning: Missing version constraint for provider "aws" in `required_providers` (main.tf:18:1, terraform_required_providers)
+warning: List items should be accessed using square brackets (main.tf:28:31, terraform_deprecated_index, fixable)
+notice: `region` variable has no description (main.tf:5:1, terraform_documented_variables)
+notice: resource name `LogsBucket` must match the following format: snake_case (main.tf:18:1, terraform_naming_convention)

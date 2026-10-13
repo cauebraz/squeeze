@@ -1,0 +1,4 @@
+tflint: 0 issues; tflint reported 1 error and did not finish every check
+error: Unclosed configuration block (main.tf:1:27, tflint)
+  There is no closing brace for this block before the end of the file. This may be caused by incorrect
+  brace nesting elsewhere in this file.

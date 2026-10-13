@@ -1,0 +1,7 @@
+tflint: 121 issues: 61 warnings, 60 notices; 60 fixable with tflint --fix
+warning: terraform "required_version" attribute is required (main.tf:1:1, terraform_required_version)
+warning: variable "Var0" is declared but not used (main.tf:1:1, terraform_unused_declarations, fixable)
+warning: variable "Var1" is declared but not used (main.tf:6:1, terraform_unused_declarations, fixable)
+warning: variable "Var2" is declared but not used (main.tf:11:1, terraform_unused_declarations, fixable)
+warning: variable "Var3" is declared but not used (main.tf:16:1, terraform_unused_declarations, fixable)
+... 116 more issues, terraform_naming_convention 60, terraform_unused_declarations 56 (--max-issues 0)

@@ -1,0 +1,7 @@
+tflint: 3 issues: 2 errors, 1 warning; tflint reported 1 error and did not finish every check
+error: Failed to check ruleset; plugin "aws" exited with status 1 (tflint)
+error: "t9.micro" is an invalid value as instance_type (modules/app/main.tf:4:19, aws_instance_invalid_type)
+  called from main.tf:12:19 <- envs/prod/main.tf:3:10
+error: "t9.micro" is an invalid value as instance_type (modules/app/main.tf:4:19, aws_instance_invalid_type)
+  called from main.tf:20:19
+warning: Module source "git::https://example.com/vpc.git" is not pinned (main.tf:30:12, terraform_module_pinned_source)

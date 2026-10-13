@@ -1,0 +1,59 @@
+package tflint
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+)
+
+var ErrNotTFLint = errors.New("input has no tflint issues or errors arrays")
+
+type Pos struct {
+	Line   int `json:"line"`
+	Column int `json:"column"`
+}
+
+type Range struct {
+	Filename string `json:"filename"`
+	Start    Pos    `json:"start"`
+	End      Pos    `json:"end"`
+}
+
+type Rule struct {
+	Name     string `json:"name"`
+	Severity string `json:"severity"`
+	Link     string `json:"link"`
+}
+
+type Issue struct {
+	Rule    Rule    `json:"rule"`
+	Message string  `json:"message"`
+	Range   Range   `json:"range"`
+	Callers []Range `json:"callers"`
+	Fixable bool    `json:"fixable"`
+	Fixed   bool    `json:"fixed"`
+}
+
+type ToolError struct {
+	Summary  string `json:"summary"`
+	Message  string `json:"message"`
+	Severity string `json:"severity"`
+	Range    *Range `json:"range"`
+}
+
+type Output struct {
+	Issues *[]Issue     `json:"issues"`
+	Errors *[]ToolError `json:"errors"`
+}
+
+func Parse(input []byte) (*Output, error) {
+	var out Output
+	if err := json.NewDecoder(bytes.NewReader(input)).Decode(&out); err != nil {
+		return nil, fmt.Errorf("decode: %w", err)
+	}
+	if out.Issues == nil || out.Errors == nil {
+		return nil, ErrNotTFLint
+	}
+	return &out, nil
+}
