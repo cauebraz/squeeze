@@ -1,0 +1,24 @@
+======================================= test session starts ========================================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/dev/shop
+configfile: pytest.ini
+collected 12 items
+
+tests/test_calc.py .F
+
+============================================= FAILURES =============================================
+__________________________________________ test_add_wrong __________________________________________
+
+    def test_add_wrong():
+        print("computing the sum")
+        result = add(2, 2)
+>       assert result == 5
+E       assert 4 == 5
+
+tests/test_calc.py:13: AssertionError
+--------------------------------------- Captured stdout call ---------------------------------------
+computing the sum
+===================================== short test summary info ======================================
+FAILED tests/test_calc.py::test_add_wrong - assert 4 == 5
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+=================================== 1 failed, 1 passed in 0.01s ====================================

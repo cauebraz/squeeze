@@ -1,0 +1,21 @@
+======================================= test session starts ========================================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/dev/shop
+configfile: pytest.ini
+collected 12 items / 1 error
+
+============================================== ERRORS ==============================================
+______________________________ ERROR collecting tests/test_broken.py _______________________________
+ImportError while importing test module '/home/dev/shop/tests/test_broken.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_broken.py:1: in <module>
+    import missing_module
+E   ModuleNotFoundError: No module named 'missing_module'
+===================================== short test summary info ======================================
+ERROR tests/test_broken.py
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================================= 1 error in 0.04s =========================================

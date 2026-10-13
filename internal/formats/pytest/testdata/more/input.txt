@@ -1,0 +1,135 @@
+======================================= test session starts ========================================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/dev/shop
+configfile: pytest.ini
+collected 61 items
+
+more/test_more.py F...F......F......F......F......F......F......F......F......F              [100%]
+
+============================================= FAILURES =============================================
+____________________________________________ test_parse ____________________________________________
+
+    def test_parse():
+        log.warning("parsing user input")
+>       assert parse("12a") == 12
+               ^^^^^^^^^^^^
+
+more/test_more.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+more/test_more.py:9: in parse
+    return convert(value)
+           ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = '12a'
+
+    def convert(value):
+>       return int(value)
+               ^^^^^^^^^^
+E       ValueError: invalid literal for int() with base 10: '12a'
+
+more/test_more.py:13: ValueError
+---------------------------------------- Captured log call -----------------------------------------
+WARNING  shop:test_more.py:17 parsing user input
+___________________________________________ test_many[3] ___________________________________________
+
+n = 3
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (3 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[10] ___________________________________________
+
+n = 10
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (10 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[17] ___________________________________________
+
+n = 17
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (17 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[24] ___________________________________________
+
+n = 24
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (24 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[31] ___________________________________________
+
+n = 31
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (31 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[38] ___________________________________________
+
+n = 38
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (38 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[45] ___________________________________________
+
+n = 45
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (45 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[52] ___________________________________________
+
+n = 52
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (52 % 7) != 3
+
+more/test_more.py:23: AssertionError
+__________________________________________ test_many[59] ___________________________________________
+
+n = 59
+
+    @pytest.mark.parametrize("n", range(60))
+    def test_many(n):
+>       assert n % 7 != 3
+E       assert (59 % 7) != 3
+
+more/test_more.py:23: AssertionError
+===================================== short test summary info ======================================
+FAILED more/test_more.py::test_parse - ValueError: invalid literal for int() with base 10: '12a'
+FAILED more/test_more.py::test_many[3] - assert (3 % 7) != 3
+FAILED more/test_more.py::test_many[10] - assert (10 % 7) != 3
+FAILED more/test_more.py::test_many[17] - assert (17 % 7) != 3
+FAILED more/test_more.py::test_many[24] - assert (24 % 7) != 3
+FAILED more/test_more.py::test_many[31] - assert (31 % 7) != 3
+FAILED more/test_more.py::test_many[38] - assert (38 % 7) != 3
+FAILED more/test_more.py::test_many[45] - assert (45 % 7) != 3
+FAILED more/test_more.py::test_many[52] - assert (52 % 7) != 3
+FAILED more/test_more.py::test_many[59] - assert (59 % 7) != 3
+================================== 10 failed, 51 passed in 0.02s ===================================

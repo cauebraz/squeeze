@@ -1,0 +1,8 @@
+pytest 9.1.1: 5 failed, 4 passed, 1 skipped, 1 xfailed, 3 warnings, 1 error in 0.01s
+FAILED tests/test_calc.py::test_add_wrong - assert 4 == 5
+FAILED tests/test_calc.py::test_add_param[2-3-6] - assert 5 == 6
+FAILED tests/test_calc.py::test_dict - AssertionError: assert {'name': 'web', 'port': 80} == {'na...
+FAILED tests/test_calc.py::test_fixed - [XPASS(strict)] fixed already
+FAILED tests/test_calc.py::TestDivision::test_zero - ZeroDivisionError: division by zero
+ERROR tests/test_calc.py::test_query - RuntimeError: database unavailable
+warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)

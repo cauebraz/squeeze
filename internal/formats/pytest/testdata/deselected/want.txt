@@ -1,0 +1,7 @@
+pytest: 1 failed, 3 passed, 8 deselected in 0.01s
+FAILED tests/test_calc.py::test_add_param[2-3-6]
+  > assert add(a, b) == want
+  E assert 5 == 6
+  E  +  where 5 = add(2, 3)
+  tests/test_calc.py:18: AssertionError
+  ... 3 traceback lines (--full)

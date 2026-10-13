@@ -1,0 +1,79 @@
+pytest 9.1.1: 10 failed, 51 passed in 0.02s
+FAILED more/test_more.py::test_parse
+      def test_parse():
+          log.warning("parsing user input")
+  >       assert parse("12a") == 12
+                 ^^^^^^^^^^^^
+  more/test_more.py:18:
+  more/test_more.py:9: in parse
+      return convert(value)
+             ^^^^^^^^^^^^^^
+  value = '12a'
+      def convert(value):
+  >       return int(value)
+                 ^^^^^^^^^^
+  E       ValueError: invalid literal for int() with base 10: '12a'
+  more/test_more.py:13: ValueError
+FAILED more/test_more.py::test_many[3]
+  n = 3
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (3 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[10]
+  n = 10
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (10 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[17]
+  n = 17
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (17 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[24]
+  n = 24
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (24 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[31]
+  n = 31
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (31 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[38]
+  n = 38
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (38 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[45]
+  n = 45
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (45 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[52]
+  n = 52
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (52 % 7) != 3
+  more/test_more.py:23: AssertionError
+FAILED more/test_more.py::test_many[59]
+  n = 59
+      @pytest.mark.parametrize("n", range(60))
+      def test_many(n):
+  >       assert n % 7 != 3
+  E       assert (59 % 7) != 3
+  more/test_more.py:23: AssertionError

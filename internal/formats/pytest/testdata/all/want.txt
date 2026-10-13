@@ -1,0 +1,35 @@
+pytest 9.1.1: 5 failed, 4 passed, 1 skipped, 1 xfailed, 3 warnings, 1 error in 0.01s
+ERROR tests/test_calc.py::test_query (setup)
+  > raise RuntimeError("database unavailable")
+  E RuntimeError: database unavailable
+  tests/conftest.py:6: RuntimeError
+  ... 2 traceback lines (--full)
+FAILED tests/test_calc.py::test_add_wrong
+  > assert result == 5
+  E assert 4 == 5
+  tests/test_calc.py:13: AssertionError
+  ... 3 traceback lines; captured stdout call (--full)
+FAILED tests/test_calc.py::test_add_param[2-3-6]
+  > assert add(a, b) == want
+  E assert 5 == 6
+  E  +  where 5 = add(2, 3)
+  tests/test_calc.py:18: AssertionError
+  ... 3 traceback lines (--full)
+FAILED tests/test_calc.py::test_dict
+  > assert {"name": "web", "port": 80} == {"name": "web", "port": 443}
+  E AssertionError: assert {'name': 'web', 'port': 80} == {'name': 'web', 'port': 443}
+  E   Omitting 1 identical items, use -vv to show
+  E   Differing items:
+  E   {'port': 80} != {'port': 443}
+  E   Use -v to get more diff
+  tests/test_calc.py:22: AssertionError
+  ... 1 traceback line (--full)
+FAILED tests/test_calc.py::test_fixed
+  [XPASS(strict)] fixed already
+FAILED tests/test_calc.py::TestDivision::test_zero
+  > assert 1 / 0
+  E ZeroDivisionError: division by zero
+  tests/test_calc.py:51: ZeroDivisionError
+  ... 3 traceback lines (--full)
+warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
+... not shown: 6 short summary lines for passed, skipped, xfailed or xpassed tests (--all)

@@ -1,0 +1,16 @@
+..F.                                                                                         [100%]
+============================================= FAILURES =============================================
+______________________________________ test_add_param[2-3-6] _______________________________________
+
+a = 2, b = 3, want = 6
+
+    @pytest.mark.parametrize("a,b,want", [(1, 1, 2), (2, 3, 6), (0, 0, 0)])
+    def test_add_param(a, b, want):
+>       assert add(a, b) == want
+E       assert 5 == 6
+E        +  where 5 = add(2, 3)
+
+tests/test_calc.py:18: AssertionError
+===================================== short test summary info ======================================
+FAILED tests/test_calc.py::test_add_param[2-3-6] - assert 5 == 6
+1 failed, 3 passed, 8 deselected in 0.01s

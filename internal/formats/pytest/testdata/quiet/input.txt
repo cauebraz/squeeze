@@ -1,0 +1,73 @@
+.F.F.F.sxFEF                                                                                 [100%]
+============================================== ERRORS ==============================================
+___________________________________ ERROR at setup of test_query ___________________________________
+
+    @pytest.fixture
+    def db():
+>       raise RuntimeError("database unavailable")
+E       RuntimeError: database unavailable
+
+tests/conftest.py:6: RuntimeError
+============================================= FAILURES =============================================
+__________________________________________ test_add_wrong __________________________________________
+
+    def test_add_wrong():
+        print("computing the sum")
+        result = add(2, 2)
+>       assert result == 5
+E       assert 4 == 5
+
+tests/test_calc.py:13: AssertionError
+--------------------------------------- Captured stdout call ---------------------------------------
+computing the sum
+______________________________________ test_add_param[2-3-6] _______________________________________
+
+a = 2, b = 3, want = 6
+
+    @pytest.mark.parametrize("a,b,want", [(1, 1, 2), (2, 3, 6), (0, 0, 0)])
+    def test_add_param(a, b, want):
+>       assert add(a, b) == want
+E       assert 5 == 6
+E        +  where 5 = add(2, 3)
+
+tests/test_calc.py:18: AssertionError
+____________________________________________ test_dict _____________________________________________
+
+    def test_dict():
+>       assert {"name": "web", "port": 80} == {"name": "web", "port": 443}
+E       AssertionError: assert {'name': 'web', 'port': 80} == {'name': 'web', 'port': 443}
+E         
+E         Omitting 1 identical items, use -vv to show
+E         Differing items:
+E         {'port': 80} != {'port': 443}
+E         Use -v to get more diff
+
+tests/test_calc.py:22: AssertionError
+____________________________________________ test_fixed ____________________________________________
+[XPASS(strict)] fixed already
+______________________________________ TestDivision.test_zero ______________________________________
+
+self = <test_calc.TestDivision object at 0x10aa1d810>
+
+    def test_zero(self):
+>       assert 1 / 0
+               ^^^^^
+E       ZeroDivisionError: division by zero
+
+tests/test_calc.py:51: ZeroDivisionError
+========================================= warnings summary =========================================
+tests/test_calc.py::test_old_api
+tests/test_calc.py::test_old_api
+tests/test_calc.py::test_old_api
+  /home/dev/shop/calc.py:9: DeprecationWarning: old_api is deprecated, use add
+    warnings.warn("old_api is deprecated, use add", DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+===================================== short test summary info ======================================
+FAILED tests/test_calc.py::test_add_wrong - assert 4 == 5
+FAILED tests/test_calc.py::test_add_param[2-3-6] - assert 5 == 6
+FAILED tests/test_calc.py::test_dict - AssertionError: assert {'name': 'web', 'port': 80} == {'na...
+FAILED tests/test_calc.py::test_fixed - [XPASS(strict)] fixed already
+FAILED tests/test_calc.py::TestDivision::test_zero - ZeroDivisionError: division by zero
+ERROR tests/test_calc.py::test_query - RuntimeError: database unavailable
+5 failed, 4 passed, 1 skipped, 1 xfailed, 3 warnings, 1 error in 0.02s

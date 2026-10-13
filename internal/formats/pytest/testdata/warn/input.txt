@@ -1,0 +1,18 @@
+======================================= test session starts ========================================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/dev/shop
+configfile: pytest.ini
+collected 12 items
+
+warn/test_warn.py ............                                                               [100%]
+
+========================================= warnings summary =========================================
+warn/test_warn.py: 12 warnings
+  /home/dev/shop/warn/test_warn.py:8: FutureWarning: legacy config key 'timeout' is deprecated
+    warnings.warn("legacy config key 'timeout' is deprecated", FutureWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================================= slowest 2 durations ========================================
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)
+================================= 12 passed, 12 warnings in 0.01s ==================================

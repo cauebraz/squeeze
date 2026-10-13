@@ -1,0 +1,31 @@
+pytest 9.1.1: 5 failed, 4 passed, 1 skipped, 1 xfailed, 3 warnings, 1 error in 0.02s
+ERROR tests/test_calc.py::test_query (setup)
+  tests/conftest.py:6: in db
+  raise RuntimeError("database unavailable")
+  E RuntimeError: database unavailable
+FAILED tests/test_calc.py::test_add_wrong
+  tests/test_calc.py:13: in test_add_wrong
+  assert result == 5
+  E assert 4 == 5
+  ... captured stdout call (--full)
+FAILED tests/test_calc.py::test_add_param[2-3-6]
+  tests/test_calc.py:18: in test_add_param
+  assert add(a, b) == want
+  E assert 5 == 6
+  E  +  where 5 = add(2, 3)
+FAILED tests/test_calc.py::test_dict
+  tests/test_calc.py:22: in test_dict
+  assert {"name": "web", "port": 80} == {"name": "web", "port": 443}
+  E AssertionError: assert {'name': 'web', 'port': 80} == {'name': 'web', 'port': 443}
+  E   Omitting 1 identical items, use -vv to show
+  E   Differing items:
+  E   {'port': 80} != {'port': 443}
+  E   Use -v to get more diff
+FAILED tests/test_calc.py::test_fixed
+  [XPASS(strict)] fixed already
+FAILED tests/test_calc.py::TestDivision::test_zero
+  tests/test_calc.py:51: in test_zero
+  assert 1 / 0
+  E ZeroDivisionError: division by zero
+  ... 1 traceback line (--full)
+warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)

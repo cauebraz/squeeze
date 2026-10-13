@@ -1,0 +1,3 @@
+pytest 9.1.1: 12 passed, 12 warnings in 0.01s
+warning warn/test_warn.py:8: FutureWarning: legacy config key 'timeout' is deprecated (x12)
+... not shown: section "slowest 2 durations" (1 line) (--all)
