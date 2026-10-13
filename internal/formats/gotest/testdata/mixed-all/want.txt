@@ -4,7 +4,7 @@ build failed: example.com/shop/broken
 fail example.com/shop/calc TestAddNegative
   calc_test.go:17: Add(-2, -3) = -5, want -6
       second line of the message
-  ... 1 log line (--logs)
+  ... 1 log line (--full)
 fail example.com/shop/calc TestDivByZero
   panic: runtime error: integer divide by zero [recovered, repanicked]
   goroutine 21 [running]:
@@ -12,7 +12,7 @@ fail example.com/shop/calc TestDivByZero
       /home/dev/shop/calc/calc.go:5
   example.com/shop/calc.TestDivByZero(0x21448553a248?)
       /home/dev/shop/calc/calc_test.go:43 +0x20
-  ... 10 runtime and testing stack lines (--logs)
+  ... 10 runtime and testing stack lines (--full)
 fail example.com/shop/calc TestTable/one
   attr case=one
   calc_test.go:32: Add(1, 0) = 1, want 2

@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 )
 
-var errNoPipe = errors.New("stdin is a terminal, not a pipe or a file; run `tool | squeeze` or `squeeze < file`")
+var errNoPipe = errors.New("stdin is a terminal or a device, not a pipe or a file; run `tool | squeeze` or `squeeze < file`")
 
 type noPipe struct{}
 

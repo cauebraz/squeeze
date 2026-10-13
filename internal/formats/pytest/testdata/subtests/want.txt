@@ -1,0 +1,23 @@
+pytest 9.1.1: 5 failed, 1 passed in 0.03s
+FAILED sub/test_sub.py::test_sub [case] (i=1)
+  sub/test_sub.py:8: in test_sub
+  assert i != 1
+  E assert 1 != 1
+FAILED sub/test_sub.py::test_sub
+  contains 1 failed subtest
+FAILED sub/test_sub.py::test_child
+  sub/test_sub.py:12: in test_child
+  subprocess.run([sys.executable, "-c", "import sys; sys.stderr.write('fatal: config.yaml missing key db\\n'); sys.exit(2)"], check=True)
+  /usr/lib/python3.13/subprocess.py:577: in run
+  raise CalledProcessError(retcode, process.args,
+  E subprocess.CalledProcessError: Command '['.venv/bin/python', '-c', "import sys; sys.stderr.write('fatal: config.yaml missing key db\\n'); sys.exit(2)"]' returned non-zero exit status 2.
+  ... 1 captured line in stderr call (--full)
+FAILED sub/test_sub.py::test_prints_sections
+  sub/test_sub.py:18: in test_prints_sections
+  assert False
+  E assert False
+  ... 2 captured lines in stdout call (--full)
+FAILED sub/test_sub.py::test_param_ids[a - b]
+  sub/test_sub.py:22: in test_param_ids
+  assert x == 2
+  E assert 1 == 2

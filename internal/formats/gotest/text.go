@@ -2,8 +2,8 @@ package gotest
 
 import (
 	"fmt"
+	"github.com/cauebraz/squeeze/internal/core"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -17,8 +17,11 @@ func Text(r Report, o Options) string {
 	}
 	for _, f := range r.Failures {
 		fmt.Fprintf(&b, "fail %s %s", f.Package, f.Test)
+		if f.Runs > 1 {
+			fmt.Fprintf(&b, " (run %d of %d)", f.Run, f.Runs)
+		}
 		if f.Elapsed > 0 {
-			b.WriteString(" " + seconds(f.Elapsed))
+			b.WriteString(" " + core.Seconds(f.Elapsed))
 		}
 		if f.Unfinished {
 			b.WriteString(" (did not finish)")
@@ -33,7 +36,7 @@ func Text(r Report, o Options) string {
 		writeOutput(&b, f.Output)
 	}
 	if r.FailuresOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more failed %s (--max-tests 0)\n", r.FailuresOmitted, plural(r.FailuresOmitted, "test", "tests"))
+		fmt.Fprintf(&b, "... %d more failed %s (--max-tests 0)\n", r.FailuresOmitted, core.Plural(r.FailuresOmitted, "test", "tests"))
 	}
 	for _, p := range r.PackageFailures {
 		fmt.Fprintf(&b, "fail %s", p.Package)
@@ -46,9 +49,26 @@ func Text(r Report, o Options) string {
 	for _, bm := range r.Benchmarks {
 		fmt.Fprintf(&b, "bench %s %s\n", bm.Package, bm.Result)
 	}
+	for _, w := range r.Warnings {
+		fmt.Fprintf(&b, "warning %s\n", w)
+	}
 	if len(r.Text.Lines) > 0 {
 		b.WriteString("output outside the test events:\n")
 		writeOutput(&b, r.Text)
+	}
+	if !o.All {
+		var items []string
+		for _, c := range []struct {
+			n          int
+			what, many string
+		}{{len(r.Skipped), "skipped test", "skipped tests"}, {len(r.Passing), "passing package", "passing packages"}, {len(r.NoTests), "package without tests", "packages without tests"}} {
+			if c.n > 0 {
+				items = append(items, fmt.Sprintf("%d %s", c.n, core.Plural(c.n, c.what, c.many)))
+			}
+		}
+		if len(items) > 0 {
+			fmt.Fprintf(&b, "... %s (--all)\n", strings.Join(items, ", "))
+		}
 	}
 	if o.All {
 		for _, s := range r.Skipped {
@@ -57,7 +77,7 @@ func Text(r Report, o Options) string {
 		for _, p := range r.Passing {
 			fmt.Fprintf(&b, "ok %s", p.Package)
 			if p.Elapsed > 0 {
-				b.WriteString(" " + seconds(p.Elapsed))
+				b.WriteString(" " + core.Seconds(p.Elapsed))
 			}
 			b.WriteByte('\n')
 		}
@@ -72,7 +92,7 @@ func Text(r Report, o Options) string {
 func header(r Report) string {
 	t, p := r.Tests, r.Packages
 	total := t.Passed + t.Failed + t.Skipped
-	line := fmt.Sprintf("go test: %s; %d %s: %d passed, %d failed, %d skipped", r.Status, total, plural(total, "test", "tests"), t.Passed, t.Failed, t.Skipped)
+	line := fmt.Sprintf("go test: %s; %d %s: %d passed, %d failed, %d skipped", r.Status, total, core.Plural(total, "test", "tests"), t.Passed, t.Failed, t.Skipped)
 	pkgs := p.OK + p.Failed + p.BuildFailed + p.NoTests
 	if pkgs == 0 {
 		return line
@@ -86,7 +106,7 @@ func header(r Report) string {
 			parts = append(parts, fmt.Sprintf("%d %s", c.n, c.what))
 		}
 	}
-	return fmt.Sprintf("%s; %d %s: %s", line, pkgs, plural(pkgs, "package", "packages"), strings.Join(parts, ", "))
+	return fmt.Sprintf("%s; %d %s: %s", line, pkgs, core.Plural(pkgs, "package", "packages"), strings.Join(parts, ", "))
 }
 
 func writeOutput(b *strings.Builder, o Output) {
@@ -96,13 +116,13 @@ func writeOutput(b *strings.Builder, o Output) {
 		b.WriteByte('\n')
 	}
 	if o.Omitted > 0 {
-		fmt.Fprintf(b, "  ... %d more %s (--max-output 0)\n", o.Omitted, plural(o.Omitted, "line", "lines"))
+		fmt.Fprintf(b, "  ... %d more %s (--max-output 0)\n", o.Omitted, core.Plural(o.Omitted, "line", "lines"))
 	}
 	if o.Logs > 0 {
-		fmt.Fprintf(b, "  ... %d log %s (--logs)\n", o.Logs, plural(o.Logs, "line", "lines"))
+		fmt.Fprintf(b, "  ... %d log %s (--full)\n", o.Logs, core.Plural(o.Logs, "line", "lines"))
 	}
 	if o.Stack > 0 {
-		fmt.Fprintf(b, "  ... %d runtime and testing stack %s (--logs)\n", o.Stack, plural(o.Stack, "line", "lines"))
+		fmt.Fprintf(b, "  ... %d runtime and testing stack %s (--full)\n", o.Stack, core.Plural(o.Stack, "line", "lines"))
 	}
 }
 
@@ -121,16 +141,5 @@ func writeOther(b *strings.Builder, other map[string]int) {
 	for _, k := range keys {
 		items = append(items, fmt.Sprintf("%s %d", k, other[k]))
 	}
-	fmt.Fprintf(b, "... %d %s with an unknown action: %s\n", total, plural(total, "event", "events"), strings.Join(items, ", "))
-}
-
-func seconds(s float64) string {
-	return strconv.FormatFloat(s, 'f', -1, 64) + "s"
-}
-
-func plural(n int, one, many string) string {
-	if n == 1 {
-		return one
-	}
-	return many
+	fmt.Fprintf(b, "... %d %s with an unknown action: %s (--raw-dir)\n", total, core.Plural(total, "event", "events"), strings.Join(items, ", "))
 }

@@ -77,7 +77,7 @@ func (b *builder) other(key, message string) {
 
 func (b *builder) add(l Line) {
 	if l.Type == "" {
-		b.other("text", clean(l.Text))
+		b.other("text", core.Clean(l.Text))
 		return
 	}
 	if strings.HasPrefix(l.Type, "test_") {
@@ -92,7 +92,7 @@ func (b *builder) add(l Line) {
 	}
 	switch {
 	case l.Type == "version":
-		b.r.ToolVersion = clean(l.Terraform)
+		b.r.ToolVersion = core.Clean(l.Terraform)
 	case l.Type == "diagnostic" && l.Diagnostic != nil:
 		b.diagnostic(tfdiag.Convert(*l.Diagnostic), l.AtTestFile, l.AtTestRun)
 	case l.Type == "planned_change" && l.Change != nil:
@@ -103,12 +103,12 @@ func (b *builder) add(l Line) {
 	case l.Type == "deferred_change" && l.Deferred != nil && l.Deferred.Change != nil:
 		c := convertChange(*l.Deferred.Change)
 		if c.Action != "noop" {
-			b.r.Deferred = append(b.r.Deferred, Deferred{Address: c.Address, Action: c.Action, Reason: clean(l.Deferred.Reason)})
+			b.r.Deferred = append(b.r.Deferred, Deferred{Address: c.Address, Action: c.Action, Reason: core.Clean(l.Deferred.Reason)})
 		}
 	case l.Type == "change_summary" && l.Changes != nil:
 		c := l.Changes
 		b.r.Summary = &Summary{
-			Operation: clean(c.Operation), Add: c.Add, Change: c.Change, Remove: c.Remove,
+			Operation: core.Clean(c.Operation), Add: c.Add, Change: c.Change, Remove: c.Remove,
 			Import: c.Import, ActionInvocation: c.ActionInvocation, ActionFail: c.ActionFail,
 		}
 	case l.Type == "apply_complete" && l.Hook != nil:
@@ -117,9 +117,9 @@ func (b *builder) add(l Line) {
 		if l.Type == "apply_errored" {
 			b.sawApply = true
 		}
-		f := Failure{Type: l.Type, Message: clean(l.Message)}
+		f := Failure{Type: l.Type, Message: core.Clean(l.Message)}
 		if l.Hook != nil {
-			f.Address = clean(l.Hook.Resource.Addr)
+			f.Address = core.Clean(l.Hook.Resource.Addr)
 		}
 		b.r.Failures = append(b.r.Failures, f)
 	case l.Type == "outputs" && l.Outputs != nil:
@@ -127,15 +127,15 @@ func (b *builder) add(l Line) {
 	case l.Type == "test_summary" && l.TestSummary != nil:
 		t := b.tests()
 		s := l.TestSummary
-		t.Status, t.Passed, t.Failed, t.Errored, t.Skipped = clean(s.Status), s.Passed, s.Failed, s.Errored, s.Skipped
+		t.Status, t.Passed, t.Failed, t.Errored, t.Skipped = core.Clean(s.Status), s.Passed, s.Failed, s.Errored, s.Skipped
 	case l.Type == "test_run" && l.TestRun != nil:
 		b.testRun(*l.TestRun)
 	case l.Type == "test_file" && l.TestFile != nil:
-		b.testFile(clean(l.TestFile.Path), clean(l.TestFile.Status))
+		b.testFile(core.Clean(l.TestFile.Path), core.Clean(l.TestFile.Status))
 	case l.Type == "policy_result" && l.Result != "" && l.Result != "AllowResult":
-		p := PolicyResult{Policy: clean(l.Policy), Target: clean(l.Target), Result: clean(l.Result)}
+		p := PolicyResult{Policy: core.Clean(l.Policy), Target: core.Clean(l.Target), Result: core.Clean(l.Result)}
 		if l.PolicyMeta != nil {
-			p.Enforcement = clean(l.PolicyMeta.EnforcementLevel)
+			p.Enforcement = core.Clean(l.PolicyMeta.EnforcementLevel)
 		}
 		b.r.Policies = append(b.r.Policies, p)
 	case l.Type == "provider_version_installation_complete":
@@ -152,17 +152,17 @@ func (b *builder) fallback(l Line) {
 	case "warn":
 		b.diagnostic(tfdiag.Diagnostic{Severity: "warning", Summary: stripPrefix(l.Message, "Warning: ")}, l.AtTestFile, l.AtTestRun)
 	default:
-		b.other(clean(l.Type), clean(l.Message))
+		b.other(core.Clean(l.Type), core.Clean(l.Message))
 	}
 }
 
 func convertChange(c streamChange) Change {
-	out := Change{Address: clean(c.Resource.Addr), Action: clean(c.Action), Reason: clean(c.Reason)}
+	out := Change{Address: core.Clean(c.Resource.Addr), Action: core.Clean(c.Action), Reason: core.Clean(c.Reason)}
 	if c.PreviousResource != nil && c.PreviousResource.Addr != c.Resource.Addr {
-		out.PreviousAddress = clean(c.PreviousResource.Addr)
+		out.PreviousAddress = core.Clean(c.PreviousResource.Addr)
 	}
 	if c.Importing != nil {
-		out.ImportID = clean(c.Importing.ID)
+		out.ImportID = core.Clean(c.Importing.ID)
 	}
 	return out
 }
@@ -185,12 +185,12 @@ func (b *builder) applied(h streamHook, message string) {
 	var action string
 	_ = json.Unmarshal(h.Action, &action)
 	if action == "read" {
-		b.other("refresh", clean(message))
+		b.other("refresh", core.Clean(message))
 		return
 	}
 	b.sawApply = true
 	b.r.Applied.Count++
-	b.timings = append(b.timings, Timing{Address: clean(h.Resource.Addr), Seconds: h.Elapsed})
+	b.timings = append(b.timings, Timing{Address: core.Clean(h.Resource.Addr), Seconds: h.Elapsed})
 }
 
 func (b *builder) outputs(outputs map[string]streamOutput) {
@@ -202,7 +202,7 @@ func (b *builder) outputs(outputs map[string]streamOutput) {
 	b.r.Outputs = make([]Output, 0, len(names))
 	for _, name := range names {
 		o := outputs[name]
-		out := Output{Name: clean(name), Action: clean(o.Action), Sensitive: o.Sensitive}
+		out := Output{Name: core.Clean(name), Action: core.Clean(o.Action), Sensitive: o.Sensitive}
 		if !o.Sensitive && isScalar(o.Value) {
 			out.Value = o.Value
 		}
@@ -223,7 +223,7 @@ func (b *builder) tests() *Tests {
 }
 
 func (b *builder) testRun(s streamTestRun) {
-	s.Path, s.Run, s.Status = clean(s.Path), clean(s.Run), clean(s.Status)
+	s.Path, s.Run, s.Status = core.Clean(s.Path), core.Clean(s.Run), core.Clean(s.Status)
 	t := b.tests()
 	key := [2]string{s.Path, s.Run}
 	i, ok := b.runs[key]
@@ -255,7 +255,7 @@ func (b *builder) testFile(path, status string) *TestFile {
 }
 
 func (b *builder) diagnostic(d tfdiag.Diagnostic, file, run string) {
-	file, run = clean(file), clean(run)
+	file, run = core.Clean(file), core.Clean(run)
 	switch {
 	case file != "" && run != "":
 		b.testRun(streamTestRun{Path: file, Run: run})
@@ -292,14 +292,13 @@ func (b *builder) finish() Report {
 		for _, c := range r.Changes {
 			if c.Action != "noop" {
 				visible = append(visible, c)
+			} else {
+				r.NoopHidden++
 			}
 		}
 		r.Changes = visible
 	}
-	if b.o.MaxResources > 0 && len(r.Changes) > b.o.MaxResources {
-		r.Omitted = len(r.Changes) - b.o.MaxResources
-		r.Changes = r.Changes[:b.o.MaxResources]
-	}
+	r.Changes, r.Omitted = core.Limit(r.Changes, b.o.MaxResources)
 	sort.SliceStable(b.timings, func(i, j int) bool { return b.timings[i].Seconds > b.timings[j].Seconds })
 	for _, t := range b.timings {
 		if len(r.Applied.Slowest) == 3 || t.Seconds <= 0 {
@@ -307,7 +306,7 @@ func (b *builder) finish() Report {
 		}
 		r.Applied.Slowest = append(r.Applied.Slowest, t)
 	}
-	r.Diagnostics, r.DiagnosticsOmitted = tfdiag.Limit(tfdiag.Normalize(b.diags), b.o.MaxDiagnostics)
+	r.Diagnostics, r.DiagnosticsOmitted = core.Limit(tfdiag.Normalize(b.diags), b.o.MaxDiagnostics)
 	if r.Diagnostics == nil {
 		r.Diagnostics = []tfdiag.Diagnostic{}
 	}
@@ -347,9 +346,5 @@ func (b *builder) operation() string {
 }
 
 func stripPrefix(message, prefix string) string {
-	return clean(strings.TrimPrefix(clean(message), prefix))
-}
-
-func clean(s string) string {
-	return core.Clean(s)
+	return core.Clean(strings.TrimPrefix(core.Clean(message), prefix))
 }

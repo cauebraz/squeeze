@@ -14,16 +14,23 @@ type Summary struct {
 	Line       string         `json:"line"`
 }
 
+type Captured struct {
+	Name    string   `json:"name"`
+	Lines   []string `json:"lines"`
+	Omitted int      `json:"omitted,omitempty"`
+}
+
 type Failure struct {
-	Kind      string   `json:"kind"`
-	Test      string   `json:"test"`
-	When      string   `json:"when,omitempty"`
-	Message   string   `json:"message,omitempty"`
-	Lines     []string `json:"lines"`
-	Hidden    int      `json:"hidden,omitempty"`
-	Captured  []string `json:"captured,omitempty"`
-	Omitted   int      `json:"omitted,omitempty"`
-	Untracked bool     `json:"from_summary_only,omitempty"`
+	Kind      string     `json:"kind"`
+	Test      string     `json:"test"`
+	Subtest   string     `json:"subtest,omitempty"`
+	When      string     `json:"when,omitempty"`
+	Message   string     `json:"message,omitempty"`
+	Lines     []string   `json:"lines"`
+	Hidden    int        `json:"hidden,omitempty"`
+	Captured  []Captured `json:"captured,omitempty"`
+	Omitted   int        `json:"omitted,omitempty"`
+	Untracked bool       `json:"from_summary_only,omitempty"`
 }
 
 type Warning struct {
@@ -33,14 +40,15 @@ type Warning struct {
 
 type Report struct {
 	Tool            string         `json:"tool"`
-	Version         string         `json:"version"`
-	Complete        bool           `json:"complete"`
+	Version         string         `json:"tool_version"`
+	Complete        bool           `json:"summary_found"`
 	Summary         Summary        `json:"summary"`
 	Interrupted     string         `json:"interrupted,omitempty"`
+	InternalError   bool           `json:"internal_error,omitempty"`
 	Stopped         string         `json:"stopped,omitempty"`
 	Failures        []Failure      `json:"failures"`
 	FailuresOmitted int            `json:"failures_omitted"`
-	Warnings        []Warning      `json:"warnings"`
+	Warnings        []Warning      `json:"warning_messages"`
 	WarningsOmitted int            `json:"warnings_omitted"`
 	Notes           []string       `json:"notes"`
 	NotesOmitted    int            `json:"notes_omitted"`

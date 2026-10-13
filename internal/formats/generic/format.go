@@ -2,10 +2,7 @@ package generic
 
 import (
 	"bytes"
-	"errors"
 	"flag"
-	"fmt"
-	"strconv"
 	"unicode/utf8"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -29,7 +26,7 @@ func (Format) Description() string {
 	return "any text output: strips color codes, folds repeated lines, keeps the head, the tail and error lines"
 }
 
-func (Format) Conditions() []string { return []string{} }
+func (Format) Conditions() []string { return []string{"error", "warning"} }
 
 func (Format) Detect(head []byte) bool {
 	if len(bytes.TrimSpace(head)) == 0 {
@@ -55,9 +52,9 @@ func trimPartialRune(b []byte) []byte {
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	o := DefaultOptions()
-	countFlag(fs, &o.MaxLines, "max-lines", "lines shown, 0 for all")
-	countFlag(fs, &o.MaxLineBytes, "max-line-bytes", "bytes shown per line, 0 for all")
-	fs.BoolVar(&o.NoFold, "no-fold", false, "print repeated and similar lines instead of folding them")
+	core.CountFlag(fs, &o.MaxLines, "max-lines", "lines listed, 0 for all")
+	core.CountFlag(fs, &o.MaxLineBytes, "max-line-bytes", "bytes per line, 0 for all")
+	fs.BoolVar(&o.NoFold, "no-fold", false, "print repeated and similar lines")
 	return func(input []byte) (core.Result, error) {
 		return Squeeze(input, o)
 	}
@@ -65,19 +62,8 @@ func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 
 func Squeeze(input []byte, o Options) (core.Result, error) {
 	r, text := Build(input, o)
-	return core.Result{Text: text, Data: r, Conditions: []string{}}, nil
-}
-
-func countFlag(fs *flag.FlagSet, p *int, name, usage string) {
-	fs.Func(name, fmt.Sprintf("%s (default %d)", usage, *p), func(s string) error {
-		n, err := strconv.Atoi(s)
-		if err != nil {
-			return errors.New("not an integer")
-		}
-		if n < 0 {
-			return errors.New("must be 0 or more")
-		}
-		*p = n
-		return nil
-	})
+	return core.Result{Text: text, Data: r, Conditions: core.Conditions(map[string]bool{
+		"error":   r.ErrorLines > 0,
+		"warning": r.WarningLines > 0,
+	})}, nil
 }

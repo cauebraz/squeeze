@@ -1,5 +1,6 @@
 terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy; 1 drifted
 ~ aws_s3_bucket.assets
   - tags.Owner: "someone"
-drift: 1 resource (--drift to list)
+... 1 resource without changes (--all)
+... 1 drifted resource (--drift)
 ... 2 drifted resources not affecting this plan (--all)

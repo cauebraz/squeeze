@@ -1,0 +1,46 @@
+======================================= test session starts ========================================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/dev/shop
+configfile: pytest.ini
+collected 12 items
+
+tests/test_calc.py .F.F.F.sxFEF                                                              [100%]
+
+============================================== ERRORS ==============================================
+___________________________________ ERROR at setup of test_query ___________________________________
+E   RuntimeError: database unavailable
+============================================= FAILURES =============================================
+E   assert 4 == 5
+--------------------------------------- Captured stdout call ---------------------------------------
+computing the sum
+/home/dev/shop/tests/test_calc.py:13: assert 4 == 5
+E   assert 5 == 6
+     +  where 5 = add(2, 3)
+/home/dev/shop/tests/test_calc.py:18: assert 5 == 6
+E   AssertionError: assert {'name': 'web', 'port': 80} == {'name': 'web', 'port': 443}
+      
+      Omitting 1 identical items, use -vv to show
+      Differing items:
+      {'port': 80} != {'port': 443}
+      Use -v to get more diff
+/home/dev/shop/tests/test_calc.py:22: AssertionError: assert {'name': 'web', 'port': 80} == {'name': 'web', 'port': 443}
+[XPASS(strict)] fixed already
+[XPASS(strict)] fixed already
+E   ZeroDivisionError: division by zero
+/home/dev/shop/tests/test_calc.py:51: ZeroDivisionError: division by zero
+========================================= warnings summary =========================================
+tests/test_calc.py::test_old_api
+tests/test_calc.py::test_old_api
+tests/test_calc.py::test_old_api
+  /home/dev/shop/calc.py:9: DeprecationWarning: old_api is deprecated, use add
+    warnings.warn("old_api is deprecated, use add", DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+===================================== short test summary info ======================================
+FAILED tests/test_calc.py::test_add_wrong - assert 4 == 5
+FAILED tests/test_calc.py::test_add_param[2-3-6] - assert 5 == 6
+FAILED tests/test_calc.py::test_dict - AssertionError: assert {'name': 'web', 'port': 80} == {'na...
+FAILED tests/test_calc.py::test_fixed - [XPASS(strict)] fixed already
+FAILED tests/test_calc.py::TestDivision::test_zero - ZeroDivisionError: division by zero
+ERROR tests/test_calc.py::test_query - RuntimeError: database unavailable
+============== 5 failed, 4 passed, 1 skipped, 1 xfailed, 3 warnings, 1 error in 0.01s ==============

@@ -1,11 +1,8 @@
 package tfjson
 
 import (
-	"bytes"
-	"errors"
 	"flag"
-	"fmt"
-	"strconv"
+	"github.com/cauebraz/squeeze/internal/jsonl"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
@@ -32,31 +29,18 @@ func (Format) Description() string {
 	return "Terraform machine-readable UI stream from plan, apply, destroy, init or test with -json"
 }
 
-var conditionNames = []string{"apply_errored", "change", "deferred", "destroy", "drift", "error", "forget", "policy_failed", "replace", "test_failed", "warning"}
+var conditionNames = []string{"apply_errored", "change", "deferred", "destroy", "drift", "error", "fail", "forget", "policy_failed", "replace", "test_failed", "warning"}
 
 func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
 
 func (Format) Detect(head []byte) bool {
-	seen := 0
-	for _, line := range bytes.Split(head, []byte("\n")) {
-		if len(bytes.TrimSpace(line)) == 0 {
-			continue
-		}
-		if isStreamLine(line) {
-			return true
-		}
-		seen++
-		if seen == detectLines {
-			return false
-		}
-	}
-	return false
+	return jsonl.Detect(head, detectLines, nil, isStreamLine)
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	o := DefaultOptions()
-	countFlag(fs, &o.MaxResources, "max-resources", "resources shown, 0 for all")
-	countFlag(fs, &o.MaxDiagnostics, "max-diagnostics", "diagnostics shown, 0 for all")
+	core.CountFlag(fs, &o.MaxResources, "max-resources", "planned changes listed, 0 for all")
+	core.CountFlag(fs, &o.MaxDiagnostics, "max-diagnostics", "diagnostics listed, 0 for all")
 	fs.BoolVar(&o.All, "all", false, "include no-op resources, passing tests and every other message")
 	fs.BoolVar(&o.ListDrift, "drift", false, "list drifted resources instead of counting them")
 	fs.BoolVar(&o.NoDetail, "no-detail", false, "print diagnostic summary, location and code only")
@@ -115,19 +99,6 @@ func conditions(r Report, lines []Line) []string {
 			}
 		}
 	}
+	present["fail"] = present["error"] || present["apply_errored"] || present["policy_failed"] || present["test_failed"]
 	return core.Conditions(present)
-}
-
-func countFlag(fs *flag.FlagSet, p *int, name, usage string) {
-	fs.Func(name, fmt.Sprintf("%s (default %d)", usage, *p), func(s string) error {
-		n, err := strconv.Atoi(s)
-		if err != nil {
-			return errors.New("not an integer")
-		}
-		if n < 0 {
-			return errors.New("must be 0 or more")
-		}
-		*p = n
-		return nil
-	})
 }

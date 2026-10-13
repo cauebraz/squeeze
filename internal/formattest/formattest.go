@@ -11,7 +11,9 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
@@ -100,37 +102,68 @@ func Contract(t *testing.T, f core.Format, dir string) {
 			t.Errorf("%s: Detect(%q) = true", f.Name(), empty)
 		}
 	}
-	for _, c := range Cases(t, dir) {
-		t.Run(c.Name, func(t *testing.T) {
-			t.Parallel()
-			if !f.Detect(core.Head(c.Input)) {
-				t.Errorf("Detect() = false")
-			}
-			first, err := Run(t, f, c.Input, c.Args...)
-			if err != nil {
-				t.Fatalf("squeeze error = %v", err)
-			}
-			second, err := Run(t, f, c.Input, c.Args...)
-			if err != nil || second.Text != first.Text {
-				t.Errorf("output differs between runs")
-			}
-			CheckText(t, first.Text)
-			checkNames(t, "Result.Conditions", first.Conditions)
-			for _, c := range first.Conditions {
-				if !slices.Contains(declared, c) {
-					t.Errorf("condition %q is not declared by Conditions()", c)
+	seen := map[string]bool{}
+	var mu sync.Mutex
+	cases := Cases(t, dir)
+	t.Run("cases", func(t *testing.T) {
+		for _, c := range cases {
+			t.Run(c.Name, func(t *testing.T) {
+				t.Parallel()
+				if !f.Detect(core.Head(c.Input)) {
+					t.Errorf("Detect() = false")
 				}
-			}
-			envelope, err := core.Envelope(f.Name(), len(c.Input), first, nil)
-			if err != nil {
-				t.Fatalf("Envelope() error = %v", err)
-			}
-			if !json.Valid(envelope) {
-				t.Errorf("Envelope() is not valid JSON: %s", envelope)
-			}
-			golden(t, filepath.Join(c.Dir, "want.txt"), []byte(first.Text))
-			golden(t, filepath.Join(c.Dir, "want.json"), envelope)
-		})
+				first, err := Run(t, f, c.Input, c.Args...)
+				if err != nil {
+					t.Fatalf("squeeze error = %v", err)
+				}
+				second, err := Run(t, f, c.Input, c.Args...)
+				if err != nil || second.Text != first.Text {
+					t.Errorf("output differs between runs")
+				}
+				CheckText(t, first.Text)
+				CheckNotices(t, first.Text)
+				checkNames(t, "Result.Conditions", first.Conditions)
+				mu.Lock()
+				for _, c := range first.Conditions {
+					seen[c] = true
+				}
+				mu.Unlock()
+				for _, c := range first.Conditions {
+					if !slices.Contains(declared, c) {
+						t.Errorf("condition %q is not declared by Conditions()", c)
+					}
+				}
+				envelope, err := core.Envelope(f.Name(), len(c.Input), first, nil)
+				if err != nil {
+					t.Fatalf("Envelope() error = %v", err)
+				}
+				var doc struct {
+					Format string          `json:"format"`
+					Data   json.RawMessage `json:"data"`
+				}
+				if err := json.Unmarshal(envelope, &doc); err != nil || doc.Format != f.Name() || len(doc.Data) == 0 {
+					t.Errorf("Envelope() does not round-trip: %v\n%s", err, envelope)
+				}
+				golden(t, filepath.Join(c.Dir, "want.txt"), []byte(first.Text))
+				golden(t, filepath.Join(c.Dir, "want.json"), envelope)
+			})
+		}
+	})
+	for _, name := range declared {
+		if !seen[name] {
+			t.Errorf("%s: condition %q is declared but no case under %s produces it", f.Name(), name, dir)
+		}
+	}
+}
+
+var notice = regexp.MustCompile(`^\s*\.\.\. \d+ [^()]+ \((--[a-z-]+( 0)?|--output json|--raw-dir)\)$`)
+
+func CheckNotices(t testing.TB, text string) {
+	t.Helper()
+	for _, line := range strings.Split(text, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "... ") && !notice.MatchString(line) {
+			t.Errorf("cut notice does not follow \"... N <what> (<flag>)\": %q", line)
+		}
 	}
 }
 
@@ -151,10 +184,12 @@ func CheckText(t testing.TB, text string) {
 	if text == "" || !strings.HasSuffix(text, "\n") {
 		t.Errorf("text is empty or lacks a final newline: %q", text)
 	}
-	for i := 0; i < len(text); i++ {
-		c := text[i]
-		if (c < 0x20 && c != '\n') || c == 0x7f {
-			t.Errorf("text contains control byte %#x at %d", c, i)
+	if !utf8.ValidString(text) {
+		t.Errorf("text is not valid UTF-8")
+	}
+	for i, r := range text {
+		if (r < 0x20 && r != '\n') || r == 0x7f || (r >= 0x80 && r < 0xa0) {
+			t.Errorf("text contains control character %#x at %d", r, i)
 			return
 		}
 	}

@@ -29,6 +29,7 @@ type pkgState struct {
 
 type testState struct {
 	pkg, name string
+	run       int
 	status    string
 	elapsed   float64
 	lines     []line
@@ -40,6 +41,7 @@ type builder struct {
 	o          Options
 	pkgs       map[string]*pkgState
 	tests      map[[2]string]*testState
+	runs       map[[2]string][]*testState
 	builds     map[string][]string
 	buildFail  map[string]bool
 	text       []string
@@ -53,6 +55,7 @@ func Build(events []Event, o Options) Report {
 		o:         o,
 		pkgs:      map[string]*pkgState{},
 		tests:     map[[2]string]*testState{},
+		runs:      map[[2]string][]*testState{},
 		builds:    map[string][]string{},
 		buildFail: map[string]bool{},
 		other:     map[string]int{},
@@ -78,11 +81,17 @@ func (b *builder) pkg(name string) *pkgState {
 
 func (b *builder) test(pkg, name string) *testState {
 	key := [2]string{pkg, name}
-	t, ok := b.tests[key]
-	if !ok {
-		t = &testState{pkg: pkg, name: name, attrs: map[string]string{}}
-		b.tests[key] = t
+	if t, ok := b.tests[key]; ok {
+		return t
 	}
+	return b.newRun(pkg, name)
+}
+
+func (b *builder) newRun(pkg, name string) *testState {
+	key := [2]string{pkg, name}
+	t := &testState{pkg: pkg, name: name, run: len(b.runs[key]) + 1, attrs: map[string]string{}}
+	b.tests[key] = t
+	b.runs[key] = append(b.runs[key], t)
 	return t
 }
 
@@ -105,18 +114,21 @@ func (b *builder) add(e Event) {
 		b.text = append(b.text, e.Text)
 		return
 	}
-	pkg, test := clean(e.Package), clean(e.Test)
+	pkg, test := core.Clean(e.Package), core.Clean(e.Test)
 	switch e.Action {
 	case "build-output":
-		ip := clean(e.ImportPath)
+		ip := core.Clean(e.ImportPath)
 		b.builds[ip] = append(b.builds[ip], splitOutput(e.Output)...)
 	case "build-fail":
-		b.buildFail[clean(e.ImportPath)] = true
+		b.buildFail[core.Clean(e.ImportPath)] = true
 	case "start":
 		b.pkg(pkg)
 	case "run":
 		b.pkg(pkg)
-		b.test(pkg, test)
+		if t, ok := b.tests[[2]string{pkg, test}]; ok && t.status == "" && len(t.lines) == 0 {
+			return
+		}
+		b.newRun(pkg, test)
 	case "pause", "cont":
 	case "output":
 		if e.OutputType != "" {
@@ -149,14 +161,14 @@ func (b *builder) add(e Event) {
 		p := b.pkg(pkg)
 		p.status, p.elapsed = e.Action, elapsed
 		if e.FailedBuild != "" {
-			p.failedBuild = clean(e.FailedBuild)
+			p.failedBuild = core.Clean(e.FailedBuild)
 		}
 	case "attr":
-		b.test(pkg, test).attrs[clean(e.Key)] = clean(e.Value)
+		b.test(pkg, test).attrs[core.Clean(e.Key)] = core.Clean(e.Value)
 	case "artifacts":
-		b.test(pkg, test).artifacts = clean(e.Path)
+		b.test(pkg, test).artifacts = core.Clean(e.Path)
 	default:
-		b.other[clean(e.Action)]++
+		b.other[core.Clean(e.Action)]++
 	}
 }
 
@@ -178,6 +190,7 @@ func (b *builder) finish() Report {
 		Passing:         []PackageRef{},
 		NoTests:         []string{},
 		Text:            Output{Lines: []string{}},
+		Warnings:        []string{},
 		Other:           b.other,
 	}
 	failedPkg := map[string]bool{}
@@ -208,8 +221,12 @@ func (b *builder) finish() Report {
 		}
 		b.scan(&r, p.lines)
 		for _, l := range p.lines {
-			if text := strings.TrimSpace(l.text); benchResult.MatchString(text) {
+			text := strings.TrimSpace(l.text)
+			switch {
+			case benchResult.MatchString(text):
 				r.Benchmarks = append(r.Benchmarks, Benchmark{Package: name, Result: spaces.ReplaceAllString(text, " ")})
+			case strings.HasPrefix(text, "testing: warning: "):
+				r.Warnings = append(r.Warnings, name+": "+core.Clean(text))
 			}
 		}
 	}
@@ -228,15 +245,12 @@ func (b *builder) finish() Report {
 		listed[f.Package] = true
 	}
 	r.Tests.Failed = len(r.Failures)
-	if b.o.MaxTests > 0 && len(r.Failures) > b.o.MaxTests {
-		r.FailuresOmitted = len(r.Failures) - b.o.MaxTests
-		r.Failures = r.Failures[:b.o.MaxTests]
-	}
+	r.Failures, r.FailuresOmitted = core.Limit(r.Failures, b.o.MaxTests)
 	for _, name := range sortedKeys(failedPkg) {
 		p := b.pkgs[name]
 		var kept []line
 		for _, l := range p.lines {
-			if !isFrame(l) && !summaryLine.MatchString(strings.TrimSpace(l.text)) {
+			if !b.isFrame(l) && !summaryLine.MatchString(strings.TrimSpace(l.text)) {
 				kept = append(kept, l)
 			}
 		}
@@ -255,8 +269,8 @@ func (b *builder) finish() Report {
 }
 
 func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
-	keys := make([][2]string, 0, len(b.tests))
-	for k := range b.tests {
+	keys := make([][2]string, 0, len(b.runs))
+	for k := range b.runs {
 		keys = append(keys, k)
 	}
 	sort.Slice(keys, func(i, j int) bool {
@@ -267,21 +281,22 @@ func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
 	})
 	failing := map[[2]string]bool{}
 	for _, k := range keys {
-		t := b.tests[k]
-		b.scan(r, t.lines)
-		for _, l := range t.lines {
-			if text := strings.TrimSpace(l.text); benchResult.MatchString(text) {
-				r.Benchmarks = append(r.Benchmarks, Benchmark{Package: t.pkg, Result: spaces.ReplaceAllString(text, " ")})
+		for _, t := range b.runs[k] {
+			b.scan(r, t.lines)
+			for _, l := range t.lines {
+				if text := strings.TrimSpace(l.text); benchResult.MatchString(text) {
+					r.Benchmarks = append(r.Benchmarks, Benchmark{Package: t.pkg, Result: spaces.ReplaceAllString(text, " ")})
+				}
 			}
-		}
-		switch {
-		case t.status == "fail" || (t.status == "" && failedPkg[t.pkg] && !strings.HasPrefix(t.name, "Benchmark")):
-			failing[k] = true
-		case t.status == "skip":
-			r.Tests.Skipped++
-			r.Skipped = append(r.Skipped, TestRef{Package: t.pkg, Test: t.name})
-		case t.status == "pass" && !strings.HasPrefix(t.name, "Benchmark"):
-			r.Tests.Passed++
+			switch {
+			case t.status == "fail" || (t.status == "" && failedPkg[t.pkg] && !strings.HasPrefix(t.name, "Benchmark")):
+				failing[k] = true
+			case t.status == "skip":
+				r.Tests.Skipped++
+				r.Skipped = append(r.Skipped, TestRef{Package: t.pkg, Test: t.name})
+			case t.status == "pass" && !strings.HasPrefix(t.name, "Benchmark"):
+				r.Tests.Passed++
+			}
 		}
 	}
 	var out []Failure
@@ -289,16 +304,24 @@ func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
 		if !failing[k] {
 			continue
 		}
-		t := b.tests[k]
-		output := b.testOutput(t)
-		if len(output.Lines) == 0 && hasFailingChild(failing, k) {
-			continue
+		runs := b.runs[k]
+		for _, t := range runs {
+			if t.status != "fail" && !(t.status == "" && failedPkg[t.pkg] && !strings.HasPrefix(t.name, "Benchmark")) {
+				continue
+			}
+			output := b.testOutput(t)
+			if len(output.Lines) == 0 && hasFailingChild(failing, k) {
+				continue
+			}
+			f := Failure{Package: t.pkg, Test: t.name, Elapsed: t.elapsed, Unfinished: t.status == "", Artifacts: t.artifacts, Output: output}
+			if len(runs) > 1 {
+				f.Run, f.Runs = t.run, len(runs)
+			}
+			if len(t.attrs) > 0 {
+				f.Attrs = t.attrs
+			}
+			out = append(out, f)
 		}
-		f := Failure{Package: t.pkg, Test: t.name, Elapsed: t.elapsed, Unfinished: t.status == "", Artifacts: t.artifacts, Output: output}
-		if len(t.attrs) > 0 {
-			f.Attrs = t.attrs
-		}
-		out = append(out, f)
 	}
 	if out == nil {
 		out = []Failure{}
@@ -315,15 +338,18 @@ func hasFailingChild(failing map[[2]string]bool, k [2]string) bool {
 	return false
 }
 
-func isFrame(l line) bool {
-	return l.typ == "frame" || frameLine.MatchString(l.text)
+func (b *builder) isFrame(l line) bool {
+	if b.outputType {
+		return l.typ == "frame"
+	}
+	return frameLine.MatchString(l.text)
 }
 
 func (b *builder) testOutput(t *testState) Output {
 	var all []line
 	errorLines := false
 	for _, l := range t.lines {
-		if isFrame(l) {
+		if b.isFrame(l) {
 			continue
 		}
 		all = append(all, l)
@@ -331,7 +357,7 @@ func (b *builder) testOutput(t *testState) Output {
 			errorLines = true
 		}
 	}
-	if b.o.Logs || !b.outputType || !errorLines {
+	if b.o.Full || !b.outputType || !errorLines {
 		return b.output(all, t.pkg)
 	}
 	var kept []line
@@ -376,7 +402,7 @@ func (b *builder) output(lines []line, pkg string) Output {
 		raw = append(raw, l.text)
 	}
 	out := Output{Lines: []string{}}
-	if !b.o.Logs {
+	if !b.o.Full {
 		raw, out.Stack = filterStack(raw, pkg)
 	}
 	var cleaned []string
@@ -386,10 +412,7 @@ func (b *builder) output(lines []line, pkg string) Output {
 		}
 	}
 	cleaned = dedent(cleaned)
-	if b.o.MaxOutput > 0 && len(cleaned) > b.o.MaxOutput {
-		out.Omitted = len(cleaned) - b.o.MaxOutput
-		cleaned = cleaned[:b.o.MaxOutput]
-	}
+	cleaned, out.Omitted = core.Limit(cleaned, b.o.MaxOutput)
 	out.Lines = append(out.Lines, cleaned...)
 	return out
 }
@@ -440,8 +463,4 @@ func sortedKeys[V any](m map[string]V) []string {
 	}
 	sort.Strings(keys)
 	return keys
-}
-
-func clean(s string) string {
-	return core.Clean(s)
 }

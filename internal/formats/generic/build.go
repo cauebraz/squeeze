@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
 const minRun = 3
 
-var flagWords = regexp.MustCompile(`(?i)\b(errors?|fail(s|ed|ures?)?|fatal|panic(s|ked)?|exceptions?|tracebacks?|warn(s|ed|ings?)?)\b`)
+var (
+	flagWords    = regexp.MustCompile(`(?i)\b(errors?|fail(s|ed|ures?)?|fatal|panic(s|ked)?|exceptions?|tracebacks?|warn(s|ed|ings?)?)\b`)
+	errorWords   = regexp.MustCompile(`(?i)\b(errors?|fail(s|ed|ures?)?|fatal|panic(s|ked)?|exceptions?|tracebacks?)\b`)
+	warningWords = regexp.MustCompile(`(?i)\b(warn(s|ed|ings?)?)\b`)
+)
 
 var digits = regexp.MustCompile(`[0-9]+`)
 
@@ -20,9 +23,11 @@ type Report struct {
 	Printed      int `json:"printed"`
 	BlankDropped int `json:"blank_dropped"`
 	Folded       int `json:"folded"`
-	Cut          int `json:"cut"`
-	CutFlagged   int `json:"cut_flagged"`
+	Cut          int `json:"lines_omitted"`
+	CutFlagged   int `json:"flagged_lines_omitted"`
 	LongLines    int `json:"long_lines"`
+	ErrorLines   int `json:"error_lines"`
+	WarningLines int `json:"warning_lines"`
 }
 
 type entry struct {
@@ -42,6 +47,14 @@ func Build(input []byte, o Options) (Report, string) {
 	var r Report
 	lines := splitLines(string(input))
 	r.Lines = len(lines)
+	for _, l := range lines {
+		if errorWords.MatchString(l) {
+			r.ErrorLines++
+		}
+		if warningWords.MatchString(l) {
+			r.WarningLines++
+		}
+	}
 	cleaned := dropBlanks(lines, &r)
 	groups := fold(cleaned, o.NoFold, &r)
 	groups = cut(groups, o.MaxLines, &r)
@@ -123,12 +136,12 @@ func fold(lines []string, off bool, r *Report) []group {
 		g := single(lines[i])
 		g.lines = n
 		if identical {
-			g.entries = append(g.entries, entry{text: fmt.Sprintf("... %d more identical %s (--no-fold)", n-1, plural(n-1, "line", "lines")), marker: true})
+			g.entries = append(g.entries, entry{text: fmt.Sprintf("... %d more identical %s (--no-fold)", n-1, core.Plural(n-1, "line", "lines")), marker: true})
 			g.flags *= n
 			r.Folded += n - 1
 		} else {
 			g.entries = append(g.entries,
-				entry{text: fmt.Sprintf("... %d similar %s (--no-fold)", n-2, plural(n-2, "line", "lines")), marker: true},
+				entry{text: fmt.Sprintf("... %d similar %s (--no-fold)", n-2, core.Plural(n-2, "line", "lines")), marker: true},
 				entry{text: lines[j-1]})
 			g.content = 2
 			r.Folded += n - 2
@@ -164,9 +177,9 @@ func cut(groups []group, max int, r *Report) []group {
 		if gap.lines == 0 {
 			return
 		}
-		text := fmt.Sprintf("... %d %s cut (--max-lines 0)", gap.lines, plural(gap.lines, "line", "lines"))
+		text := fmt.Sprintf("... %d %s cut (--max-lines 0)", gap.lines, core.Plural(gap.lines, "line", "lines"))
 		if gap.flags > 0 {
-			text = fmt.Sprintf("... %d %s cut, %d with error or warning words (--max-lines 0)", gap.lines, plural(gap.lines, "line", "lines"), gap.flags)
+			text = fmt.Sprintf("... %d %s cut, %d with error or warning words (--max-lines 0)", gap.lines, core.Plural(gap.lines, "line", "lines"), gap.flags)
 		}
 		out = append(out, group{entries: []entry{{text: text, marker: true}}})
 		r.Cut += gap.lines
@@ -199,8 +212,8 @@ func render(groups []group, maxBytes int, r *Report) string {
 			if !e.marker {
 				r.Printed++
 				if maxBytes > 0 && len(text) > maxBytes {
-					short := truncate(text, maxBytes)
-					text = fmt.Sprintf("%s ... [%d more bytes, --max-line-bytes 0]", short, len(text)-len(short))
+					short := core.Truncate(text, maxBytes)
+					text = fmt.Sprintf("%s ... %d more bytes (--max-line-bytes 0)", short, len(text)-len(short))
 					r.LongLines++
 				}
 			}
@@ -209,21 +222,4 @@ func render(groups []group, maxBytes int, r *Report) string {
 		}
 	}
 	return b.String()
-}
-
-func truncate(s string, n int) string {
-	for n > 0 && s[n]&0xC0 == 0x80 {
-		n--
-	}
-	if n == 0 {
-		_, n = utf8.DecodeRuneInString(s)
-	}
-	return s[:n]
-}
-
-func plural(n int, one, many string) string {
-	if n == 1 {
-		return one
-	}
-	return many
 }

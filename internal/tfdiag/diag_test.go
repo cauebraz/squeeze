@@ -100,17 +100,6 @@ func TestSortTieBreakers(t *testing.T) {
 	}
 }
 
-func TestLimit(t *testing.T) {
-	t.Parallel()
-	ds := make([]Diagnostic, 5)
-	for _, tt := range []struct{ n, kept, omitted int }{{0, 5, 0}, {5, 5, 0}, {7, 5, 0}, {2, 2, 3}} {
-		kept, omitted := Limit(ds, tt.n)
-		if len(kept) != tt.kept || omitted != tt.omitted {
-			t.Errorf("Limit(%d) = %d, %d; want %d, %d", tt.n, len(kept), omitted, tt.kept, tt.omitted)
-		}
-	}
-}
-
 func TestWrite(t *testing.T) {
 	t.Parallel()
 	long := strings.Repeat("word ", 80)

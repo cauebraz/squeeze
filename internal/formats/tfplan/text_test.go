@@ -151,7 +151,7 @@ func TestText(t *testing.T) {
 			{Name: "region", Action: Delete},
 		},
 	}
-	common := `... 12 more resources (--max-resources)
+	common := `... 12 more resources (--max-resources 0)
 `
 	tail := `... 1 drifted resource not affecting this plan (--all)
 deferred:
@@ -165,13 +165,13 @@ terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace; 2 drift
 -/+ aws_db_instance.main (replacement forced by engine_version)
   ! engine_version: "15" -> "16"
   ~ password: (sensitive)
-  ... 1 more attribute (--max-attrs)
+  ... 1 more attribute (--max-attrs 0)
 `
 	tests := map[string]struct {
 		o    Options
 		want string
 	}{
-		"drift counted": {Options{}, head + common + "drift: 2 resources (--drift to list)\n" + tail},
+		"drift counted": {Options{}, head + common + "... 2 drifted resources (--drift)\n" + tail},
 		"drift listed": {Options{ListDrift: true}, head + common + `drift:
 ~ aws_s3_bucket.a
   - tags.Owner: "me"
@@ -192,7 +192,7 @@ func TestTextSingulars(t *testing.T) {
 	t.Parallel()
 	r := Report{Tool: "terraform", Summary: Summary{Complete: true}, Omitted: 1, Drift: []ResourceChange{{Address: "a", Action: Update}}}
 	got := Text(r, Options{})
-	for _, s := range []string{"... 1 more resource (--max-resources)\n", "drift: 1 resource (--drift to list)\n"} {
+	for _, s := range []string{"... 1 more resource (--max-resources 0)\n", "... 1 drifted resource (--drift)\n"} {
 		if !strings.Contains(got, s) {
 			t.Errorf("Text() lacks %q:\n%s", s, got)
 		}

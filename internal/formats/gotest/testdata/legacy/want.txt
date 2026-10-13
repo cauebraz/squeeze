@@ -6,3 +6,4 @@ fail example.com/legacy/calc TestAdd 0.01s
 output outside the test events:
   # example.com/legacy/broken
   broken/broken.go:3:28: undefined: undefinedName
+... 1 passing package (--all)

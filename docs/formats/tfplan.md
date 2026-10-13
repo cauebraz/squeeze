@@ -63,7 +63,7 @@ Attribute symbols:
 - Create and delete print no attributes, since the whole object is new or gone.
 - Line notes carry the deposed key, `moved from <address>`, `import`, the attributes that force replacement and Terraform's `action_reason`.
 - Drift is shown the way Terraform shows it: only attributes listed in the plan's `relevant_attributes`. A relevant path that goes through a list index makes the whole list relevant, as Terraform's renderer treats every element of a relevant list (`internal/command/jsonformat/differ/list.go`).
-- A replacement path that names a set element by its value prints the element as `[*]`, so the value never reaches the text. Drift that does not affect the plan is counted in a `... N drifted resources not affecting this plan (--all)` line.
+- A replacement path that names a set element by its value prints the element as `[*]`, so the value never reaches the text. Drift that affects the plan is counted in `... N drifted resources (--drift)` unless `--drift` lists it; drift that does not affect the plan is counted in a `... N drifted resources not affecting this plan (--all)` line. Resources without changes are counted in `... N resources without changes (--all)`.
 - Deferred resources (`deferred_changes`, in incomplete plans) are listed with Terraform's reason. Deferred no-ops are hidden unless moved.
 - Action invocations (`action_invocations`) are listed with their trigger event and resource.
 
@@ -71,11 +71,11 @@ Attribute symbols:
 
 | Flag | Default | Effect |
 |---|---|---|
-| `--max-attrs` | `8` | attributes per resource, `0` for all |
-| `--max-resources` | `200` | resources listed, `0` for all |
 | `--all` | off | include resources and outputs without changes, and drift that does not affect the plan |
-| `--no-values` | off | print attribute paths only |
 | `--drift` | off | list drifted resources instead of counting them |
+| `--max-attrs` | `8` | attributes per resource listed, `0` for all |
+| `--max-resources` | `200` | resources listed, `0` for all |
+| `--no-values` | off | print attribute paths only |
 
 ## Conditions for `--fail-on`
 
@@ -85,7 +85,8 @@ Attribute symbols:
 | `deferred` | a change was deferred |
 | `destroy` | a resource is deleted or replaced by destroying it |
 | `drift` | drift that affects the plan |
-| `errored` | Terraform reports `errored: true` |
+| `error` | Terraform reports `errored: true` |
+| `fail` | the plan errored or is incomplete |
 | `forget` | a resource is removed from state without being destroyed |
 | `import` | a resource is imported |
 | `incomplete` | Terraform reports `complete: false` |
@@ -100,7 +101,7 @@ Attribute symbols:
 - `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `actions`, `outputs`, `errored`, `complete`.
 - `changes` and `drift`: each with `address`, `action` and, when set, `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `replaced_by`, `attrs`, `attrs_omitted`.
 - `attrs`: `path`, `kind` (`update`, `add`, `remove`) and, when set, `before`, `after`, `unknown`, `sensitive`, `forces_replacement`, `reordered`. `before` and `after` are the scalar values with their JSON types and are never shortened; the 48-byte limit applies to text only.
-- `omitted`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) and `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`).
+- `changes_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) and `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`).
 
 ## Limitations
 

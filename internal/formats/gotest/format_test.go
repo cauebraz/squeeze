@@ -50,7 +50,9 @@ func TestDetect(t *testing.T) {
 		"no package":    {`{"Action":"start"}`, false},
 		"tfjson stream": {`{"@level":"info","@message":"x","type":"version"}`, false},
 		"plain text":    {"ok  \tp\t0.1s\n", false},
-		"too late":      {"a\nb\nc\nd\ne\n{\"Action\":\"start\",\"Package\":\"p\"}", false},
+		"after module downloads": {strings.Repeat("go: downloading example.com/m v1.0.0\n", 12) +
+			"# example.com/p\n" + `{"Action":"start","Package":"p"}`, true},
+		"after twenty text lines": {strings.Repeat("x\n", 20) + `{"Action":"start","Package":"p"}`, false},
 	}
 	for name, tt := range tests {
 		if got := (Format{}).Detect([]byte(tt.input)); got != tt.want {
@@ -69,13 +71,13 @@ func TestParseRejectsInputWithoutEvents(t *testing.T) {
 func TestConditions(t *testing.T) {
 	t.Parallel()
 	tests := map[string][]string{
-		"mixed":      {"build_failed", "fail", "panic", "skip"},
-		"timeout":    {"fail", "timeout"},
-		"race":       {"fail", "race"},
+		"mixed":      {"build_failed", "error", "fail", "panic", "skip"},
+		"timeout":    {"error", "fail", "timeout"},
+		"race":       {"error", "fail", "race"},
 		"bench":      {},
 		"pass":       {},
-		"legacy":     {"build_failed", "fail"},
-		"unfinished": {"fail"},
+		"legacy":     {"build_failed", "error", "fail"},
+		"unfinished": {"error", "fail"},
 	}
 	for name, want := range tests {
 		r, err := Squeeze(fixture(t, name), DefaultOptions())
@@ -153,12 +155,84 @@ func TestErrorLinesHideLogsButKeepPanics(t *testing.T) {
 	if diff := cmp.Diff(Output{Lines: []string{"    a_test.go:4: got 1", "panic: boom"}, Logs: 1}, got); diff != "" {
 		t.Errorf("output (-want +got):\n%s", diff)
 	}
-	logs, err := Squeeze(input, Options{Logs: true})
+	logs, err := Squeeze(input, Options{Full: true})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got := logs.Data.(Report).Failures[0].Output; len(got.Lines) != 3 || got.Logs != 0 {
-		t.Errorf("--logs output = %+v", got)
+		t.Errorf("--full output = %+v", got)
+	}
+}
+
+func TestEveryRunOfARepeatedTestIsCounted(t *testing.T) {
+	t.Parallel()
+	input := stream(
+		`{"Action":"run","Package":"p","Test":"TestFlaky"}`,
+		`{"Action":"output","Package":"p","Test":"TestFlaky","Output":"    f_test.go:9: boom\n","OutputType":"error"}`,
+		`{"Action":"fail","Package":"p","Test":"TestFlaky"}`,
+		`{"Action":"run","Package":"p","Test":"TestFlaky"}`,
+		`{"Action":"pass","Package":"p","Test":"TestFlaky"}`,
+		`{"Action":"fail","Package":"p"}`,
+	)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := r.Data.(Report)
+	if diff := cmp.Diff(Counts{Passed: 1, Failed: 1}, report.Tests); diff != "" {
+		t.Errorf("tests (-want +got):\n%s", diff)
+	}
+	if len(report.Failures) != 1 || report.Failures[0].Run != 1 || len(report.Failures[0].Output.Lines) != 1 {
+		t.Fatalf("failures = %+v", report.Failures)
+	}
+	if !strings.Contains(r.Text, "fail p TestFlaky (run 1 of 2)\n  f_test.go:9: boom\n") {
+		t.Errorf("text:\n%s", r.Text)
+	}
+}
+
+func TestTypedErrorLinesAreNeverFraming(t *testing.T) {
+	t.Parallel()
+	input := stream(
+		`{"Action":"run","Package":"p","Test":"TestA"}`,
+		`{"Action":"output","Package":"p","Test":"TestA","Output":"    a_test.go:9: child go test failed:\n","OutputType":"error"}`,
+		`{"Action":"output","Package":"p","Test":"TestA","Output":"        --- FAIL: TestInner (0.00s)\n","OutputType":"error-continue"}`,
+		`{"Action":"output","Package":"p","Test":"TestA","Output":"--- FAIL: TestA (0.00s)\n","OutputType":"frame"}`,
+		`{"Action":"fail","Package":"p","Test":"TestA"}`,
+		`{"Action":"fail","Package":"p"}`,
+	)
+	for _, o := range []Options{DefaultOptions(), {Full: true}} {
+		r, err := Squeeze(input, o)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := r.Data.(Report).Failures[0].Output.Lines
+		if diff := cmp.Diff([]string{"a_test.go:9: child go test failed:", "    --- FAIL: TestInner (0.00s)"}, got); diff != "" {
+			t.Errorf("full=%v lines (-want +got):\n%s", o.Full, diff)
+		}
+	}
+}
+
+func TestGoWarningsAreKept(t *testing.T) {
+	t.Parallel()
+	input := stream(
+		`{"Action":"start","Package":"p"}`,
+		`{"Action":"output","Package":"p","Output":"testing: warning: no tests to run\n"}`,
+		`{"Action":"output","Package":"p","Output":"PASS\n","OutputType":"frame"}`,
+		`{"Action":"output","Package":"p","Output":"ok  \tp\t0.01s\n"}`,
+		`{"Action":"pass","Package":"p"}`,
+	)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([]string{"p: testing: warning: no tests to run"}, r.Data.(Report).Warnings); diff != "" {
+		t.Errorf("warnings (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"warning"}, r.Conditions); diff != "" {
+		t.Errorf("conditions (-want +got):\n%s", diff)
+	}
+	if !strings.Contains(r.Text, "warning p: testing: warning: no tests to run\n") {
+		t.Errorf("text:\n%s", r.Text)
 	}
 }
 
@@ -239,7 +313,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`{"Action":"fail","Package":"p\nfail forged","Test":"T\nfail forged"}`,
 		`{"Action":"bench\nfail forged","Package":"p"}`,
 	)
-	for _, o := range []Options{DefaultOptions(), {All: true, Logs: true}} {
+	for _, o := range []Options{DefaultOptions(), {All: true, Full: true}} {
 		r, err := Squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
@@ -290,7 +364,7 @@ func FuzzSqueeze(f *testing.F) {
 				failedEvents++
 			}
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxTests: 1, MaxOutput: 1, All: true}, {Logs: true}} {
+		for _, o := range []Options{DefaultOptions(), {MaxTests: 1, MaxOutput: 1, All: true}, {Full: true}} {
 			r := Build(events, o)
 			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)

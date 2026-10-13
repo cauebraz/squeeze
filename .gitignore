@@ -1,5 +1,6 @@
 /bin/
 coverage.out
+.squeeze/
 internal/formats/*/testdata/real/
 notes/
 research/

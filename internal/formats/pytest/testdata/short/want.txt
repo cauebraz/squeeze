@@ -7,7 +7,7 @@ FAILED tests/test_calc.py::test_add_wrong
   tests/test_calc.py:13: in test_add_wrong
   assert result == 5
   E assert 4 == 5
-  ... captured stdout call (--full)
+  ... 1 captured line in stdout call (--full)
 FAILED tests/test_calc.py::test_add_param[2-3-6]
   tests/test_calc.py:18: in test_add_param
   assert add(a, b) == want

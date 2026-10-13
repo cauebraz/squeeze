@@ -1,6 +1,6 @@
 # generic
 
-Input: any text output. squeeze uses it when no other format detects the input, and prints one line on stderr that says so. Detected when the first 64 KiB hold something other than whitespace, no NUL byte and valid UTF-8, or when they are all whitespace and more follows. Empty or whitespace-only input exits with code 1, other input with code 2.
+Input: any text output. squeeze uses it when no other format detects the input, and prints `squeeze: no format detected; used generic` on stderr. Detected when the first 64 KiB hold something other than whitespace, no NUL byte and valid UTF-8, or when they are all whitespace and more follows. Empty or whitespace-only input exits with code 1, other input with code 2.
 
 ```
 npm test 2>&1 | squeeze
@@ -43,24 +43,29 @@ exit status 2
 - Three or more lines in a row that differ only in their numbers print the first and the last with `... N similar lines (--no-fold)` between them. Lines with an error or warning word fold only when identical.
 - Error or warning words are `error`, `errors`, `fail`, `fails`, `failed`, `failure`, `failures`, `fatal`, `panic`, `panics`, `panicked`, `exception`, `exceptions`, `traceback`, `tracebacks`, `warn`, `warns`, `warned`, `warning` and `warnings`, as whole words in any case.
 - Past `--max-lines`, squeeze keeps the first quarter and the last half of the lines, and fills the remaining quarter with the first lines from the middle that carry an error or warning word. A folded run stays whole: its line and its fold notice are kept or cut together. Each gap prints `... N lines cut (--max-lines 0)` and how many of those lines carry such a word. Fold and cut notices do not count toward the limit.
-- A line longer than `--max-line-bytes` is cut at a character boundary, keeping at least one character, and ends with `... [N more bytes, --max-line-bytes 0]`.
+- A line longer than `--max-line-bytes` is cut at a character boundary, keeping at least one character, and ends with `... N more bytes (--max-line-bytes 0)`.
 - Input with no printable text prints `(no printable text)`.
 
 ## Flags
 
 | Flag | Default | Effect |
 |---|---|---|
-| `--max-lines` | `200` | lines listed, `0` for all |
 | `--max-line-bytes` | `512` | bytes per line, `0` for all |
+| `--max-lines` | `200` | lines listed, `0` for all |
 | `--no-fold` | off | print repeated and similar lines |
 
 ## Conditions for `--fail-on`
 
-None. Words in free text do not say whether a run failed, so `--fail-on` needs a format that does. On input that no format detects, `--fail-on` exits with code 2 and names the formats; under `squeeze generic` any condition exits with code 64.
+| Condition | Present when |
+|---|---|
+| `error` | a line holds an error word: `error`, `fail`, `failed`, `failure`, `fatal`, `panic`, `exception` or `traceback`, with their plurals |
+| `warning` | a line holds `warn`, `warns`, `warned`, `warning` or `warnings` |
+
+Both are word matches on the input, not the tool's verdict: a line such as `0 errors` sets `error`. Name the tool's format when one exists for an exact condition.
 
 ## JSON data
 
-`data` holds counts of input lines: `lines`, `printed`, `blank_dropped`, `folded`, `cut`, `cut_flagged` (cut lines with an error or warning word), and `long_lines` (printed lines cut by `--max-line-bytes`). `printed + blank_dropped + folded + cut` equals `lines`.
+`data` holds counts of input lines: `lines`, `printed`, `blank_dropped`, `folded`, `lines_omitted`, `flagged_lines_omitted` (omitted lines with an error or warning word), `long_lines` (printed lines cut by `--max-line-bytes`), `error_lines` and `warning_lines` (lines with an error or a warning word, counted before folding and cutting). `printed + blank_dropped + folded + lines_omitted` equals `lines`.
 
 ## Limitations
 

@@ -1,7 +1,7 @@
 terraform 1.9.5 plan: 0 to add, 2 to change, 0 to destroy
 ~ aws_instance.web
   ~ instance_type: "t3.small" -> "t3.medium"
-  ... 2 more attributes (--max-attrs)
+  ... 2 more attributes (--max-attrs 0)
 ~ module.vpc.aws_security_group.web
   ~ ingress[0].cidr_blocks[0]: "10.0.0.0/8" -> "10.0.0.0/16"
-  ... 5 more attributes (--max-attrs)
+  ... 5 more attributes (--max-attrs 0)

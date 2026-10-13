@@ -4,7 +4,8 @@ FAILED more/test_more.py::test_parse
   > return int(value)
   E ValueError: invalid literal for int() with base 10: '12a'
   more/test_more.py:13: ValueError
-  ... 7 traceback lines; captured log call (--full)
+  ... 7 traceback lines (--full)
+  ... 1 captured line in log call (--full)
 FAILED more/test_more.py::test_many[3]
   > assert n % 7 != 3
   E assert (3 % 7) != 3

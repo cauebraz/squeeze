@@ -6,4 +6,4 @@ fail example.com/shop/slow TestSlow (did not finish)
   goroutine 36 [sleep]:
   example.com/shop/slow.TestSlow(0x30e2c4556488?)
       /home/dev/shop/slow/slow_test.go:10 +0x24
-  ... 24 runtime and testing stack lines (--logs)
+  ... 24 runtime and testing stack lines (--full)

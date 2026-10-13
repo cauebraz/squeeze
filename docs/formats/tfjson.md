@@ -35,6 +35,7 @@ error tests/network.tftest.hcl
   error: Invalid value for variable (tests/network.tftest.hcl:3:3)
     cidr_block must be a valid IPv4 CIDR.
     > cidr_block = "10.0.0.0/33"
+... 1 passing test run (--all)
 ... 1 other message: test_abstract 1 (--all)
 ```
 
@@ -43,7 +44,7 @@ error tests/network.tftest.hcl
 - `applied:` counts completed resources and names the three slowest. Data source reads during a plan or apply are counted under `refresh`.
 - Every `apply_errored`, `provision_errored`, `action_errored` and `ephemeral_op_errored` message is printed as an `error:` line, followed by the diagnostics.
 - A `policy_result` other than `AllowResult` is printed as a `policy:` line with the policy, the target and the enforcement level.
-- Test runs that fail or error are listed with their diagnostics; a test file that errors outside a run is listed with its own diagnostics. Passing runs appear with `--all`.
+- Test runs that fail or error are listed with their diagnostics; a test file that errors outside a run is listed with its own diagnostics. Passing runs are counted in `... N passing test runs (--all)`; no-op changes in `... N no-op changes (--all)`; drift in `... N drifted resources (--drift)` unless `--drift` lists it.
 - Sensitive output values are never printed or stored; other scalar outputs print their value up to 48 bytes.
 - Every line at level `error` or `warn` becomes a diagnostic, whatever its type, so a message type squeeze does not know cannot hide a failure. A diagnostic severity other than `warning` counts as an error.
 - Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed, so an address or a name cannot forge a line of output.
@@ -53,10 +54,10 @@ error tests/network.tftest.hcl
 
 | Flag | Default | Effect |
 |---|---|---|
-| `--max-resources` | `200` | planned changes listed, `0` for all |
-| `--max-diagnostics` | `20` | diagnostics listed, `0` for all |
-| `--all` | off | include no-op changes, passing tests and every other message |
+| `--all` | off | include no-op resources, passing tests and every other message |
 | `--drift` | off | list drifted resources instead of counting them |
+| `--max-diagnostics` | `20` | diagnostics listed, `0` for all |
+| `--max-resources` | `200` | planned changes listed, `0` for all |
 | `--no-detail` | off | print diagnostic summary, location and code only |
 
 ## Conditions for `--fail-on`
@@ -69,6 +70,7 @@ error tests/network.tftest.hcl
 | `destroy` | the summary destroys or a planned change deletes or replaces |
 | `drift` | Terraform reported drift |
 | `error` | an error diagnostic or a failed operation |
+| `fail` | `error`, `apply_errored`, `policy_failed` or `test_failed` |
 | `forget` | a planned change removes an object from state without destroying it |
 | `policy_failed` | a policy result other than `AllowResult` |
 | `replace` | a planned change replaces |
@@ -77,7 +79,7 @@ error tests/network.tftest.hcl
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `operation`, `summary` (Terraform's `change_summary` as `operation`, `add`, `change`, `remove`, `import`, `action_invocation`, `action_fail`, or null), `changes`, `omitted`, `drift`, `deferred`, `applied` (`count`, `slowest`), `failures`, `policies`, `errors`, `warnings`, `diagnostics`, `diagnostics_omitted`, `outputs`, `providers_installed`, `tests` (or null) and `other` (message counts by type).
+`data` holds `tool`, `tool_version`, `operation`, `summary` (Terraform's `change_summary` as `operation`, `add`, `change`, `remove`, `import`, `action_invocation`, `action_fail`, or null), `changes`, `changes_omitted`, `noop_hidden`, `drift`, `deferred`, `applied` (`count`, `slowest`), `failures`, `policies`, `errors`, `warnings`, `diagnostics`, `diagnostics_omitted`, `outputs`, `providers_installed`, `tests` (or null) and `other` (message counts by type).
 
 - `changes` and `drift`: `address`, `action` and, when set, `previous_address`, `reason`, `import_id`. `deferred` adds `reason` to `address` and `action`.
 - `failures`: `type`, `message` and, when set, `address`. `policies`: `policy`, `result` and, when set, `target`, `enforcement`.

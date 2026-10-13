@@ -8,7 +8,8 @@ FAILED tests/test_calc.py::test_add_wrong
   > assert result == 5
   E assert 4 == 5
   tests/test_calc.py:13: AssertionError
-  ... 3 traceback lines; captured stdout call (--full)
+  ... 3 traceback lines (--full)
+  ... 1 captured line in stdout call (--full)
 FAILED tests/test_calc.py::test_add_param[2-3-6]
   > assert add(a, b) == want
   E assert 5 == 6
@@ -32,4 +33,4 @@ FAILED tests/test_calc.py::TestDivision::test_zero
   tests/test_calc.py:51: ZeroDivisionError
   ... 3 traceback lines (--full)
 warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
-... not shown: 6 short summary lines for passed, skipped, xfailed or xpassed tests (--all)
+... 6 short summary lines for passed, skipped, xfailed or xpassed tests (--all)

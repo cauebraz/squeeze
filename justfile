@@ -1,7 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 version := `git describe --tags --always --dirty 2>/dev/null || echo dev`
-min_coverage := "85"
+min_coverage := "95"
 terraform_repo := "https://github.com/hashicorp/terraform.git"
 terraform_ref := "9ec49e06a868cfa161213fac7f74aa03f8937755"
 
@@ -28,7 +28,10 @@ lint:
     go tool staticcheck ./...
     go tool exhaustive ./...
 
-check: fmt-check vet lint test
+check: fmt-check vet lint tidy-check test
+
+tidy-check:
+    go mod tidy -diff
 
 cover:
     go test -coverpkg=./... -coverprofile=coverage.out ./...

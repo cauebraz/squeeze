@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cauebraz/squeeze/internal/core"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/tfdiag"
@@ -29,7 +30,7 @@ type Report struct {
 	Errors      int                 `json:"errors"`
 	Warnings    int                 `json:"warnings"`
 	Diagnostics []tfdiag.Diagnostic `json:"diagnostics"`
-	Omitted     int                 `json:"omitted"`
+	Omitted     int                 `json:"diagnostics_omitted"`
 }
 
 func Parse(input []byte) (*Validation, error) {
@@ -56,7 +57,7 @@ func Build(v *Validation, o Options) Report {
 	}
 	ds = tfdiag.Normalize(ds)
 	errorCount, warningCount := tfdiag.Count(ds)
-	kept, omitted := tfdiag.Limit(ds, o.MaxDiagnostics)
+	kept, omitted := core.Limit(ds, o.MaxDiagnostics)
 	return Report{
 		Tool:        "terraform",
 		Valid:       *v.Valid,

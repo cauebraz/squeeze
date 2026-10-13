@@ -33,7 +33,7 @@ const (
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{}, tfvalidate.Format{}, tfjson.Format{}, gotest.Format{}, pytest.Format{}).WithFallback(generic.Format{})
+	return core.NewRegistry(tfplan.Format{}, tfvalidate.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
 }
 
 type invocation struct {
@@ -50,7 +50,7 @@ func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 }
 
 func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Registry) int {
-	inv, code, ok := parse(args, stderr, reg)
+	inv, code, ok := parse(args, stdout, stderr, reg)
 	if !ok {
 		return code
 	}
@@ -59,8 +59,16 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 		return ExitOK
 	}
 	input, err := io.ReadAll(stdin)
+	if errors.Is(err, errNoPipe) {
+		fmt.Fprintf(stderr, "squeeze: %v\n", err)
+		return ExitError
+	}
 	if err != nil {
 		fmt.Fprintf(stderr, "squeeze: read stdin: %v\n", err)
+		return ExitError
+	}
+	if len(bytes.TrimSpace(input)) == 0 {
+		fmt.Fprintln(stderr, "squeeze: empty input")
 		return ExitError
 	}
 	if inv.rawDir != "" {
@@ -70,10 +78,6 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 			return ExitError
 		}
 		fmt.Fprintf(stderr, "squeeze: raw input saved to %s\n", path)
-	}
-	if len(bytes.TrimSpace(input)) == 0 {
-		fmt.Fprintln(stderr, "squeeze: empty input")
-		return ExitError
 	}
 	if inv.format == nil {
 		names := strings.Join(reg.Names(), ", ")
@@ -87,11 +91,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 			return ExitUnknownFormat
 		}
 		if reg.IsFallback(f) {
-			if len(inv.failOn) > 0 {
-				fmt.Fprintf(stderr, "squeeze: input matches no known format and --fail-on needs one; name it: squeeze <format> (formats: %s)\n", names)
-				return ExitUnknownFormat
-			}
-			fmt.Fprintf(stderr, "squeeze: input matches no known format; printed as %s text (formats: %s)\n", f.Name(), names)
+			fmt.Fprintf(stderr, "squeeze: no format detected; used %s\n", f.Name())
 		}
 		inv.format = f
 		inv.squeeze = f.Configure(flag.NewFlagSet(f.Name(), flag.ContinueOnError))
@@ -163,7 +163,7 @@ func (l listFlag) Set(s string) error {
 	return nil
 }
 
-func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int, bool) {
+func parse(args []string, stdout, stderr io.Writer, reg *core.Registry) (invocation, int, bool) {
 	var inv invocation
 	name := "squeeze"
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
@@ -178,9 +178,13 @@ func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int
 	}
 	fs := flag.NewFlagSet(name, flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	fs.StringVar(&inv.output, "output", "text", "text, or json for the envelope with the format's data")
-	fs.StringVar(&inv.rawDir, "raw-dir", "", "save the unmodified input to this directory and print its path on stderr")
-	fs.Var(listFlag{&inv.failOn}, "fail-on", "exit 3 when the input has any of these comma-separated conditions; names in squeeze <format> -h")
+	fs.StringVar(&inv.output, "output", "text", "output `format`: text, or json for the envelope with the format's data")
+	fs.StringVar(&inv.rawDir, "raw-dir", "", "save the unmodified input to this `dir` and print its path on stderr")
+	where := "names in squeeze <format> -h"
+	if inv.format != nil {
+		where = "names listed below"
+	}
+	fs.Var(listFlag{&inv.failOn}, "fail-on", "exit 3 when the input has any of these comma-separated `conditions`; "+where)
 	if inv.format == nil {
 		fs.BoolVar(&inv.version, "version", false, "print the version and exit")
 	} else {
@@ -188,11 +192,11 @@ func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int
 	}
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
-			fs.SetOutput(stderr)
+			fs.SetOutput(stdout)
 			if inv.format == nil {
-				rootUsage(stderr, fs, reg)
+				rootUsage(stdout, fs, reg)
 			} else {
-				formatUsage(stderr, fs, inv.format)
+				formatUsage(stdout, fs, inv.format)
 			}
 			return inv, ExitOK, false
 		}
@@ -200,7 +204,7 @@ func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int
 		if hint := flagHint(err, inv.format, reg); hint != "" {
 			fmt.Fprintf(stderr, "squeeze: %s\n", hint)
 		}
-		fmt.Fprintf(stderr, "run '%s -h' for usage\n", name)
+		fmt.Fprintf(stderr, "squeeze: run '%s -h' for usage\n", name)
 		return inv, ExitUsage, false
 	}
 	if fs.NArg() > 0 {
@@ -224,7 +228,7 @@ func rootUsage(w io.Writer, fs *flag.FlagSet, reg *core.Registry) {
 	fmt.Fprint(w, `usage: squeeze [flags] < input
        squeeze <format> [flags] < input
 
-Reads a tool's output on stdin and prints the smallest text that keeps every change.
+Reads a tool's output on stdin and prints the smallest text that keeps every change, failure or decision.
 Without a format, squeeze detects it and uses the format's defaults;
 text that no format matches goes through the generic format.
 
@@ -249,8 +253,16 @@ func saveRaw(dir string, input []byte) (string, error) {
 	}
 	sum := sha256.Sum256(input)
 	path := filepath.Join(dir, hex.EncodeToString(sum[:])[:12])
-	if err := os.WriteFile(path, input, 0o600); err != nil {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if errors.Is(err, os.ErrExist) {
+		return path, nil
+	}
+	if err != nil {
 		return "", err
 	}
-	return path, nil
+	if _, err := f.Write(input); err != nil {
+		f.Close()
+		return "", err
+	}
+	return path, f.Close()
 }

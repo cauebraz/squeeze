@@ -1,0 +1,9 @@
+go test: fail; 4 tests: 2 passed, 2 failed, 0 skipped; 1 package: 1 failed
+fail example.com/shop/calc TestAddNegative (run 1 of 2)
+  calc_test.go:17: Add(-2, -3) = -5, want -6
+      second line of the message
+  ... 1 log line (--full)
+fail example.com/shop/calc TestAddNegative (run 2 of 2)
+  calc_test.go:17: Add(-2, -3) = -5, want -6
+      second line of the message
+  ... 1 log line (--full)

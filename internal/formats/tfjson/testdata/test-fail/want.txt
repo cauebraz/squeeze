@@ -7,4 +7,5 @@ error tests/network.tftest.hcl
   error: Invalid value for variable (tests/network.tftest.hcl:3:3)
     cidr_block must be a valid IPv4 CIDR.
     > cidr_block = "10.0.0.0/33"
+... 1 passing test run (--all)
 ... 1 other message: test_abstract 1 (--all)

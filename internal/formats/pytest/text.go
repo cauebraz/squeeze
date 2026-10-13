@@ -2,6 +2,7 @@ package pytest
 
 import (
 	"fmt"
+	"github.com/cauebraz/squeeze/internal/core"
 	"strings"
 )
 
@@ -16,10 +17,10 @@ func Text(r Report, o Options) string {
 		fmt.Fprintf(&b, "stopped: %s\n", r.Stopped)
 	}
 	for _, f := range r.Failures {
-		writeFailure(&b, f)
+		writeFailure(&b, f, o.Full)
 	}
 	if r.FailuresOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more failures and errors (--max-tests 0)\n", r.FailuresOmitted)
+		fmt.Fprintf(&b, "... %d more %s (--max-tests 0)\n", r.FailuresOmitted, core.Plural(r.FailuresOmitted, "failure or error", "failures and errors"))
 	}
 	for _, w := range r.Warnings {
 		fmt.Fprintf(&b, "warning %s", w.Message)
@@ -29,15 +30,15 @@ func Text(r Report, o Options) string {
 		b.WriteByte('\n')
 	}
 	if r.WarningsOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more %s (--max-warnings 0)\n", r.WarningsOmitted, plural(r.WarningsOmitted, "warning", "warnings"))
+		fmt.Fprintf(&b, "... %d more %s (--max-warnings 0)\n", r.WarningsOmitted, core.Plural(r.WarningsOmitted, "warning", "warnings"))
 	}
 	if len(r.Notes) > 0 {
 		b.WriteString("output outside the report sections:\n")
+		if r.NotesOmitted > 0 {
+			fmt.Fprintf(&b, "  ... %d earlier %s (--max-output 0)\n", r.NotesOmitted, core.Plural(r.NotesOmitted, "line", "lines"))
+		}
 		for _, n := range r.Notes {
 			b.WriteString("  " + n + "\n")
-		}
-		if r.NotesOmitted > 0 {
-			fmt.Fprintf(&b, "  ... %d more %s (--max-output 0)\n", r.NotesOmitted, plural(r.NotesOmitted, "line", "lines"))
 		}
 	}
 	if o.All {
@@ -67,12 +68,19 @@ func header(r Report) string {
 	return tool + ": " + r.Summary.Line
 }
 
-func writeFailure(b *strings.Builder, f Failure) {
+func writeFailure(b *strings.Builder, f Failure, full bool) {
 	word := "FAILED"
 	if f.Kind == "error" {
 		word = "ERROR"
 	}
-	fmt.Fprintf(b, "%s %s", word, f.Test)
+	name := f.Test
+	if name == "" {
+		name = "(entry without a node id)"
+	}
+	fmt.Fprintf(b, "%s %s", word, name)
+	if f.Subtest != "" {
+		b.WriteString(" " + f.Subtest)
+	}
 	if f.When != "" {
 		fmt.Fprintf(b, " (%s)", f.When)
 	}
@@ -81,40 +89,47 @@ func writeFailure(b *strings.Builder, f Failure) {
 	}
 	b.WriteByte('\n')
 	if f.Omitted > 0 {
-		fmt.Fprintf(b, "  ... %d earlier %s (--max-output 0)\n", f.Omitted, plural(f.Omitted, "line", "lines"))
+		fmt.Fprintf(b, "  ... %d earlier %s (--max-output 0)\n", f.Omitted, core.Plural(f.Omitted, "line", "lines"))
 	}
 	for _, l := range f.Lines {
 		b.WriteString("  " + l + "\n")
 	}
 	var hidden []string
 	if f.Hidden > 0 {
-		hidden = append(hidden, fmt.Sprintf("%d traceback %s", f.Hidden, plural(f.Hidden, "line", "lines")))
-	}
-	if len(f.Captured) > 0 {
-		hidden = append(hidden, "captured "+strings.Join(f.Captured, ", "))
+		hidden = append(hidden, fmt.Sprintf("%d traceback %s", f.Hidden, core.Plural(f.Hidden, "line", "lines")))
 	}
 	if len(hidden) > 0 {
 		fmt.Fprintf(b, "  ... %s (--full)\n", strings.Join(hidden, "; "))
 	}
+	if !full {
+		names := make([]string, 0, len(f.Captured))
+		count := 0
+		for _, c := range f.Captured {
+			names = append(names, c.Name)
+			count += len(c.Lines) + c.Omitted
+		}
+		if len(f.Captured) > 0 {
+			fmt.Fprintf(b, "  ... %d captured %s in %s (--full)\n", count, core.Plural(count, "line", "lines"), strings.Join(names, " and "))
+		}
+		return
+	}
+	for _, c := range f.Captured {
+		fmt.Fprintf(b, "  captured %s:\n", c.Name)
+		if c.Omitted > 0 {
+			fmt.Fprintf(b, "    ... %d earlier %s (--max-output 0)\n", c.Omitted, core.Plural(c.Omitted, "line", "lines"))
+		}
+		for _, l := range c.Lines {
+			b.WriteString("    " + l + "\n")
+		}
+	}
 }
 
 func writeCounted(b *strings.Builder, r Report) {
-	var items []string
 	if n := len(r.Outcomes); n > 0 {
-		items = append(items, fmt.Sprintf("%d short summary %s for passed, skipped, xfailed or xpassed tests", n, plural(n, "line", "lines")))
+		fmt.Fprintf(b, "... %d short summary %s for passed, skipped, xfailed or xpassed tests (--all)\n", n, core.Plural(n, "line", "lines"))
 	}
 	for _, title := range r.sectionOrder {
 		n := r.Sections[title]
-		items = append(items, fmt.Sprintf("section %q (%d %s)", title, n, plural(n, "line", "lines")))
+		fmt.Fprintf(b, "... %d %s in section %q (--all)\n", n, core.Plural(n, "line", "lines"), title)
 	}
-	if len(items) > 0 {
-		fmt.Fprintf(b, "... not shown: %s (--all)\n", strings.Join(items, ", "))
-	}
-}
-
-func plural(n int, one, many string) string {
-	if n == 1 {
-		return one
-	}
-	return many
 }

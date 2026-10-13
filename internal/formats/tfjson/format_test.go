@@ -50,17 +50,17 @@ func TestConditions(t *testing.T) {
 	t.Parallel()
 	tests := map[string][]string{
 		"plan":                {"change", "destroy", "replace"},
-		"plan-diagnostics":    {"error", "warning"},
+		"plan-diagnostics":    {"error", "fail", "warning"},
 		"plan-drift-deferred": {"change", "deferred", "drift"},
 		"import-move-forget":  {"change", "forget"},
 		"apply":               {"change"},
-		"apply-errored":       {"apply_errored", "change", "error"},
+		"apply-errored":       {"apply_errored", "change", "error", "fail"},
 		"destroy":             {"change", "destroy"},
 		"init":                {},
 		"test-pass":           {},
-		"test-fail":           {"error", "test_failed"},
-		"policy-deny":         {"change", "policy_failed"},
-		"unknown-types":       {"error", "warning"},
+		"test-fail":           {"error", "fail", "test_failed"},
+		"policy-deny":         {"change", "fail", "policy_failed"},
+		"unknown-types":       {"error", "fail", "warning"},
 	}
 	seen := map[string]bool{}
 	for name, want := range tests {

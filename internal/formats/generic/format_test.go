@@ -89,7 +89,7 @@ func TestText(t *testing.T) {
 		"one byte keeps the first character": {
 			input: lines("\u00e9\u6f22"),
 			o:     Options{MaxLineBytes: 1},
-			want:  "\u00e9 ... [3 more bytes, --max-line-bytes 0]\n",
+			want:  "\u00e9 ... 3 more bytes (--max-line-bytes 0)\n",
 		},
 		"blank runs collapse": {
 			input: lines("", "", "a", "", "", "", "b", "", ""),
@@ -144,12 +144,12 @@ func TestText(t *testing.T) {
 		"long line": {
 			input: lines(strings.Repeat("ab", 10), "ok"),
 			o:     Options{MaxLineBytes: 5},
-			want:  "ababa ... [15 more bytes, --max-line-bytes 0]\nok\n",
+			want:  "ababa ... 15 more bytes (--max-line-bytes 0)\nok\n",
 		},
 		"long line cut on a rune boundary": {
 			input: lines("aaaaéz"),
 			o:     Options{MaxLineBytes: 5},
-			want:  "aaaa ... [3 more bytes, --max-line-bytes 0]\n",
+			want:  "aaaa ... 3 more bytes (--max-line-bytes 0)\n",
 		},
 		"indentation and tabs": {
 			input: lines("  two", "\tTab"),
@@ -180,7 +180,7 @@ func TestText(t *testing.T) {
 func TestReport(t *testing.T) {
 	t.Parallel()
 	r, _ := Build(lines("", "a", "a", "a", "b", "", "", strings.Repeat("z", 9), "Error x", "c", "d"), Options{MaxLines: 5, MaxLineBytes: 4})
-	want := Report{Lines: 11, Printed: 4, BlankDropped: 2, Folded: 2, Cut: 3, LongLines: 1}
+	want := Report{Lines: 11, Printed: 4, BlankDropped: 2, Folded: 2, Cut: 3, LongLines: 1, ErrorLines: 1}
 	if diff := cmp.Diff(want, r); diff != "" {
 		t.Errorf("report (-want +got):\n%s", diff)
 	}

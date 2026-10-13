@@ -23,6 +23,8 @@ type Output struct {
 type Failure struct {
 	Package    string            `json:"package"`
 	Test       string            `json:"test"`
+	Run        int               `json:"run,omitempty"`
+	Runs       int               `json:"runs,omitempty"`
 	Elapsed    float64           `json:"elapsed,omitempty"`
 	Unfinished bool              `json:"unfinished,omitempty"`
 	Attrs      map[string]string `json:"attrs,omitempty"`
@@ -70,6 +72,7 @@ type Report struct {
 	Passing         []PackageRef     `json:"passing_packages"`
 	NoTests         []string         `json:"packages_without_tests"`
 	Text            Output           `json:"text"`
+	Warnings        []string         `json:"warning_messages"`
 	Panics          int              `json:"panics"`
 	Timeouts        int              `json:"timeouts"`
 	Races           int              `json:"races"`

@@ -7,8 +7,8 @@ squeeze compacts a tool's output for coding agents. Read `README.md` for the use
 Use `just` for everything; `just --list` shows the recipes.
 
 ```
-just check          # gofmt, go vet, staticcheck, exhaustive, tests: run before the first edit and after the last
-just cover          # coverage across packages, fails below 85 percent
+just check          # gofmt, go vet, staticcheck, exhaustive, go mod tidy, tests: run before the first edit and after the last
+just cover          # coverage across packages, fails below 95 percent
 just golden         # rewrite golden files after an intended output change
 just fuzz tfplan 30 # fuzz one format
 just fuzz-all 20    # fuzz every format; fails for a format without FuzzSqueeze
@@ -49,5 +49,6 @@ docs/formats/<name>.md  user documentation of one format
 - No comments in code. Explanations go in the PR description or in `docs/`.
 - Documents and messages are plain ASCII.
 - A behavior change updates `README.md` or `docs/formats/<name>.md` in the same change.
-- Do not edit `CHANGELOG.md`. The project is in development; once public releases start, an automated release tool (semantic-release or release-please) writes the changelog from the commit history.
+- There is no `CHANGELOG.md` and none is written by hand. Once public releases start, an automated release tool (semantic-release or release-please) writes it from the commit history.
+- `just cover` fails below 95 percent; a change that lowers coverage adds tests before it is done.
 - Research notes, plans and drafts stay out of the repository; `notes/` and `research/` are gitignored.

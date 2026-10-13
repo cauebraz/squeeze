@@ -213,7 +213,8 @@ type Report struct {
 	ToolVersion  string             `json:"tool_version"`
 	Summary      Summary            `json:"summary"`
 	Changes      []ResourceChange   `json:"changes"`
-	Omitted      int                `json:"omitted"`
+	Omitted      int                `json:"changes_omitted"`
+	NoopHidden   int                `json:"noop_hidden"`
 	Drift        []ResourceChange   `json:"drift"`
 	DriftOmitted int                `json:"drift_omitted"`
 	Deferred     []DeferredChange   `json:"deferred"`

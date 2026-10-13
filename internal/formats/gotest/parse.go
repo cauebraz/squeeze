@@ -1,11 +1,11 @@
 package gotest
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
+
+	"github.com/cauebraz/squeeze/internal/jsonl"
 )
 
 var ErrNoEvents = errors.New("no go test -json events in the input")
@@ -32,21 +32,14 @@ type Event struct {
 }
 
 func Parse(input []byte) ([]Event, error) {
-	r := bufio.NewReader(bytes.NewReader(input))
 	var events []Event
 	seen := 0
-	for {
-		raw, err := r.ReadBytes('\n')
-		if trimmed := bytes.TrimSpace(raw); len(trimmed) > 0 {
-			e := parseLine(trimmed)
-			if e.Action != "" {
-				seen++
-			}
-			events = append(events, e)
+	for _, raw := range jsonl.Lines(input) {
+		e := parseLine(raw)
+		if e.Action != "" {
+			seen++
 		}
-		if errors.Is(err, io.EOF) {
-			break
-		}
+		events = append(events, e)
 	}
 	if seen == 0 {
 		return nil, ErrNoEvents

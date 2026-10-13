@@ -43,19 +43,20 @@ warning: Argument is deprecated (storage.tf:7:3)
 | Flag | Default | Effect |
 |---|---|---|
 | `--max-diagnostics` | `20` | diagnostics listed, `0` for all |
-| `--no-detail` | off | print summary, location and code only |
+| `--no-detail` | off | print diagnostic summary, location and code only |
 
 ## Conditions for `--fail-on`
 
 | Condition | Present when |
 |---|---|
 | `error` | at least one error |
+| `fail` | Terraform reports `valid: false` |
 | `invalid` | Terraform reports `valid: false` |
 | `warning` | at least one warning |
 
 ## JSON data
 
-`data` holds `tool`, `valid`, `errors`, `warnings`, `omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code` and `count`.
+`data` holds `tool`, `valid`, `errors`, `warnings`, `diagnostics_omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code` and `count`.
 
 ## Limitations
 

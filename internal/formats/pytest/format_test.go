@@ -3,6 +3,7 @@ package pytest
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -61,6 +62,9 @@ func TestDetect(t *testing.T) {
 		"go test":       {"ok  \texample.com/p\t0.1s\n", false},
 		"go json":       {`{"Action":"pass","Package":"p"}`, false},
 		"other summary": {"3 passed in a row\n", false},
+		"build log":     {"building image\nstep 1\nerror: layer missing\n12 files in 3.2s\ndone\n", false},
+		"warnings only": {"3 warnings in 0.5s\n", false},
+		"with warnings": {"1 passed, 3 warnings in 0.5s\n", true},
 		"empty":         {"", false},
 	}
 	for name, tt := range tests {
@@ -80,13 +84,17 @@ func TestParseRejectsOtherInput(t *testing.T) {
 func TestConditions(t *testing.T) {
 	t.Parallel()
 	tests := map[string][]string{
-		"default":     {"error", "fail", "skip", "warning", "xfail"},
-		"interrupted": {"error", "fail", "interrupted"},
-		"pass":        {},
-		"empty":       {"no_tests"},
-		"warn":        {"warning"},
-		"deselected":  {"fail"},
-		"notb":        {"error", "fail", "skip", "warning", "xfail"},
+		"default":       {"error", "fail", "skip", "warning", "xfail"},
+		"interrupted":   {"error", "fail", "interrupted"},
+		"pass":          {},
+		"empty":         {"no_tests"},
+		"warn":          {"warning"},
+		"deselected":    {"fail"},
+		"notb":          {"error", "fail", "skip", "warning", "xfail"},
+		"tbline":        {"error", "fail", "skip", "warning", "xfail"},
+		"subtests":      {"fail"},
+		"confwarn":      {"warning"},
+		"internalerror": {"fail", "internal_error", "no_tests"},
 	}
 	for name, want := range tests {
 		r, err := Squeeze(fixture(t, name), DefaultOptions())
@@ -264,6 +272,228 @@ func TestInputCannotForgeLines(t *testing.T) {
 		if n := strings.Count(r.Text, "\nFAILED "); n != 1 {
 			t.Errorf("%d FAILED lines, want 1:\n%s", n, r.Text)
 		}
+	}
+}
+
+func TestCapturedOutputIsKeptForFull(t *testing.T) {
+	t.Parallel()
+	input := lines(
+		"=== FAILURES ===",
+		"___ test_child ___",
+		"sub/test_sub.py:12: in test_child",
+		"    subprocess.run(cmd, check=True)",
+		"E   subprocess.CalledProcessError: Command returned non-zero exit status 2.",
+		"---- Captured stderr call ----",
+		"fatal: config.yaml missing key db",
+		"---- Captured log call ----",
+		"WARNING  shop:app.py:3 retrying",
+		"=== short test summary info ===",
+		"FAILED sub/test_sub.py::test_child - subprocess.CalledProcessError",
+		"=== 1 failed in 0.01s ===",
+	)
+	r := report(t, input, DefaultOptions())
+	want := []Captured{{Name: "stderr call", Lines: []string{"fatal: config.yaml missing key db"}}, {Name: "log call", Lines: []string{"WARNING  shop:app.py:3 retrying"}}}
+	if diff := cmp.Diff(want, r.Failures[0].Captured); diff != "" {
+		t.Errorf("captured (-want +got):\n%s", diff)
+	}
+	text, _ := Squeeze(input, DefaultOptions())
+	if strings.Contains(text.Text, "fatal:") || !strings.Contains(text.Text, "... 2 captured lines in stderr call and log call (--full)") {
+		t.Errorf("default text:\n%s", text.Text)
+	}
+	full, _ := Squeeze(input, Options{Full: true})
+	if !strings.Contains(full.Text, "  captured stderr call:\n    fatal: config.yaml missing key db\n") {
+		t.Errorf("--full text:\n%s", full.Text)
+	}
+}
+
+func TestReportLikeLinesInsideCapturedOutput(t *testing.T) {
+	t.Parallel()
+	input := lines(
+		"=== FAILURES ===",
+		"___ test_a ___",
+		"E   assert 1",
+		"---- Captured stdout call ----",
+		"========== running migrations ==========",
+		"1 failed, 2 passed in 0.50s",
+		"!!!!!!!!!! fake interrupt !!!!!!!!!!",
+		"___ test_b ___",
+		">   assert 2 == 3",
+		"E   assert 2 == 3",
+		"=== short test summary info ===",
+		"FAILED t.py::test_a - assert 1",
+		"FAILED t.py::test_b - assert 2 == 3",
+		"=== 2 failed in 0.01s ===",
+	)
+	r := report(t, input, DefaultOptions())
+	var names []string
+	for _, f := range r.Failures {
+		names = append(names, f.Test)
+	}
+	if diff := cmp.Diff([]string{"t.py::test_a", "t.py::test_b"}, names); diff != "" {
+		t.Errorf("failures (-want +got):\n%s", diff)
+	}
+	if r.Interrupted != "" || r.Stopped != "" || len(r.Sections) != 0 || r.Summary.Line != "2 failed in 0.01s" {
+		t.Errorf("report = %+v", r)
+	}
+	if got := r.Failures[0].Captured[0].Lines; len(got) != 3 {
+		t.Errorf("captured lines = %v", got)
+	}
+}
+
+func TestNodeIDsWithSeparatorsInParameters(t *testing.T) {
+	t.Parallel()
+	input := lines(
+		"=== FAILURES ===",
+		"___ test_p[a - b] ___",
+		"E   assert 1 == 2",
+		"___ TestX.test_q[c::d] ___",
+		"E   assert 2 == 1",
+		"=== short test summary info ===",
+		"FAILED t.py::test_p[a - b] - assert 1 == 2",
+		"FAILED t.py::TestX::test_q[c::d] - assert 2 == 1",
+		"=== 2 failed in 0.01s ===",
+	)
+	r := report(t, input, DefaultOptions())
+	var got []string
+	for _, f := range r.Failures {
+		got = append(got, f.Test+" | "+f.Message)
+	}
+	want := []string{"t.py::test_p[a - b] | assert 1 == 2", "t.py::TestX::test_q[c::d] | assert 2 == 1"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("failures (-want +got):\n%s", diff)
+	}
+}
+
+func TestTracebackLineStyle(t *testing.T) {
+	t.Parallel()
+	input := lines(
+		"=== FAILURES ===",
+		"E   assert 4 == 5",
+		"---- Captured stdout call ----",
+		"computing the sum",
+		"/home/dev/shop/tests/test_calc.py:13: assert 4 == 5",
+		"E   assert 5 == 6",
+		"     +  where 5 = add(2, 3)",
+		"/home/dev/shop/tests/test_calc.py:18: assert 5 == 6",
+		"=== short test summary info ===",
+		"FAILED tests/test_calc.py::test_add_wrong - assert 4 == 5",
+		"FAILED tests/test_calc.py::test_add_param[2-3-6] - assert 5 == 6",
+		"=== 2 failed in 0.01s ===",
+	)
+	r := report(t, input, DefaultOptions())
+	if len(r.Failures) != 2 {
+		t.Fatalf("failures = %+v", r.Failures)
+	}
+	if r.Failures[0].Test != "tests/test_calc.py::test_add_wrong" || r.Failures[1].Test != "tests/test_calc.py::test_add_param[2-3-6]" {
+		t.Errorf("tests = %q, %q", r.Failures[0].Test, r.Failures[1].Test)
+	}
+	if diff := cmp.Diff([]string{"E assert 4 == 5", "/home/dev/shop/tests/test_calc.py:13: assert 4 == 5"}, r.Failures[0].Lines); diff != "" {
+		t.Errorf("first lines (-want +got):\n%s", diff)
+	}
+	if got := r.Failures[0].Captured; len(got) != 1 || len(got[0].Lines) != 1 {
+		t.Errorf("captured = %+v", got)
+	}
+	if r.Failures[1].Untracked {
+		t.Error("second failure fell back to the summary")
+	}
+}
+
+func TestInternalErrorKeepsTheLastLines(t *testing.T) {
+	t.Parallel()
+	var body []string
+	for i := range 30 {
+		body = append(body, "INTERNALERROR>   File \"/home/dev/x.py\", line "+strconv.Itoa(i))
+	}
+	input := lines(append(append([]string{
+		"===== test session starts =====",
+		"platform linux -- Python 3.13.1, pytest-9.1.1, pluggy-1.6.0",
+		"collected 1 item",
+		"",
+		"INTERNALERROR> Traceback (most recent call last):"},
+		body...),
+		"INTERNALERROR> RuntimeError: plugin xyz: cannot reach license server")...)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := r.Data.(Report)
+	if last := report.Notes[len(report.Notes)-1]; !strings.HasSuffix(last, "cannot reach license server") || report.NotesOmitted != 12 {
+		t.Errorf("notes = %v, omitted %d", report.Notes, report.NotesOmitted)
+	}
+	if diff := cmp.Diff([]string{"fail", "internal_error"}, r.Conditions); diff != "" {
+		t.Errorf("conditions (-want +got):\n%s", diff)
+	}
+	if !strings.Contains(r.Text, "... 12 earlier lines (--max-output 0)") {
+		t.Errorf("text:\n%s", r.Text)
+	}
+}
+
+func TestSubtests(t *testing.T) {
+	t.Parallel()
+	input := lines(
+		"sub/test_sub.py uF.                   [100%]",
+		"=== FAILURES ===",
+		"___ test_sub [case] (i=1) ___",
+		"sub/test_sub.py:8: in test_sub",
+		"    assert i != 1",
+		"E   assert 1 != 1",
+		"___ test_sub ___",
+		"contains 1 failed subtest",
+		"=== short test summary info ===",
+		"SUBFAILED[case] (i=1) sub/test_sub.py::test_sub - assert 1 != 1",
+		"FAILED sub/test_sub.py::test_sub - contains 1 failed subtest",
+		"=== 2 failed in 0.03s ===",
+	)
+	r := report(t, input, DefaultOptions())
+	var got []string
+	for _, f := range r.Failures {
+		got = append(got, f.Test+" | "+f.Subtest+" | "+f.Message)
+	}
+	want := []string{"sub/test_sub.py::test_sub | [case] (i=1) | assert 1 != 1", "sub/test_sub.py::test_sub |  | contains 1 failed subtest"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("failures (-want +got):\n%s", diff)
+	}
+	if len(r.Notes) != 0 {
+		t.Errorf("progress line kept as a note: %v", r.Notes)
+	}
+	text, _ := Squeeze(input, DefaultOptions())
+	if !strings.Contains(text.Text, "FAILED sub/test_sub.py::test_sub [case] (i=1)\n") {
+		t.Errorf("text:\n%s", text.Text)
+	}
+}
+
+func TestWarningMessagesSpanLines(t *testing.T) {
+	t.Parallel()
+	input := lines(
+		"=== warnings summary ===",
+		"../.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:1464",
+		"  /home/dev/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: foo",
+		"  ",
+		"    self._warn_or_fail_if_strict(f\"Unknown config option: {key}\\n\")",
+		"",
+		"a.py::test_a",
+		"  a.py:3: UserWarning: first line",
+		"  second line",
+		"    warnings.warn(\"first line\\nsecond line\")",
+		"",
+		"-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+		"=== 1 passed, 2 warnings in 0.01s ===",
+	)
+	r := report(t, input, DefaultOptions())
+	want := []Warning{
+		{Message: "/home/dev/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: foo", Count: 1},
+		{Message: "a.py:3: UserWarning: first line second line", Count: 1},
+	}
+	if diff := cmp.Diff(want, r.Warnings); diff != "" {
+		t.Errorf("warnings (-want +got):\n%s", diff)
+	}
+}
+
+func TestOmittedFailuresPlural(t *testing.T) {
+	t.Parallel()
+	r, _ := Squeeze(fixture(t, "more"), Options{MaxTests: 9})
+	if !strings.Contains(r.Text, "... 1 more failure or error (--max-tests 0)\n") {
+		t.Errorf("text:\n%s", r.Text)
 	}
 }
 

@@ -3,6 +3,7 @@ package tfplan
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cauebraz/squeeze/internal/core"
 	"strconv"
 	"strings"
 )
@@ -20,7 +21,10 @@ func Text(r Report, o Options) string {
 		writeResource(&b, c)
 	}
 	if r.Omitted > 0 {
-		fmt.Fprintf(&b, "... %d more %s (--max-resources)\n", r.Omitted, plural(r.Omitted, "resource", "resources"))
+		fmt.Fprintf(&b, "... %d more %s (--max-resources 0)\n", r.Omitted, core.Plural(r.Omitted, "resource", "resources"))
+	}
+	if r.NoopHidden > 0 {
+		fmt.Fprintf(&b, "... %d %s without changes (--all)\n", r.NoopHidden, core.Plural(r.NoopHidden, "resource", "resources"))
 	}
 	writeDrift(&b, r, o.ListDrift)
 	writeDeferred(&b, r.Deferred)
@@ -70,22 +74,15 @@ func header(r Report) string {
 		line += fmt.Sprintf("; %d deferred", s.Deferred)
 	}
 	if s.Actions > 0 {
-		line += fmt.Sprintf("; %d %s to invoke", s.Actions, plural(s.Actions, "action", "actions"))
+		line += fmt.Sprintf("; %d %s to invoke", s.Actions, core.Plural(s.Actions, "action", "actions"))
 	}
 	if s.Outputs > 0 {
-		line += fmt.Sprintf("; %d %s changed", s.Outputs, plural(s.Outputs, "output", "outputs"))
+		line += fmt.Sprintf("; %d %s changed", s.Outputs, core.Plural(s.Outputs, "output", "outputs"))
 	}
 	if !s.Complete {
 		line += "; incomplete"
 	}
 	return line
-}
-
-func plural(n int, one, many string) string {
-	if n == 1 {
-		return one
-	}
-	return many
 }
 
 func writeResource(b *strings.Builder, c ResourceChange) {
@@ -104,7 +101,7 @@ func writeResource(b *strings.Builder, c ResourceChange) {
 		b.WriteByte('\n')
 	}
 	if c.AttrsOmitted > 0 {
-		fmt.Fprintf(b, "  ... %d more %s (--max-attrs)\n", c.AttrsOmitted, plural(c.AttrsOmitted, "attribute", "attributes"))
+		fmt.Fprintf(b, "  ... %d more %s (--max-attrs 0)\n", c.AttrsOmitted, core.Plural(c.AttrsOmitted, "attribute", "attributes"))
 	}
 }
 
@@ -198,11 +195,11 @@ func writeDrift(b *strings.Builder, r Report, list bool) {
 				writeResource(b, c)
 			}
 		} else {
-			fmt.Fprintf(b, "drift: %d %s (--drift to list)\n", n, plural(n, "resource", "resources"))
+			fmt.Fprintf(b, "... %d drifted %s (--drift)\n", n, core.Plural(n, "resource", "resources"))
 		}
 	}
 	if r.DriftOmitted > 0 {
-		fmt.Fprintf(b, "... %d drifted %s not affecting this plan (--all)\n", r.DriftOmitted, plural(r.DriftOmitted, "resource", "resources"))
+		fmt.Fprintf(b, "... %d drifted %s not affecting this plan (--all)\n", r.DriftOmitted, core.Plural(r.DriftOmitted, "resource", "resources"))
 	}
 }
 

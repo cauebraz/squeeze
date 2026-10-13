@@ -3,4 +3,4 @@ fail example.com/shop/api TestServe (did not finish)
   api_test.go:20: listening on :8080
 fail example.com/shop/api (did not finish)
   signal: killed
-... 1 event with an unknown action: future 1
+... 1 event with an unknown action: future 1 (--raw-dir)

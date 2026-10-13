@@ -1,11 +1,11 @@
 package tfjson
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
+
+	"github.com/cauebraz/squeeze/internal/jsonl"
 )
 
 var ErrNoStream = errors.New("no Terraform JSON stream lines in the input")
@@ -18,21 +18,14 @@ type Line struct {
 }
 
 func Parse(input []byte) ([]Line, error) {
-	r := bufio.NewReader(bytes.NewReader(input))
 	var lines []Line
 	stream := 0
-	for {
-		raw, err := r.ReadBytes('\n')
-		if trimmed := bytes.TrimSpace(raw); len(trimmed) > 0 {
-			l := parseLine(trimmed)
-			if l.Type != "" {
-				stream++
-			}
-			lines = append(lines, l)
+	for _, raw := range jsonl.Lines(input) {
+		l := parseLine(raw)
+		if l.Type != "" {
+			stream++
 		}
-		if errors.Is(err, io.EOF) {
-			break
-		}
+		lines = append(lines, l)
 	}
 	if stream == 0 {
 		return nil, ErrNoStream

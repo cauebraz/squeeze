@@ -7,6 +7,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -15,6 +16,23 @@ import (
 )
 
 const formatsDir = "../formats"
+
+var (
+	formatList = strings.Join(DefaultRegistry().Names(), ", ")
+	allOwners  = flagOwners("all")
+)
+
+func flagOwners(name string) string {
+	var owners []string
+	for _, f := range DefaultRegistry().Formats() {
+		fs := flag.NewFlagSet(f.Name(), flag.ContinueOnError)
+		f.Configure(fs)
+		if fs.Lookup(name) != nil {
+			owners = append(owners, f.Name())
+		}
+	}
+	return strings.Join(owners, ", ")
+}
 
 func readFixture(t *testing.T, format, name string) []byte {
 	t.Helper()
@@ -57,15 +75,58 @@ func TestRunFallback(t *testing.T) {
 	if auto.code != ExitOK || auto.stdout != want {
 		t.Errorf("auto: code = %d, stdout = %q", auto.code, auto.stdout)
 	}
-	if auto.stderr != "squeeze: input matches no known format; printed as generic text (formats: tfplan, tfvalidate, tfjson, gotest, pytest, generic)\n" {
+	if auto.stderr != "squeeze: no format detected; used generic\n" {
 		t.Errorf("auto: stderr = %q", auto.stderr)
 	}
 	named := runCLI(t, input, "generic")
 	if named.code != ExitOK || named.stdout != want || named.stderr != "" {
 		t.Errorf("named: code = %d, stdout = %q, stderr = %q", named.code, named.stdout, named.stderr)
 	}
-	if r := runCLI(t, input, "generic", "--fail-on", "error"); r.code != ExitUsage || !strings.Contains(r.stderr, `generic has no condition "error" (conditions: none)`) {
+	if r := runCLI(t, input, "generic", "--fail-on", "explode"); r.code != ExitUsage || !strings.Contains(r.stderr, `generic has no condition "explode" (conditions: error, warning)`) {
 		t.Errorf("named --fail-on: code = %d, stderr = %q", r.code, r.stderr)
+	}
+}
+
+func TestDetectionPrefersPytestOverJSONStreams(t *testing.T) {
+	t.Parallel()
+	input := []byte("{\"Action\":\"run\",\"Package\":\"p\",\"Test\":\"T\"}\n" +
+		"=========== test session starts ===========\nplatform linux -- Python 3.13.1, pytest-9.1.1, pluggy-1.6.0\ncollected 1 item\n\n" +
+		"tests/t.py F\n=========== FAILURES ===========\n___ test_a ___\nE   assert 1 == 2\n=========== 1 failed in 0.01s ===========\n")
+	f, err := DefaultRegistry().Detect(input)
+	if err != nil || f.Name() != "pytest" {
+		t.Errorf("Detect() = %v, %v, want pytest", f, err)
+	}
+	log := []byte("building image\nstep 1\nerror: layer missing\n12 files in 3.2s\ndone\n")
+	if f, err := DefaultRegistry().Detect(log); err != nil || f.Name() != "generic" {
+		t.Errorf("Detect(log) = %v, %v, want generic", f, err)
+	}
+}
+
+func TestFailOnWorksOnGenericText(t *testing.T) {
+	t.Parallel()
+	input := []byte("step 1\nerror: layer missing\nwarning: deprecated base image\n")
+	r := runCLI(t, input, "--fail-on", "error")
+	if r.code != ExitCondition || !strings.Contains(r.stdout, "error: layer missing") || !strings.Contains(r.stderr, "--fail-on matched: error") {
+		t.Errorf("auto: code = %d, stdout = %q, stderr = %q", r.code, r.stdout, r.stderr)
+	}
+	if r := runCLI(t, []byte("all good\n"), "generic", "--fail-on", "error,warning"); r.code != ExitOK {
+		t.Errorf("clean text: code = %d, stderr = %q", r.code, r.stderr)
+	}
+}
+
+func TestHelpGoesToStdout(t *testing.T) {
+	t.Parallel()
+	for _, args := range [][]string{{"-h"}, {"tfplan", "--help"}, {"generic", "-h"}} {
+		r := runCLI(t, nil, args...)
+		if r.code != ExitOK || r.stderr != "" || !strings.HasPrefix(r.stdout, "usage: squeeze") {
+			t.Errorf("%v: code = %d, stdout = %q, stderr = %q", args, r.code, r.stdout[:min(len(r.stdout), 40)], r.stderr)
+		}
+	}
+	r := runCLI(t, nil, "tfplan", "-h")
+	for _, want := range []string{"-max-attrs n\n", "-fail-on conditions\n", "listed below"} {
+		if !strings.Contains(r.stdout, want) {
+			t.Errorf("tfplan help lacks %q:\n%s", want, r.stdout)
+		}
 	}
 }
 
@@ -82,7 +143,7 @@ func TestRunNamedFormatMatchesAutoDetect(t *testing.T) {
 func TestRunFormatFlags(t *testing.T) {
 	t.Parallel()
 	r := runCLI(t, readFixture(t, "tfplan", "update-nested"), "tfplan", "--max-attrs", "1", "--output", "text")
-	if r.code != ExitOK || !strings.Contains(r.stdout, "... 2 more attributes (--max-attrs)") {
+	if r.code != ExitOK || !strings.Contains(r.stdout, "... 2 more attributes (--max-attrs 0)") {
 		t.Errorf("code = %d, stdout = %q, stderr = %q", r.code, r.stdout, r.stderr)
 	}
 }
@@ -126,15 +187,14 @@ func TestRunErrors(t *testing.T) {
 	}{
 		{"unknown flag", plan, []string{"--bogus"}, ExitUsage, "flag provided but not defined"},
 		{"format flag without format", plan, []string{"--max-attrs", "1"}, ExitUsage, "flag provided but not defined: -max-attrs"},
-		{"unknown format", plan, []string{"cargotest"}, ExitUsage, `unknown format "cargotest" (formats: tfplan, tfvalidate, tfjson, gotest, pytest, generic)`},
+		{"unknown format", plan, []string{"cargotest"}, ExitUsage, "unknown format \"cargotest\" (formats: " + formatList + ")"},
 		{"version under a format", plan, []string{"tfplan", "--version"}, ExitUsage, "flag provided but not defined: -version"},
 		{"bad format flag value", plan, []string{"tfplan", "--max-attrs", "-1"}, ExitUsage, "must be 0 or more"},
 		{"extra argument", plan, []string{"tfplan", "plan.json"}, ExitUsage, `unexpected argument "plan.json"`},
 		{"bad output", plan, []string{"--output", "yaml"}, ExitUsage, "--output must be text or json"},
 		{"empty input", nil, nil, ExitError, "empty input"},
 		{"whitespace input", []byte(" \n\t"), []string{"tfplan"}, ExitError, "empty input"},
-		{"binary input", []byte("\x7fELF\x00\x01"), nil, ExitUnknownFormat, "input matches no known format and is not text; name it: squeeze <format> (formats: tfplan, tfvalidate, tfjson, gotest, pytest, generic)"},
-		{"fallback with --fail-on", []byte("collected 3 items\n"), []string{"--fail-on", "error"}, ExitUnknownFormat, "input matches no known format and --fail-on needs one; name it: squeeze <format>"},
+		{"binary input", []byte("\x7fELF\x00\x01"), nil, ExitUnknownFormat, "input matches no known format and is not text; name it: squeeze <format> (formats: " + formatList + ")"},
 		{"named format on other input", []byte("collected 3 items\n"), []string{"tfplan"}, ExitError, "squeeze: tfplan: decode"},
 		{"state file", []byte(`{"format_version":"1.0","values":{}}`), []string{"tfplan"}, ExitError, "terraform state, not a plan"},
 		{"truncated plan", plan[:len(plan)/2], []string{"tfplan"}, ExitError, "decode"},
@@ -176,16 +236,16 @@ func TestRunHelp(t *testing.T) {
 	}
 	for _, tt := range tests {
 		r := runCLI(t, nil, tt.args...)
-		if r.code != ExitOK || r.stdout != "" {
-			t.Errorf("%v: code = %d, stdout = %q", tt.args, r.code, r.stdout)
+		if r.code != ExitOK || r.stderr != "" {
+			t.Errorf("%v: code = %d, stderr = %q", tt.args, r.code, r.stderr)
 		}
 		for _, s := range tt.contains {
-			if !strings.Contains(r.stderr, s) {
-				t.Errorf("%v: help lacks %q:\n%s", tt.args, s, r.stderr)
+			if !strings.Contains(r.stdout, s) {
+				t.Errorf("%v: help lacks %q:\n%s", tt.args, s, r.stdout)
 			}
 		}
 		for _, s := range tt.absent {
-			if strings.Contains(r.stderr, s) {
+			if strings.Contains(r.stdout, s) {
 				t.Errorf("%v: help contains %q", tt.args, s)
 			}
 		}
@@ -381,15 +441,15 @@ func TestRunHints(t *testing.T) {
 	}{
 		"format flag without format": {
 			[]string{"--all"},
-			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of formats tfplan, tfjson, gotest, pytest: squeeze <format> -all\n", "run 'squeeze -h' for usage\n"},
+			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of formats " + allOwners + ": squeeze <format> -all\n", "squeeze: run 'squeeze -h' for usage\n"},
 		},
 		"version under a format": {
 			[]string{"tfplan", "-version"},
-			[]string{"-version works without a format: squeeze -version", "run 'squeeze tfplan -h' for usage"},
+			[]string{"-version works without a format: squeeze -version", "squeeze: run 'squeeze tfplan -h' for usage"},
 		},
 		"misspelled format": {
 			[]string{"tfpaln"},
-			[]string{`unknown format "tfpaln" (formats: tfplan, tfvalidate, tfjson, gotest, pytest, generic); did you mean "tfplan"?`},
+			[]string{"unknown format \"tfpaln\" (formats: " + formatList + "); did you mean \"tfplan\"?"},
 		},
 		"file as format": {
 			[]string{file},
@@ -536,15 +596,15 @@ func TestRunFailOnJSON(t *testing.T) {
 func TestFormatHelpListsConditions(t *testing.T) {
 	t.Parallel()
 	r := runCLI(t, nil, "tfplan", "-h")
-	if !strings.Contains(r.stderr, "Conditions for --fail-on:\n  change, deferred, destroy, drift, errored, forget, import, incomplete, move, replace\n") {
-		t.Errorf("help lacks the condition list:\n%s", r.stderr)
+	if !strings.Contains(r.stdout, "Conditions for --fail-on:\n  change, deferred, destroy, drift, error, fail, forget, import, incomplete, move, replace\n") {
+		t.Errorf("help lacks the condition list:\n%s", r.stdout)
 	}
-	if r := runCLI(t, nil, "generic", "-h"); !strings.HasSuffix(r.stderr, "Conditions for --fail-on:\n  none\n") {
-		t.Errorf("generic help:\n%s", r.stderr)
+	if r := runCLI(t, nil, "generic", "-h"); !strings.HasSuffix(r.stdout, "Conditions for --fail-on:\n  error, warning\n") {
+		t.Errorf("generic help:\n%s", r.stdout)
 	}
 	root := runCLI(t, nil, "-h")
-	if !strings.Contains(root.stderr, "-fail-on") || !strings.Contains(root.stderr, "squeeze <format> -h") {
-		t.Errorf("root help lacks --fail-on:\n%s", root.stderr)
+	if !strings.Contains(root.stdout, "-fail-on") || !strings.Contains(root.stdout, "squeeze <format> -h") {
+		t.Errorf("root help lacks --fail-on:\n%s", root.stdout)
 	}
 }
 
@@ -557,5 +617,69 @@ func TestListFlag(t *testing.T) {
 	}
 	if (listFlag{}).String() != "" {
 		t.Error("zero listFlag String() is not empty")
+	}
+}
+
+func TestDocsFlagTablesMatchHelp(t *testing.T) {
+	t.Parallel()
+	common := map[string]bool{"output": true, "raw-dir": true, "fail-on": true}
+	row := regexp.MustCompile("^\\| `--([a-z-]+)` \\| (`\\d+`|off) \\| (.*) \\|$")
+	for _, f := range DefaultRegistry().Formats() {
+		doc, err := os.ReadFile(filepath.Join("..", "..", "docs", "formats", f.Name()+".md"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, rest, ok := strings.Cut(string(doc), "## Flags\n")
+		if !ok {
+			t.Errorf("%s: docs page has no Flags section", f.Name())
+			continue
+		}
+		section, _, _ := strings.Cut(rest, "\n## ")
+		documented := map[string][2]string{}
+		for _, line := range strings.Split(section, "\n") {
+			if m := row.FindStringSubmatch(line); m != nil {
+				documented[m[1]] = [2]string{m[2], m[3]}
+			}
+		}
+		fs := flag.NewFlagSet(f.Name(), flag.ContinueOnError)
+		f.Configure(fs)
+		fs.VisitAll(func(fl *flag.Flag) {
+			if common[fl.Name] {
+				return
+			}
+			got, ok := documented[fl.Name]
+			if !ok {
+				t.Errorf("%s: flag --%s is not in the docs table", f.Name(), fl.Name)
+				return
+			}
+			delete(documented, fl.Name)
+			usage := fl.Usage
+			wantDefault := "off"
+			if i := strings.LastIndex(usage, " (default "); i >= 0 {
+				wantDefault = "`" + strings.TrimSuffix(usage[i+len(" (default "):], ")") + "`"
+				usage = strings.TrimPrefix(usage[:i], "`n` ")
+			}
+			if got[0] != wantDefault {
+				t.Errorf("%s --%s: docs default %s, help %s", f.Name(), fl.Name, got[0], wantDefault)
+			}
+			if strings.ReplaceAll(got[1], "`", "") != usage {
+				t.Errorf("%s --%s: docs say %q, help says %q", f.Name(), fl.Name, got[1], usage)
+			}
+		})
+		for name := range documented {
+			t.Errorf("%s: docs table lists --%s, which the format does not register", f.Name(), name)
+		}
+	}
+}
+
+func TestRunRawDirSkipsEmptyInput(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	r := runCLI(t, []byte(" \n"), "--raw-dir", dir)
+	if r.code != ExitError || strings.Contains(r.stderr, "raw input saved") {
+		t.Errorf("code = %d, stderr = %q", r.code, r.stderr)
+	}
+	if entries, _ := os.ReadDir(dir); len(entries) != 0 {
+		t.Errorf("raw dir entries = %d, want 0", len(entries))
 	}
 }

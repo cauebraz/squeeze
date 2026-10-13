@@ -90,7 +90,8 @@ type Report struct {
 	Operation          string              `json:"operation"`
 	Summary            *Summary            `json:"summary"`
 	Changes            []Change            `json:"changes"`
-	Omitted            int                 `json:"omitted"`
+	Omitted            int                 `json:"changes_omitted"`
+	NoopHidden         int                 `json:"noop_hidden"`
 	Drift              []Change            `json:"drift"`
 	Deferred           []Deferred          `json:"deferred"`
 	Applied            Applied             `json:"applied"`

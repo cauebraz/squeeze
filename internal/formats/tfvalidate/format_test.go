@@ -136,8 +136,8 @@ func TestConditions(t *testing.T) {
 	tests := map[string][]string{
 		"valid":               {},
 		"duplicates":          {"warning"},
-		"one-error":           {"error", "invalid"},
-		"errors-and-warnings": {"error", "invalid", "warning"},
+		"one-error":           {"error", "fail", "invalid"},
+		"errors-and-warnings": {"error", "fail", "invalid", "warning"},
 	}
 	for name, want := range tests {
 		r, err := Squeeze(fixture(t, name), DefaultOptions())
@@ -173,7 +173,7 @@ func TestCountsCoverDiagnostics(t *testing.T) {
 	if report.Errors != 2 || report.Warnings != 1 {
 		t.Errorf("errors = %d, warnings = %d, want 2 and 1", report.Errors, report.Warnings)
 	}
-	if diff := cmp.Diff([]string{"error", "invalid", "warning"}, r.Conditions); diff != "" {
+	if diff := cmp.Diff([]string{"error", "fail", "invalid", "warning"}, r.Conditions); diff != "" {
 		t.Errorf("conditions (-want +got):\n%s", diff)
 	}
 	if !strings.HasPrefix(r.Text, "terraform validate: invalid, 2 errors, 1 warning\n") {

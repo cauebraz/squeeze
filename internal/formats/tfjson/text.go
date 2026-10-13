@@ -3,8 +3,8 @@ package tfjson
 import (
 	"bytes"
 	"fmt"
+	"github.com/cauebraz/squeeze/internal/core"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/tfdiag"
@@ -35,7 +35,10 @@ func Text(r Report, o Options) string {
 		writeChange(&b, c)
 	}
 	if r.Omitted > 0 {
-		fmt.Fprintf(&b, "... %d more %s (--max-resources)\n", r.Omitted, plural(r.Omitted, "resource", "resources"))
+		fmt.Fprintf(&b, "... %d more %s (--max-resources 0)\n", r.Omitted, core.Plural(r.Omitted, "resource", "resources"))
+	}
+	if r.NoopHidden > 0 {
+		fmt.Fprintf(&b, "... %d no-op %s (--all)\n", r.NoopHidden, core.Plural(r.NoopHidden, "change", "changes"))
 	}
 	writeApplied(&b, r.Applied)
 	for _, f := range r.Failures {
@@ -57,7 +60,7 @@ func Text(r Report, o Options) string {
 		tfdiag.Write(&b, d, tfdiag.WriteOptions{NoDetail: o.NoDetail})
 	}
 	if r.DiagnosticsOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more %s (--max-diagnostics)\n", r.DiagnosticsOmitted, plural(r.DiagnosticsOmitted, "diagnostic", "diagnostics"))
+		fmt.Fprintf(&b, "... %d more %s (--max-diagnostics 0)\n", r.DiagnosticsOmitted, core.Plural(r.DiagnosticsOmitted, "diagnostic", "diagnostics"))
 	}
 	writeDrift(&b, r.Drift, o.ListDrift)
 	if len(r.Deferred) > 0 {
@@ -92,10 +95,10 @@ func header(r Report) string {
 	}
 	var diags []string
 	if r.Errors > 0 {
-		diags = append(diags, fmt.Sprintf("%d %s", r.Errors, plural(r.Errors, "error", "errors")))
+		diags = append(diags, fmt.Sprintf("%d %s", r.Errors, core.Plural(r.Errors, "error", "errors")))
 	}
 	if r.Warnings > 0 {
-		diags = append(diags, fmt.Sprintf("%d %s", r.Warnings, plural(r.Warnings, "warning", "warnings")))
+		diags = append(diags, fmt.Sprintf("%d %s", r.Warnings, core.Plural(r.Warnings, "warning", "warnings")))
 	}
 	if len(diags) > 0 {
 		segments = append(segments, strings.Join(diags, ", "))
@@ -119,7 +122,7 @@ func summaryWords(r Report) string {
 			}
 			parts = append(parts, fmt.Sprintf("%d to add", s.Add), fmt.Sprintf("%d to change", s.Change), fmt.Sprintf("%d to destroy", s.Remove))
 			if s.ActionInvocation > 0 {
-				parts = append(parts, fmt.Sprintf("%d %s to invoke", s.ActionInvocation, plural(s.ActionInvocation, "action", "actions")))
+				parts = append(parts, fmt.Sprintf("%d %s to invoke", s.ActionInvocation, core.Plural(s.ActionInvocation, "action", "actions")))
 			}
 		case "apply":
 			if s.Import > 0 {
@@ -139,17 +142,17 @@ func summaryWords(r Report) string {
 		return fmt.Sprintf("%s, %d passed, %d failed, %d errored, %d skipped", t.Status, t.Passed, t.Failed, t.Errored, t.Skipped)
 	}
 	if r.Providers > 0 {
-		return fmt.Sprintf("%d %s installed", r.Providers, plural(r.Providers, "provider", "providers"))
+		return fmt.Sprintf("%d %s installed", r.Providers, core.Plural(r.Providers, "provider", "providers"))
 	}
 	return ""
 }
 
 func appendInvoked(parts []string, s *Summary) []string {
 	if s.ActionInvocation > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s invoked", s.ActionInvocation, plural(s.ActionInvocation, "action", "actions")))
+		parts = append(parts, fmt.Sprintf("%d %s invoked", s.ActionInvocation, core.Plural(s.ActionInvocation, "action", "actions")))
 	}
 	if s.ActionFail > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s failed", s.ActionFail, plural(s.ActionFail, "action", "actions")))
+		parts = append(parts, fmt.Sprintf("%d %s failed", s.ActionFail, core.Plural(s.ActionFail, "action", "actions")))
 	}
 	return parts
 }
@@ -182,19 +185,15 @@ func writeChange(b *strings.Builder, c Change) {
 	b.WriteByte('\n')
 }
 
-func seconds(s float64) string {
-	return strconv.FormatFloat(s, 'f', -1, 64) + "s"
-}
-
 func writeApplied(b *strings.Builder, a Applied) {
 	if a.Count == 0 {
 		return
 	}
-	fmt.Fprintf(b, "applied: %d %s", a.Count, plural(a.Count, "resource", "resources"))
+	fmt.Fprintf(b, "applied: %d %s", a.Count, core.Plural(a.Count, "resource", "resources"))
 	if len(a.Slowest) > 0 {
 		items := make([]string, 0, len(a.Slowest))
 		for _, t := range a.Slowest {
-			items = append(items, t.Address+" "+seconds(t.Seconds))
+			items = append(items, t.Address+" "+core.Seconds(t.Seconds))
 		}
 		b.WriteString(" (slowest: ")
 		b.WriteString(strings.Join(items, ", "))
@@ -208,7 +207,7 @@ func writeDrift(b *strings.Builder, drift []Change, list bool) {
 		return
 	}
 	if !list {
-		fmt.Fprintf(b, "drift: %d %s (--drift to list)\n", len(drift), plural(len(drift), "resource", "resources"))
+		fmt.Fprintf(b, "... %d drifted %s (--drift)\n", len(drift), core.Plural(len(drift), "resource", "resources"))
 		return
 	}
 	b.WriteString("drift:\n")
@@ -245,8 +244,10 @@ func writeTests(b *strings.Builder, t *Tests, o Options) {
 		return
 	}
 	listed := map[string]bool{}
+	passing := 0
 	for _, run := range t.Runs {
 		if !o.All && !failingTestStatus[run.Status] {
+			passing++
 			continue
 		}
 		listed[run.File] = true
@@ -256,7 +257,7 @@ func writeTests(b *strings.Builder, t *Tests, o Options) {
 		}
 		fmt.Fprintf(b, "%s %s %q", status, run.File, run.Run)
 		if run.ElapsedMs != nil && *run.ElapsedMs > 0 {
-			b.WriteString(" " + seconds(float64(*run.ElapsedMs)/1000))
+			b.WriteString(" " + core.Seconds(float64(*run.ElapsedMs)/1000))
 		}
 		b.WriteByte('\n')
 		for _, d := range run.Diagnostics {
@@ -277,6 +278,9 @@ func writeTests(b *strings.Builder, t *Tests, o Options) {
 			tfdiag.Write(b, d, tfdiag.WriteOptions{Indent: "  ", NoDetail: o.NoDetail})
 		}
 	}
+	if passing > 0 {
+		fmt.Fprintf(b, "... %d passing test %s (--all)\n", passing, core.Plural(passing, "run", "runs"))
+	}
 }
 
 func writeOther(b *strings.Builder, r Report, all bool) {
@@ -291,11 +295,7 @@ func writeOther(b *strings.Builder, r Report, all bool) {
 		b.WriteString("other:\n")
 		for _, m := range r.otherMessages {
 			if len(m) > maxMessageBytes {
-				cut := maxMessageBytes - 3
-				for cut > 0 && m[cut]&0xC0 == 0x80 {
-					cut--
-				}
-				m = m[:cut] + "..."
+				m = core.Truncate(m, maxMessageBytes-3) + "..."
 			}
 			b.WriteString("  ")
 			b.WriteString(m)
@@ -317,12 +317,5 @@ func writeOther(b *strings.Builder, r Report, all bool) {
 	for _, k := range keys {
 		items = append(items, fmt.Sprintf("%s %d", k, r.Other[k]))
 	}
-	fmt.Fprintf(b, "... %d other %s: %s (--all)\n", total, plural(total, "message", "messages"), strings.Join(items, ", "))
-}
-
-func plural(n int, one, many string) string {
-	if n == 1 {
-		return one
-	}
-	return many
+	fmt.Fprintf(b, "... %d other %s: %s (--all)\n", total, core.Plural(total, "message", "messages"), strings.Join(items, ", "))
 }

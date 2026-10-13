@@ -1,0 +1,2 @@
+pytest 9.1.1: 1 passed, 1 xpassed in 0.00s
+... 1 short summary line for passed, skipped, xfailed or xpassed tests (--all)

@@ -19,25 +19,48 @@ var (
 	capturedTitle = regexp.MustCompile(`^-{3,} (.+?) -{3,}$`)
 	frameSep      = regexp.MustCompile(`^(_ )+_?$`)
 	location      = regexp.MustCompile(`^[^\s:][^:]*:\d+:( .*)?$`)
+	crashLine     = regexp.MustCompile(`^[^\s:][^:]*:\d+: \S.*$`)
 	inFunction    = regexp.MustCompile(`^[^\s:][^:]*:\d+: in \S+$`)
-	progressLine  = regexp.MustCompile(`^(\S+ )?[.FsxXEPR]+(\s+\[\s*\d+%\])?$`)
+	progressLine  = regexp.MustCompile(`^(\S+ )?[.FsxXEPRu]+(\s+\[\s*\d+%\])?$`)
 	verboseLine   = regexp.MustCompile(`^(\[gw\d+\] .*|\S+::\S.* (PASSED|FAILED|SKIPPED|XFAIL|XPASS|ERROR)( \(.*\))?(\s+\[\s*\d+%\])?)$`)
 	headerLine    = regexp.MustCompile(`^(platform |rootdir: |configfile: |inifile: |testpaths: |plugins: |cachedir: |collecting|collected \d+|created: \d+|\d+ workers? \[|scheduling tests via |hypothesis profile |Using --randomly-seed)`)
-	summaryEntry  = regexp.MustCompile(`^(FAILED|ERROR|XFAIL|XPASS|SKIPPED|PASSED|DESELECTED)(?: \[\d+\])? (.+?)(?: - (.*))?$`)
+	summaryEntry  = regexp.MustCompile(`^(SUB)?(FAILED|ERROR|XFAIL|XPASS|SKIPPED|PASSED|DESELECTED)(\[[^\]]*\](?: \([^)]*\))?)?(?: \[\d+\])? (.+)$`)
 	versionField  = regexp.MustCompile(`pytest-([0-9][^,\s]*)`)
 	locationCount = regexp.MustCompile(`^\S+: (\d+) warnings?$`)
 )
+
+var outcomeWords = map[string]bool{
+	"failed": true, "passed": true, "skipped": true, "deselected": true,
+	"xfailed": true, "xpassed": true, "error": true, "errors": true,
+}
+
+func knownStats(parts string) bool {
+	if parts == "no tests ran" {
+		return true
+	}
+	for _, part := range strings.Split(parts, ", ") {
+		if m := statPart.FindStringSubmatch(part); m != nil && outcomeWords[m[2]] {
+			return true
+		}
+	}
+	return false
+}
+
+type section struct {
+	name  string
+	lines []string
+}
 
 type entry struct {
 	section  string
 	title    string
 	body     []string
-	captured []string
+	captured []section
 }
 
 type record struct {
-	word, test, message string
-	used                bool
+	word, label, test, message string
+	used                       bool
 }
 
 type parser struct {
@@ -81,8 +104,13 @@ func (p *parser) relative(l string) string {
 	return strings.ReplaceAll(l, p.rootdir+"/", "")
 }
 
+func (p *parser) inCaptured() bool {
+	return p.cur != nil && len(p.cur.captured) > 0
+}
+
 func (p *parser) line(l string) {
-	if m := statsLine.FindStringSubmatch(l); m != nil {
+	framed := strings.HasPrefix(l, "=")
+	if m := statsLine.FindStringSubmatch(l); m != nil && (framed || !p.inCaptured()) && (p.found || framed || knownStats(m[1])) {
 		p.found = true
 		p.closeEntry()
 		p.stats(m[1], m[2])
@@ -95,7 +123,7 @@ func (p *parser) line(l string) {
 		p.section = "header"
 		return
 	}
-	if m := sectionLine.FindStringSubmatch(l); m != nil {
+	if m := sectionLine.FindStringSubmatch(l); m != nil && (!p.inCaptured() || knownSection.MatchString(l)) {
 		p.closeEntry()
 		p.section = m[1]
 		if knownSection.MatchString(l) {
@@ -103,7 +131,7 @@ func (p *parser) line(l string) {
 		}
 		return
 	}
-	if m := bangLine.FindStringSubmatch(l); m != nil {
+	if m := bangLine.FindStringSubmatch(l); m != nil && !p.inCaptured() {
 		p.closeEntry()
 		msg := m[1]
 		if rest, ok := strings.CutPrefix(msg, "Interrupted: "); ok {
@@ -121,8 +149,9 @@ func (p *parser) line(l string) {
 	case "FAILURES", "ERRORS":
 		p.entryLine(l)
 	case "short test summary info":
-		if m := summaryEntry.FindStringSubmatch(l); m != nil && (m[1] == "FAILED" || m[1] == "ERROR") {
-			p.records = append(p.records, &record{word: m[1], test: m[2], message: m[3]})
+		if m := summaryEntry.FindStringSubmatch(l); m != nil && (m[2] == "FAILED" || m[2] == "ERROR") {
+			test, message := splitSummary(m[4])
+			p.records = append(p.records, &record{word: m[2], label: strings.TrimSpace(m[3]), test: test, message: message})
 		} else if m != nil {
 			p.r.Outcomes = append(p.r.Outcomes, p.relative(l))
 		} else if strings.TrimSpace(l) != "" {
@@ -144,6 +173,25 @@ func (p *parser) line(l string) {
 	}
 }
 
+func splitSummary(rest string) (test, message string) {
+	depth := 0
+	for i := 0; i+3 <= len(rest); i++ {
+		switch rest[i] {
+		case '[':
+			depth++
+		case ']':
+			if depth > 0 {
+				depth--
+			}
+		case ' ':
+			if depth == 0 && rest[i:i+3] == " - " {
+				return rest[:i], rest[i+3:]
+			}
+		}
+	}
+	return rest, ""
+}
+
 func (p *parser) headerLine(l string) {
 	switch {
 	case strings.HasPrefix(l, "platform "):
@@ -162,6 +210,9 @@ func (p *parser) note(l string) {
 	if t == "" || progressLine.MatchString(t) || verboseLine.MatchString(t) || headerLine.MatchString(t) {
 		return
 	}
+	if strings.HasPrefix(t, "INTERNALERROR>") {
+		p.r.InternalError = true
+	}
 	p.r.Notes = append(p.r.Notes, p.relative(l))
 }
 
@@ -174,11 +225,23 @@ func (p *parser) entryLine(l string) {
 	if p.cur == nil {
 		p.cur = &entry{section: p.section}
 	}
-	if m := capturedTitle.FindStringSubmatch(l); m != nil {
-		p.cur.captured = append(p.cur.captured, strings.TrimPrefix(m[1], "Captured "))
+	if p.cur.title == "" && (crashLine.MatchString(l) || (len(p.cur.body) > 0 && strings.HasPrefix(l, "["))) {
+		p.cur.body = append(p.cur.body, p.relative(l))
+		p.closeEntry()
 		return
 	}
-	if len(p.cur.captured) > 0 {
+	if m := capturedTitle.FindStringSubmatch(l); m != nil {
+		name, ok := strings.CutPrefix(m[1], "Captured ")
+		if !ok {
+			p.closeEntry()
+			p.section = ""
+			return
+		}
+		p.cur.captured = append(p.cur.captured, section{name: name})
+		return
+	}
+	if n := len(p.cur.captured); n > 0 {
+		p.cur.captured[n-1].lines = append(p.cur.captured[n-1].lines, p.relative(l))
 		return
 	}
 	p.cur.body = append(p.cur.body, p.relative(l))
@@ -245,28 +308,19 @@ func (p *parser) finish(o Options) {
 		if rec.word == "ERROR" {
 			kind = "error"
 		}
-		failures = append(failures, Failure{Kind: kind, Test: rec.test, Message: rec.message, Lines: []string{}, Untracked: true})
+		failures = append(failures, Failure{Kind: kind, Test: rec.test, Subtest: rec.label, Message: rec.message, Lines: []string{}, Untracked: true})
 	}
-	if o.MaxTests > 0 && len(failures) > o.MaxTests {
-		p.r.FailuresOmitted = len(failures) - o.MaxTests
-		failures = failures[:o.MaxTests]
-	}
+	failures, p.r.FailuresOmitted = core.Limit(failures, o.MaxTests)
 	if failures != nil {
 		p.r.Failures = failures
 	}
 	p.r.Warnings = p.warnings.result()
-	if o.MaxWarnings > 0 && len(p.r.Warnings) > o.MaxWarnings {
-		p.r.WarningsOmitted = len(p.r.Warnings) - o.MaxWarnings
-		p.r.Warnings = p.r.Warnings[:o.MaxWarnings]
-	}
-	if o.MaxOutput > 0 && len(p.r.Notes) > o.MaxOutput {
-		p.r.NotesOmitted = len(p.r.Notes) - o.MaxOutput
-		p.r.Notes = p.r.Notes[:o.MaxOutput]
-	}
+	p.r.Warnings, p.r.WarningsOmitted = core.Limit(p.r.Warnings, o.MaxWarnings)
+	p.r.Notes, p.r.NotesOmitted = core.LimitTail(p.r.Notes, o.MaxOutput)
 }
 
 func (p *parser) failure(e *entry, o Options) Failure {
-	f := Failure{Kind: "failed", Test: e.title, Captured: e.captured}
+	f := Failure{Kind: "failed", Test: e.title}
 	if e.section == "ERRORS" {
 		f.Kind = "error"
 		switch {
@@ -280,15 +334,13 @@ func (p *parser) failure(e *entry, o Options) Failure {
 		}
 	}
 	if rec := p.match(f); rec != nil {
-		f.Test, f.Message = rec.test, rec.message
+		f.Test, f.Subtest, f.Message = rec.test, rec.label, rec.message
 	}
 	f.Lines, f.Hidden = selectLines(e.body, o.Full)
-	if o.MaxOutput > 0 && len(f.Lines) > o.MaxOutput {
-		f.Omitted = len(f.Lines) - o.MaxOutput
-		f.Lines = f.Lines[f.Omitted:]
-	}
-	if o.Full {
-		f.Captured = nil
+	f.Lines, f.Omitted = core.LimitTail(f.Lines, o.MaxOutput)
+	for _, c := range e.captured {
+		kept, omitted := core.LimitTail(nonNil(c.lines), o.MaxOutput)
+		f.Captured = append(f.Captured, Captured{Name: c.name, Lines: kept, Omitted: omitted})
 	}
 	return f
 }
@@ -302,7 +354,11 @@ func (p *parser) match(f Failure) *record {
 		if rec.used || rec.word != word {
 			continue
 		}
-		if rec.test == f.Test || domain(rec.test) == f.Test {
+		short := domain(rec.test)
+		if rec.label != "" {
+			short += " " + rec.label
+		}
+		if f.Test == "" || rec.test == f.Test || short == f.Test {
 			rec.used = true
 			return rec
 		}
@@ -311,11 +367,15 @@ func (p *parser) match(f Failure) *record {
 }
 
 func domain(nodeid string) string {
+	params := ""
+	if i := strings.Index(nodeid, "["); i >= 0 {
+		nodeid, params = nodeid[:i], nodeid[i:]
+	}
 	_, rest, ok := strings.Cut(nodeid, "::")
 	if !ok {
-		return nodeid
+		return nodeid + params
 	}
-	return strings.ReplaceAll(rest, "::", ".")
+	return strings.ReplaceAll(rest, "::", ".") + params
 }
 
 func selectLines(body []string, full bool) ([]string, int) {
@@ -393,46 +453,67 @@ func nonNil(s []string) []string {
 }
 
 type warningParser struct {
-	pending []string
-	tests   int
-	done    bool
-	order   []string
-	byMsg   map[string]int
+	locations int
+	message   string
+	closed    bool
+	open      bool
+	order     []string
+	byMsg     map[string]int
 }
 
-func (w *warningParser) add(msg string, tests int) {
-	if w.byMsg == nil {
-		w.byMsg = map[string]int{}
+func (w *warningParser) flush() {
+	if w.open && (w.message != "" || w.locations > 0) {
+		if w.byMsg == nil {
+			w.byMsg = map[string]int{}
+		}
+		if _, seen := w.byMsg[w.message]; !seen {
+			w.order = append(w.order, w.message)
+		}
+		w.byMsg[w.message] += w.locations
 	}
-	if _, seen := w.byMsg[msg]; !seen {
-		w.order = append(w.order, msg)
-	}
-	w.byMsg[msg] += tests
+	w.locations, w.message, w.closed, w.open = 0, "", false, false
 }
 
 func (w *warningParser) line(l string) {
 	t := strings.TrimSpace(l)
 	switch {
-	case t == "" || strings.HasPrefix(t, "-- Docs: "):
-		if !w.done && len(w.pending) > 0 {
-			w.add(w.pending[0], 0)
+	case strings.HasPrefix(t, "-- Docs: "):
+		w.flush()
+	case t == "":
+		w.closed = w.message != ""
+	case !strings.HasPrefix(l, " ") && !isWarningLocation(t):
+		if w.message != "" && w.locations == 0 && !w.closed {
+			w.message += " " + t
+			return
 		}
-		w.pending, w.tests, w.done = nil, 0, false
-	case w.done:
+		w.flush()
+		w.open, w.message = true, t
 	case !strings.HasPrefix(l, " "):
-		w.pending = append(w.pending, t)
+		if w.message != "" {
+			w.flush()
+		}
+		w.open = true
 		if m := locationCount.FindStringSubmatch(t); m != nil {
 			n, _ := strconv.Atoi(m[1])
-			w.tests += n
+			w.locations += n
 		} else {
-			w.tests++
+			w.locations++
 		}
-	default:
-		w.add(t, w.tests)
-		w.done = true
+	case strings.HasPrefix(l, "    "):
+		w.closed = true
+	case w.message == "":
+		w.open, w.message = true, t
+	case !w.closed:
+		w.message += " " + t
 	}
 }
+
+func isWarningLocation(t string) bool {
+	return !strings.Contains(t, " ") || locationCount.MatchString(t)
+}
+
 func (w *warningParser) result() []Warning {
+	w.flush()
 	out := make([]Warning, 0, len(w.order))
 	for _, msg := range w.order {
 		out = append(out, Warning{Message: msg, Count: w.byMsg[msg]})

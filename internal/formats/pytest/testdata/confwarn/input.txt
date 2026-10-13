@@ -1,0 +1,16 @@
+======================================= test session starts ========================================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/dev/shop
+configfile: pytest.ini
+collected 1 item
+
+tests/test_calc.py .                                                                         [100%]
+
+========================================= warnings summary =========================================
+../.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:1464
+  /home/dev/shop/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: foo
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=================================== 1 passed, 1 warning in 0.00s ===================================

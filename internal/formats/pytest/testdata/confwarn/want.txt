@@ -1,0 +1,2 @@
+pytest 9.1.1: 1 passed, 1 warning in 0.00s
+warning .venv/lib/python3.13/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: foo

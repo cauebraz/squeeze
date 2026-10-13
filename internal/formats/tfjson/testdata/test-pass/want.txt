@@ -1,2 +1,3 @@
 terraform 1.9.5 test: pass, 2 passed, 0 failed, 0 errored, 0 skipped
+... 2 passing test runs (--all)
 ... 1 other message: test_abstract 1 (--all)

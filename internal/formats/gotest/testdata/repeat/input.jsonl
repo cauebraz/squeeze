@@ -1,0 +1,26 @@
+{"Time":"2026-10-13T20:11:01.358883Z","Action":"start","Package":"example.com/shop/calc"}
+{"Time":"2026-10-13T20:11:01.559968Z","Action":"run","Package":"example.com/shop/calc","Test":"TestAdd"}
+{"Time":"2026-10-13T20:11:01.560031Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAdd","Output":"=== RUN   TestAdd\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560079Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAdd","Output":"--- PASS: TestAdd (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560083Z","Action":"pass","Package":"example.com/shop/calc","Test":"TestAdd","Elapsed":0}
+{"Time":"2026-10-13T20:11:01.560088Z","Action":"run","Package":"example.com/shop/calc","Test":"TestAddNegative"}
+{"Time":"2026-10-13T20:11:01.560089Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"=== RUN   TestAddNegative\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560093Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"    calc_test.go:15: checking negative numbers\n"}
+{"Time":"2026-10-13T20:11:01.560094Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"    calc_test.go:17: Add(-2, -3) = -5, want -6\n","OutputType":"error"}
+{"Time":"2026-10-13T20:11:01.560099Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"        second line of the message\n","OutputType":"error-continue"}
+{"Time":"2026-10-13T20:11:01.560103Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"--- FAIL: TestAddNegative (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560104Z","Action":"fail","Package":"example.com/shop/calc","Test":"TestAddNegative","Elapsed":0}
+{"Time":"2026-10-13T20:11:01.560105Z","Action":"run","Package":"example.com/shop/calc","Test":"TestAdd"}
+{"Time":"2026-10-13T20:11:01.560106Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAdd","Output":"=== RUN   TestAdd\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560107Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAdd","Output":"--- PASS: TestAdd (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560107Z","Action":"pass","Package":"example.com/shop/calc","Test":"TestAdd","Elapsed":0}
+{"Time":"2026-10-13T20:11:01.560109Z","Action":"run","Package":"example.com/shop/calc","Test":"TestAddNegative"}
+{"Time":"2026-10-13T20:11:01.56011Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"=== RUN   TestAddNegative\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.56011Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"    calc_test.go:15: checking negative numbers\n"}
+{"Time":"2026-10-13T20:11:01.560111Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"    calc_test.go:17: Add(-2, -3) = -5, want -6\n","OutputType":"error"}
+{"Time":"2026-10-13T20:11:01.560117Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"        second line of the message\n","OutputType":"error-continue"}
+{"Time":"2026-10-13T20:11:01.560118Z","Action":"output","Package":"example.com/shop/calc","Test":"TestAddNegative","Output":"--- FAIL: TestAddNegative (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560119Z","Action":"fail","Package":"example.com/shop/calc","Test":"TestAddNegative","Elapsed":0}
+{"Time":"2026-10-13T20:11:01.56012Z","Action":"output","Package":"example.com/shop/calc","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560544Z","Action":"output","Package":"example.com/shop/calc","Output":"FAIL\texample.com/shop/calc\t0.201s\n","OutputType":"frame"}
+{"Time":"2026-10-13T20:11:01.560559Z","Action":"fail","Package":"example.com/shop/calc","Elapsed":0.202}

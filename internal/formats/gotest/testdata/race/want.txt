@@ -14,4 +14,4 @@ fail example.com/shop/racy TestCounter
     example.com/shop/racy.TestCounter()
         /home/dev/shop/racy/racy_test.go:13 +0x6c
       testing.go:1865: race detected during execution of test
-  ... 8 runtime and testing stack lines (--logs)
+  ... 8 runtime and testing stack lines (--full)

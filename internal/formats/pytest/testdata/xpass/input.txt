@@ -1,0 +1,12 @@
+======================================= test session starts ========================================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/dev/shop
+configfile: pytest.ini
+collected 2 items
+
+xp/test_xpass.py X.                                                                          [100%]
+
+============================================= XPASSES ==============================================
+===================================== short test summary info ======================================
+XPASS xp/test_xpass.py::test_now_passes - rounding bug fixed upstream
+=================================== 1 passed, 1 xpassed in 0.00s ===================================

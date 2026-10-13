@@ -2,6 +2,7 @@ package tfvalidate
 
 import (
 	"fmt"
+	"github.com/cauebraz/squeeze/internal/core"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/tfdiag"
@@ -15,7 +16,7 @@ func Text(r Report, o Options) string {
 		tfdiag.Write(&b, d, tfdiag.WriteOptions{NoDetail: o.NoDetail})
 	}
 	if r.Omitted > 0 {
-		fmt.Fprintf(&b, "... %d more %s (--max-diagnostics)\n", r.Omitted, plural(r.Omitted, "diagnostic", "diagnostics"))
+		fmt.Fprintf(&b, "... %d more %s (--max-diagnostics 0)\n", r.Omitted, core.Plural(r.Omitted, "diagnostic", "diagnostics"))
 	}
 	return b.String()
 }
@@ -27,21 +28,14 @@ func header(r Report) string {
 	}
 	var parts []string
 	if r.Errors > 0 || !r.Valid {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Errors, plural(r.Errors, "error", "errors")))
+		parts = append(parts, fmt.Sprintf("%d %s", r.Errors, core.Plural(r.Errors, "error", "errors")))
 	}
 	if r.Warnings > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Warnings, plural(r.Warnings, "warning", "warnings")))
+		parts = append(parts, fmt.Sprintf("%d %s", r.Warnings, core.Plural(r.Warnings, "warning", "warnings")))
 	}
 	line := r.Tool + " validate: " + state
 	if len(parts) > 0 {
 		line += ", " + strings.Join(parts, ", ")
 	}
 	return line
-}
-
-func plural(n int, one, many string) string {
-	if n == 1 {
-		return one
-	}
-	return many
 }

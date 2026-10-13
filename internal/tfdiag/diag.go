@@ -55,16 +55,16 @@ type Diagnostic struct {
 
 func Convert(r Raw) Diagnostic {
 	d := Diagnostic{
-		Severity: clean(r.Severity),
-		Summary:  clean(r.Summary),
+		Severity: core.Clean(r.Severity),
+		Summary:  core.Clean(r.Summary),
 		Detail:   strings.TrimSpace(r.Detail),
-		Address:  clean(r.Address),
+		Address:  core.Clean(r.Address),
 	}
 	if d.Severity != "warning" {
 		d.Severity = "error"
 	}
 	if r.Range != nil {
-		d.File = clean(r.Range.Filename)
+		d.File = core.Clean(r.Range.Filename)
 		d.Line = r.Range.Start.Line
 		d.Column = r.Range.Start.Column
 	}
@@ -83,7 +83,7 @@ func codeLine(s *Snippet) string {
 	if idx >= len(lines) {
 		idx = len(lines) - 1
 	}
-	return truncate(clean(lines[idx]), maxCodeBytes)
+	return truncate(core.Clean(lines[idx]), maxCodeBytes)
 }
 
 func Fold(ds []Diagnostic) []Diagnostic {
@@ -139,13 +139,6 @@ func Normalize(ds []Diagnostic) []Diagnostic {
 	out := Fold(ds)
 	Sort(out)
 	return out
-}
-
-func Limit(ds []Diagnostic, n int) ([]Diagnostic, int) {
-	if n <= 0 || len(ds) <= n {
-		return ds, 0
-	}
-	return ds[:n], len(ds) - n
 }
 
 func Count(ds []Diagnostic) (errors, warnings int) {
@@ -215,7 +208,7 @@ func location(d Diagnostic) string {
 }
 
 func wrap(text string, width, maxLines int) []string {
-	words := strings.Fields(clean(text))
+	words := strings.Fields(core.Clean(text))
 	var lines []string
 	var cur strings.Builder
 	for _, w := range words {
@@ -260,15 +253,5 @@ func cut(s string, n int) string {
 	if n <= 0 {
 		return ""
 	}
-	if len(s) <= n {
-		return strings.TrimRight(s, " ")
-	}
-	for n > 0 && s[n]&0xC0 == 0x80 {
-		n--
-	}
-	return strings.TrimRight(s[:n], " ")
-}
-
-func clean(s string) string {
-	return core.Clean(s)
+	return strings.TrimRight(core.Truncate(s, n), " ")
 }

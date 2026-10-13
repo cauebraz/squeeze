@@ -13,7 +13,8 @@ func conditions(r Report) []string {
 		"deferred":   s.Deferred > 0,
 		"destroy":    s.Destroy > 0,
 		"drift":      s.Drift > 0,
-		"errored":    s.Errored,
+		"error":      s.Errored,
+		"fail":       s.Errored || !s.Complete,
 		"forget":     s.Forget > 0,
 		"import":     s.Import > 0,
 		"incomplete": !s.Complete,
@@ -43,15 +44,13 @@ func Build(p *Plan, o Options) (Report, error) {
 		}
 		count(&r.Summary, c)
 		if c.Action == Noop && !moved(c) && !o.IncludeNoop {
+			r.NoopHidden++
 			continue
 		}
 		r.Changes = append(r.Changes, c)
 	}
 	sortChanges(r.Changes)
-	if o.MaxResources > 0 && len(r.Changes) > o.MaxResources {
-		r.Omitted = len(r.Changes) - o.MaxResources
-		r.Changes = r.Changes[:o.MaxResources]
-	}
+	r.Changes, r.Omitted = core.Limit(r.Changes, o.MaxResources)
 	if err := buildDrift(&r, p, o); err != nil {
 		return Report{}, err
 	}
@@ -207,10 +206,7 @@ func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, 
 		}
 		c.Attrs = kept
 	}
-	if o.MaxAttrs > 0 && len(c.Attrs) > o.MaxAttrs {
-		c.AttrsOmitted = len(c.Attrs) - o.MaxAttrs
-		c.Attrs = c.Attrs[:o.MaxAttrs]
-	}
+	c.Attrs, c.AttrsOmitted = core.Limit(c.Attrs, o.MaxAttrs)
 	return c, nil
 }
 

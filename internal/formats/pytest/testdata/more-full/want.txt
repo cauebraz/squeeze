@@ -14,6 +14,8 @@ FAILED more/test_more.py::test_parse
                  ^^^^^^^^^^
   E       ValueError: invalid literal for int() with base 10: '12a'
   more/test_more.py:13: ValueError
+  captured log call:
+    WARNING  shop:test_more.py:17 parsing user input
 FAILED more/test_more.py::test_many[3]
   n = 3
       @pytest.mark.parametrize("n", range(60))

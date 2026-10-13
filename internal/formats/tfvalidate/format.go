@@ -2,10 +2,7 @@ package tfvalidate
 
 import (
 	"bytes"
-	"errors"
 	"flag"
-	"fmt"
-	"strconv"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
@@ -25,7 +22,7 @@ func (Format) Name() string { return "tfvalidate" }
 
 func (Format) Description() string { return "Terraform validation JSON from terraform validate -json" }
 
-var conditionNames = []string{"error", "invalid", "warning"}
+var conditionNames = []string{"error", "fail", "invalid", "warning"}
 
 func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
 
@@ -44,18 +41,8 @@ func (Format) Detect(head []byte) bool {
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	o := DefaultOptions()
-	fs.Func("max-diagnostics", fmt.Sprintf("diagnostics shown, 0 for all (default %d)", o.MaxDiagnostics), func(s string) error {
-		n, err := strconv.Atoi(s)
-		if err != nil {
-			return errors.New("not an integer")
-		}
-		if n < 0 {
-			return errors.New("must be 0 or more")
-		}
-		o.MaxDiagnostics = n
-		return nil
-	})
-	fs.BoolVar(&o.NoDetail, "no-detail", false, "print summary, location and code only")
+	core.CountFlag(fs, &o.MaxDiagnostics, "max-diagnostics", "diagnostics listed, 0 for all")
+	fs.BoolVar(&o.NoDetail, "no-detail", false, "print diagnostic summary, location and code only")
 	return func(input []byte) (core.Result, error) {
 		return Squeeze(input, o)
 	}
@@ -73,6 +60,7 @@ func Squeeze(input []byte, o Options) (core.Result, error) {
 func conditions(r Report) []string {
 	return core.Conditions(map[string]bool{
 		"error":   r.Errors > 0,
+		"fail":    !r.Valid,
 		"invalid": !r.Valid,
 		"warning": r.Warnings > 0,
 	})

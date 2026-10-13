@@ -72,7 +72,7 @@ func TestConfigureSetsOptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(plain.Text, "more attributes (--max-attrs)") || strings.Contains(unlimited.Text, "more attributes") {
+	if !strings.Contains(plain.Text, "more attributes (--max-attrs 0)") || strings.Contains(unlimited.Text, "more attributes") {
 		t.Errorf("-max-attrs 0 did not lift the limit:\n%s", unlimited.Text)
 	}
 }
@@ -145,8 +145,8 @@ func TestConditions(t *testing.T) {
 		"create-only":    {"change"},
 		"replace-forced": {"change", "destroy", "replace"},
 		"drift":          {"change", "drift"},
-		"deferred":       {"change", "deferred", "incomplete"},
-		"errored":        {"change", "errored", "incomplete"},
+		"deferred":       {"change", "deferred", "fail", "incomplete"},
+		"errored":        {"change", "error", "fail", "incomplete"},
 		"forget-replace": {"change", "forget", "replace"},
 		"import":         {"change", "import"},
 		"moved":          {"change", "forget", "move"},

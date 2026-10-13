@@ -1,0 +1,3 @@
+go test: pass; 0 tests: 0 passed, 0 failed, 0 skipped; 1 package: 1 ok
+warning example.com/shop/bench: testing: warning: no tests to run
+... 1 passing package (--all)
