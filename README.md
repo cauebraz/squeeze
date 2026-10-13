@@ -83,7 +83,7 @@ Each format decides what to keep. Every format guarantees:
 
 - Output is plain text with no control characters or color codes, is the same for the same input, and ends with a newline.
 - Secrets the tool marks as sensitive never reach stdout.
-- Anything cut for size is announced with a count and the flag that shows it.
+- Items and lines cut for size are announced with a count and the flag that shows them. Single values have fixed limits instead, listed on each format's page: a diagnostic detail past three lines, a code line past 120 bytes and a `tfjson --all` message past 200 bytes end in `...`, and a value past 48 bytes prints its path or name only. `--output json` carries the details and values in full.
 - Errors and warnings are never dropped, whatever their shape. `generic` has no tool to mark them, so it keeps lines with error or warning words first and counts the ones past its line limit in the cut notice.
 - Names and addresses from the input are printed on one line without control characters or terminal escape sequences, so the input cannot forge a line of output.
 

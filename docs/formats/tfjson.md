@@ -47,7 +47,7 @@ error tests/network.tftest.hcl
 - Sensitive output values are never printed or stored; other scalar outputs print their value up to 48 bytes.
 - Every line at level `error` or `warn` becomes a diagnostic, whatever its type, so a message type squeeze does not know cannot hide a failure. A diagnostic severity other than `warning` counts as an error.
 - Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed, so an address or a name cannot forge a line of output.
-- Everything else is counted in `... N other messages: <type> <count>, ... (--all)`; `--all` prints those messages.
+- Everything else is counted in `... N other messages: <type> <count>, ... (--all)`; `--all` prints those messages, each cut at 200 bytes with `...`; `--output json` carries only their counts.
 
 ## Flags
 

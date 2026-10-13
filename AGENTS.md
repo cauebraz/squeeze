@@ -36,7 +36,7 @@ docs/formats/<name>.md  user documentation of one format
 
 ## Rules
 
-- Output invariants hold for every format: no secret the tool marks as sensitive reaches stdout; output has no control characters or color codes, is the same for the same input and ends with a newline; anything cut is announced with a count and the flag that shows it.
+- Output invariants hold for every format: no secret the tool marks as sensitive reaches stdout; output has no control characters or color codes, is the same for the same input and ends with a newline; items and lines cut are announced with a count and the flag that shows them; a single value cut at a fixed limit is listed on the format's docs page and kept whole in `--output json` when the format's data holds it.
 - Errors and warnings are never dropped: a line or record the format does not understand but the tool marks as an error or warning becomes a diagnostic.
 - stdout is empty whenever the exit code is not 0 or 3. Exit codes are 0, 1, 2, 3 and 64 as listed in the README; a new failure mode reuses one of them.
 - A golden file change is a behavior change. Run `just golden`, read the whole diff, and state in the PR why each changed line is correct.

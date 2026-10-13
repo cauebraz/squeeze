@@ -59,4 +59,4 @@ warning: Argument is deprecated (storage.tf:7:3)
 
 ## Limitations
 
-- The detail is cut after three lines and the code line at 120 bytes in the text; `--output json` carries the full detail.
+- The detail is cut after three lines in the text; `--output json` carries the full detail. The code line is cut at 120 bytes in both.
