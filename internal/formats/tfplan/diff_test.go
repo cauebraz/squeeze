@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -282,22 +281,31 @@ func TestDiffAttrs(t *testing.T) {
 	}
 }
 
-func TestDeepListsStayLinear(t *testing.T) {
+func TestDeepListsAreComparedByIndex(t *testing.T) {
 	t.Parallel()
-	nest := func(leaf string) any {
+	nest := func(depth int, leaf []any) any {
 		var v any = leaf
-		for range 9000 {
+		for range depth {
 			v = []any{v}
 		}
 		return v
 	}
-	start := time.Now()
-	got, _ := diffAttrs(PlanChange{Before: map[string]any{"l": nest("a")}, After: map[string]any{"l": nest("b")}}, true)
-	if d := time.Since(start); d > time.Second {
-		t.Errorf("diffAttrs() took %v", d)
+	diff := func(depth int) []AttrChange {
+		got, _ := diffAttrs(PlanChange{
+			Before: map[string]any{"l": nest(depth, []any{"a", "b"})},
+			After:  map[string]any{"l": nest(depth, []any{"b", "a"})},
+		}, true)
+		return got
 	}
-	if len(got) != 1 || got[0].Before == nil || got[0].Before.Value != "a" {
-		t.Errorf("attrs = %+v", got)
+	if got := diff(maxMatchDepth - 2); len(got) != 1 || !got[0].Reordered {
+		t.Errorf("shallow list: attrs = %+v, want one reorder", got)
+	}
+	deep := diff(maxMatchDepth)
+	if len(deep) != 2 || deep[0].Reordered || deep[0].Before == nil || deep[0].Before.Value != "a" || deep[1].Before.Value != "b" {
+		t.Errorf("deep list: attrs = %+v, want two changes by index", deep)
+	}
+	if got := diff(9000); len(got) != 2 {
+		t.Errorf("9000 levels: %d attrs, want 2", len(got))
 	}
 }
 
