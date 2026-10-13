@@ -11,13 +11,14 @@ import (
 	"testing"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/formattest"
 )
 
 const formatsDir = "../formats"
 
 func readFixture(t *testing.T, format, name string) []byte {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join(formatsDir, format, "testdata", name))
+	data, err := os.ReadFile(filepath.Join(formatsDir, format, "testdata", name, "input.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,18 +40,18 @@ func runCLI(t *testing.T, input []byte, args ...string) result {
 
 func TestRunAutoDetect(t *testing.T) {
 	t.Parallel()
-	r := runCLI(t, readFixture(t, "tfplan", "replace-forced.json"))
+	r := runCLI(t, readFixture(t, "tfplan", "replace-forced"))
 	if r.code != ExitOK || r.stderr != "" {
 		t.Fatalf("code = %d, stderr = %q", r.code, r.stderr)
 	}
-	if !strings.HasPrefix(r.stdout, "terraform 1.9.5 plan: 0 to add, 0 to change, 1 to destroy, 1 to replace\n") {
+	if !strings.HasPrefix(r.stdout, "terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace\n") {
 		t.Errorf("stdout = %q", r.stdout)
 	}
 }
 
 func TestRunNamedFormatMatchesAutoDetect(t *testing.T) {
 	t.Parallel()
-	input := readFixture(t, "tfplan", "update-nested.json")
+	input := readFixture(t, "tfplan", "update-nested")
 	auto := runCLI(t, input)
 	named := runCLI(t, input, "tfplan")
 	if auto.code != ExitOK || named.code != ExitOK || auto.stdout != named.stdout {
@@ -60,7 +61,7 @@ func TestRunNamedFormatMatchesAutoDetect(t *testing.T) {
 
 func TestRunFormatFlags(t *testing.T) {
 	t.Parallel()
-	r := runCLI(t, readFixture(t, "tfplan", "update-nested.json"), "tfplan", "--max-attrs", "1", "--output", "text")
+	r := runCLI(t, readFixture(t, "tfplan", "update-nested"), "tfplan", "--max-attrs", "1", "--output", "text")
 	if r.code != ExitOK || !strings.Contains(r.stdout, "... 2 more attributes (--max-attrs)") {
 		t.Errorf("code = %d, stdout = %q, stderr = %q", r.code, r.stdout, r.stderr)
 	}
@@ -68,7 +69,7 @@ func TestRunFormatFlags(t *testing.T) {
 
 func TestRunJSONEnvelope(t *testing.T) {
 	t.Parallel()
-	input := readFixture(t, "tfplan", "update-nested.json")
+	input := readFixture(t, "tfplan", "update-nested")
 	for _, args := range [][]string{{"--output", "json"}, {"tfplan", "--output=json"}} {
 		r := runCLI(t, input, args...)
 		if r.code != ExitOK {
@@ -95,7 +96,7 @@ func TestRunJSONEnvelope(t *testing.T) {
 
 func TestRunErrors(t *testing.T) {
 	t.Parallel()
-	plan := readFixture(t, "tfplan", "create-only.json")
+	plan := readFixture(t, "tfplan", "create-only")
 	tests := []struct {
 		name   string
 		input  []byte
@@ -173,15 +174,52 @@ func TestRunHelp(t *testing.T) {
 func TestRunVersion(t *testing.T) {
 	t.Parallel()
 	r := runCLI(t, nil, "--version")
-	if r.code != ExitOK || r.stdout != "squeeze "+Version+"\n" {
-		t.Errorf("code = %d, stdout = %q", r.code, r.stdout)
+	if r.code != ExitOK || r.stdout != "squeeze "+version()+"\n" || r.stderr != "" {
+		t.Errorf("code = %d, stdout = %q, stderr = %q", r.code, r.stdout, r.stderr)
+	}
+	if version() == "" || strings.Contains(version(), "(devel)") {
+		t.Errorf("version() = %q", version())
+	}
+}
+
+func TestStdinGuard(t *testing.T) {
+	t.Parallel()
+	file := filepath.Join(t.TempDir(), "plan.json")
+	if err := os.WriteFile(file, readFixture(t, "tfplan", "create-only"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Open(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	var stdout, stderr bytes.Buffer
+	if code := Run(nil, Stdin(f), &stdout, &stderr); code != ExitOK {
+		t.Errorf("regular file: code = %d, stderr = %q", code, stderr.String())
+	}
+	dev, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dev.Close()
+	stdout.Reset()
+	stderr.Reset()
+	code := Run(nil, Stdin(dev), &stdout, &stderr)
+	if code != ExitError || !strings.Contains(stderr.String(), "stdin is a terminal") || stdout.Len() != 0 {
+		t.Errorf("char device: code = %d, stdout = %q, stderr = %q", code, stdout.String(), stderr.String())
+	}
+	if _, ok := Stdin(dev).(noPipe); !ok {
+		t.Error("Stdin(char device) did not return the guard")
+	}
+	if r := runCLI(t, nil, "--version"); r.code != ExitOK {
+		t.Errorf("--version must not read stdin: code = %d", r.code)
 	}
 }
 
 func TestRunRawDir(t *testing.T) {
 	t.Parallel()
 	dir := filepath.Join(t.TempDir(), "nested", "raw")
-	input := readFixture(t, "tfplan", "sensitive.json")
+	input := readFixture(t, "tfplan", "sensitive")
 	r := runCLI(t, input, "--raw-dir", dir)
 	if r.code != ExitOK {
 		t.Fatalf("code = %d, stderr = %q", r.code, r.stderr)
@@ -231,7 +269,7 @@ func TestRunRawDirError(t *testing.T) {
 	if err := os.WriteFile(file, nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	r := runCLI(t, readFixture(t, "tfplan", "create-only.json"), "--raw-dir", file)
+	r := runCLI(t, readFixture(t, "tfplan", "create-only"), "--raw-dir", file)
 	if r.code != ExitError || !strings.Contains(r.stderr, "save raw input") || r.stdout != "" {
 		t.Errorf("code = %d, stdout = %q, stderr = %q", r.code, r.stdout, r.stderr)
 	}
@@ -252,7 +290,7 @@ func TestRunIOErrors(t *testing.T) {
 		t.Errorf("read error: code = %d, stderr = %q", code, stderr.String())
 	}
 	stderr.Reset()
-	input := readFixture(t, "tfplan", "create-only.json")
+	input := readFixture(t, "tfplan", "create-only")
 	if code := Run(nil, bytes.NewReader(input), failingWriter{}, &stderr); code != ExitError || !strings.Contains(stderr.String(), "write stdout: closed") {
 		t.Errorf("write error: code = %d, stderr = %q", code, stderr.String())
 	}
@@ -267,7 +305,8 @@ type stubFormat struct{}
 func (stubFormat) Name() string        { return "stub" }
 func (stubFormat) Description() string { return "stub" }
 func (stubFormat) Detect([]byte) bool  { return true }
-func (stubFormat) Configure(*flag.FlagSet) core.Squeezer {
+func (stubFormat) Configure(fs *flag.FlagSet) core.Squeezer {
+	fs.Bool("shared", false, "")
 	return func([]byte) (core.Result, error) {
 		return core.Result{Text: "ok\n", Data: unmarshalable{}}, nil
 	}
@@ -289,21 +328,112 @@ func TestEveryFixtureIsDetectedByExactlyItsOwnFormat(t *testing.T) {
 	t.Parallel()
 	formats := DefaultRegistry().Formats()
 	for _, owner := range formats {
-		dir := filepath.Join(formatsDir, owner.Name(), "testdata")
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			t.Fatalf("format %s has no testdata directory: %v", owner.Name(), err)
-		}
-		for _, e := range entries {
-			if e.IsDir() {
-				continue
-			}
-			head := core.Head(readFixture(t, owner.Name(), e.Name()))
+		for _, c := range formattest.Cases(t, filepath.Join(formatsDir, owner.Name(), "testdata")) {
+			head := core.Head(c.Input)
 			for _, f := range formats {
 				if got, want := f.Detect(head), f.Name() == owner.Name(); got != want {
-					t.Errorf("%s/%s: %s.Detect() = %v, want %v", owner.Name(), e.Name(), f.Name(), got, want)
+					t.Errorf("%s/%s: %s.Detect() = %v, want %v", owner.Name(), c.Name, f.Name(), got, want)
 				}
 			}
 		}
 	}
+}
+
+func TestRunHints(t *testing.T) {
+	t.Parallel()
+	plan := readFixture(t, "tfplan", "create-only")
+	file := filepath.Join(t.TempDir(), "plan.json")
+	if err := os.WriteFile(file, plan, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	tests := map[string]struct {
+		args []string
+		want []string
+	}{
+		"format flag without format": {
+			[]string{"--all"},
+			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of format tfplan: squeeze tfplan -all\n", "run 'squeeze -h' for usage\n"},
+		},
+		"version under a format": {
+			[]string{"tfplan", "-version"},
+			[]string{"-version works without a format: squeeze -version", "run 'squeeze tfplan -h' for usage"},
+		},
+		"misspelled format": {
+			[]string{"tfpaln"},
+			[]string{`unknown format "tfpaln" (formats: tfplan); did you mean "tfplan"?`},
+		},
+		"file as format": {
+			[]string{file},
+			[]string{`is a file; squeeze reads stdin: squeeze < ` + file},
+		},
+		"file after format": {
+			[]string{"tfplan", file},
+			[]string{`is a file; squeeze reads stdin: squeeze tfplan < ` + file},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			r := runCLI(t, plan, tt.args...)
+			if r.code != ExitUsage || r.stdout != "" {
+				t.Errorf("code = %d, stdout = %q", r.code, r.stdout)
+			}
+			for _, w := range tt.want {
+				if !strings.Contains(r.stderr, w) {
+					t.Errorf("stderr lacks %q:\n%s", w, r.stderr)
+				}
+			}
+			if strings.Contains(r.stderr, "Flags:") {
+				t.Errorf("a usage error printed the full help:\n%s", r.stderr)
+			}
+		})
+	}
+}
+
+func TestFlagHintNone(t *testing.T) {
+	t.Parallel()
+	reg := DefaultRegistry()
+	if got := flagHint(errors.New("other error"), nil, reg); got != "" {
+		t.Errorf("flagHint(other) = %q", got)
+	}
+	if got := flagHint(errors.New(undefinedFlag+"bogus"), nil, reg); got != "" {
+		t.Errorf("flagHint(bogus) = %q", got)
+	}
+	tf, _ := reg.Lookup("tfplan")
+	if got := flagHint(errors.New(undefinedFlag+"all"), tf, reg); got != "" {
+		t.Errorf("flagHint(all) under tfplan = %q", got)
+	}
+	two := core.NewRegistry(stubFormat{}, namedStub{"other"})
+	if got := flagHint(errors.New(undefinedFlag+"shared"), nil, two); got != "-shared is a flag of formats stub, other: squeeze <format> -shared" {
+		t.Errorf("flagHint(shared) = %q", got)
+	}
+}
+
+func TestClosest(t *testing.T) {
+	t.Parallel()
+	names := []string{"tfplan", "pytest", "gotest"}
+	tests := map[string]string{"tfplan": "tfplan", "tfpaln": "tfplan", "pytset": "pytest", "go": "", "terraform": ""}
+	for word, want := range tests {
+		if got := closest(word, names); got != want {
+			t.Errorf("closest(%q) = %q, want %q", word, got, want)
+		}
+	}
+	for _, tt := range []struct {
+		a, b string
+		want int
+	}{{"", "", 0}, {"a", "", 1}, {"", "ab", 2}, {"kitten", "sitting", 3}, {"tfplan", "tfpaln", 2}} {
+		if got := levenshtein(tt.a, tt.b); got != tt.want {
+			t.Errorf("levenshtein(%q, %q) = %d, want %d", tt.a, tt.b, got, tt.want)
+		}
+	}
+}
+
+type namedStub struct{ name string }
+
+func (n namedStub) Name() string        { return n.name }
+func (n namedStub) Description() string { return n.name }
+func (namedStub) Detect([]byte) bool    { return false }
+func (namedStub) Configure(fs *flag.FlagSet) core.Squeezer {
+	fs.Bool("shared", false, "")
+	return func([]byte) (core.Result, error) { return core.Result{}, nil }
 }

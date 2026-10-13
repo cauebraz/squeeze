@@ -1,5 +1,0 @@
-terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy, 1 to forget, 2 to move
-- aws_s3_bucket.archive (removed from state, not destroyed)
-~ module.storage.aws_s3_bucket.this[0] (moved from aws_s3_bucket.data)
-  ~ force_destroy: false -> true
-= aws_iam_role.app (moved from aws_iam_role.legacy)

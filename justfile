@@ -2,6 +2,8 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 version := `git describe --tags --always --dirty 2>/dev/null || echo dev`
 min_coverage := "85"
+terraform_repo := "https://github.com/hashicorp/terraform.git"
+terraform_ref := "9ec49e06a868cfa161213fac7f74aa03f8937755"
 
 default:
     @just --list
@@ -23,7 +25,8 @@ vet:
     go vet ./...
 
 lint:
-    if command -v staticcheck >/dev/null; then staticcheck ./...; else echo "staticcheck not installed; skipped (go install honnef.co/go/tools/cmd/staticcheck@v0.8.2)"; fi
+    go tool staticcheck ./...
+    go tool exhaustive ./...
 
 check: fmt-check vet lint test
 
@@ -47,4 +50,16 @@ bench:
     go test ./internal/formats/... -run '^$' -bench . -benchmem
 
 demo: build
-    ./bin/squeeze < internal/formats/tfplan/testdata/replace-forced.json
+    ./bin/squeeze < internal/formats/tfplan/testdata/replace-forced/input.json
+
+conformance ref=terraform_ref:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    git -C "$work" init -q
+    git -C "$work" remote add origin {{terraform_repo}}
+    git -C "$work" sparse-checkout set internal/command/testdata/show-json
+    git -C "$work" fetch -q --depth 1 --filter=blob:none origin {{ref}}
+    git -C "$work" checkout -q FETCH_HEAD
+    SQUEEZE_REAL_DIR="$work/internal/command/testdata/show-json" go test ./internal/formats/tfplan -run '^TestRealInputs$' -count=1 -v | grep -E '^(=== RUN|--- |ok|FAIL|PASS)|ratio|leaks|: '

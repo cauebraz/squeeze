@@ -6,12 +6,12 @@ squeeze reads a tool's output on stdin and prints the smallest text that still c
 
 ```
 $ terraform show -json plan.out | squeeze
-terraform 1.9.5 plan: 0 to add, 0 to change, 1 to destroy, 1 to replace
+terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace
 - aws_instance.old (delete_because_no_resource_config)
 -/+ aws_db_instance.main (replacement forced by engine_version; replace_because_cannot_update)
   ! engine_version: "15.4" -> "16.1"
-  ~ address: (known after apply)
-  ~ arn: (known after apply)
+  + address: (known after apply)
+  + arn: (known after apply)
   ~ endpoint: (known after apply)
   ~ id: "db-ABCDEFGHIJKLMNOP" -> (known after apply)
   ~ instance_class: "db.t3.micro" -> "db.t3.small"
@@ -96,12 +96,15 @@ The content of the input never changes the exit code.
 ## Development
 
 ```
-just check          # gofmt, go vet, staticcheck, tests
-just cover          # coverage profile, fails below 85 percent
+just check          # gofmt, go vet, staticcheck, exhaustive, tests
+just cover          # coverage across packages, fails below 85 percent
 just golden         # rewrite golden files after an intended output change
 just fuzz tfplan 30 # fuzz one format for 30 seconds
 just bench          # benchmarks of every format
+just conformance    # run tfplan over Terraform's own show-json outputs at a pinned commit
 ```
+
+Go 1.26 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.
 
 New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding agents working on this repository follow [AGENTS.md](AGENTS.md).
 

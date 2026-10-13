@@ -47,7 +47,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 		return code
 	}
 	if inv.version {
-		fmt.Fprintf(stdout, "squeeze %s\n", Version)
+		fmt.Fprintf(stdout, "squeeze %s\n", version())
 		return ExitOK
 	}
 	input, err := io.ReadAll(stdin)
@@ -102,7 +102,7 @@ func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		f, ok := reg.Lookup(args[0])
 		if !ok {
-			fmt.Fprintf(stderr, "squeeze: unknown format %q (formats: %s)\n", args[0], strings.Join(reg.Names(), ", "))
+			fmt.Fprintf(stderr, "squeeze: %s\n", unknownFormat(args[0], reg))
 			return inv, ExitUsage, false
 		}
 		inv.format = f
@@ -110,24 +110,33 @@ func parse(args []string, stderr io.Writer, reg *core.Registry) (invocation, int
 		args = args[1:]
 	}
 	fs := flag.NewFlagSet(name, flag.ContinueOnError)
-	fs.SetOutput(stderr)
+	fs.SetOutput(io.Discard)
 	fs.StringVar(&inv.output, "output", "text", "text, or json for the envelope with the format's data")
 	fs.StringVar(&inv.rawDir, "raw-dir", "", "save the unmodified input to this directory and print its path on stderr")
 	if inv.format == nil {
 		fs.BoolVar(&inv.version, "version", false, "print the version and exit")
-		fs.Usage = func() { rootUsage(stderr, fs, reg) }
 	} else {
 		inv.squeeze = inv.format.Configure(fs)
-		fs.Usage = func() { formatUsage(stderr, fs, inv.format) }
 	}
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
+			fs.SetOutput(stderr)
+			if inv.format == nil {
+				rootUsage(stderr, fs, reg)
+			} else {
+				formatUsage(stderr, fs, inv.format)
+			}
 			return inv, ExitOK, false
 		}
+		fmt.Fprintf(stderr, "squeeze: %v\n", err)
+		if hint := flagHint(err, inv.format, reg); hint != "" {
+			fmt.Fprintf(stderr, "squeeze: %s\n", hint)
+		}
+		fmt.Fprintf(stderr, "run '%s -h' for usage\n", name)
 		return inv, ExitUsage, false
 	}
 	if fs.NArg() > 0 {
-		fmt.Fprintf(stderr, "squeeze: unexpected argument %q; input is read from stdin\n", fs.Arg(0))
+		fmt.Fprintf(stderr, "squeeze: %s\n", unexpectedArgument(fs.Arg(0), name))
 		return inv, ExitUsage, false
 	}
 	if inv.output != "text" && inv.output != "json" {

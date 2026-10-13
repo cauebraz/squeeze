@@ -4,19 +4,26 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
+var ignoreAt = cmpopts.IgnoreUnexported(AttrChange{})
+
+func sv(v any) *Scalar {
+	return &Scalar{Value: v}
+}
+
+func num(n string) *Scalar {
+	return &Scalar{Value: json.Number(n)}
+}
+
 type diffCase struct {
-	name         string
-	before       string
-	after        string
-	unknown      string
-	beforeSens   string
-	afterSens    string
-	replacePaths string
-	noValues     bool
-	want         []AttrChange
-	wantReplaced []string
+	before, after, unknown, beforeSens, afterSens, replacePaths string
+	noValues                                                    bool
+	want                                                        []AttrChange
+	wantReplaced                                                []string
 }
 
 func runDiff(t *testing.T, tt diffCase) ([]AttrChange, []string) {
@@ -38,270 +45,175 @@ func runDiff(t *testing.T, tt diffCase) ([]AttrChange, []string) {
 
 func TestDiffAttrs(t *testing.T) {
 	t.Parallel()
-	long := strings.Repeat("x", 47)
-	tests := []diffCase{
-		{
-			name:   "no difference",
-			before: `{"a":1,"b":{"c":"d"}}`,
-			after:  `{"a":1,"b":{"c":"d"}}`,
+	long := strings.Repeat("x", 60)
+	tests := map[string]diffCase{
+		"no difference": {
+			before: `{"a":1,"b":{"c":"d"}}`, after: `{"a":1,"b":{"c":"d"}}`,
 		},
-		{
-			name:   "top-level scalar",
-			before: `{"a":"x","b":1}`,
-			after:  `{"a":"y","b":1}`,
-			want:   []AttrChange{{Path: "a", Before: `"x"`, After: `"y"`}},
+		"top-level scalar": {
+			before: `{"a":"x","b":1}`, after: `{"a":"y","b":1}`,
+			want: []AttrChange{{Path: "a", Before: sv("x"), After: sv("y")}},
 		},
-		{
-			name:   "nested map in key order",
-			before: `{"tags":{"Name":"web","Env":"dev"}}`,
-			after:  `{"tags":{"Name":"web-tier","Env":"prod"}}`,
+		"nested map in key order": {
+			before: `{"tags":{"Name":"web","Env":"dev"}}`, after: `{"tags":{"Name":"web-tier","Env":"prod"}}`,
 			want: []AttrChange{
-				{Path: "tags.Env", Before: `"dev"`, After: `"prod"`},
-				{Path: "tags.Name", Before: `"web"`, After: `"web-tier"`},
+				{Path: "tags.Env", Before: sv("dev"), After: sv("prod")},
+				{Path: "tags.Name", Before: sv("web"), After: sv("web-tier")},
 			},
 		},
-		{
-			name:   "key that is not an identifier",
-			before: `{"tags":{"kubernetes.io/role":"elb"}}`,
-			after:  `{"tags":{"kubernetes.io/role":"internal-elb"}}`,
-			want:   []AttrChange{{Path: `tags["kubernetes.io/role"]`, Before: `"elb"`, After: `"internal-elb"`}},
+		"key that is not an identifier": {
+			before: `{"tags":{"kubernetes.io/role":"elb"}}`, after: `{"tags":{"kubernetes.io/role":"internal-elb"}}`,
+			want: []AttrChange{{Path: `tags["kubernetes.io/role"]`, Before: sv("elb"), After: sv("internal-elb")}},
 		},
-		{
-			name:   "list element by index",
-			before: `{"ingress":[{"cidr":["10.0.0.0/8"]}]}`,
-			after:  `{"ingress":[{"cidr":["10.0.0.0/16"]}]}`,
-			want:   []AttrChange{{Path: "ingress[0].cidr[0]", Before: `"10.0.0.0/8"`, After: `"10.0.0.0/16"`}},
+		"map key added": {
+			before: `{"tags":{"Team":"platform"}}`, after: `{"tags":{"Team":"platform","ManagedBy":"terraform"}}`,
+			want: []AttrChange{{Path: "tags.ManagedBy", Kind: Added, After: sv("terraform")}},
 		},
-		{
-			name:   "list grows with scalar",
-			before: `{"ports":[80]}`,
-			after:  `{"ports":[80,443]}`,
-			want:   []AttrChange{{Path: "ports[1]", Before: "null", After: "443"}},
+		"map key removed": {
+			before: `{"tags":{"Owner":"someone"}}`, after: `{"tags":{}}`,
+			want: []AttrChange{{Path: "tags.Owner", Kind: Removed, Before: sv("someone")}},
 		},
-		{
-			name:   "list shrinks with object",
-			before: `{"rules":[{"a":1},{"a":2}]}`,
-			after:  `{"rules":[{"a":1}]}`,
-			want:   []AttrChange{{Path: "rules[1]"}},
+		"explicit null is a modification": {
+			before: `{"a":null}`, after: `{"a":true}`,
+			want: []AttrChange{{Path: "a", Before: sv(nil), After: sv(true)}},
 		},
-		{
-			name:   "null to value",
-			before: `{"a":null}`,
-			after:  `{"a":true}`,
-			want:   []AttrChange{{Path: "a", Before: "null", After: "true"}},
+		"value to explicit null": {
+			before: `{"a":"x"}`, after: `{"a":null}`,
+			want: []AttrChange{{Path: "a", Before: sv("x"), After: sv(nil)}},
 		},
-		{
-			name:   "value to absent key",
-			before: `{"a":"x"}`,
-			after:  `{}`,
-			want:   []AttrChange{{Path: "a", Before: `"x"`, After: "null"}},
+		"list element by index": {
+			before: `{"ingress":[{"cidr":["10.0.0.0/8"]}]}`, after: `{"ingress":[{"cidr":["10.0.0.0/16"]}]}`,
+			want: []AttrChange{{Path: "ingress[0].cidr[0]", Before: sv("10.0.0.0/8"), After: sv("10.0.0.0/16")}},
 		},
-		{
-			name:   "type change map to list",
-			before: `{"a":{"b":1}}`,
-			after:  `{"a":[1]}`,
-			want:   []AttrChange{{Path: "a"}},
+		"list grows": {
+			before: `{"ports":[80]}`, after: `{"ports":[80,443]}`,
+			want: []AttrChange{{Path: "ports[1]", Kind: Added, After: num("443")}},
 		},
-		{
-			name:   "scalar at the 48 byte limit is shown",
-			before: `{"a":"x"}`,
-			after:  `{"a":"` + long[:46] + `"}`,
-			want:   []AttrChange{{Path: "a", Before: `"x"`, After: `"` + long[:46] + `"`}},
+		"list shrinks with object": {
+			before: `{"rules":[{"a":1},{"a":2}]}`, after: `{"rules":[{"a":1}]}`,
+			want: []AttrChange{{Path: "rules[1]", Kind: Removed}},
 		},
-		{
-			name:   "scalar over 48 bytes shows the path only",
-			before: `{"a":"short"}`,
-			after:  `{"a":"` + long + `y"}`,
-			want:   []AttrChange{{Path: "a"}},
+		"type change map to list": {
+			before: `{"a":{"b":1}}`, after: `{"a":[1]}`,
+			want: []AttrChange{{Path: "a"}},
 		},
-		{
-			name:     "no values",
-			before:   `{"a":"x"}`,
-			after:    `{"a":"y"}`,
-			noValues: true,
-			want:     []AttrChange{{Path: "a"}},
+		"long values stay in the model": {
+			before: `{"a":"short"}`, after: `{"a":"` + long + `"}`,
+			want: []AttrChange{{Path: "a", Before: sv("short"), After: sv(long)}},
 		},
-		{
-			name:    "unknown with known before",
-			before:  `{"id":"i-1","n":1}`,
-			after:   `{"n":1}`,
-			unknown: `{"id":true}`,
-			want:    []AttrChange{{Path: "id", Before: `"i-1"`, Unknown: true}},
+		"no values": {
+			before: `{"a":"x","t":{}}`, after: `{"a":"y","t":{"k":"v"}}`, noValues: true,
+			want: []AttrChange{{Path: "a"}, {Path: "t.k", Kind: Added}},
 		},
-		{
-			name:    "unknown with null before",
-			before:  `{"arn":null}`,
-			after:   `{}`,
-			unknown: `{"arn":true}`,
-			want:    []AttrChange{{Path: "arn", Unknown: true}},
+		"unknown with known before": {
+			before: `{"id":"i-1","n":1}`, after: `{"n":1}`, unknown: `{"id":true}`,
+			want: []AttrChange{{Path: "id", Before: sv("i-1"), Unknown: true}},
 		},
-		{
-			name:     "unknown hides before when values are off",
-			before:   `{"id":"i-1"}`,
-			after:    `{}`,
-			unknown:  `{"id":true}`,
-			noValues: true,
-			want:     []AttrChange{{Path: "id", Unknown: true}},
+		"unknown with null before": {
+			before: `{"arn":null}`, after: `{}`, unknown: `{"arn":true}`,
+			want: []AttrChange{{Path: "arn", Unknown: true}},
 		},
-		{
-			name:    "unknown subtree stops recursion",
-			before:  `{"block":{"a":1,"b":2}}`,
-			after:   `{}`,
-			unknown: `{"block":true}`,
-			want:    []AttrChange{{Path: "block", Unknown: true}},
+		"unknown hides before when values are off": {
+			before: `{"id":"i-1"}`, after: `{}`, unknown: `{"id":true}`, noValues: true,
+			want: []AttrChange{{Path: "id", Unknown: true}},
 		},
-		{
-			name:    "unknown key only in after_unknown",
-			before:  `{}`,
-			after:   `{}`,
-			unknown: `{"version":true}`,
-			want:    []AttrChange{{Path: "version", Unknown: true}},
+		"unknown subtree stops recursion": {
+			before: `{"block":{"a":1,"b":2}}`, after: `{}`, unknown: `{"block":true}`,
+			want: []AttrChange{{Path: "block", Unknown: true}},
 		},
-		{
-			name:    "unknown list element",
-			before:  `{"l":[{"id":"a"}]}`,
-			after:   `{"l":[{}]}`,
-			unknown: `{"l":[{"id":true}]}`,
-			want:    []AttrChange{{Path: "l[0].id", Before: `"a"`, Unknown: true}},
+		"unknown key only in after_unknown is added": {
+			before: `{}`, after: `{}`, unknown: `{"version":true}`,
+			want: []AttrChange{{Path: "version", Kind: Added, Unknown: true}},
 		},
-		{
-			name:       "sensitive changed",
-			before:     `{"password":"hunter2"}`,
-			after:      `{"password":"correct-horse"}`,
-			beforeSens: `{"password":true}`,
-			afterSens:  `{"password":true}`,
-			want:       []AttrChange{{Path: "password", Sensitive: true}},
+		"unknown list element": {
+			before: `{"l":[{"id":"a"}]}`, after: `{"l":[{}]}`, unknown: `{"l":[{"id":true}]}`,
+			want: []AttrChange{{Path: "l[0].id", Before: sv("a"), Unknown: true}},
 		},
-		{
-			name:       "sensitive unchanged is omitted",
-			before:     `{"password":"same"}`,
-			after:      `{"password":"same"}`,
-			beforeSens: `{"password":true}`,
-			afterSens:  `{"password":true}`,
+		"after_unknown false entries are ignored": {
+			before: `{"a":1}`, after: `{"a":1}`, unknown: `{"a":false,"b":false,"c":{}}`,
 		},
-		{
-			name:      "sensitive only after",
-			before:    `{"token":"a"}`,
-			after:     `{"token":"b"}`,
-			afterSens: `{"token":true}`,
-			want:      []AttrChange{{Path: "token", Sensitive: true}},
+		"sensitive changed": {
+			before: `{"password":"hunter2"}`, after: `{"password":"correct-horse"}`,
+			beforeSens: `{"password":true}`, afterSens: `{"password":true}`,
+			want: []AttrChange{{Path: "password", Sensitive: true}},
 		},
-		{
-			name:       "sensitive and unknown",
-			before:     `{"secret":"a"}`,
-			after:      `{}`,
-			unknown:    `{"secret":true}`,
-			beforeSens: `{"secret":true}`,
-			want:       []AttrChange{{Path: "secret", Sensitive: true, Unknown: true}},
+		"sensitive unchanged is omitted": {
+			before: `{"password":"same"}`, after: `{"password":"same"}`,
+			beforeSens: `{"password":true}`, afterSens: `{"password":true}`,
 		},
-		{
-			name:       "sensitive parent hides nested values",
-			before:     `{"env":{"KEY":"old","OTHER":"x"}}`,
-			after:      `{"env":{"KEY":"new","OTHER":"x"}}`,
-			beforeSens: `{"env":true}`,
-			afterSens:  `{"env":true}`,
-			want:       []AttrChange{{Path: "env", Sensitive: true}},
+		"sensitive only after": {
+			before: `{"token":"a"}`, after: `{"token":"b"}`, afterSens: `{"token":true}`,
+			want: []AttrChange{{Path: "token", Sensitive: true}},
 		},
-		{
-			name:       "sensitive nested key",
-			before:     `{"env":{"KEY":"old","LEVEL":"info"}}`,
-			after:      `{"env":{"KEY":"new","LEVEL":"debug"}}`,
-			beforeSens: `{"env":{"KEY":true}}`,
-			afterSens:  `{"env":{"KEY":true}}`,
+		"sensitive added": {
+			before: `{"env":{}}`, after: `{"env":{"KEY":"v"}}`, afterSens: `{"env":{"KEY":true}}`,
+			want: []AttrChange{{Path: "env.KEY", Kind: Added, Sensitive: true}},
+		},
+		"sensitive and unknown": {
+			before: `{"secret":"a"}`, after: `{}`, unknown: `{"secret":true}`, beforeSens: `{"secret":true}`,
+			want: []AttrChange{{Path: "secret", Sensitive: true, Unknown: true}},
+		},
+		"sensitive parent hides nested values": {
+			before: `{"env":{"KEY":"old","OTHER":"x"}}`, after: `{"env":{"KEY":"new","OTHER":"x"}}`,
+			beforeSens: `{"env":true}`, afterSens: `{"env":true}`,
+			want: []AttrChange{{Path: "env", Sensitive: true}},
+		},
+		"sensitive nested key": {
+			before: `{"env":{"KEY":"old","LEVEL":"info"}}`, after: `{"env":{"KEY":"new","LEVEL":"debug"}}`,
+			beforeSens: `{"env":{"KEY":true}}`, afterSens: `{"env":{"KEY":true}}`,
 			want: []AttrChange{
 				{Path: "env.KEY", Sensitive: true},
-				{Path: "env.LEVEL", Before: `"info"`, After: `"debug"`},
+				{Path: "env.LEVEL", Before: sv("info"), After: sv("debug")},
 			},
 		},
-		{
-			name:       "sensitive root",
-			before:     `{"a":"x"}`,
-			after:      `{"a":"y"}`,
-			beforeSens: `true`,
-			want:       []AttrChange{{Path: "(resource)", Sensitive: true}},
+		"sensitive root": {
+			before: `{"a":"x"}`, after: `{"a":"y"}`, beforeSens: `true`,
+			want: []AttrChange{{Path: "(resource)", Sensitive: true}},
 		},
-		{
-			name:         "replace path marks and sorts first",
-			before:       `{"a":1,"engine_version":"15"}`,
-			after:        `{"a":2,"engine_version":"16"}`,
+		"replace path marks and sorts first": {
+			before: `{"a":1,"engine_version":"15"}`, after: `{"a":2,"engine_version":"16"}`,
 			replacePaths: `[["engine_version"]]`,
 			want: []AttrChange{
-				{Path: "engine_version", Before: `"15"`, After: `"16"`, ForcesReplacement: true},
-				{Path: "a", Before: "1", After: "2"},
+				{Path: "engine_version", Before: sv("15"), After: sv("16"), ForcesReplacement: true},
+				{Path: "a", Before: num("1"), After: num("2")},
 			},
 			wantReplaced: []string{"engine_version"},
 		},
-		{
-			name:         "replace path is a prefix of the attribute",
-			before:       `{"nic":[{"subnet":"a"}]}`,
-			after:        `{"nic":[{"subnet":"b"}]}`,
-			replacePaths: `[["nic"]]`,
-			want:         []AttrChange{{Path: "nic[0].subnet", Before: `"a"`, After: `"b"`, ForcesReplacement: true}},
+		"replace path is a prefix of the attribute": {
+			before: `{"nic":[{"subnet":"a"}]}`, after: `{"nic":[{"subnet":"b"}]}`, replacePaths: `[["nic"]]`,
+			want:         []AttrChange{{Path: "nic[0].subnet", Before: sv("a"), After: sv("b"), ForcesReplacement: true}},
 			wantReplaced: []string{"nic"},
 		},
-		{
-			name:         "attribute is a prefix of the replace path",
-			before:       `{"nic":[{"subnet":"a"}]}`,
-			after:        `{"nic":[]}`,
-			replacePaths: `[["nic",0,"subnet"]]`,
-			want:         []AttrChange{{Path: "nic[0]", ForcesReplacement: true}},
+		"attribute is a prefix of the replace path": {
+			before: `{"nic":[{"subnet":"a"}]}`, after: `{"nic":[]}`, replacePaths: `[["nic",0,"subnet"]]`,
+			want:         []AttrChange{{Path: "nic[0]", Kind: Removed, ForcesReplacement: true}},
 			wantReplaced: []string{"nic[0].subnet"},
 		},
-		{
-			name:         "invalid replace path is ignored",
-			before:       `{"a":1}`,
-			after:        `{"a":2}`,
-			replacePaths: `[[{"x":1}],["a",1.5]]`,
-			want:         []AttrChange{{Path: "a", Before: "1", After: "2"}},
+		"invalid replace path is ignored": {
+			before: `{"a":1}`, after: `{"a":2}`, replacePaths: `[[{"x":1}],["a",1.5]]`,
+			want: []AttrChange{{Path: "a", Before: num("1"), After: num("2")}},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, replaced := runDiff(t, tt)
-			if !equalAttrs(got, tt.want) {
-				t.Errorf("attrs =\n%+v\nwant\n%+v", got, tt.want)
+			if diff := cmp.Diff(tt.want, got, ignoreAt, cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("attrs (-want +got):\n%s", diff)
 			}
-			if strings.Join(replaced, "|") != strings.Join(tt.wantReplaced, "|") {
-				t.Errorf("replacedBy = %q, want %q", replaced, tt.wantReplaced)
+			if diff := cmp.Diff(tt.wantReplaced, replaced, cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("replacedBy (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
-func equalAttrs(a, b []AttrChange) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func TestDiffNeverRendersSensitiveValues(t *testing.T) {
+func TestDiffAttrsCarryTheirPath(t *testing.T) {
 	t.Parallel()
-	secrets := []string{"s3cr3t-before", "s3cr3t-after", "nested-old", "nested-new", "list-old", "list-new"}
-	c := PlanChange{
-		Before:          decode(t, `{"a":"s3cr3t-before","m":{"k":"nested-old"},"l":["list-old"]}`),
-		After:           decode(t, `{"a":"s3cr3t-after","m":{"k":"nested-new"},"l":["list-new"]}`),
-		BeforeSensitive: decode(t, `{"a":true,"m":{"k":true},"l":[true]}`),
-		AfterSensitive:  decode(t, `{"a":true,"m":{"k":true},"l":[true]}`),
-	}
-	attrs, _ := diffAttrs(c, true)
-	if len(attrs) != 3 {
-		t.Fatalf("attrs = %+v, want 3 sensitive changes", attrs)
-	}
-	out, err := json.Marshal(attrs)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, s := range secrets {
-		if strings.Contains(string(out), s) {
-			t.Errorf("attrs leak %q: %s", s, out)
-		}
+	got, _ := runDiff(t, diffCase{before: `{"m":{"k":[1]}}`, after: `{"m":{"k":[2]}}`})
+	want := path{{key: "m"}, {key: "k"}, {index: 0, isIndex: true}}
+	if len(got) != 1 || !got[0].at.hasPrefix(want) || len(got[0].at) != len(want) {
+		t.Errorf("at = %v, want %v", got[0].at, want)
 	}
 }
 
@@ -327,29 +239,13 @@ func TestPathString(t *testing.T) {
 	}
 }
 
-func TestScalar(t *testing.T) {
+func TestPathOverlaps(t *testing.T) {
 	t.Parallel()
-	tests := []struct {
-		v    any
-		want string
-		ok   bool
-	}{
-		{nil, "null", true},
-		{true, "true", true},
-		{false, "false", true},
-		{"a\"b", `"a\"b"`, true},
-		{json.Number("42"), "42", true},
-		{1.5, "1.5", true},
-		{map[string]any{}, "", false},
-		{[]any{}, "", false},
-		{strings.Repeat("x", 46), `"` + strings.Repeat("x", 46) + `"`, true},
-		{strings.Repeat("x", 47), "", false},
-	}
-	for _, tt := range tests {
-		got, ok := scalar(tt.v)
-		if got != tt.want || ok != tt.ok {
-			t.Errorf("scalar(%v) = %q, %v; want %q, %v", tt.v, got, ok, tt.want, tt.ok)
-		}
+	a := path{{key: "a"}}
+	ab := path{{key: "a"}, {key: "b"}}
+	c := path{{key: "c"}}
+	if !a.overlaps(ab) || !ab.overlaps(a) || a.overlaps(c) || !a.overlaps(nil) {
+		t.Error("overlaps() returned a wrong answer")
 	}
 }
 
@@ -359,23 +255,25 @@ func TestToPath(t *testing.T) {
 	if !ok || p.String() != "a[2][3].b" {
 		t.Errorf("toPath() = %v, %v", p, ok)
 	}
-	if _, ok := toPath([]any{true}); ok {
-		t.Error("toPath(bool) succeeded")
-	}
-	if _, ok := toPath([]any{json.Number("1.5")}); ok {
-		t.Error("toPath(1.5) succeeded")
+	for _, bad := range [][]any{{true}, {json.Number("1.5")}, {1.5}} {
+		if _, ok := toPath(bad); ok {
+			t.Errorf("toPath(%v) succeeded", bad)
+		}
 	}
 }
 
-func TestChildOutOfRange(t *testing.T) {
+func TestLookup(t *testing.T) {
 	t.Parallel()
 	list := []any{"a"}
 	for _, s := range []step{{index: -1, isIndex: true}, {index: 1, isIndex: true}} {
-		if got := child(list, s); got != nil {
-			t.Errorf("child(%v) = %v, want nil", s, got)
+		if v, ok := lookup(list, s); ok || v != nil {
+			t.Errorf("lookup(%v) = %v, %v", s, v, ok)
 		}
 	}
-	if got := child("scalar", step{key: "a"}); got != nil {
-		t.Errorf("child(scalar) = %v, want nil", got)
+	if _, ok := lookup("scalar", step{key: "a"}); ok {
+		t.Error("lookup(scalar) found a key")
+	}
+	if v, ok := lookup(map[string]any{"k": nil}, step{key: "k"}); !ok || v != nil {
+		t.Errorf("lookup(explicit null) = %v, %v", v, ok)
 	}
 }

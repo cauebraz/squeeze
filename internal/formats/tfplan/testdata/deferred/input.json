@@ -1,0 +1,176 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.main",
+          "mode": "managed",
+          "type": "aws_vpc",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "cidr_block": "10.0.0.0/16"
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_vpc.main",
+      "mode": "managed",
+      "type": "aws_vpc",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "cidr_block": "10.0.0.0/16"
+        },
+        "after_unknown": {
+          "id": true,
+          "arn": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "deferred_changes": [
+    {
+      "reason": "instance_count_unknown",
+      "resource_change": {
+        "address": "aws_subnet.private[\"*\"]",
+        "mode": "managed",
+        "type": "aws_subnet",
+        "name": "private[\"*\"]",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "change": {
+          "actions": [
+            "create"
+          ],
+          "before": null,
+          "after": {
+            "vpc_id": null
+          },
+          "after_unknown": {
+            "vpc_id": true,
+            "id": true
+          },
+          "before_sensitive": false,
+          "after_sensitive": {}
+        }
+      }
+    },
+    {
+      "reason": "provider_config_unknown",
+      "resource_change": {
+        "address": "kubernetes_namespace.app",
+        "mode": "managed",
+        "type": "kubernetes_namespace",
+        "name": "app",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "change": {
+          "actions": [
+            "create"
+          ],
+          "before": null,
+          "after": {
+            "metadata": [
+              {
+                "name": "app"
+              }
+            ]
+          },
+          "after_unknown": {
+            "id": true
+          },
+          "before_sensitive": false,
+          "after_sensitive": {}
+        }
+      }
+    },
+    {
+      "reason": "deferred_prereq",
+      "resource_change": {
+        "address": "aws_route_table.private",
+        "mode": "managed",
+        "type": "aws_route_table",
+        "name": "private",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "change": {
+          "actions": [
+            "no-op"
+          ],
+          "before": {
+            "id": "rtb-1"
+          },
+          "after": {
+            "id": "rtb-1"
+          },
+          "after_unknown": {},
+          "before_sensitive": {},
+          "after_sensitive": {}
+        }
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": []
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.main",
+          "mode": "managed",
+          "type": "aws_vpc",
+          "name": "main",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": false,
+  "errored": false
+}

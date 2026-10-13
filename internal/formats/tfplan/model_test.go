@@ -1,87 +1,130 @@
 package tfplan
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
-func TestActionNamesSymbolsRanks(t *testing.T) {
+func TestActionTables(t *testing.T) {
 	t.Parallel()
-	tests := []struct {
-		action Action
-		name   string
-		symbol string
-		rank   int
-	}{
-		{Delete, "delete", "-", 0},
-		{Replace, "replace", "-/+", 1},
-		{ReplaceCBD, "replace-create-before-destroy", "+/-", 2},
-		{Forget, "forget", "-", 3},
-		{Update, "update", "~", 4},
-		{Create, "create", "+", 5},
-		{Read, "read", "<=", 6},
-		{Import, "import", ">>", 7},
-		{Noop, "no-op", "=", 8},
+	ranks := map[int]Action{}
+	for _, a := range allActions {
+		if a.String() == "" || a.Symbol() == "" || a.Symbol() == "?" {
+			t.Errorf("action %d lacks a name or symbol", int(a))
+		}
+		if other, dup := ranks[a.Rank()]; dup {
+			t.Errorf("actions %s and %s share rank %d", a, other, a.Rank())
+		}
+		ranks[a.Rank()] = a
+		text, err := a.MarshalText()
+		if err != nil || string(text) != a.String() {
+			t.Errorf("MarshalText(%s) = %q, %v", a, text, err)
+		}
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if got := tt.action.String(); got != tt.name {
-				t.Errorf("String() = %q, want %q", got, tt.name)
-			}
-			if got := tt.action.Symbol(); got != tt.symbol {
-				t.Errorf("Symbol() = %q, want %q", got, tt.symbol)
-			}
-			if got := tt.action.Rank(); got != tt.rank {
-				t.Errorf("Rank() = %d, want %d", got, tt.rank)
-			}
-			text, err := tt.action.MarshalText()
-			if err != nil || string(text) != tt.name {
-				t.Errorf("MarshalText() = %q, %v; want %q, nil", text, err, tt.name)
-			}
-		})
+	if len(allActions) != int(Import)+1 {
+		t.Errorf("allActions has %d entries, want %d", len(allActions), int(Import)+1)
 	}
 }
 
-func TestInvalidAction(t *testing.T) {
+func TestActionSymbolsMatchTerraform(t *testing.T) {
 	t.Parallel()
-	for _, a := range []Action{-1, Forget + 1} {
-		if got := a.String(); got == "" {
-			t.Errorf("String() of %d is empty", int(a))
+	want := map[Action]string{
+		Create: "+", Delete: "-", Update: "~", Read: "<=", Replace: "-/+", ReplaceCBD: "+/-",
+		Forget: ".", ForgetThenCreate: "./+", CreateThenForget: "+/.",
+	}
+	for a, sym := range want {
+		if got := a.Symbol(); got != sym {
+			t.Errorf("%s.Symbol() = %q, want %q", a, got, sym)
 		}
-		if got := a.Symbol(); got != "?" {
-			t.Errorf("Symbol() of %d = %q, want ?", int(a), got)
+	}
+}
+
+func TestActionOrder(t *testing.T) {
+	t.Parallel()
+	order := []Action{Delete, Replace, ReplaceCBD, ForgetThenCreate, CreateThenForget, Forget, Update, Create, Read, Import, Noop}
+	for i := 1; i < len(order); i++ {
+		if order[i-1].Rank() >= order[i].Rank() {
+			t.Errorf("%s must sort before %s", order[i-1], order[i])
 		}
-		if got := a.Rank(); got <= Noop.Rank() {
-			t.Errorf("Rank() of %d = %d, want after no-op", int(a), got)
+	}
+}
+
+func TestIsReplace(t *testing.T) {
+	t.Parallel()
+	for _, a := range allActions {
+		want := a == Replace || a == ReplaceCBD || a == ForgetThenCreate || a == CreateThenForget
+		if a.IsReplace() != want {
+			t.Errorf("%s.IsReplace() = %v", a, a.IsReplace())
+		}
+	}
+}
+
+func TestInvalidEnums(t *testing.T) {
+	t.Parallel()
+	for _, a := range []Action{-1, Import + 1} {
+		if a.String() == "" || a.Symbol() != "?" || a.Rank() <= Noop.Rank() {
+			t.Errorf("invalid action %d: %q %q %d", int(a), a.String(), a.Symbol(), a.Rank())
 		}
 		if _, err := a.MarshalText(); err == nil {
-			t.Errorf("MarshalText() of %d returned no error", int(a))
+			t.Errorf("MarshalText(%d) returned no error", int(a))
+		}
+	}
+	for _, k := range []AttrKind{-1, Removed + 1} {
+		if k.Symbol() != "?" {
+			t.Errorf("invalid kind %d symbol = %q", int(k), k.Symbol())
+		}
+		if _, err := k.MarshalText(); err == nil {
+			t.Errorf("MarshalText(kind %d) returned no error", int(k))
+		}
+	}
+}
+
+func TestAttrKind(t *testing.T) {
+	t.Parallel()
+	tests := map[AttrKind][2]string{Modified: {"update", "~"}, Added: {"add", "+"}, Removed: {"remove", "-"}}
+	for k, want := range tests {
+		text, err := k.MarshalText()
+		if err != nil || string(text) != want[0] || k.Symbol() != want[1] {
+			t.Errorf("kind %d = %q %q, %v; want %v", int(k), text, k.Symbol(), err, want)
+		}
+	}
+}
+
+func TestScalarJSON(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		v    any
+		want string
+	}{
+		{nil, "null"}, {true, "true"}, {"a\"b", `"a\"b"`}, {json.Number("12345678901234567890"), "12345678901234567890"}, {1.5, "1.5"},
+	}
+	for _, tt := range tests {
+		got, err := json.Marshal(Scalar{Value: tt.v})
+		if err != nil || string(got) != tt.want {
+			t.Errorf("Marshal(%v) = %s, %v; want %s", tt.v, got, err, tt.want)
 		}
 	}
 }
 
 func TestSummaryChanged(t *testing.T) {
 	t.Parallel()
-	tests := []struct {
-		name string
+	tests := map[string]struct {
 		s    Summary
 		want bool
 	}{
-		{"empty", Summary{}, false},
-		{"noop drift outputs only", Summary{Noop: 3, Drift: 1, Outputs: 2}, false},
-		{"add", Summary{Add: 1}, true},
-		{"change", Summary{Change: 1}, true},
-		{"destroy", Summary{Destroy: 1}, true},
-		{"replace", Summary{Replace: 1}, true},
-		{"read", Summary{Read: 1}, true},
-		{"import", Summary{Import: 1}, true},
-		{"forget", Summary{Forget: 1}, true},
-		{"move", Summary{Move: 1}, true},
+		"empty":             {Summary{}, false},
+		"only side effects": {Summary{Noop: 3, Drift: 1, Deferred: 1, Actions: 1, Outputs: 2, Replace: 1}, false},
+		"import":            {Summary{Import: 1}, true},
+		"add":               {Summary{Add: 1}, true},
+		"change":            {Summary{Change: 1}, true},
+		"destroy":           {Summary{Destroy: 1}, true},
+		"forget":            {Summary{Forget: 1}, true},
+		"move":              {Summary{Move: 1}, true},
+		"read":              {Summary{Read: 1}, true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if got := tt.s.Changed(); got != tt.want {
-				t.Errorf("Changed() = %v, want %v", got, tt.want)
-			}
-		})
+	for name, tt := range tests {
+		if got := tt.s.Changed(); got != tt.want {
+			t.Errorf("%s: Changed() = %v, want %v", name, got, tt.want)
+		}
 	}
 }

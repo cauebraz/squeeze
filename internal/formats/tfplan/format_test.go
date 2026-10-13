@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
 )
 
@@ -19,6 +20,18 @@ func TestContract(t *testing.T) {
 func TestRealInputs(t *testing.T) {
 	t.Parallel()
 	formattest.Real(t, Format{}, "testdata/real")
+	for name, input := range formattest.RealInputs(t, Format{}, "testdata/real") {
+		r, err := Squeeze(input, Options{IncludeNoop: true, ListDrift: true, MaxAttrs: 0, MaxResources: 0})
+		if err != nil {
+			continue
+		}
+		envelope, err := core.Envelope("tfplan", len(input), r)
+		if err != nil {
+			t.Errorf("%s: %v", name, err)
+			continue
+		}
+		assertNoLeak(t, name, input, r.Text, string(envelope))
+	}
 }
 
 func TestFormatName(t *testing.T) {
@@ -28,64 +41,39 @@ func TestFormatName(t *testing.T) {
 	}
 }
 
-func TestConfigureFlags(t *testing.T) {
-	t.Parallel()
-	input := fixture(t, "update-nested.json")
-	tests := []struct {
-		args     []string
-		contains []string
-		absent   []string
-	}{
-		{nil, []string{"  ~ instance_type: \"t3.small\" -> \"t3.medium\"\n"}, nil},
-		{[]string{"-max-attrs", "1"}, []string{"  ... 2 more attributes (--max-attrs)\n"}, nil},
-		{[]string{"-max-resources", "1"}, []string{"... 1 more resources (--max-resources)\n"}, []string{"module.vpc"}},
-		{[]string{"-no-values"}, []string{"  ~ instance_type\n"}, []string{"t3.medium"}},
-		{[]string{"-max-attrs", "0", "-max-resources", "0"}, []string{"tags_all.Name"}, []string{"more attributes", "more resources"}},
-	}
-	for _, tt := range tests {
-		r, err := formattest.Run(t, Format{}, input, tt.args...)
-		if err != nil {
-			t.Fatalf("%v: %v", tt.args, err)
-		}
-		for _, s := range tt.contains {
-			if !strings.Contains(r.Text, s) {
-				t.Errorf("%v: text lacks %q:\n%s", tt.args, s, r.Text)
-			}
-		}
-		for _, s := range tt.absent {
-			if strings.Contains(r.Text, s) {
-				t.Errorf("%v: text contains %q", tt.args, s)
-			}
-		}
-	}
-	all, _ := formattest.Run(t, Format{}, fixture(t, "noop-only.json"), "-all")
-	if !strings.Contains(all.Text, "= aws_iam_role.app\n") {
-		t.Errorf("-all: %s", all.Text)
-	}
-	drift, _ := formattest.Run(t, Format{}, fixture(t, "drift.json"), "-drift")
-	if !strings.Contains(drift.Text, "drift:\n- aws_instance.bastion\n") {
-		t.Errorf("-drift: %s", drift.Text)
-	}
-}
-
 func TestConfigureRejectsBadCounts(t *testing.T) {
 	t.Parallel()
-	tests := []struct {
+	tests := map[string]struct {
 		args []string
 		msg  string
 	}{
-		{[]string{"-max-attrs", "x"}, "not an integer"},
-		{[]string{"-max-attrs", "-1"}, "must be 0 or more"},
-		{[]string{"-max-resources", "-5"}, "must be 0 or more"},
+		"not a number":       {[]string{"-max-attrs", "x"}, "not an integer"},
+		"negative attrs":     {[]string{"-max-attrs", "-1"}, "must be 0 or more"},
+		"negative resources": {[]string{"-max-resources", "-5"}, "must be 0 or more"},
 	}
-	for _, tt := range tests {
+	for name, tt := range tests {
 		fs := flag.NewFlagSet("tfplan", flag.ContinueOnError)
 		fs.SetOutput(io.Discard)
 		(Format{}).Configure(fs)
-		err := fs.Parse(tt.args)
-		if err == nil || !strings.Contains(err.Error(), tt.msg) {
-			t.Errorf("Parse(%v) error = %v, want %q", tt.args, err, tt.msg)
+		if err := fs.Parse(tt.args); err == nil || !strings.Contains(err.Error(), tt.msg) {
+			t.Errorf("%s: Parse(%v) error = %v, want %q", name, tt.args, err, tt.msg)
 		}
+	}
+}
+
+func TestConfigureSetsOptions(t *testing.T) {
+	t.Parallel()
+	input := fixture(t, "update-nested")
+	plain, err := formattest.Run(t, Format{}, input, "-max-attrs", "1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	unlimited, err := formattest.Run(t, Format{}, input, "-max-attrs", "0", "-max-resources", "0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(plain.Text, "more attributes (--max-attrs)") || strings.Contains(unlimited.Text, "more attributes") {
+		t.Errorf("-max-attrs 0 did not lift the limit:\n%s", unlimited.Text)
 	}
 }
 
@@ -105,7 +93,7 @@ func TestConfigureUsageShowsDefaults(t *testing.T) {
 
 func TestDataPayload(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "noop-only.json"), DefaultOptions())
+	r, err := Squeeze(fixture(t, "noop-only"), DefaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,26 +101,39 @@ func TestDataPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, key := range []string{`"changes":[]`, `"drift":[]`, `"outputs":[]`, `"tool":"terraform"`} {
+	for _, key := range []string{`"changes":[]`, `"drift":[]`, `"deferred":[]`, `"actions":[]`, `"outputs":[]`, `"tool":"terraform"`} {
 		if !strings.Contains(string(out), key) {
 			t.Errorf("data lacks %s: %s", key, out)
 		}
 	}
-	created, err := Squeeze(fixture(t, "create-only.json"), DefaultOptions())
+	created, err := Squeeze(fixture(t, "create-only"), DefaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
 	out, _ = json.Marshal(created.Data)
-	for _, key := range []string{"previous_address", "deposed", "importing", "replaced_by", "attrs_omitted"} {
+	for _, key := range []string{"previous_address", "deposed", "importing", "replaced_by", "attrs_omitted", "irrelevant"} {
 		if strings.Contains(string(out), `"`+key+`"`) {
 			t.Errorf("data contains empty %s: %s", key, out)
 		}
 	}
+	nested, err := Squeeze(fixture(t, "update-nested"), Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, _ = json.Marshal(nested.Data)
+	for _, want := range []string{`"before":"t3.small","after":"t3.medium"`, `"before":false,"after":true`, `"kind":"add"`} {
+		if !strings.Contains(string(out), want) {
+			t.Errorf("data lacks typed value %s: %s", want, out)
+		}
+	}
 }
 
-func TestDataPayloadInvalidAction(t *testing.T) {
+func TestDataPayloadInvalidEnums(t *testing.T) {
 	t.Parallel()
 	if _, err := json.Marshal(Report{Changes: []ResourceChange{{Address: "a", Action: Action(99)}}}); err == nil {
-		t.Fatal("Marshal() with an invalid action returned no error")
+		t.Error("Marshal() with an invalid action returned no error")
+	}
+	if _, err := json.Marshal(AttrChange{Kind: AttrKind(9)}); err == nil {
+		t.Error("Marshal() with an invalid kind returned no error")
 	}
 }

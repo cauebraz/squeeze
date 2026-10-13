@@ -1,0 +1,4 @@
+terraform 1.9.5 plan: 2 to import, 0 to add, 1 to change, 0 to destroy
+~ aws_iam_role.ci (import)
+  + tags.ManagedBy: "terraform"
+>> aws_s3_bucket.legacy

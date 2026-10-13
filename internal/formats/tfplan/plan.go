@@ -10,12 +10,14 @@ func Build(p *Plan, o Options) (Report, error) {
 			Errored:  p.Errored,
 			Complete: p.Complete == nil || *p.Complete,
 		},
-		Changes: []ResourceChange{},
-		Drift:   []ResourceChange{},
-		Outputs: []OutputChange{},
+		Changes:  []ResourceChange{},
+		Drift:    []ResourceChange{},
+		Deferred: []DeferredChange{},
+		Actions:  []ActionInvocation{},
+		Outputs:  []OutputChange{},
 	}
 	for _, pr := range p.ResourceChanges {
-		c, err := convert(pr, o)
+		c, err := convert(pr, o, nil)
 		if err != nil {
 			return Report{}, err
 		}
@@ -30,15 +32,14 @@ func Build(p *Plan, o Options) (Report, error) {
 		r.Omitted = len(r.Changes) - o.MaxResources
 		r.Changes = r.Changes[:o.MaxResources]
 	}
-	for _, pr := range p.ResourceDrift {
-		c, err := convert(pr, o)
-		if err != nil {
-			return Report{}, err
-		}
-		r.Drift = append(r.Drift, c)
+	if err := buildDrift(&r, p, o); err != nil {
+		return Report{}, err
 	}
-	sortChanges(r.Drift)
-	r.Summary.Drift = len(r.Drift)
+	if err := buildDeferred(&r, p); err != nil {
+		return Report{}, err
+	}
+	r.Actions = convertActions(p.ActionInvocations)
+	r.Summary.Actions = len(r.Actions)
 	outputs, err := convertOutputs(p.OutputChanges, o.IncludeNoop)
 	if err != nil {
 		return Report{}, err
@@ -52,7 +53,114 @@ func Build(p *Plan, o Options) (Report, error) {
 	return r, nil
 }
 
-func convert(pr PlanResource, o Options) (ResourceChange, error) {
+type relevance struct {
+	byResource map[string][]path
+	global     []path
+}
+
+func newRelevance(attrs []PlanRelevantAttr) relevance {
+	rel := relevance{byResource: map[string][]path{}}
+	for _, a := range attrs {
+		p, ok := toPath(a.Attribute)
+		if !ok {
+			continue
+		}
+		if a.Resource == "" {
+			rel.global = append(rel.global, p)
+			continue
+		}
+		rel.byResource[a.Resource] = append(rel.byResource[a.Resource], p)
+	}
+	return rel
+}
+
+func (rel relevance) paths(address string) []path {
+	return append(append([]path(nil), rel.global...), rel.byResource[address]...)
+}
+
+func buildDrift(r *Report, p *Plan, o Options) error {
+	rel := newRelevance(p.RelevantAttributes)
+	for _, pr := range p.ResourceDrift {
+		paths := rel.paths(pr.Address)
+		keep := func(at path) bool {
+			for _, rp := range paths {
+				if at.hasPrefix(rp) {
+					return true
+				}
+			}
+			return false
+		}
+		c, err := convert(pr, o, keep)
+		if err != nil {
+			return err
+		}
+		relevant := len(paths) > 0 && (len(c.Attrs) > 0 || !hasAttrDiff(c.Action))
+		if relevant {
+			r.Drift = append(r.Drift, c)
+			r.Summary.Drift++
+			continue
+		}
+		r.Summary.DriftIgnored++
+		if !o.IncludeNoop {
+			r.DriftOmitted++
+			continue
+		}
+		all, err := convert(pr, o, nil)
+		if err != nil {
+			return err
+		}
+		all.Irrelevant = true
+		r.Drift = append(r.Drift, all)
+	}
+	sortChanges(r.Drift)
+	return nil
+}
+
+func buildDeferred(r *Report, p *Plan) error {
+	for _, d := range p.DeferredChanges {
+		rc := d.ResourceChange
+		action, err := mapAction(rc.Change.Actions, rc.Change.Importing != nil)
+		if err != nil {
+			return err
+		}
+		isMoved := rc.PreviousAddress != "" && rc.PreviousAddress != rc.Address
+		if action == Noop && !isMoved {
+			continue
+		}
+		r.Deferred = append(r.Deferred, DeferredChange{Address: rc.Address, Action: action, Reason: d.Reason})
+	}
+	sort.SliceStable(r.Deferred, func(i, j int) bool {
+		a, b := r.Deferred[i], r.Deferred[j]
+		if a.Action.Rank() != b.Action.Rank() {
+			return a.Action.Rank() < b.Action.Rank()
+		}
+		return a.Address < b.Address
+	})
+	r.Summary.Deferred = len(r.Deferred)
+	return nil
+}
+
+func convertActions(actions []PlanAction) []ActionInvocation {
+	out := make([]ActionInvocation, 0, len(actions))
+	for _, a := range actions {
+		inv := ActionInvocation{Address: a.Address}
+		switch {
+		case a.LifecycleActionTrigger != nil:
+			inv.Event = a.LifecycleActionTrigger.ActionTriggerEvent
+			inv.Resource = a.LifecycleActionTrigger.TriggeringResourceAddress
+		case a.InvokeActionTrigger != nil:
+			inv.Invoked = true
+		}
+		out = append(out, inv)
+	}
+	return out
+}
+
+func hasAttrDiff(a Action) bool {
+	return a == Update || a.IsReplace()
+}
+
+func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, error) {
 	importing := pr.Change.Importing != nil
 	action, err := mapAction(pr.Change.Actions, importing)
 	if err != nil {
@@ -66,9 +174,17 @@ func convert(pr PlanResource, o Options) (ResourceChange, error) {
 		Importing:       importing,
 		Reason:          pr.ActionReason,
 	}
-	switch action {
-	case Update, Replace, ReplaceCBD:
+	if hasAttrDiff(action) {
 		c.Attrs, c.ReplacedBy = diffAttrs(pr.Change, !o.NoValues)
+	}
+	if keep != nil {
+		kept := c.Attrs[:0]
+		for _, a := range c.Attrs {
+			if keep(a.at) {
+				kept = append(kept, a)
+			}
+		}
+		c.Attrs = kept
 	}
 	if o.MaxAttrs > 0 && len(c.Attrs) > o.MaxAttrs {
 		c.AttrsOmitted = len(c.Attrs) - o.MaxAttrs
@@ -86,13 +202,20 @@ func count(s *Summary, c ResourceChange) {
 	case Delete:
 		s.Destroy++
 	case Replace, ReplaceCBD:
+		s.Add++
+		s.Destroy++
 		s.Replace++
-	case Read:
-		s.Read++
+	case ForgetThenCreate, CreateThenForget:
+		s.Add++
+		s.Replace++
+		s.Forget++
 	case Forget:
 		s.Forget++
+	case Read:
+		s.Read++
 	case Noop:
 		s.Noop++
+	case Import:
 	}
 	if c.Importing {
 		s.Import++

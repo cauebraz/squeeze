@@ -1,4 +1,0 @@
-terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy; 2 drifted
-~ aws_s3_bucket.assets
-  ~ tags.Owner: "someone" -> null
-drift: 2 resources (--drift to list)

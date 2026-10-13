@@ -1,0 +1,128 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.web",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "ami": "ami-0abcdef1234567890"
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_instance.web",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "ami": "ami-0abcdef1234567890"
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "action_invocations": [
+    {
+      "address": "action.aws_lambda_invoke.notify",
+      "type": "aws_lambda_invoke",
+      "name": "notify",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "config_values": {
+        "function_name": "notify"
+      },
+      "config_sensitive": {},
+      "config_unknown": {},
+      "lifecycle_action_trigger": {
+        "triggering_resource_address": "aws_instance.web",
+        "action_trigger_event": "AfterCreate",
+        "action_trigger_block_index": 0,
+        "actions_list_index": 0,
+        "on_failure": "fail"
+      }
+    },
+    {
+      "address": "action.aws_lambda_invoke.audit",
+      "type": "aws_lambda_invoke",
+      "name": "audit",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "config_values": {
+        "function_name": "audit"
+      },
+      "config_sensitive": {},
+      "config_unknown": {},
+      "invoke_action_trigger": {}
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": []
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.web",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "web",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

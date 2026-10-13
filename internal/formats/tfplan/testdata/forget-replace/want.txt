@@ -1,0 +1,7 @@
+terraform 1.9.5 plan: 2 to add, 0 to change, 0 to destroy, 2 to replace, 2 to forget
+./+ aws_instance.keep (existing object not destroyed; replacement forced by ami)
+  ! ami: "ami-0abcdef1234567890" -> "ami-0fedcba9876543210"
+  ~ id: "i-0ccccccccccccccc1" -> (known after apply)
++/. aws_instance.keep_cbd (existing object not destroyed; replacement forced by ami)
+  ! ami: "ami-0abcdef1234567890" -> "ami-0fedcba9876543210"
+  ~ id: "i-0ccccccccccccccc2" -> (known after apply)

@@ -1,8 +1,0 @@
-terraform 1.9.5 plan: 0 to add, 0 to change, 1 to destroy, 1 to replace
-- aws_launch_template.app (deposed object a1b2c3d4)
-+/- aws_launch_template.app (replacement forced by name)
-  ! name: "app-v1" -> "app-v2"
-  ~ arn: (known after apply)
-  ~ block_device_mappings[0].ebs[0].volume_size: 20 -> 40
-  ~ id: "lt-0123456789abcdef0" -> (known after apply)
-  ~ latest_version: 3 -> (known after apply)

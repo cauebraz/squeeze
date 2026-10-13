@@ -1,0 +1,7 @@
+terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy; 1 drifted
+~ aws_s3_bucket.assets
+  - tags.Owner: "someone"
+drift:
+~ aws_s3_bucket.assets
+  + tags.Owner: "someone"
+... 2 drifted resources not affecting this plan (--all)

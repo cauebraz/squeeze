@@ -14,11 +14,12 @@ var actionTable = map[string]Action{
 	"delete,create": Replace,
 	"create,delete": ReplaceCBD,
 	"forget":        Forget,
+	"forget,create": ForgetThenCreate,
+	"create,forget": CreateThenForget,
 }
 
 func mapAction(actions []string, importing bool) (Action, error) {
-	key := strings.Join(actions, ",")
-	a, ok := actionTable[key]
+	a, ok := actionTable[strings.Join(actions, ",")]
 	if !ok {
 		return 0, fmt.Errorf("unsupported actions %q", actions)
 	}

@@ -1,0 +1,183 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "variables": {
+    "region": {
+      "value": "us-east-1"
+    },
+    "environment": {
+      "value": "staging"
+    }
+  },
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.keep",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "keep",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "ami": "ami-0fedcba9876543210"
+          },
+          "sensitive_values": {}
+        },
+        {
+          "address": "aws_instance.keep_cbd",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "keep_cbd",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "ami": "ami-0fedcba9876543210"
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_instance.keep",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "keep",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "forget",
+          "create"
+        ],
+        "before": {
+          "id": "i-0ccccccccccccccc1",
+          "ami": "ami-0abcdef1234567890"
+        },
+        "after": {
+          "ami": "ami-0fedcba9876543210"
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": {},
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "ami"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_instance.keep_cbd",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "keep_cbd",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create",
+          "forget"
+        ],
+        "before": {
+          "id": "i-0ccccccccccccccc2",
+          "ami": "ami-0abcdef1234567890"
+        },
+        "after": {
+          "ami": "ami-0fedcba9876543210"
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": {},
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "ami"
+          ]
+        ]
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.5",
+    "values": {
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_instance.keep",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "keep",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "id": "i-0ccccccccccccccc1",
+              "ami": "ami-0abcdef1234567890"
+            },
+            "sensitive_values": {}
+          },
+          {
+            "address": "aws_instance.keep_cbd",
+            "mode": "managed",
+            "type": "aws_instance",
+            "name": "keep_cbd",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "id": "i-0ccccccccccccccc2",
+              "ami": "ami-0abcdef1234567890"
+            },
+            "sensitive_values": {}
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.keep",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "keep",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        },
+        {
+          "address": "aws_instance.keep_cbd",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "keep_cbd",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-13T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

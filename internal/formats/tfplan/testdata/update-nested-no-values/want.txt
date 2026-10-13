@@ -1,0 +1,12 @@
+terraform 1.9.5 plan: 0 to add, 2 to change, 0 to destroy
+~ aws_instance.web
+  ~ instance_type
+  ~ monitoring
+  ~ user_data
+~ module.vpc.aws_security_group.web
+  ~ ingress[0].cidr_blocks[0]
+  + ingress[1]
+  ~ tags.Name
+  ~ tags["kubernetes.io/role"]
+  ~ tags_all.Name
+  ~ tags_all["kubernetes.io/role"]

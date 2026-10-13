@@ -1,6 +1,7 @@
 package tfplan
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -77,11 +78,8 @@ func TestParseKeepsNumbersExact(t *testing.T) {
 	}
 	before := p.ResourceChanges[0].Change.Before.(map[string]any)["n"]
 	after := p.ResourceChanges[0].Change.After.(map[string]any)["n"]
-	if s, _ := scalar(before); s != "12345678901234567890" {
-		t.Errorf("before = %v, want exact integer", s)
-	}
-	if s, _ := scalar(after); s != "1.50" {
-		t.Errorf("after = %v, want 1.50", s)
+	if before != json.Number("12345678901234567890") || after != json.Number("1.50") {
+		t.Errorf("numbers = %v, %v; want exact json.Number values", before, after)
 	}
 }
 

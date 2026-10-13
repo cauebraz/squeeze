@@ -1,0 +1,4 @@
+terraform 1.9.5 plan: no changes
+= aws_iam_role.app
+= aws_s3_bucket.static
+outputs: = region

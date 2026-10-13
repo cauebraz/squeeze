@@ -1,0 +1,3 @@
+terraform 1.9.5 plan: 1 to add, 0 to change, 0 to destroy; 2 actions to invoke
++ aws_instance.web
+actions: action.aws_lambda_invoke.notify (AfterCreate aws_instance.web), action.aws_lambda_invoke.audit (invoked)
