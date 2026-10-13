@@ -47,7 +47,7 @@ func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	o := DefaultOptions()
 	countFlag(fs, &o.MaxAttrs, "max-attrs", "attributes shown per resource, 0 for all")
 	countFlag(fs, &o.MaxResources, "max-resources", "resources shown, 0 for all")
-	fs.BoolVar(&o.IncludeNoop, "all", false, "include resources and outputs without changes")
+	fs.BoolVar(&o.IncludeNoop, "all", false, "include resources and outputs without changes, and drift that does not affect the plan")
 	fs.BoolVar(&o.NoValues, "no-values", false, "print attribute paths only, never values")
 	fs.BoolVar(&o.ListDrift, "drift", false, "list drifted resources instead of counting them")
 	return func(input []byte) (core.Result, error) {

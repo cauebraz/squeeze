@@ -56,3 +56,7 @@ warning: Argument is deprecated (storage.tf:7:3)
 ## JSON data
 
 `data` holds `tool`, `valid`, `errors`, `warnings`, `omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code` and `count`.
+
+## Limitations
+
+- The detail is cut after three lines and the code line at 120 bytes in the text; `--output json` carries the full detail.

@@ -64,7 +64,7 @@ func TestRunFallback(t *testing.T) {
 	if named.code != ExitOK || named.stdout != want || named.stderr != "" {
 		t.Errorf("named: code = %d, stdout = %q, stderr = %q", named.code, named.stdout, named.stderr)
 	}
-	if r := runCLI(t, input, "generic", "--fail-on", "error"); r.code != ExitUsage || !strings.Contains(r.stderr, `generic has no condition "error"`) {
+	if r := runCLI(t, input, "generic", "--fail-on", "error"); r.code != ExitUsage || !strings.Contains(r.stderr, `generic has no condition "error" (conditions: none)`) {
 		t.Errorf("named --fail-on: code = %d, stderr = %q", r.code, r.stderr)
 	}
 }
@@ -538,6 +538,9 @@ func TestFormatHelpListsConditions(t *testing.T) {
 	r := runCLI(t, nil, "tfplan", "-h")
 	if !strings.Contains(r.stderr, "Conditions for --fail-on:\n  change, deferred, destroy, drift, errored, forget, import, incomplete, move, replace\n") {
 		t.Errorf("help lacks the condition list:\n%s", r.stderr)
+	}
+	if r := runCLI(t, nil, "generic", "-h"); !strings.HasSuffix(r.stderr, "Conditions for --fail-on:\n  none\n") {
+		t.Errorf("generic help:\n%s", r.stderr)
 	}
 	root := runCLI(t, nil, "-h")
 	if !strings.Contains(root.stderr, "-fail-on") || !strings.Contains(root.stderr, "squeeze <format> -h") {

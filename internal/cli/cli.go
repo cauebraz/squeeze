@@ -126,10 +126,17 @@ func checkConditions(f core.Format, failOn []string) error {
 	known := f.Conditions()
 	for _, name := range failOn {
 		if !slices.Contains(known, name) {
-			return fmt.Errorf("--fail-on: %s has no condition %q (conditions: %s)", f.Name(), name, strings.Join(known, ", "))
+			return fmt.Errorf("--fail-on: %s has no condition %q (conditions: %s)", f.Name(), name, conditionList(known))
 		}
 	}
 	return nil
+}
+
+func conditionList(names []string) string {
+	if len(names) == 0 {
+		return "none"
+	}
+	return strings.Join(names, ", ")
 }
 
 type listFlag struct{ values *[]string }
@@ -231,7 +238,7 @@ Formats:
 func formatUsage(w io.Writer, fs *flag.FlagSet, f core.Format) {
 	fmt.Fprintf(w, "usage: squeeze %s [flags] < input\n\n%s\n\nFlags:\n", f.Name(), f.Description())
 	fs.PrintDefaults()
-	fmt.Fprintf(w, "\nConditions for --fail-on:\n  %s\n", strings.Join(f.Conditions(), ", "))
+	fmt.Fprintf(w, "\nConditions for --fail-on:\n  %s\n", conditionList(f.Conditions()))
 }
 
 func saveRaw(dir string, input []byte) (string, error) {

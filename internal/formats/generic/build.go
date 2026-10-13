@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
 const minRun = 3
 
-var flagWords = regexp.MustCompile(`(?i)\b(error|errors|fail|failed|failure|failures|fatal|panic|exception|traceback|warn|warning|warnings)\b`)
+var flagWords = regexp.MustCompile(`(?i)\b(errors?|fail(s|ed|ures?)?|fatal|panic(s|ked)?|exceptions?|tracebacks?|warn(s|ed|ings?)?)\b`)
 
 var digits = regexp.MustCompile(`[0-9]+`)
 
@@ -25,11 +26,16 @@ type Report struct {
 }
 
 type entry struct {
-	text    string
-	flagged bool
-	marker  bool
+	text   string
+	marker bool
+}
+
+type group struct {
+	entries []entry
+	content int
 	lines   int
 	flags   int
+	flagged bool
 }
 
 func Build(input []byte, o Options) (Report, string) {
@@ -37,9 +43,9 @@ func Build(input []byte, o Options) (Report, string) {
 	lines := splitLines(string(input))
 	r.Lines = len(lines)
 	cleaned := dropBlanks(lines, &r)
-	entries := fold(cleaned, o.NoFold, &r)
-	entries = cut(entries, o.MaxLines, &r)
-	return r, render(entries, o.MaxLineBytes, &r)
+	groups := fold(cleaned, o.NoFold, &r)
+	groups = cut(groups, o.MaxLines, &r)
+	return r, render(groups, o.MaxLineBytes, &r)
 }
 
 func splitLines(s string) []string {
@@ -50,27 +56,17 @@ func splitLines(s string) []string {
 	raw := strings.Split(s, "\n")
 	out := make([]string, len(raw))
 	for i, l := range raw {
-		l = strings.TrimSuffix(l, "\r")
-		if j := strings.LastIndexByte(l, '\r'); j >= 0 {
-			if rest := l[j+1:]; strings.TrimSpace(rest) != "" {
-				l = rest
-			} else {
-				l = lastSegment(l)
+		frames := strings.Split(strings.TrimSuffix(l, "\r"), "\r")
+		for j := len(frames) - 1; j >= 0; j-- {
+			if out[i] = core.Line(frames[j]); strings.TrimSpace(out[i]) != "" {
+				break
 			}
 		}
-		out[i] = core.Line(l)
-	}
-	return out
-}
-
-func lastSegment(l string) string {
-	parts := strings.Split(l, "\r")
-	for i := len(parts) - 1; i >= 0; i-- {
-		if strings.TrimSpace(parts[i]) != "" {
-			return parts[i]
+		if strings.TrimSpace(out[i]) == "" {
+			out[i] = ""
 		}
 	}
-	return ""
+	return out
 }
 
 func dropBlanks(lines []string, r *Report) []string {
@@ -99,16 +95,16 @@ func similar(a, b string) bool {
 	return digits.ReplaceAllString(a, "0") == digits.ReplaceAllString(b, "0")
 }
 
-func line(text string) entry {
-	e := entry{text: text, lines: 1}
+func single(text string) group {
+	g := group{entries: []entry{{text: text}}, content: 1, lines: 1}
 	if flagWords.MatchString(text) {
-		e.flagged, e.flags = true, 1
+		g.flagged, g.flags = true, 1
 	}
-	return e
+	return g
 }
 
-func fold(lines []string, off bool, r *Report) []entry {
-	out := make([]entry, 0, len(lines))
+func fold(lines []string, off bool, r *Report) []group {
+	out := make([]group, 0, len(lines))
 	for i := 0; i < len(lines); {
 		j := i + 1
 		identical := true
@@ -119,45 +115,51 @@ func fold(lines []string, off bool, r *Report) []entry {
 		n := j - i
 		if n < minRun {
 			for k := i; k < j; k++ {
-				out = append(out, line(lines[k]))
+				out = append(out, single(lines[k]))
 			}
 			i = j
 			continue
 		}
-		first := line(lines[i])
+		g := single(lines[i])
+		g.lines = n
 		if identical {
-			marker := entry{text: fmt.Sprintf("... %d more identical %s (--no-fold)", n-1, plural(n-1, "line", "lines")), marker: true, lines: n - 1, flags: first.flags * (n - 1)}
-			out = append(out, first, marker)
+			g.entries = append(g.entries, entry{text: fmt.Sprintf("... %d more identical %s (--no-fold)", n-1, plural(n-1, "line", "lines")), marker: true})
+			g.flags *= n
 			r.Folded += n - 1
 		} else {
-			marker := entry{text: fmt.Sprintf("... %d similar %s (--no-fold)", n-2, plural(n-2, "line", "lines")), marker: true, lines: n - 2}
-			out = append(out, first, marker, line(lines[j-1]))
+			g.entries = append(g.entries,
+				entry{text: fmt.Sprintf("... %d similar %s (--no-fold)", n-2, plural(n-2, "line", "lines")), marker: true},
+				entry{text: lines[j-1]})
+			g.content = 2
 			r.Folded += n - 2
 		}
+		out = append(out, g)
 		i = j
 	}
 	return out
 }
 
-func cut(entries []entry, max int, r *Report) []entry {
-	if max <= 0 || len(entries) <= max {
-		return entries
+func cut(groups []group, max int, r *Report) []group {
+	total := 0
+	for _, g := range groups {
+		total += g.content
 	}
-	head, tail := max/4, max/2
-	budget := max - head - tail
-	middle := entries[head : len(entries)-tail]
-	keep := make([]bool, len(middle))
-	for i, e := range middle {
-		if budget == 0 {
-			break
-		}
-		if e.flagged {
-			keep[i] = true
-			budget--
-		}
+	if max <= 0 || total <= max {
+		return groups
 	}
-	out := append([]entry(nil), entries[:head]...)
-	var gap entry
+	head, used := 0, 0
+	for head < len(groups) && used+groups[head].content <= max/4 {
+		used += groups[head].content
+		head++
+	}
+	tail, usedTail := len(groups), 0
+	for tail > head && usedTail+groups[tail-1].content <= max/2 {
+		tail--
+		usedTail += groups[tail].content
+	}
+	budget := max - used - usedTail
+	out := append([]group(nil), groups[:head]...)
+	var gap group
 	flush := func() {
 		if gap.lines == 0 {
 			return
@@ -166,44 +168,45 @@ func cut(entries []entry, max int, r *Report) []entry {
 		if gap.flags > 0 {
 			text = fmt.Sprintf("... %d %s cut, %d with error or warning words (--max-lines 0)", gap.lines, plural(gap.lines, "line", "lines"), gap.flags)
 		}
-		out = append(out, entry{text: text, marker: true})
+		out = append(out, group{entries: []entry{{text: text, marker: true}}})
 		r.Cut += gap.lines
 		r.CutFlagged += gap.flags
-		gap = entry{}
+		gap = group{}
 	}
-	for i, e := range middle {
-		if keep[i] {
+	for _, g := range groups[head:tail] {
+		if g.flagged && g.content <= budget {
+			budget -= g.content
 			flush()
-			out = append(out, e)
+			out = append(out, g)
 			continue
 		}
-		if e.marker {
-			r.Folded -= e.lines
-		}
-		gap.lines += e.lines
-		gap.flags += e.flags
+		r.Folded -= g.lines - g.content
+		gap.lines += g.lines
+		gap.flags += g.flags
 	}
 	flush()
-	return append(out, entries[len(entries)-tail:]...)
+	return append(out, groups[tail:]...)
 }
 
-func render(entries []entry, maxBytes int, r *Report) string {
-	if len(entries) == 0 {
+func render(groups []group, maxBytes int, r *Report) string {
+	if len(groups) == 0 {
 		return "(no printable text)\n"
 	}
 	var b strings.Builder
-	for _, e := range entries {
-		text := e.text
-		if !e.marker {
-			r.Printed++
-			if maxBytes > 0 && len(text) > maxBytes {
-				short := truncate(text, maxBytes)
-				text = fmt.Sprintf("%s ... [%d more bytes, --max-line-bytes 0]", short, len(text)-len(short))
-				r.LongLines++
+	for _, g := range groups {
+		for _, e := range g.entries {
+			text := e.text
+			if !e.marker {
+				r.Printed++
+				if maxBytes > 0 && len(text) > maxBytes {
+					short := truncate(text, maxBytes)
+					text = fmt.Sprintf("%s ... [%d more bytes, --max-line-bytes 0]", short, len(text)-len(short))
+					r.LongLines++
+				}
 			}
+			b.WriteString(text)
+			b.WriteByte('\n')
 		}
-		b.WriteString(text)
-		b.WriteByte('\n')
 	}
 	return b.String()
 }
@@ -211,6 +214,9 @@ func render(entries []entry, maxBytes int, r *Report) string {
 func truncate(s string, n int) string {
 	for n > 0 && s[n]&0xC0 == 0x80 {
 		n--
+	}
+	if n == 0 {
+		_, n = utf8.DecodeRuneInString(s)
 	}
 	return s[:n]
 }

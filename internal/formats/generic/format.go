@@ -32,7 +32,10 @@ func (Format) Description() string {
 func (Format) Conditions() []string { return []string{} }
 
 func (Format) Detect(head []byte) bool {
-	if len(bytes.TrimSpace(head)) == 0 || bytes.IndexByte(head, 0) >= 0 {
+	if len(bytes.TrimSpace(head)) == 0 {
+		return len(head) == core.HeadSize
+	}
+	if bytes.IndexByte(head, 0) >= 0 {
 		return false
 	}
 	return utf8.Valid(trimPartialRune(head))

@@ -85,6 +85,7 @@ func newRelevance(attrs []PlanRelevantAttr) relevance {
 		if !ok {
 			continue
 		}
+		p = withoutIndices(p)
 		if a.Resource == "" {
 			rel.global = append(rel.global, p)
 			continue

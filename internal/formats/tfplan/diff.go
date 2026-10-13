@@ -13,21 +13,34 @@ type step struct {
 	key     string
 	index   int
 	isIndex bool
+	wild    bool
 }
+
+const maxMatchDepth = 32
 
 type path []step
 
 var identifier = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_-]*$`)
 
 func (p path) String() string {
+	return render(p, nil)
+}
+
+func render(p, before path) string {
 	if len(p) == 0 {
 		return "(resource)"
 	}
 	var b strings.Builder
 	for i, s := range p {
 		switch {
+		case s.wild:
+			b.WriteString("[*]")
 		case s.isIndex:
 			b.WriteByte('[')
+			if i < len(before) && before[i].isIndex && before[i].index != s.index {
+				b.WriteString(strconv.Itoa(before[i].index))
+				b.WriteString("->")
+			}
 			b.WriteString(strconv.Itoa(s.index))
 			b.WriteByte(']')
 		case identifier.MatchString(s.key):
@@ -49,11 +62,56 @@ func (p path) hasPrefix(prefix path) bool {
 		return false
 	}
 	for i := range prefix {
-		if p[i] != prefix[i] {
+		if !p[i].matches(prefix[i]) {
 			return false
 		}
 	}
 	return true
+}
+
+func (s step) matches(o step) bool {
+	return s == o || (s.wild && o.isIndex) || (o.wild && s.isIndex)
+}
+
+func (p path) lists() int {
+	n := 0
+	for _, s := range p {
+		if s.isIndex {
+			n++
+		}
+	}
+	return n
+}
+
+func withoutIndices(p path) path {
+	for i, s := range p {
+		if s.isIndex {
+			return p[:i]
+		}
+	}
+	return p
+}
+
+func resolveWild(p path, values ...any) path {
+	out := append(path(nil), p...)
+	for i, s := range out {
+		if s.isIndex {
+			for v := range values {
+				values[v], _ = lookup(values[v], s)
+			}
+			continue
+		}
+		for _, v := range values {
+			if _, isList := v.([]any); isList {
+				out[i] = step{isIndex: true, wild: true}
+				return out[:i+1]
+			}
+		}
+		for v := range values {
+			values[v], _ = lookup(values[v], s)
+		}
+	}
+	return out
 }
 
 func (p path) overlaps(other path) bool {
@@ -205,6 +263,7 @@ func diffAttrs(c PlanChange, values bool) ([]AttrChange, []string) {
 	var replacedBy []string
 	for _, raw := range c.ReplacePaths {
 		if p, ok := toPath(raw); ok {
+			p = resolveWild(p, c.Before, c.After)
 			d.replace = append(d.replace, p)
 			replacedBy = append(replacedBy, p.String())
 		}
@@ -221,7 +280,7 @@ func (d *differ) walk(w where, n node) {
 		return
 	}
 	if n.sensitive() {
-		if isTrue(n.unknown) || n.hasBefore != n.hasAfter || !reflect.DeepEqual(n.before, n.after) {
+		if isTrue(n.unknown) || n.hasBefore != n.hasAfter || !reflect.DeepEqual(n.before, n.after) || isTrue(n.beforeSens) != isTrue(n.afterSens) {
 			d.emit(w, AttrChange{Kind: n.kind(), Sensitive: true, Unknown: isTrue(n.unknown)})
 		}
 		return
@@ -271,6 +330,12 @@ func (d *differ) walkList(w where, n node, before, after []any) {
 	afterLen := len(after)
 	if ul, ok := n.unknown.([]any); ok {
 		afterLen = max(afterLen, len(ul))
+	}
+	if w.at.lists() >= maxMatchDepth {
+		for i := range max(len(before), afterLen) {
+			d.walk(w.with(index(i), index(i)), n.element(i, i))
+		}
+		return
 	}
 	free := map[string][]int{}
 	for j := range afterLen {
@@ -337,11 +402,11 @@ func (d *differ) scalar(v any) *Scalar {
 
 func (d *differ) emit(w where, a AttrChange) {
 	p := w.at
-	a.Path = p.String()
+	a.Path = render(p, w.before)
 	a.at = p
 	a.beforeAt = w.before
 	for _, r := range d.replace {
-		if p.overlaps(r) {
+		if p.overlaps(r) || w.before.overlaps(r) {
 			a.ForcesReplacement = true
 			break
 		}

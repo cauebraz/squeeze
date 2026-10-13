@@ -178,6 +178,47 @@ func TestBuildDriftRelevance(t *testing.T) {
 	}
 }
 
+func TestDriftRelevanceThroughListIndex(t *testing.T) {
+	t.Parallel()
+	rule := func(cidr string, port int) map[string]any {
+		return map[string]any{"cidr": cidr, "port": json.Number(fmt.Sprint(port))}
+	}
+	tests := map[string]struct {
+		before, after []any
+		want          []string
+	}{
+		"swapped":          {[]any{rule("a", 22), rule("b", 443)}, []any{rule("b", 443), rule("a", 22)}, []string{"ingress"}},
+		"moved and edited": {[]any{rule("a", 22), rule("b", 443)}, []any{rule("b", 443), rule("a", 80)}, []string{"ingress[0->1].port"}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			plan := &Plan{FormatVersion: "1.2",
+				ResourceDrift: []PlanResource{{Address: "r.sg", Change: PlanChange{
+					Actions: []string{"update"},
+					Before:  map[string]any{"ingress": tt.before},
+					After:   map[string]any{"ingress": tt.after},
+				}}},
+				RelevantAttributes: []PlanRelevantAttr{{Resource: "r.sg", Attribute: []any{"ingress", json.Number("0"), "cidr"}}},
+			}
+			r, err := Build(plan, defaults)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(r.Drift) != 1 || r.Summary.Drift != 1 {
+				t.Fatalf("drift = %+v, summary = %+v", r.Drift, r.Summary)
+			}
+			var paths []string
+			for _, a := range r.Drift[0].Attrs {
+				paths = append(paths, a.Path)
+			}
+			if diff := cmp.Diff(tt.want, paths); diff != "" {
+				t.Errorf("attrs (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestDriftRelevanceRules(t *testing.T) {
 	t.Parallel()
 	upd := func(addr string) PlanResource {

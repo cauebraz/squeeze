@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -104,7 +105,28 @@ func TestDiffAttrs(t *testing.T) {
 		"object changed and moved": {
 			before: `{"ingress":[{"port":22,"cidr":"x"},{"port":80,"cidr":"y"}]}`,
 			after:  `{"ingress":[{"port":80,"cidr":"y"},{"port":443,"cidr":"x"}]}`,
-			want:   []AttrChange{{Path: "ingress[1].port", Before: num("22"), After: num("443")}},
+			want:   []AttrChange{{Path: "ingress[0->1].port", Before: num("22"), After: num("443")}},
+		},
+		"object moved past the others shows both indices": {
+			before: `{"rule":[{"name":"deny","p":1},{"name":"web","p":2},{"name":"ssh","p":3}]}`,
+			after:  `{"rule":[{"name":"web","p":2},{"name":"ssh","p":3},{"name":"deny","p":4}]}`,
+			want:   []AttrChange{{Path: "rule[0->2].p", Before: num("1"), After: num("4")}},
+		},
+		"replace path at the before index marks the moved element": {
+			before: `{"l":[{"n":"a","p":1},{"n":"b","p":5}]}`, after: `{"l":[{"n":"b","p":5},{"n":"a","p":2}]}`,
+			replacePaths: `[["l",0,"p"]]`,
+			want:         []AttrChange{{Path: "l[0->1].p", Before: num("1"), After: num("2"), ForcesReplacement: true}},
+			wantReplaced: []string{"l[0].p"},
+		},
+		"set element in a replace path is not printed": {
+			before: `{"l":["hunter2"]}`, after: `{"l":["s3cr3t-new"]}`,
+			beforeSens: `{"l":[true]}`, afterSens: `{"l":[true]}`, replacePaths: `[["l","s3cr3t-new"]]`,
+			want:         []AttrChange{{Path: "l[0]", Sensitive: true, ForcesReplacement: true}},
+			wantReplaced: []string{"l[*]"},
+		},
+		"sensitivity change alone": {
+			before: `{"a":"x","l":["y"]}`, after: `{"a":"x","l":["y"]}`, afterSens: `{"a":true,"l":[true]}`,
+			want: []AttrChange{{Path: "a", Sensitive: true}, {Path: "l[0]", Sensitive: true}},
 		},
 		"scalar changed in place": {
 			before: `{"l":["a","b"]}`, after: `{"l":["a","x"]}`,
@@ -257,6 +279,25 @@ func TestDiffAttrs(t *testing.T) {
 				t.Errorf("replacedBy (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestDeepListsStayLinear(t *testing.T) {
+	t.Parallel()
+	nest := func(leaf string) any {
+		var v any = leaf
+		for range 9000 {
+			v = []any{v}
+		}
+		return v
+	}
+	start := time.Now()
+	got, _ := diffAttrs(PlanChange{Before: map[string]any{"l": nest("a")}, After: map[string]any{"l": nest("b")}}, true)
+	if d := time.Since(start); d > time.Second {
+		t.Errorf("diffAttrs() took %v", d)
+	}
+	if len(got) != 1 || got[0].Before == nil || got[0].Before.Value != "a" {
+		t.Errorf("attrs = %+v", got)
 	}
 }
 

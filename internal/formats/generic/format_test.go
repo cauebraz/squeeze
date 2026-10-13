@@ -36,6 +36,7 @@ func TestDetect(t *testing.T) {
 		"invalid utf-8":        {[]byte("caf\xe9 au lait"), false},
 		"rune cut by the head": {append(append([]byte(nil), full...), 0xc3), true},
 		"lone continuation":    {[]byte("abc\x80"), false},
+		"head of whitespace":   {bytes.Repeat([]byte("\n"), core.HeadSize), true},
 	}
 	for name, tt := range tests {
 		if got := (Format{}).Detect(tt.input); got != tt.want {
@@ -64,6 +65,31 @@ func TestText(t *testing.T) {
 			input: []byte("loading\r\r\nnext\n"),
 			o:     DefaultOptions(),
 			want:  "loading\nnext\n",
+		},
+		"frame of escape codes keeps the text before it": {
+			input: []byte("Downloading 100%\r\x1b[0m\nDone\r\x1b[K\n"),
+			o:     DefaultOptions(),
+			want:  "Downloading 100%\nDone\n",
+		},
+		"plurals of flag words do not fold": {
+			input: lines("x 1 panics", "x 2 panics", "x 3 panics", "y 1 tracebacks", "y 2 tracebacks", "y 3 tracebacks"),
+			o:     DefaultOptions(),
+			want:  "x 1 panics\nx 2 panics\nx 3 panics\ny 1 tracebacks\ny 2 tracebacks\ny 3 tracebacks\n",
+		},
+		"fold notices do not count toward the limit": {
+			input: lines("a", "a", "a", "b", "b", "b", "c", "d", "e", "f", "g", "g", "g"),
+			o:     Options{MaxLines: 4},
+			want:  "a\n... 2 more identical lines (--no-fold)\n... 6 lines cut (--max-lines 0)\nf\ng\n... 2 more identical lines (--no-fold)\n",
+		},
+		"cut never leaves a fold notice without its line": {
+			input: lines("a", "b", "c", "d", "e", "same", "same", "same", "same", "z"),
+			o:     Options{MaxLines: 4},
+			want:  "a\n... 4 lines cut (--max-lines 0)\nsame\n... 3 more identical lines (--no-fold)\nz\n",
+		},
+		"one byte keeps the first character": {
+			input: lines("\u00e9\u6f22"),
+			o:     Options{MaxLineBytes: 1},
+			want:  "\u00e9 ... [3 more bytes, --max-line-bytes 0]\n",
 		},
 		"blank runs collapse": {
 			input: lines("", "", "a", "", "", "", "b", "", ""),
@@ -154,7 +180,7 @@ func TestText(t *testing.T) {
 func TestReport(t *testing.T) {
 	t.Parallel()
 	r, _ := Build(lines("", "a", "a", "a", "b", "", "", strings.Repeat("z", 9), "Error x", "c", "d"), Options{MaxLines: 5, MaxLineBytes: 4})
-	want := Report{Lines: 11, Printed: 4, BlankDropped: 2, Cut: 5, LongLines: 1}
+	want := Report{Lines: 11, Printed: 4, BlankDropped: 2, Folded: 2, Cut: 3, LongLines: 1}
 	if diff := cmp.Diff(want, r); diff != "" {
 		t.Errorf("report (-want +got):\n%s", diff)
 	}

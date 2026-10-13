@@ -8,7 +8,7 @@ terraform apply -json -auto-approve | squeeze --fail-on apply_errored,error
 terraform test -json | squeeze --fail-on test_failed
 ```
 
-The stream repeats a start, progress and completion message for every resource and every ten seconds of work. squeeze keeps the planned changes, the final summary, the failures, the diagnostics, the outputs and the failing tests. On the fixtures the text is 4.7 to 18.4 percent of the input; on Terraform's own `*.jsonlog` test outputs (`just conformance`) it is 14 to 44 percent, since those samples hold only a few lines.
+The stream repeats a start, progress and completion message for every resource and every ten seconds of work. squeeze keeps the planned changes, the final summary, the failures, the diagnostics, the outputs and the failing tests. On the fixtures the text is 4.7 to 18.4 percent of the input; on Terraform's own `*.jsonlog` test outputs (`just conformance`) it is 4 to 44 percent, since those samples hold only a few lines.
 
 ## Output
 
@@ -77,7 +77,12 @@ error tests/network.tftest.hcl
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `operation`, `summary` (Terraform's `change_summary`, or null), `changes`, `omitted`, `drift`, `deferred`, `applied` (`count`, `slowest`), `failures`, `policies`, `errors`, `warnings`, `diagnostics`, `diagnostics_omitted`, `outputs`, `providers_installed`, `tests` (or null) and `other` (message counts by type).
+`data` holds `tool`, `tool_version`, `operation`, `summary` (Terraform's `change_summary` as `operation`, `add`, `change`, `remove`, `import`, `action_invocation`, `action_fail`, or null), `changes`, `omitted`, `drift`, `deferred`, `applied` (`count`, `slowest`), `failures`, `policies`, `errors`, `warnings`, `diagnostics`, `diagnostics_omitted`, `outputs`, `providers_installed`, `tests` (or null) and `other` (message counts by type).
+
+- `changes` and `drift`: `address`, `action` and, when set, `previous_address`, `reason`, `import_id`. `deferred` adds `reason` to `address` and `action`.
+- `failures`: `type`, `message` and, when set, `address`. `policies`: `policy`, `result` and, when set, `target`, `enforcement`.
+- `outputs`: `name` and, when set, `action`, `sensitive`, `value` (scalars only, never for sensitive outputs).
+- `tests`: `status`, `passed`, `failed`, `errored`, `skipped`, `runs` (`file`, `run`, `status`, `elapsed_ms` when set, `diagnostics`) and `files` (`file`, `status`, `diagnostics`).
 
 ## Limitations
 

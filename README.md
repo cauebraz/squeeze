@@ -18,7 +18,7 @@ terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace
   ~ password: (sensitive)
 ```
 
-The plan JSON for this example is 3,774 bytes; the output is 485.
+The plan JSON for this example is 6,294 bytes; the output is 485.
 
 ## Why
 
@@ -109,12 +109,12 @@ Each format decides what to keep. Every format guarantees:
 | Code | Meaning |
 |---|---|
 | 0 | output written |
-| 1 | read, parse or write error; stdout is empty |
+| 1 | empty input, or a read, parse or write error; stdout is empty |
 | 2 | the input matches no known format and is not text, or no format detects it and `--fail-on` needs one; name one |
 | 3 | `--fail-on` matched; stdout holds the full output and stderr names the conditions |
 | 64 | invalid flags or arguments, including an unknown `--fail-on` condition |
 
-Without `--fail-on`, the content of the input never changes the exit code.
+Without `--fail-on`, the changes and failures the input reports never change the exit code; only input squeeze cannot read, detect or parse does.
 
 ## Development
 
@@ -123,7 +123,7 @@ just check          # gofmt, go vet, staticcheck, exhaustive, tests
 just cover          # coverage across packages, fails below 85 percent
 just golden         # rewrite golden files after an intended output change
 just fuzz tfplan 30 # fuzz one format for 30 seconds
-just bench          # benchmarks of every format
+just bench          # benchmarks with the output/input ratio (tfplan only)
 just conformance    # run every format over Terraform's own command testdata at a pinned commit
 ```
 
