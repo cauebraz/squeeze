@@ -93,6 +93,58 @@ func TestDiffAttrs(t *testing.T) {
 			before: `{"rules":[{"a":1},{"a":2}]}`, after: `{"rules":[{"a":1}]}`,
 			want: []AttrChange{{Path: "rules[1]", Kind: Removed}},
 		},
+		"element added in the middle": {
+			before: `{"l":["a","c"]}`, after: `{"l":["a","b","c"]}`,
+			want: []AttrChange{{Path: "l[1]", Kind: Added, After: sv("b")}},
+		},
+		"element removed from the front": {
+			before: `{"l":["a","b","c"]}`, after: `{"l":["b","c"]}`,
+			want: []AttrChange{{Path: "l[0]", Kind: Removed, Before: sv("a")}},
+		},
+		"object changed and moved": {
+			before: `{"ingress":[{"port":22,"cidr":"x"},{"port":80,"cidr":"y"}]}`,
+			after:  `{"ingress":[{"port":80,"cidr":"y"},{"port":443,"cidr":"x"}]}`,
+			want:   []AttrChange{{Path: "ingress[1].port", Before: num("22"), After: num("443")}},
+		},
+		"scalar changed in place": {
+			before: `{"l":["a","b"]}`, after: `{"l":["a","x"]}`,
+			want: []AttrChange{{Path: "l[1]", Before: sv("b"), After: sv("x")}},
+		},
+		"scalar changed at another index": {
+			before: `{"l":["a","b"]}`, after: `{"l":["x","a"]}`,
+			want: []AttrChange{
+				{Path: "l[1]", Kind: Removed, Before: sv("b")},
+				{Path: "l[0]", Kind: Added, After: sv("x")},
+			},
+		},
+		"list reordered": {
+			before: `{"l":[1,2,3]}`, after: `{"l":[3,1,2]}`,
+			want: []AttrChange{{Path: "l", Reordered: true}},
+		},
+		"list reordered and grown": {
+			before: `{"l":["a","b"]}`, after: `{"l":["b","a","c"]}`,
+			want: []AttrChange{
+				{Path: "l", Reordered: true},
+				{Path: "l[2]", Kind: Added, After: sv("c")},
+			},
+		},
+		"duplicate removed": {
+			before: `{"l":["a","a"]}`, after: `{"l":["a"]}`,
+			want: []AttrChange{{Path: "l[1]", Kind: Removed, Before: sv("a")}},
+		},
+		"sensitive elements match by value": {
+			before: `{"l":["s1","s2"]}`, after: `{"l":["s0","s1","s2"]}`,
+			beforeSens: `{"l":[true,true]}`, afterSens: `{"l":[true,true,true]}`,
+			want: []AttrChange{{Path: "l[0]", Kind: Added, Sensitive: true}},
+		},
+		"sensitive element added beside a plain equal value": {
+			before: `{"l":["s"]}`, after: `{"l":["s","s"]}`, afterSens: `{"l":[true,false]}`,
+			want: []AttrChange{{Path: "l[0]", Kind: Added, Sensitive: true}},
+		},
+		"unknown element never matches": {
+			before: `{"l":["a"]}`, after: `{"l":[null]}`, unknown: `{"l":[true]}`,
+			want: []AttrChange{{Path: "l[0]", Before: sv("a"), Unknown: true}},
+		},
 		"type change map to list": {
 			before: `{"a":{"b":1}}`, after: `{"a":[1]}`,
 			want: []AttrChange{{Path: "a"}},

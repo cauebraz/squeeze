@@ -1,0 +1,205 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_security_group.app",
+          "mode": "managed",
+          "type": "aws_security_group",
+          "name": "app",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "id": "sg-0a1b2c3d4e5f60718",
+            "name": "app",
+            "ingress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "https",
+                "from_port": 443,
+                "protocol": "tcp",
+                "to_port": 443
+              },
+              {
+                "cidr_blocks": [
+                  "10.0.0.0/8"
+                ],
+                "description": "admin",
+                "from_port": 8443,
+                "protocol": "tcp",
+                "to_port": 8443
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_lb.app",
+          "mode": "managed",
+          "type": "aws_lb",
+          "name": "app",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "id": "app",
+            "name": "app",
+            "subnets": [
+              "subnet-0aaaaaaaaaaaaaaa1",
+              "subnet-0bbbbbbbbbbbbbbb2",
+              "subnet-0ccccccccccccccc3"
+            ]
+          }
+        },
+        {
+          "address": "aws_eks_node_group.workers",
+          "mode": "managed",
+          "type": "aws_eks_node_group",
+          "name": "workers",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "id": "main:workers",
+            "node_group_name": "workers",
+            "instance_types": [
+              "m5a.large",
+              "m5.large"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_security_group.app",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "id": "sg-0a1b2c3d4e5f60718",
+          "name": "app",
+          "ingress": [
+            {
+              "cidr_blocks": [
+                "10.0.0.0/8"
+              ],
+              "description": "ssh",
+              "from_port": 22,
+              "protocol": "tcp",
+              "to_port": 22
+            },
+            {
+              "cidr_blocks": [
+                "0.0.0.0/0"
+              ],
+              "description": "https",
+              "from_port": 443,
+              "protocol": "tcp",
+              "to_port": 443
+            }
+          ]
+        },
+        "after": {
+          "id": "sg-0a1b2c3d4e5f60718",
+          "name": "app",
+          "ingress": [
+            {
+              "cidr_blocks": [
+                "0.0.0.0/0"
+              ],
+              "description": "https",
+              "from_port": 443,
+              "protocol": "tcp",
+              "to_port": 443
+            },
+            {
+              "cidr_blocks": [
+                "10.0.0.0/8"
+              ],
+              "description": "admin",
+              "from_port": 8443,
+              "protocol": "tcp",
+              "to_port": 8443
+            }
+          ]
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_lb.app",
+      "mode": "managed",
+      "type": "aws_lb",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "id": "app",
+          "name": "app",
+          "subnets": [
+            "subnet-0aaaaaaaaaaaaaaa1",
+            "subnet-0ccccccccccccccc3"
+          ]
+        },
+        "after": {
+          "id": "app",
+          "name": "app",
+          "subnets": [
+            "subnet-0aaaaaaaaaaaaaaa1",
+            "subnet-0bbbbbbbbbbbbbbb2",
+            "subnet-0ccccccccccccccc3"
+          ]
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_eks_node_group.workers",
+      "mode": "managed",
+      "type": "aws_eks_node_group",
+      "name": "workers",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "id": "main:workers",
+          "node_group_name": "workers",
+          "instance_types": [
+            "m5.large",
+            "m5a.large"
+          ]
+        },
+        "after": {
+          "id": "main:workers",
+          "node_group_name": "workers",
+          "instance_types": [
+            "m5a.large",
+            "m5.large"
+          ]
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "complete": true,
+  "errored": false
+}

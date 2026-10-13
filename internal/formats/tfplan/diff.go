@@ -131,31 +131,67 @@ func (n node) kind() AttrKind {
 	}
 }
 
-func (n node) childSteps() ([]step, bool) {
-	bm, bIsMap := n.before.(map[string]any)
-	am, aIsMap := n.after.(map[string]any)
-	if bIsMap && aIsMap {
-		keys := unionKeys(bm, am, n.unknown)
-		steps := make([]step, 0, len(keys))
-		for _, k := range keys {
-			steps = append(steps, step{key: k})
-		}
-		return steps, true
+func (n node) element(bi, ai int) node {
+	before, hasBefore := lookupIndex(n.before, bi)
+	after, hasAfter := lookupIndex(n.after, ai)
+	unknown, _ := lookupIndex(n.unknown, ai)
+	beforeSens, _ := lookupIndex(n.beforeSens, bi)
+	afterSens, _ := lookupIndex(n.afterSens, ai)
+	return node{
+		before: before, after: after, unknown: unknown,
+		beforeSens: beforeSens, afterSens: afterSens,
+		hasBefore: n.hasBefore && hasBefore, hasAfter: n.hasAfter && hasAfter,
 	}
-	bl, bIsList := n.before.([]any)
-	al, aIsList := n.after.([]any)
-	if bIsList && aIsList {
-		size := max(len(bl), len(al))
-		if ul, ok := n.unknown.([]any); ok {
-			size = max(size, len(ul))
-		}
-		steps := make([]step, 0, size)
-		for i := range size {
-			steps = append(steps, step{index: i, isIndex: true})
-		}
-		return steps, true
+}
+
+func lookupIndex(v any, i int) (any, bool) {
+	if i < 0 {
+		return nil, false
 	}
-	return nil, false
+	return lookup(v, step{index: i, isIndex: true})
+}
+
+func elementKey(value, sens any) (string, bool) {
+	if !hasTrue(sens) {
+		sens = nil
+	}
+	key, err := json.Marshal([]any{value, sens})
+	if err != nil {
+		return "", false
+	}
+	return string(key), true
+}
+
+func hasTrue(v any) bool {
+	switch t := v.(type) {
+	case bool:
+		return t
+	case []any:
+		for _, e := range t {
+			if hasTrue(e) {
+				return true
+			}
+		}
+	case map[string]any:
+		for _, e := range t {
+			if hasTrue(e) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+type where struct {
+	at, before path
+}
+
+func (w where) with(at, before step) where {
+	return where{at: w.at.with(at), before: w.before.with(before)}
+}
+
+func index(i int) step {
+	return step{index: i, isIndex: true}
 }
 
 type differ struct {
@@ -173,20 +209,20 @@ func diffAttrs(c PlanChange, values bool) ([]AttrChange, []string) {
 			replacedBy = append(replacedBy, p.String())
 		}
 	}
-	d.walk(nil, rootNode(c))
+	d.walk(where{}, rootNode(c))
 	sort.SliceStable(d.out, func(i, j int) bool {
 		return d.out[i].ForcesReplacement && !d.out[j].ForcesReplacement
 	})
 	return d.out, replacedBy
 }
 
-func (d *differ) walk(p path, n node) {
+func (d *differ) walk(w where, n node) {
 	if !n.hasBefore && !n.hasAfter && !isTrue(n.unknown) {
 		return
 	}
 	if n.sensitive() {
 		if isTrue(n.unknown) || n.hasBefore != n.hasAfter || !reflect.DeepEqual(n.before, n.after) {
-			d.emit(p, AttrChange{Kind: n.kind(), Sensitive: true, Unknown: isTrue(n.unknown)})
+			d.emit(w, AttrChange{Kind: n.kind(), Sensitive: true, Unknown: isTrue(n.unknown)})
 		}
 		return
 	}
@@ -195,14 +231,23 @@ func (d *differ) walk(p path, n node) {
 		if n.hasBefore && n.before != nil {
 			a.Before = d.scalar(n.before)
 		}
-		d.emit(p, a)
+		d.emit(w, a)
 		return
 	}
-	if steps, ok := n.childSteps(); ok {
-		for _, s := range steps {
-			d.walk(p.with(s), n.child(s))
+	if bm, ok := n.before.(map[string]any); ok {
+		if am, ok := n.after.(map[string]any); ok {
+			for _, k := range unionKeys(bm, am, n.unknown) {
+				s := step{key: k}
+				d.walk(w.with(s, s), n.child(s))
+			}
+			return
 		}
-		return
+	}
+	if bl, ok := n.before.([]any); ok {
+		if al, ok := n.after.([]any); ok {
+			d.walkList(w, n, bl, al)
+			return
+		}
 	}
 	if n.hasBefore && n.hasAfter && reflect.DeepEqual(n.before, n.after) {
 		return
@@ -219,7 +264,68 @@ func (d *differ) walk(p path, n node) {
 			a.Before, a.After = before, after
 		}
 	}
-	d.emit(p, a)
+	d.emit(w, a)
+}
+
+func (d *differ) walkList(w where, n node, before, after []any) {
+	afterLen := len(after)
+	if ul, ok := n.unknown.([]any); ok {
+		afterLen = max(afterLen, len(ul))
+	}
+	free := map[string][]int{}
+	for j := range afterLen {
+		e := n.element(-1, j)
+		if !e.hasAfter || hasTrue(e.unknown) {
+			continue
+		}
+		if key, ok := elementKey(e.after, e.afterSens); ok {
+			free[key] = append(free[key], j)
+		}
+	}
+	matched := make([]bool, afterLen)
+	var removed, added []int
+	reordered := false
+	last := -1
+	for i := range before {
+		e := n.element(i, -1)
+		key, ok := elementKey(e.before, e.beforeSens)
+		if q := free[key]; ok && len(q) > 0 {
+			free[key] = q[1:]
+			matched[q[0]] = true
+			if q[0] < last {
+				reordered = true
+			}
+			last = q[0]
+			continue
+		}
+		removed = append(removed, i)
+	}
+	for j := range afterLen {
+		if !matched[j] {
+			added = append(added, j)
+		}
+	}
+	if reordered {
+		d.emit(w, AttrChange{Kind: Modified, Reordered: true})
+	}
+	paired := min(len(removed), len(added))
+	for k := range paired {
+		bi, ai := removed[k], added[k]
+		_, bIsMap := n.element(bi, -1).before.(map[string]any)
+		_, aIsMap := n.element(-1, ai).after.(map[string]any)
+		if bi == ai || (bIsMap && aIsMap) {
+			d.walk(w.with(index(ai), index(bi)), n.element(bi, ai))
+			continue
+		}
+		d.walk(w.with(index(bi), index(bi)), n.element(bi, -1))
+		d.walk(w.with(index(ai), index(ai)), n.element(-1, ai))
+	}
+	for _, bi := range removed[paired:] {
+		d.walk(w.with(index(bi), index(bi)), n.element(bi, -1))
+	}
+	for _, ai := range added[paired:] {
+		d.walk(w.with(index(ai), index(ai)), n.element(-1, ai))
+	}
 }
 
 func (d *differ) scalar(v any) *Scalar {
@@ -229,9 +335,11 @@ func (d *differ) scalar(v any) *Scalar {
 	return &Scalar{Value: v}
 }
 
-func (d *differ) emit(p path, a AttrChange) {
+func (d *differ) emit(w where, a AttrChange) {
+	p := w.at
 	a.Path = p.String()
 	a.at = p
+	a.beforeAt = w.before
 	for _, r := range d.replace {
 		if p.overlaps(r) {
 			a.ForcesReplacement = true

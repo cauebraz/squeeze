@@ -169,6 +169,8 @@ func attrLine(a AttrChange) string {
 	before, hasBefore := renderScalar(a.Before)
 	after, hasAfter := renderScalar(a.After)
 	switch {
+	case a.Reordered:
+		return prefix + ": order changed"
 	case a.Sensitive && a.Unknown:
 		return prefix + ": (sensitive, known after apply)"
 	case a.Sensitive:

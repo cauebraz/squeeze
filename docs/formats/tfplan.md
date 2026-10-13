@@ -59,6 +59,7 @@ Attribute symbols:
 - A sensitive attribute prints `(sensitive)` at any nesting depth; its value is never printed or stored.
 - A value Terraform knows only after apply prints `(known after apply)`.
 - Values longer than 48 bytes, maps and lists print the attribute path only.
+- List elements are matched by value, so an element that only moves is not printed. This covers sets, which the plan JSON stores as lists in an order that shifts when an element is added. Elements without a match are paired in order when both are objects or share an index, and their attributes are compared; the rest print as `-` with the old index or `+` with the new one. A list whose matched elements change order prints `~ <path>: order changed`. This follows Terraform's set rendering (`processSet` in `internal/command/jsonformat/differ/set.go`) and its object pairing for lists (`ProcessSlice` in `internal/command/jsonformat/collections/slice.go`).
 - Create and delete print no attributes, since the whole object is new or gone.
 - Line notes carry the deposed key, `moved from <address>`, `import`, the attributes that force replacement and Terraform's `action_reason`.
 - Drift is shown the way Terraform shows it: only attributes listed in the plan's `relevant_attributes`. Drift that does not affect the plan is counted in a `... N drifted resources not affecting this plan (--all)` line.
@@ -97,11 +98,11 @@ Attribute symbols:
 - `tool`, `tool_version`.
 - `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `actions`, `outputs`, `errored`, `complete`.
 - `changes` and `drift`: each with `address`, `action` and, when set, `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `replaced_by`, `attrs`, `attrs_omitted`.
-- `attrs`: `path`, `kind` (`update`, `add`, `remove`) and, when set, `before`, `after`, `unknown`, `sensitive`, `forces_replacement`. `before` and `after` are the scalar values with their JSON types and are never shortened; the 48-byte limit applies to text only.
+- `attrs`: `path`, `kind` (`update`, `add`, `remove`) and, when set, `before`, `after`, `unknown`, `sensitive`, `forces_replacement`, `reordered`. `before` and `after` are the scalar values with their JSON types and are never shortened; the 48-byte limit applies to text only.
 - `omitted`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) and `outputs`.
 
 ## Limitations
 
-- Lists are compared by index. A reordered set shows as changed elements.
+- The plan JSON carries no provider schema, so squeeze cannot tell a set from a list. Unmatched objects in a set are paired as in a list: Terraform would show the old element removed and the new one added, squeeze shows the attributes that differ between them.
 - The plan JSON does not say whether the plan is refresh-only. Terraform shows all drift for those plans; squeeze counts the drift and points to `--all`.
 - An `actions` list outside Terraform's published set fails with exit code 1 and names it.

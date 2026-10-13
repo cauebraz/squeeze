@@ -77,6 +77,8 @@ func TestAttrLine(t *testing.T) {
 		"null":                    {AttrChange{Path: "a", Before: sv(nil), After: sv(false)}, "~ a: null -> false"},
 		"float":                   {AttrChange{Path: "a", Before: &Scalar{Value: 1.5}, After: &Scalar{Value: 2.0}}, "~ a: 1.5 -> 2"},
 		"non-scalar value":        {AttrChange{Path: "a", Before: &Scalar{Value: []any{}}, After: sv("x")}, "~ a"},
+		"reordered":               {AttrChange{Path: "a", Reordered: true}, "~ a: order changed"},
+		"reordered forces":        {AttrChange{Path: "a", Reordered: true, ForcesReplacement: true}, "! a: order changed"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

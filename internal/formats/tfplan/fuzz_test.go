@@ -14,6 +14,7 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["update"],"before":{"a":[1,{"b":null}]},"after":{"a":[2]},"after_unknown":{"a":[false,true]},"before_sensitive":{"a":[true]},"replace_paths":[["a",0]]}}]}`))
 	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["update"],"before":1,"after":"x","after_unknown":[true],"before_sensitive":{"x":true}}}]}`))
 	f.Add([]byte(`{"format_version":"1.2","resource_drift":[{"address":"a","change":{"actions":["update"],"before":{"t":{"k":"s3cret"}},"after":{"t":{}},"before_sensitive":{"t":{"k":true}}}}],"relevant_attributes":[{"resource":"","attribute":["t"]}]}`))
+	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["update"],"before":{"l":[{"k":"s3cret"},{"k":"x"}]},"after":{"l":[{"k":"x"},{"k":"t"}]},"after_unknown":{},"before_sensitive":{"l":[{"k":true},{}]},"after_sensitive":{"l":[{},{}]}}}]}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
 		p, err := Parse(input)
 		if err != nil {
@@ -34,7 +35,7 @@ func FuzzSqueeze(f *testing.F) {
 			for _, rc := range list {
 				attrs, _ := diffAttrs(rc.Change, true)
 				for _, a := range attrs {
-					if a.Before != nil && markedAt(rc.Change.BeforeSensitive, a.at) {
+					if a.Before != nil && markedAt(rc.Change.BeforeSensitive, a.beforeAt) {
 						t.Fatalf("%s %s: before value of a sensitive path kept in the model", rc.Address, a.Path)
 					}
 					if a.After != nil && markedAt(rc.Change.AfterSensitive, a.at) {

@@ -132,7 +132,6 @@ New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding ag
 
 - `pytest`, `gotest` and `cargotest` formats
 - `tflint`, `checkov` and `trivy` JSON output
-- set-aware list comparison in `tfplan`
 - generic fallback: color-code removal, repeated-line folding, byte cap
 
 ## License

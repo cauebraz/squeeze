@@ -170,7 +170,9 @@ type AttrChange struct {
 	Unknown           bool     `json:"unknown,omitempty"`
 	Sensitive         bool     `json:"sensitive,omitempty"`
 	ForcesReplacement bool     `json:"forces_replacement,omitempty"`
+	Reordered         bool     `json:"reordered,omitempty"`
 	at                path
+	beforeAt          path
 }
 
 type ResourceChange struct {

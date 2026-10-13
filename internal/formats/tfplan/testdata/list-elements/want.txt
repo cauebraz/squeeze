@@ -1,0 +1,9 @@
+terraform 1.9.5 plan: 0 to add, 3 to change, 0 to destroy
+~ aws_eks_node_group.workers
+  ~ instance_types: order changed
+~ aws_lb.app
+  + subnets[1]: "subnet-0bbbbbbbbbbbbbbb2"
+~ aws_security_group.app
+  ~ ingress[1].description: "ssh" -> "admin"
+  ~ ingress[1].from_port: 22 -> 8443
+  ~ ingress[1].to_port: 22 -> 8443
