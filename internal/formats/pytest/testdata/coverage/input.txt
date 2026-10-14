@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.8, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/user/proj
+plugins: cov-7.1.0
+collected 2 items
+
+tests/test_calc.py .F                                                    [100%]
+
+=================================== FAILURES ===================================
+________________________________ test_add_print ________________________________
+
+    def test_add_print():
+        print("debug: add called")
+>       assert add(2, 2) == 5
+E       assert 4 == 5
+E        +  where 4 = add(2, 2)
+
+tests/test_calc.py:10: AssertionError
+----------------------------- Captured stdout call -----------------------------
+debug: add called
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.14.8-final-0 _______________
+
+Name          Stmts   Miss  Cover
+---------------------------------
+src/calc.py       4      1    75%
+---------------------------------
+TOTAL             4      1    75%
+=========================== short test summary info ============================
+FAILED tests/test_calc.py::test_add_print - assert 4 == 5
+========================= 1 failed, 1 passed in 0.02s ==========================

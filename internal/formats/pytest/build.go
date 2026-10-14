@@ -12,6 +12,7 @@ var (
 	sessionStart  = regexp.MustCompile(`^=+ test session starts =+$`)
 	sectionLine   = regexp.MustCompile(`^=+ (.+?) =+$`)
 	knownSection  = regexp.MustCompile(`^=+ (FAILURES|ERRORS|short test summary info|warnings summary(?: \(final\))?) =+$`)
+	reportSection = regexp.MustCompile(`^=+ (FAILURES|ERRORS|XFAILURES|PASSES|XPASSES|short test summary info|warnings summary(?: \(final\))?|tests coverage) =+$`)
 	statsLine     = regexp.MustCompile(`^(?:=+ )?(no tests ran|\d+ [a-z]+(?: [a-z]+)?(?:, \d+ [a-z]+(?: [a-z]+)?)*) in (\d+(?:\.\d+)?s(?: \(\d+:\d+:\d+\))?)(?: =+)?$`)
 	statPart      = regexp.MustCompile(`^(\d+) (.+)$`)
 	bangLine      = regexp.MustCompile(`^!{3,} (.+?) !{3,}$`)
@@ -123,7 +124,7 @@ func (p *parser) line(l string) {
 		p.section = "header"
 		return
 	}
-	if m := sectionLine.FindStringSubmatch(l); m != nil && (!p.inCaptured() || knownSection.MatchString(l)) {
+	if m := sectionLine.FindStringSubmatch(l); m != nil && (!p.inCaptured() || reportSection.MatchString(l)) {
 		p.closeEntry()
 		p.section = m[1]
 		if knownSection.MatchString(l) {
