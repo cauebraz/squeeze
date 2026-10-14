@@ -12,7 +12,7 @@ just cover          # coverage across packages, fails below 95 percent
 just golden         # rewrite golden files after an intended output change
 just fuzz tfplan 30 # fuzz one format
 just fuzz-all 20    # fuzz every format; fails for a format without FuzzSqueeze
-just bench          # benchmarks with the output/input ratio
+just bench          # benchmarks with the output/input ratio (tfplan only)
 just conformance    # the Terraform formats against Terraform's command testdata at a pinned commit, in a temp dir
 just commits        # commit messages and branch name since origin/main; prints the size outside testdata
 just check-each     # just check on every commit since origin/main, in a temporary worktree
