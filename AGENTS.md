@@ -14,6 +14,8 @@ just fuzz tfplan 30 # fuzz one format
 just fuzz-all 20    # fuzz every format; fails for a format without FuzzSqueeze
 just bench          # benchmarks with the output/input ratio
 just conformance    # the Terraform formats against Terraform's command testdata at a pinned commit, in a temp dir
+just commits        # commit messages and branch name since origin/main; prints the size outside testdata
+just check-each     # just check on every commit since origin/main, in a temporary worktree
 ```
 
 Linters are pinned with the `tool` directive in `go.mod` and run through `go tool`; do not install them globally. The module supports Go 1.26 and 1.27; CI runs both with `GOTOOLCHAIN=local`.
@@ -31,10 +33,22 @@ internal/jsonl/         line-delimited JSON input shared by tfjson and gotest
 internal/formattest/    contract suite every format runs
 internal/formats/<name>/ one package per format; testdata/<case>/ holds input, args, want.txt, want.json
 docs/formats/<name>.md  user documentation of one format
+scripts/                check-commits.sh, behind just commits
 bench/                  agent measurement: tasks with verifiers and a runner for the Anthropic, OpenAI and OpenRouter APIs; bench/README.md holds the last results
 ```
 
 `internal/core` imports no format. `internal/cli` names a format in one place only, `DefaultRegistry`. Tool knowledge lives under `internal/formats/<name>/` and `docs/formats/<name>.md`.
+
+## Commits, branches and pull requests
+
+`CONTRIBUTING.md` holds the rules; these are the parts an agent applies on every change.
+
+- Plan the change as micro commits before the first edit: one logical change per commit, each passing `just check` by itself, refactors and moves apart from behavior, tests, golden files and docs in the commit whose behavior they cover.
+- Messages follow Conventional Commits with the types and scopes in `CONTRIBUTING.md`: subject at most 72 characters, imperative, lowercase summary, no trailing period; a breaking change has `!` and a `BREAKING CHANGE:` footer.
+- A branch is `<user>/<type>-<description>`, starts from `origin/main`, holds one concern and is rebased, never merged with `main`.
+- A pull request stays near 200 changed lines outside `testdata/` and at most about 5 commits; a larger change is split into pull requests that each pass the checks.
+- An agent that does not commit reports the proposed commits in order, each with its files and message, so the user can commit them one by one.
+- Before reporting a branch as ready, `just commits` and `just check-each` pass besides `just check` and `just cover`.
 
 ## Rules
 

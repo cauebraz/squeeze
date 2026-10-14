@@ -142,12 +142,14 @@ just bench          # benchmarks with the output/input ratio (tfplan only)
 just conformance    # run the Terraform formats over Terraform's own command testdata at a pinned commit
 just demo           # the README example, from the replace-forced fixture
 just build          # bin/squeeze with the version from git describe
+just commits        # commit messages and branch name since origin/main
+just check-each     # just check on every commit since origin/main
 just measure <model> # tokens of an agent with and without squeeze, on the provider whose key is set (bench/run.py -h); results in bench/README.md
 ```
 
 Go 1.26 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.
 
-New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding agents working on this repository follow [AGENTS.md](AGENTS.md).
+Branches, commits and pull requests follow [CONTRIBUTING.md](CONTRIBUTING.md). New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding agents working on this repository follow [AGENTS.md](AGENTS.md).
 
 
 ## License
