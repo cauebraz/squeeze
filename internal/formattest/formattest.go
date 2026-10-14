@@ -221,7 +221,8 @@ func golden(t *testing.T, path string, got []byte) {
 func RealInputs(t testing.TB, f core.Format, defaultDir string) map[string][]byte {
 	t.Helper()
 	dir := defaultDir
-	if env := os.Getenv(RealDirEnv); env != "" {
+	env := os.Getenv(RealDirEnv)
+	if env != "" {
 		dir = env
 	}
 	out := map[string][]byte{}
@@ -246,6 +247,9 @@ func RealInputs(t testing.TB, f core.Format, defaultDir string) map[string][]byt
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if len(out) == 0 && env != "" {
+		t.Fatalf("no %s inputs in %s=%s", f.Name(), RealDirEnv, env)
 	}
 	if len(out) == 0 {
 		t.Skipf("no %s inputs in %s; save real tool output there or set %s", f.Name(), dir, RealDirEnv)
