@@ -1,0 +1,1 @@
+{"schema_version":1,"format":"eslint","input_bytes":210,"text_bytes":29,"ratio":0.1381,"conditions":[],"failed_on":[],"data":{"tool":"eslint","tool_version":"","root":"/home/dev/shop/src/lib","files":1,"files_with_problems":0,"errors":0,"warnings":0,"fatal":0,"fixable":0,"suppressed":0,"rules":[],"parse_errors":[],"problems":[],"problems_omitted":0,"omitted_by_rule":[]}}

@@ -72,6 +72,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
   `terraform show -json | squeeze` for the state and `terraform output -json | squeeze` (resource addresses only,
   sensitive outputs print as `(sensitive)`).
   Read squeeze's output instead of Terraform's. Run TFLint as `tflint --format json | squeeze`, Checkov as `checkov -d . -o json | squeeze`, and Trivy as `trivy fs --format json . | squeeze`.
+- Run ESLint as `npx eslint -f json . | squeeze`; `npx eslint --fix` applies the problems marked `fixable`.
 - Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names.
 - Run Python tests with `pytest 2>&1 | squeeze`; rerun one failure with `pytest <node id>`, using the node ID it prints.
 - Pipe other long output through `squeeze` too, for example `npm test 2>&1 | squeeze`; text that no format
@@ -91,6 +92,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `tfstate` | `terraform show -json` without a plan file, `terraform output -json` | [docs/formats/tfstate.md](docs/formats/tfstate.md) |
 | `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
 | `tflint` | `tflint --format json` | [docs/formats/tflint.md](docs/formats/tflint.md) |
+| `eslint` | `eslint -f json` or `-f json-with-metadata` | [docs/formats/eslint.md](docs/formats/eslint.md) |
 | `checkov` | `checkov -o json` | [docs/formats/checkov.md](docs/formats/checkov.md) |
 | `trivy` | `trivy fs`, `config` or `image` with `--format json` | [docs/formats/trivy.md](docs/formats/trivy.md) |
 | `pytest` | pytest's terminal output, default, `-v` or `-q` | [docs/formats/pytest.md](docs/formats/pytest.md) |

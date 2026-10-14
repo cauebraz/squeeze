@@ -109,7 +109,7 @@ A change that fits two types is two commits. When it cannot be split, use the ty
 
 ### Scopes
 
-The scope names the part of the repository the commit changes: a format (`tfplan`, `tfstate`, `tfjson`, `tfvalidate`, `tflint`, `checkov`, `trivy`, `gotest`, `pytest`, `generic`), a package (`cli`, `core`, `tfdiag`, `jsonl`, `formattest`) or `bench`. Leave the scope out when a commit spans several of them.
+The scope names the part of the repository the commit changes: a format (`tfplan`, `tfstate`, `tfjson`, `tfvalidate`, `tflint`, `eslint`, `checkov`, `trivy`, `gotest`, `pytest`, `generic`), a package (`cli`, `core`, `tfdiag`, `jsonl`, `formattest`) or `bench`. Leave the scope out when a commit spans several of them.
 
 ### Breaking changes
 
