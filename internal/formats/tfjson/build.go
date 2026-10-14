@@ -305,7 +305,7 @@ func (b *builder) finish() Report {
 		}
 		r.Applied.Slowest = append(r.Applied.Slowest, t)
 	}
-	r.Diagnostics, r.DiagnosticsOmitted = core.Limit(tfdiag.Normalize(b.diags), b.o.MaxDiagnostics)
+	r.Diagnostics, r.DiagnosticsOmitted = tfdiag.Limit(tfdiag.Normalize(b.diags), b.o.MaxDiagnostics)
 	if r.Diagnostics == nil {
 		r.Diagnostics = []tfdiag.Diagnostic{}
 	}

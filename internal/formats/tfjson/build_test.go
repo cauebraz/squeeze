@@ -126,8 +126,11 @@ func TestBuildDiagnostics(t *testing.T) {
 		t.Errorf("diagnostics = %+v, errors %d, warnings %d", r.Diagnostics, r.Errors, r.Warnings)
 	}
 	limited := build(t, "plan-diagnostics", Options{MaxDiagnostics: 1})
-	if len(limited.Diagnostics) != 1 || limited.DiagnosticsOmitted != 1 || limited.Diagnostics[0].Severity != "error" {
+	if len(limited.Diagnostics) != 1 || limited.Diagnostics[0].Severity != "error" {
 		t.Errorf("limited = %+v", limited.Diagnostics)
+	}
+	if limited.DiagnosticsOmitted != r.Diagnostics[1].Count {
+		t.Errorf("omitted = %d, want %d: the cut entry stands for that many warnings", limited.DiagnosticsOmitted, r.Diagnostics[1].Count)
 	}
 }
 

@@ -86,6 +86,30 @@ func TestFoldAndSort(t *testing.T) {
 	}
 }
 
+func TestLimit(t *testing.T) {
+	t.Parallel()
+	a := Diagnostic{Severity: "error", Summary: "a", Count: 3}
+	b := Diagnostic{Severity: "error", Summary: "b"}
+	c := Diagnostic{Severity: "warning", Summary: "c", Count: 2}
+	ds := []Diagnostic{a, b, c}
+	for _, tt := range []struct {
+		n       int
+		kept    []Diagnostic
+		omitted int
+	}{
+		{0, ds, 0},
+		{1, []Diagnostic{a}, 3},
+		{2, []Diagnostic{a, b}, 2},
+		{3, ds, 0},
+		{9, ds, 0},
+	} {
+		kept, omitted := Limit(ds, tt.n)
+		if diff := cmp.Diff(tt.kept, kept); diff != "" || omitted != tt.omitted {
+			t.Errorf("Limit(%d): omitted %d, want %d; kept (-want +got):\n%s", tt.n, omitted, tt.omitted, diff)
+		}
+	}
+}
+
 func TestSortTieBreakers(t *testing.T) {
 	t.Parallel()
 	ds := []Diagnostic{

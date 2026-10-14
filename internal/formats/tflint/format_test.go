@@ -2,6 +2,7 @@ package tflint
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -119,6 +120,29 @@ func TestSeverities(t *testing.T) {
 	}
 	if diff := cmp.Diff([]string{"error plugin crashed", "error u", "warning w", "notice n"}, order); diff != "" {
 		t.Errorf("order (-want +got):\n%s", diff)
+	}
+}
+
+func TestLimitCountsLinesNotOccurrences(t *testing.T) {
+	t.Parallel()
+	dup := `{"rule":{"name":"r_dup","severity":"error"},"message":"d","range":{"filename":"a.tf","start":{"line":1,"column":1}},"callers":[]}`
+	input := []byte(`{"issues":[` + dup + `,` + dup + `,` + dup + `,` +
+		`{"rule":{"name":"r_err","severity":"error"},"message":"e","range":{"filename":"a.tf","start":{"line":2,"column":1}},"callers":[]},` +
+		`{"rule":{"name":"r_warn","severity":"warning"},"message":"w","range":{"filename":"a.tf","start":{"line":3,"column":1}},"callers":[]}],"errors":[]}`)
+	r, err := Squeeze(input, Options{MaxIssues: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := r.Data.(Report)
+	var listed []string
+	for _, is := range report.Issues {
+		listed = append(listed, fmt.Sprintf("%s x%d", is.Rule, max(is.Count, 1)))
+	}
+	if diff := cmp.Diff([]string{"r_dup x3", "r_err x1"}, listed); diff != "" {
+		t.Errorf("listed (-want +got):\n%s", diff)
+	}
+	if report.IssuesOmitted != 1 || !strings.HasSuffix(r.Text, "... 1 more issue, r_warn 1 (--max-issues 0)\n") {
+		t.Errorf("omitted %d, text:\n%s", report.IssuesOmitted, r.Text)
 	}
 }
 
@@ -243,8 +267,8 @@ func FuzzSqueeze(f *testing.F) {
 			if shown+r.IssuesOmitted != len(*out.Issues) {
 				t.Fatalf("%d issues shown and %d omitted, %d in the input", shown, r.IssuesOmitted, len(*out.Issues))
 			}
-			if o.MaxIssues > 0 && len(r.Issues) > 1 && shown > o.MaxIssues {
-				t.Fatalf("%d issues over the limit %d", shown, o.MaxIssues)
+			if o.MaxIssues > 0 && len(r.Issues) > o.MaxIssues {
+				t.Fatalf("%d lines over the limit %d", len(r.Issues), o.MaxIssues)
 			}
 			if r.IssuesOmitted > 0 && !strings.Contains(res.Text, "(--max-issues 0)") {
 				t.Fatalf("issues cut without a notice:\n%s", res.Text)
