@@ -4,13 +4,22 @@
 Each task is a small repository with a planted defect, a prompt and a
 verifier. The same model solves it in two arms: control, where the agent
 reads the tool's output as is, and squeeze, where the agent pipes the tool
-through squeeze. The agent is a minimal tool-calling loop over the
-OpenRouter chat completions API with one tool, a shell in the task's
-working copy. Every run records the tokens the API billed, the bytes the
-shell tool returned, the number of turns, and whether the verifier passed.
+through squeeze. The agent is a minimal tool-calling loop with one tool, a
+shell in the task's working copy. Every run records the tokens the API
+billed, the bytes the shell tool returned, the number of turns, and whether
+the verifier passed.
+
+Providers:
+  anthropic   Anthropic Messages API, key in ANTHROPIC_API_KEY
+  openai      OpenAI chat completions, key in OPENAI_API_KEY
+  openrouter  OpenRouter chat completions, key in OPENROUTER_API_KEY
+Without --provider, the first of these whose key is set is used. --base-url
+points a provider at another endpoint with the same API, such as a local
+OpenAI-compatible server; --api-key-env names another key variable.
 
 Usage:
-  OPENROUTER_API_KEY=... bench/run.py --model <openrouter model id> [--runs 5]
+  bench/run.py --model <model id> [--provider anthropic|openai|openrouter]
+      [--base-url URL] [--api-key-env NAME] [--runs 5]
       [--arm both|control|squeeze] [--task name ...] [--max-turns 30] [--jobs 1]
   bench/run.py --self-test            # setup, verify and solution of every task, no API calls
   bench/run.py --report bench/results/<file>.jsonl
@@ -36,21 +45,22 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(ROOT)
 TASKS = os.path.join(ROOT, "tasks")
 RESULTS = os.path.join(ROOT, "results")
-API = "https://openrouter.ai/api/v1/chat/completions"
+PROVIDERS = {
+    "anthropic": {"style": "anthropic", "url": "https://api.anthropic.com/v1/messages", "key": "ANTHROPIC_API_KEY"},
+    "openai": {"style": "openai", "url": "https://api.openai.com/v1/chat/completions", "key": "OPENAI_API_KEY"},
+    "openrouter": {"style": "openai", "url": "https://openrouter.ai/api/v1/chat/completions", "key": "OPENROUTER_API_KEY"},
+}
+ANTHROPIC_VERSION = "2023-06-01"
+ANTHROPIC_MAX_TOKENS = 16000
 TOOL_OUTPUT_CAP = 200_000
 COMMAND_TIMEOUT = 300
 
-SHELL_TOOL = {
-    "type": "function",
-    "function": {
-        "name": "shell",
-        "description": "Run a shell command in the repository and return its exit code, stdout and stderr.",
-        "parameters": {
-            "type": "object",
-            "properties": {"command": {"type": "string", "description": "the command line, run with sh -c"}},
-            "required": ["command"],
-        },
-    },
+SHELL_NAME = "shell"
+SHELL_DESCRIPTION = "Run a shell command in the repository and return its exit code, stdout and stderr."
+SHELL_SCHEMA = {
+    "type": "object",
+    "properties": {"command": {"type": "string", "description": "the command line, run with sh -c"}},
+    "required": ["command"],
 }
 
 AGENTS_HEADER = """# Agent guidelines
@@ -125,63 +135,102 @@ def build_squeeze():
     return out
 
 
-def call_api(key, model, messages, tools):
-    body = json.dumps({"model": model, "messages": messages, "tools": tools, "tool_choice": "auto"}).encode()
-    req = urllib.request.Request(
-        API,
-        data=body,
-        headers={
-            "Authorization": "Bearer " + key,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/cauebraz/squeeze",
-            "X-Title": "squeeze bench",
-        },
-    )
-    for attempt in range(5):
-        try:
-            with urllib.request.urlopen(req, timeout=300) as resp:
-                return json.load(resp)
-        except urllib.error.HTTPError as e:
-            text = e.read().decode(errors="replace")
-            if e.code in (429, 500, 502, 503, 529) and attempt < 4:
-                time.sleep(2 ** attempt * 2)
-                continue
-            sys.exit("API error %d: %s" % (e.code, text[:500]))
-        except (urllib.error.URLError, TimeoutError):
-            if attempt < 4:
-                time.sleep(2 ** attempt * 2)
-                continue
-            raise
+class Client:
+    def __init__(self, provider, url, key, model):
+        self.style = PROVIDERS[provider]["style"]
+        self.provider, self.url, self.key, self.model = provider, url, key, model
+
+    def start(self, system, prompt):
+        if self.style == "anthropic":
+            self.system = system
+            return [{"role": "user", "content": prompt}]
+        return [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
+
+    def body(self, messages):
+        if self.style == "anthropic":
+            tool = {"name": SHELL_NAME, "description": SHELL_DESCRIPTION, "input_schema": SHELL_SCHEMA}
+            return {"model": self.model, "max_tokens": ANTHROPIC_MAX_TOKENS, "system": self.system,
+                    "messages": messages, "tools": [tool]}
+        tool = {"type": "function", "function": {"name": SHELL_NAME, "description": SHELL_DESCRIPTION, "parameters": SHELL_SCHEMA}}
+        return {"model": self.model, "messages": messages, "tools": [tool], "tool_choice": "auto"}
+
+    def headers(self):
+        h = {"Content-Type": "application/json"}
+        if self.style == "anthropic":
+            h["x-api-key"] = self.key
+            h["anthropic-version"] = ANTHROPIC_VERSION
+        else:
+            h["Authorization"] = "Bearer " + self.key
+        if self.provider == "openrouter":
+            h["HTTP-Referer"] = "https://github.com/cauebraz/squeeze"
+            h["X-Title"] = "squeeze bench"
+        return h
+
+    def call(self, messages):
+        req = urllib.request.Request(self.url, data=json.dumps(self.body(messages)).encode(), headers=self.headers())
+        for attempt in range(5):
+            try:
+                with urllib.request.urlopen(req, timeout=300) as resp:
+                    return self.parse(json.load(resp))
+            except urllib.error.HTTPError as e:
+                text = e.read().decode(errors="replace")
+                if e.code in (429, 500, 502, 503, 529) and attempt < 4:
+                    time.sleep(2 ** attempt * 2)
+                    continue
+                sys.exit("API error %d: %s" % (e.code, text[:500]))
+            except (urllib.error.URLError, TimeoutError):
+                if attempt < 4:
+                    time.sleep(2 ** attempt * 2)
+                    continue
+                raise
+
+    def parse(self, resp):
+        u = resp.get("usage") or {}
+        if self.style == "anthropic":
+            cached = u.get("cache_read_input_tokens") or 0
+            usage = ((u.get("input_tokens") or 0) + (u.get("cache_creation_input_tokens") or 0) + cached,
+                     u.get("output_tokens") or 0, cached)
+            content = resp.get("content") or []
+            calls = [(b["id"], (b.get("input") or {}).get("command", "")) for b in content if b.get("type") == "tool_use"]
+            return usage, {"role": "assistant", "content": content}, calls
+        usage = (u.get("prompt_tokens") or 0, u.get("completion_tokens") or 0,
+                 (u.get("prompt_tokens_details") or {}).get("cached_tokens") or 0)
+        msg = resp["choices"][0]["message"]
+        calls = []
+        for call in msg.get("tool_calls") or []:
+            try:
+                command = json.loads(call["function"].get("arguments") or "{}").get("command", "")
+            except (json.JSONDecodeError, AttributeError):
+                command = ""
+            calls.append((call["id"], command))
+        return usage, msg, calls
+
+    def results(self, results):
+        if self.style == "anthropic":
+            return [{"role": "user", "content": [{"type": "tool_result", "tool_use_id": i, "content": t} for i, t in results]}]
+        return [{"role": "tool", "tool_call_id": i, "content": t} for i, t in results]
 
 
-def run_agent(key, model, task, work, env, max_turns):
+def run_agent(client, task, work, env, max_turns):
     with open(os.path.join(work, "AGENTS.md")) as f:
         system = f.read()
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": task["prompt"] + "\n\nReply with the single word DONE when you are finished."},
-    ]
+    messages = client.start(system, task["prompt"] + "\n\nReply with the single word DONE when you are finished.")
     usage = {"prompt_tokens": 0, "completion_tokens": 0, "cached_tokens": 0}
     tool_bytes = 0
     turns = 0
     commands = []
     while turns < max_turns:
         turns += 1
-        resp = call_api(key, model, messages, [SHELL_TOOL])
-        u = resp.get("usage") or {}
-        usage["prompt_tokens"] += u.get("prompt_tokens", 0)
-        usage["completion_tokens"] += u.get("completion_tokens", 0)
-        usage["cached_tokens"] += (u.get("prompt_tokens_details") or {}).get("cached_tokens", 0)
-        msg = resp["choices"][0]["message"]
+        (prompt, completion, cached), msg, calls = client.call(messages)
+        usage["prompt_tokens"] += prompt
+        usage["completion_tokens"] += completion
+        usage["cached_tokens"] += cached
         messages.append(msg)
-        calls = msg.get("tool_calls") or []
         if not calls:
             break
-        for call in calls:
-            try:
-                args = json.loads(call["function"].get("arguments") or "{}")
-                command = args.get("command", "")
-            except json.JSONDecodeError:
+        results = []
+        for call_id, command in calls:
+            if not isinstance(command, str):
                 command = ""
             commands.append(command)
             code, out, err = sh(command, work, env)
@@ -193,7 +242,8 @@ def run_agent(key, model, task, work, env, max_turns):
             if len(text) > TOOL_OUTPUT_CAP:
                 text = text[:TOOL_OUTPUT_CAP] + "\n[output cut at %d bytes]" % TOOL_OUTPUT_CAP
             tool_bytes += len(text.encode())
-            messages.append({"role": "tool", "tool_call_id": call["id"], "content": text})
+            results.append((call_id, text))
+        messages.extend(client.results(results))
     return usage, tool_bytes, turns, commands
 
 
@@ -254,7 +304,10 @@ def report(path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--model", help="OpenRouter model id, for example anthropic/claude-sonnet-4.5")
+    ap.add_argument("--model", help="model id as the provider names it, for example claude-opus-5-5 or anthropic/claude-opus-5.5")
+    ap.add_argument("--provider", choices=sorted(PROVIDERS), help="default: the first provider whose key is set")
+    ap.add_argument("--base-url", help="endpoint URL with the provider's API, for example a local OpenAI-compatible server")
+    ap.add_argument("--api-key-env", help="environment variable that holds the key, instead of the provider's")
     ap.add_argument("--runs", type=int, default=5)
     ap.add_argument("--arm", choices=["both", "control", "squeeze"], default="both")
     ap.add_argument("--task", action="append", default=[])
@@ -272,24 +325,31 @@ def main():
     squeeze_bin = build_squeeze()
     if args.self_test:
         sys.exit(0 if self_test(tasks, squeeze_bin) else 1)
-    key = os.environ.get("OPENROUTER_API_KEY")
+    provider = args.provider
+    if not provider:
+        provider = next((p for p in ("anthropic", "openai", "openrouter") if os.environ.get(PROVIDERS[p]["key"])), None)
+        if not provider:
+            sys.exit("set ANTHROPIC_API_KEY, OPENAI_API_KEY or OPENROUTER_API_KEY, or pass --provider and --api-key-env")
+    key_env = args.api_key_env or PROVIDERS[provider]["key"]
+    key = os.environ.get(key_env)
     if not key:
-        sys.exit("set OPENROUTER_API_KEY")
+        sys.exit("set " + key_env)
     if not args.model:
-        sys.exit("pass --model with an OpenRouter model id")
+        sys.exit("pass --model with a model id")
+    client = Client(provider, args.base_url or PROVIDERS[provider]["url"], key, args.model)
     os.makedirs(RESULTS, exist_ok=True)
     out_path = os.path.join(RESULTS, dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ") + ".jsonl")
     arms = ["control", "squeeze"] if args.arm == "both" else [args.arm]
-    print("writing " + out_path)
+    print("writing %s (%s, %s)" % (out_path, provider, args.model))
     def one(i, name, task, arm):
         base, work, env = workdir(name, task, arm, squeeze_bin)
         start = time.time()
-        usage, tool_bytes, turns, commands = run_agent(key, args.model, task, work, env, args.max_turns)
+        usage, tool_bytes, turns, commands = run_agent(client, task, work, env, args.max_turns)
         passed = verify(task, work, env)
         if not args.keep:
             shutil.rmtree(base, ignore_errors=True)
         return {
-            "task": name, "arm": arm, "run": i + 1, "model": args.model, "passed": passed,
+            "task": name, "arm": arm, "run": i + 1, "provider": provider, "model": args.model, "passed": passed,
             "prompt_tokens": usage["prompt_tokens"], "completion_tokens": usage["completion_tokens"],
             "cached_tokens": usage["cached_tokens"], "tool_bytes": tool_bytes, "turns": turns,
             "seconds": round(time.time() - start, 1), "commands": commands,
