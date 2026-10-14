@@ -243,7 +243,7 @@ func writeTests(b *strings.Builder, t *Tests, o Options) {
 	listed := map[string]bool{}
 	passing := 0
 	for _, run := range t.Runs {
-		if !o.All && !failingTestStatus[run.Status] {
+		if !o.All && !failingTestStatus[run.Status] && len(run.Diagnostics) == 0 {
 			passing++
 			continue
 		}

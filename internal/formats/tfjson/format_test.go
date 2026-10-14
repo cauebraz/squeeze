@@ -136,6 +136,24 @@ func TestOtherMessagesTruncated(t *testing.T) {
 	}
 }
 
+func TestPassingRunDiagnosticsArePrinted(t *testing.T) {
+	t.Parallel()
+	input := stream(
+		`{"@level":"info","@message":"main.tftest.hcl... in progress","type":"test_file","test_file":{"path":"main.tftest.hcl","progress":"starting"}}`,
+		`{"@level":"info","@message":"  \"setup\"... pass","@testfile":"main.tftest.hcl","@testrun":"setup","type":"test_run","test_run":{"path":"main.tftest.hcl","run":"setup","progress":"complete","status":"pass"}}`,
+		`{"@level":"error","@message":"Error: Failed to destroy resources","@testfile":"main.tftest.hcl","@testrun":"setup","type":"diagnostic","diagnostic":{"severity":"error","summary":"Failed to destroy resources","detail":"bucket not empty"}}`,
+		`{"@level":"info","@message":"  \"check\"... pass","@testfile":"main.tftest.hcl","@testrun":"check","type":"test_run","test_run":{"path":"main.tftest.hcl","run":"check","progress":"complete","status":"pass"}}`,
+	)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "pass main.tftest.hcl \"setup\"\n  error: Failed to destroy resources\n    bucket not empty\n... 1 passing test run (--all)\n"
+	if !strings.Contains(r.Text, want) {
+		t.Errorf("text does not contain %q:\n%s", want, r.Text)
+	}
+}
+
 func utf8Valid(s string) bool {
 	return strings.ToValidUTF8(s, "?") == s
 }
