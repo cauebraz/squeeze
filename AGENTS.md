@@ -18,7 +18,7 @@ just commits        # commit messages and branch name since origin/main; prints 
 just check-each     # just check on every commit since origin/main, in a temporary worktree
 ```
 
-Linters are pinned with the `tool` directive in `go.mod` and run through `go tool`; do not install them globally. The module supports Go 1.26 and 1.27; CI runs both with `GOTOOLCHAIN=local`.
+Linters are pinned with the `tool` directive in `go.mod` and run through `go tool`; do not install them globally. The module requires Go 1.27; CI runs Go 1.27.2 with `GOTOOLCHAIN=local`.
 
 A change is done when `just check` and `just cover` pass after the last edit.
 

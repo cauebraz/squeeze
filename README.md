@@ -157,7 +157,7 @@ just measure <model> # tokens of an agent with and without squeeze, on the provi
 just chart <path>   # bench/results.svg from a run, given as bench/results/<timestamp>.jsonl
 ```
 
-Go 1.26 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.
+Go 1.27 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.
 
 Branches, commits and pull requests follow [CONTRIBUTING.md](CONTRIBUTING.md). New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding agents working on this repository follow [AGENTS.md](AGENTS.md).
 
