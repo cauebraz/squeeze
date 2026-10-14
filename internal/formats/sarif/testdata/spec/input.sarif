@@ -1,0 +1,13 @@
+{"version":"2.1.0","$schema":"https://json.schemastore.org/sarif-2.1.0.json","runs":[{"tool":{"driver":{"name":"examplelint","semanticVersion":"1.4.0","rules":[{"id":"EX001","defaultConfiguration":{"level":"error"}},{"id":"EX002"},{"id":"EX003","defaultConfiguration":{"level":"note"}}]}},
+"invocations":[{"executionSuccessful":false,"toolExecutionNotifications":[{"level":"error","message":{"text":"could not read src/vendor/big.js: file too large"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"src/vendor/big.js"}}}]},{"level":"note","message":{"text":"scanned 12 files"}}],"toolConfigurationNotifications":[{"message":{"text":"rule EX009 is unknown and was ignored"}}]}],
+"results":[
+{"ruleIndex":0,"message":{"text":"Hard-coded credential in source\nThe value is read from an environment variable in production."},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"file:///home/dev/shop/src/config%20files/db.js"},"region":{"startLine":4,"startColumn":7,"snippet":{"text":"const password = \"hunter2\";"}}}}]},
+{"ruleId":"EX002","message":{"text":"Function is too long (84 lines)"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"src/cart.js","uriBaseId":"SRCROOT"},"region":{"startLine":10}}}]},
+{"ruleId":"EX003","message":{"text":"Prefer template literals"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"src/cart.js"},"region":{"startLine":12,"startColumn":3}}}]},
+{"ruleId":"EX002","level":"error","message":{"text":"Function is too long (240 lines)"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"src/order.js"}}}]},
+{"ruleId":"EX001","message":{"text":"Hard-coded credential in test fixture"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"test/db_test.js"},"region":{"startLine":2}}}],"suppressions":[{"kind":"inSource","justification":"test data"}]},
+{"ruleId":"EX001","message":{"text":"Hard-coded credential under review"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"src/legacy.js"},"region":{"startLine":9}}}],"suppressions":[{"kind":"external","status":"rejected"}]},
+{"ruleId":"EX004","kind":"pass","level":"none","message":{"text":"No eval found"}},
+{"ruleId":"EX005","kind":"review","message":{"text":"Check the regular expression by hand"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"src/route.js"},"region":{"startLine":3}}}]},
+{"ruleId":"EX006","level":"warning","message":{"text":""},"locations":[]}
+]}]}
