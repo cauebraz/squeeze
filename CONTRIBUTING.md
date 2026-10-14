@@ -7,7 +7,7 @@ squeeze takes changes as small pull requests made of micro commits with Conventi
 ## Before you start
 
 - Open an issue first for a new format, a new flag, or any change to the `--output json` envelope or the exit codes. A fix or a change inside one format can go straight to a pull request.
-- Install Go 1.26 or later and `just`. Linters run through `go tool`; nothing else to install.
+- Install Go 1.27 or later and `just`. Linters run through `go tool`; nothing else to install.
 - Run `just check` on a clean checkout before the first edit, so a failure after your change is yours and not the baseline's.
 
 ## Workflow
@@ -160,7 +160,7 @@ Title: the same format as a commit subject. A single-commit pull request uses th
 
 Description: fill in `.github/pull_request_template.md`. It asks for the problem, the change, the evidence (tool source or docs for a tool semantic, each changed golden line), the docs updated and the checks run.
 
-Review: CI runs `just check`, `just cover` and `just fuzz-all` on Go 1.26 and 1.27, the Terraform conformance suite, and, on pull requests, `just commits` and `just check-each`. All of them pass before a merge.
+Review: CI runs `just check`, `just cover` and `just fuzz-all` on Go 1.27, the Terraform conformance suite, and, on pull requests, `just commits` and `just check-each`. All of them pass before a merge.
 
 Merge: "Rebase and merge" only. Every commit of the branch lands on `main` as it is, which is why each one passes the checks and carries a Conventional Commits message. The branch is deleted after the merge.
 
@@ -184,7 +184,7 @@ Agents follow `AGENTS.md`, which applies these rules to agent work. An agent tha
 The repository settings enforce what the checks cannot:
 
 - Merge button: only "Allow rebase merging" enabled; "Automatically delete head branches" enabled.
-- A ruleset on `main`: require a pull request, require the status checks `check (1.26.9)`, `check (1.27.2)`, `commits` and `conformance`, require linear history, block force pushes and restrict deletions.
+- A ruleset on `main`: require a pull request, require the status checks `check`, `commits` and `conformance`, require linear history, block force pushes and restrict deletions.
 
 ## References
 
