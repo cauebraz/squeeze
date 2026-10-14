@@ -68,7 +68,8 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 
 ```
 - Run Terraform with `-json` and pipe it through `squeeze`: `terraform validate -json | squeeze`,
-  `terraform plan -json | squeeze`, `terraform test -json | squeeze`, `terraform show -json <planfile> | squeeze`.
+  `terraform plan -json | squeeze`, `terraform test -json | squeeze`, `terraform show -json <planfile> | squeeze`,
+  `terraform output -json | squeeze` (sensitive outputs print as `(sensitive)`).
   Read squeeze's output instead of Terraform's. Run TFLint as `tflint --format json | squeeze`, Checkov as `checkov -d . -o json | squeeze`, and Trivy as `trivy fs --format json . | squeeze`.
 - Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names.
 - Run Python tests with `pytest 2>&1 | squeeze`; rerun one failure with `pytest <node id>`, using the node ID it prints.
@@ -86,6 +87,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | Format | Input | Docs |
 |---|---|---|
 | `tfplan` | `terraform show -json <planfile>` | [docs/formats/tfplan.md](docs/formats/tfplan.md) |
+| `tfstate` | `terraform output -json` | [docs/formats/tfstate.md](docs/formats/tfstate.md) |
 | `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
 | `tflint` | `tflint --format json` | [docs/formats/tflint.md](docs/formats/tflint.md) |
 | `checkov` | `checkov -o json` | [docs/formats/checkov.md](docs/formats/checkov.md) |

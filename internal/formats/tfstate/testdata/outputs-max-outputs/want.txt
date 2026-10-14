@@ -1,0 +1,6 @@
+terraform output: 11 outputs, 2 sensitive
+api_url = "https://api.example.com/v1"
+app = {"name":"api","replicas":3}
+banner = "line one\nline two\u001b[31m red"
+db = (sensitive)
+... 7 more outputs (--max-outputs 0)

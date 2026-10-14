@@ -1,0 +1,114 @@
+{
+  "api_url": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://api.example.com/v1"
+  },
+  "app": {
+    "sensitive": false,
+    "type": [
+      "object",
+      {
+        "name": "string",
+        "replicas": "number"
+      }
+    ],
+    "value": {
+      "name": "api",
+      "replicas": 3
+    }
+  },
+  "banner": {
+    "sensitive": false,
+    "type": "string",
+    "value": "line one\nline two\u001b[31m red"
+  },
+  "db": {
+    "sensitive": true,
+    "type": [
+      "object",
+      {
+        "host": "string",
+        "password": "string"
+      }
+    ],
+    "value": {
+      "host": "db.internal",
+      "password": "hunter2-OBJECT"
+    }
+  },
+  "db_password": {
+    "sensitive": true,
+    "type": "string",
+    "value": "hunter2-OUTPUT"
+  },
+  "enabled": {
+    "sensitive": false,
+    "type": "bool",
+    "value": true
+  },
+  "endpoints": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "number"
+      ]
+    ],
+    "value": [
+      "10.0.1.5",
+      8443
+    ]
+  },
+  "private_subnet_ids": {
+    "sensitive": false,
+    "type": [
+      "list",
+      "string"
+    ],
+    "value": [
+      "subnet-001a1b2c3d4e5f6",
+      "subnet-002a1b2c3d4e5f6",
+      "subnet-003a1b2c3d4e5f6",
+      "subnet-004a1b2c3d4e5f6",
+      "subnet-005a1b2c3d4e5f6",
+      "subnet-006a1b2c3d4e5f6",
+      "subnet-007a1b2c3d4e5f6",
+      "subnet-008a1b2c3d4e5f6",
+      "subnet-009a1b2c3d4e5f6",
+      "subnet-010a1b2c3d4e5f6",
+      "subnet-011a1b2c3d4e5f6",
+      "subnet-012a1b2c3d4e5f6",
+      "subnet-013a1b2c3d4e5f6",
+      "subnet-014a1b2c3d4e5f6",
+      "subnet-015a1b2c3d4e5f6",
+      "subnet-016a1b2c3d4e5f6",
+      "subnet-017a1b2c3d4e5f6",
+      "subnet-018a1b2c3d4e5f6",
+      "subnet-019a1b2c3d4e5f6",
+      "subnet-020a1b2c3d4e5f6"
+    ]
+  },
+  "replicas": {
+    "sensitive": false,
+    "type": "number",
+    "value": 3
+  },
+  "tags": {
+    "sensitive": false,
+    "type": [
+      "map",
+      "string"
+    ],
+    "value": {
+      "env": "prod",
+      "team": "platform"
+    }
+  },
+  "unset": {
+    "sensitive": false,
+    "type": "dynamic",
+    "value": null
+  }
+}

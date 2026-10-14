@@ -1,0 +1,12 @@
+terraform output: 11 outputs, 2 sensitive
+api_url = "https://api.example.com/v1"
+app = {"name":"api","replicas":3}
+banner = "line one\nline two\u001b[31m red"
+db = (sensitive)
+db_password = (sensitive)
+enabled = true
+endpoints = ["10.0.1.5",8443]
+private_subnet_ids = ["subnet-001a1b2c3d4e5f6","subnet-002a1b2c3d4e5f6","subnet-003a1b2c3d4e5f6","subnet-004a1b2c3d4e5f6","subnet-005a1b2c3d4e5f6","subnet-006a1b2c3d4e5f6","subnet-007a1b2c3d4e5f6","subnet-008a1b2c3d4e5...
+replicas = 3
+tags = {"env":"prod","team":"platform"}
+unset = null
