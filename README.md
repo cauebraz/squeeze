@@ -97,7 +97,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `trivy` | `trivy fs`, `config` or `image` with `--format json` | [docs/formats/trivy.md](docs/formats/trivy.md) |
 | `pytest` | pytest's terminal output, default, `-v` or `-q` | [docs/formats/pytest.md](docs/formats/pytest.md) |
 | `tfjson` | `terraform plan`, `apply`, `destroy`, `init` or `test` with `-json`, and the same `tofu` commands | [docs/formats/tfjson.md](docs/formats/tfjson.md) |
-| `gotest` | `go test -json` | [docs/formats/gotest.md](docs/formats/gotest.md) |
+| `gotest` | `go test -json`, or `go test` text with or without `-v` | [docs/formats/gotest.md](docs/formats/gotest.md) |
 | `generic` | any other text, when no format above detects it | [docs/formats/generic.md](docs/formats/generic.md) |
 
 Each format decides what to keep. Every format guarantees:

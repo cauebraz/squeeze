@@ -2,6 +2,7 @@ package gotest
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"github.com/cauebraz/squeeze/internal/jsonl"
 
@@ -25,7 +26,9 @@ type Format struct{}
 
 func (Format) Name() string { return "gotest" }
 
-func (Format) Description() string { return "Go test results from go test -json" }
+func (Format) Description() string {
+	return "Go test results from go test -json or go test text output"
+}
 
 var conditionNames = []string{"build_failed", "error", "fail", "panic", "race", "skip", "timeout", "warning"}
 
@@ -34,7 +37,7 @@ func (Format) Conditions() []string { return append([]string(nil), conditionName
 func (Format) Detect(head []byte) bool {
 	return jsonl.Detect(head, detectLines, func(line []byte) bool {
 		return bytes.HasPrefix(line, []byte("go: ")) || bytes.HasPrefix(line, []byte("# "))
-	}, isEvent)
+	}, isEvent) || detectPlain(head)
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
@@ -50,6 +53,9 @@ func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 
 func Squeeze(input []byte, o Options) (core.Result, error) {
 	events, err := Parse(input)
+	if errors.Is(err, ErrNoEvents) {
+		events, err = ParseText(input)
+	}
 	if err != nil {
 		return core.Result{}, err
 	}

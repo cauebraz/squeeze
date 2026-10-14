@@ -2,9 +2,12 @@
 
 Input: the JSON stream that `go test -json` prints, one `TestEvent` per line as `go doc cmd/test2json` describes it, with the `BuildEvent` lines of `go help buildjson` mixed in. Detected when one of the first twenty non-blank lines is a JSON object with a known `Action` and a `Package` or `ImportPath`; `go: downloading` and `# package` lines before the stream do not count toward the twenty. Lines that are not JSON, which the go command prints for early errors, are kept.
 
+The text `go test` prints without `-json`, with or without `-v`, is read too: squeeze turns it into the same events, as `go tool test2json` does, so the output and `data` are those of a `-json` run. Detected when a line of the first 64 KiB is a package summary (`ok  `, `FAIL` or `?   `, a tab and the package), a `--- PASS:`, `--- FAIL:` or `--- SKIP:` line, or `=== RUN   `.
+
 ```
 go test -json ./... | squeeze
 go test -json -race ./... 2>&1 | squeeze --fail-on fail
+go test -v ./... 2>&1 | squeeze
 ```
 
 A `-json` run prints a run line, a framing line and a result event for every test, and every log line of passing tests. squeeze keeps the failures, the build errors, the benchmark results and the counts. On streams captured from real runs the text is 5.8 to 14.5 percent of the input; on the two hand-written fixtures it is 26 and 48 percent, since they hold only a few events.
@@ -85,3 +88,5 @@ fail example.com/shop/calc TestTable/one
 - The stack filter decides by function name. A module whose path has no dot and differs from the tested package's first path element has its frames counted as runtime frames; `--full` prints them.
 - Failures are sorted by package and test name, not by the order they ran, so parallel runs print the same way every time.
 - Detection reads the first twenty non-blank lines after any `go:` and `#` lines; a stream that starts with more text than that needs `squeeze gotest`.
+- In text, a package's lines are those before its summary line, which is how `go test` prints several packages. Without `-v` the text has no line for a passing test, so the header counts only the failed and skipped tests the text names; with `-v` the counts match a `-json` run. Lines after the last summary, as when the run was killed, print under `output outside the test events:`.
+- In text, a test's output is the lines after its `=== RUN`, `=== CONT`, `=== NAME` or `--- FAIL:` line, up to the next such line or package summary.

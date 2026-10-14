@@ -1,0 +1,6 @@
+go test: fail; 161 tests: 160 passed, 1 failed, 0 skipped; 2 packages: 1 ok, 1 failed
+fail example.com/shop/route TestCost/#151
+  route_test.go:10: loading route 151 from cache
+  route_test.go:11: route 151 has 7 stops
+  route_test.go:17: case 151: got 306 want 7
+... 1 passing package (--all)
