@@ -13,17 +13,3 @@ Model: `claude-opus-5-5`. Each task was solved 5 times without squeeze (control)
 | `pytest-failures` | 17215 | 13052 | 24% |
 | `tflint-high` | 11587 | 9671 | 17% |
 | total | 109291 | 38041 | 65% |
-
-```
-gotest-race      control  ############                                                       13010
-                 squeeze  #########                                                           9310
-
-lint-log         control  ################################################################   67479
-                 squeeze  ######                                                              6008
-
-pytest-failures  control  ################                                                   17215
-                 squeeze  ############                                                       13052
-
-tflint-high      control  ###########                                                        11587
-                 squeeze  #########                                                           9671
-```
