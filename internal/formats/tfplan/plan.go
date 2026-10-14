@@ -8,12 +8,22 @@ import (
 
 func conditions(r Report) []string {
 	s := r.Summary
+	checkBlock, otherCheck := false, false
+	for _, c := range r.Checks {
+		if c.Kind == "check" {
+			checkBlock = true
+		} else {
+			otherCheck = true
+		}
+	}
 	return core.Conditions(map[string]bool{
 		"change":     s.Changed(),
+		"check":      len(r.Checks) > 0,
 		"deferred":   s.Deferred > 0,
 		"destroy":    s.Destroy > 0,
 		"drift":      s.Drift > 0,
 		"error":      s.Errored,
+		"warning":    checkBlock || (otherCheck && !s.Errored),
 		"fail":       s.Errored || !s.Complete,
 		"forget":     s.Forget > 0,
 		"import":     s.Import > 0,
@@ -69,7 +79,43 @@ func Build(p *Plan, o Options) (Report, error) {
 			r.Summary.Outputs++
 		}
 	}
+	r.Checks = convertChecks(p.Checks)
+	r.Summary.ChecksFailed = len(r.Checks)
 	return r, nil
+}
+
+func convertChecks(checks []PlanCheck) []CheckResult {
+	out := []CheckResult{}
+	for _, c := range checks {
+		kind := core.Clean(c.Address.Kind)
+		object := core.Clean(c.Address.ToDisplay)
+		if len(c.Instances) == 0 {
+			if checkFailed(c.Status) {
+				out = append(out, CheckResult{Address: object, Kind: kind, Status: core.Clean(c.Status)})
+			}
+			continue
+		}
+		for _, in := range c.Instances {
+			if !checkFailed(in.Status) {
+				continue
+			}
+			r := CheckResult{Address: core.Clean(in.Address.ToDisplay), Kind: kind, Status: core.Clean(in.Status)}
+			if r.Address == "" {
+				r.Address = object
+			}
+			for _, p := range in.Problems {
+				if m := core.Clean(p.Message); m != "" {
+					r.Problems = append(r.Problems, m)
+				}
+			}
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+func checkFailed(status string) bool {
+	return status != "pass" && status != "unknown"
 }
 
 type relevance struct {

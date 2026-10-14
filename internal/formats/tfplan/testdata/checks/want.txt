@@ -1,0 +1,7 @@
+terraform 1.9.5 plan: 1 to add, 0 to change, 0 to destroy, 1 to read; 3 failed checks
++ aws_s3_bucket.logs
+<= data.aws_iam_policy_document.logs (read_because_config_unknown)
+checks:
+fail check.health: Health endpoint returned 503
+fail aws_instance.web[1]: The AMI must be for the x86_64 architecture.
+error output.endpoint

@@ -25,7 +25,7 @@ func (Format) Name() string { return "tfplan" }
 
 func (Format) Description() string { return "Terraform plan JSON from terraform show -json" }
 
-var conditionNames = []string{"change", "deferred", "destroy", "drift", "error", "fail", "forget", "import", "incomplete", "move", "replace"}
+var conditionNames = []string{"change", "check", "deferred", "destroy", "drift", "error", "fail", "forget", "import", "incomplete", "move", "replace", "warning"}
 
 func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
 

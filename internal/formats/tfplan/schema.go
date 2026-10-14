@@ -13,8 +13,30 @@ type Plan struct {
 	OutputChanges      map[string]PlanChange `json:"output_changes"`
 	ActionInvocations  []PlanAction          `json:"action_invocations"`
 	RelevantAttributes []PlanRelevantAttr    `json:"relevant_attributes"`
+	Checks             []PlanCheck           `json:"checks"`
 	Errored            bool                  `json:"errored"`
 	Complete           *bool                 `json:"complete"`
+}
+
+type PlanCheck struct {
+	Address   PlanCheckAddress    `json:"address"`
+	Status    string              `json:"status"`
+	Instances []PlanCheckInstance `json:"instances"`
+}
+
+type PlanCheckAddress struct {
+	Kind      string `json:"kind"`
+	ToDisplay string `json:"to_display"`
+}
+
+type PlanCheckInstance struct {
+	Address  PlanCheckAddress   `json:"address"`
+	Status   string             `json:"status"`
+	Problems []PlanCheckProblem `json:"problems"`
+}
+
+type PlanCheckProblem struct {
+	Message string `json:"message"`
 }
 
 type PlanResource struct {

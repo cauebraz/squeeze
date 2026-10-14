@@ -66,6 +66,7 @@ Attribute symbols:
 - A replacement path that names a set element by its value prints the element as `[*]`, so the value never reaches the text. Drift that affects the plan is counted in `... N drifted resources (--drift)` unless `--drift` lists it; drift that does not affect the plan is counted in a `... N drifted resources not affecting this plan (--all)` line. Resources without changes are counted in `... N resources without changes (--all)`.
 - Deferred resources (`deferred_changes`, in incomplete plans) are listed with Terraform's reason. Deferred no-ops are hidden unless moved.
 - Action invocations (`action_invocations`) are listed with their trigger event and resource.
+- Failed checks (`checks`) are listed under `checks:` as `<status> <address>: <error_message>`, one line per failed instance, and counted in the header as `N failed checks`. A check is a `check` block assertion, a resource or output precondition or postcondition, or a variable validation. Terraform's statuses are `pass`, `fail`, `error` and `unknown` (`internal/command/jsonchecks/status.go`); `pass` and `unknown` are not listed, as Terraform's plan output does not show them, and any other status is. An object with no instances, such as a resource whose `count` is 0 or could not be evaluated, is listed by its own address. A failed precondition, postcondition or validation stops a normal plan, which then reports `errored: true`; a plan that holds one and did not error, such as a refresh-only plan (`show-json/conditions` in Terraform's testdata), reported it as a warning.
 
 ## Flags
 
@@ -82,6 +83,7 @@ Attribute symbols:
 | Condition | Present when |
 |---|---|
 | `change` | the plan creates, updates, destroys, replaces, imports, moves, forgets or reads anything |
+| `check` | a check failed or errored |
 | `deferred` | a change was deferred |
 | `destroy` | a resource is deleted or replaced by destroying it |
 | `drift` | drift that affects the plan |
@@ -92,16 +94,17 @@ Attribute symbols:
 | `incomplete` | Terraform reports `complete: false` |
 | `move` | a resource moves to a new address |
 | `replace` | a resource is replaced |
+| `warning` | a `check` block failed or errored, or any check failed in a plan that did not error; Terraform reports both as warnings |
 
 ## JSON data
 
 `data` in the `--output json` envelope holds:
 
 - `tool`, `tool_version`.
-- `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `actions`, `outputs`, `errored`, `complete`.
+- `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `actions`, `outputs`, `checks_failed`, `errored`, `complete`.
 - `changes` and `drift`: each with `address`, `action` and, when set, `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `replaced_by`, `attrs`, `attrs_omitted`.
 - `attrs`: `path`, `kind` (`update`, `add`, `remove`) and, when set, `before`, `after`, `unknown`, `sensitive`, `forces_replacement`, `reordered`. `before` and `after` are the scalar values with their JSON types and are never shortened; the 48-byte limit applies to text only.
-- `changes_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) and `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`).
+- `changes_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`) and `checks` (`address`, `kind`, `status` and, when set, `problems`), with the same failed instances the text lists.
 
 ## Limitations
 
