@@ -76,10 +76,7 @@ func Text(r Report, o Options) string {
 }
 
 func header(r Report) string {
-	line := r.Tool
-	if r.ToolVersion != "" {
-		line += " " + r.ToolVersion
-	}
+	line := core.ToolLabel(r.Tool, r.ToolVersion)
 	if r.Operation != "" {
 		line += " " + r.Operation
 	}
@@ -294,9 +291,7 @@ func writeOther(b *strings.Builder, r Report, all bool) {
 	if all {
 		b.WriteString("other:\n")
 		for _, m := range r.otherMessages {
-			if len(m) > maxMessageBytes {
-				m = core.Truncate(m, maxMessageBytes-3) + "..."
-			}
+			m = core.Ellipsis(m, maxMessageBytes)
 			b.WriteString("  ")
 			b.WriteString(m)
 			b.WriteByte('\n')

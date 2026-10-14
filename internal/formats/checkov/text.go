@@ -29,10 +29,7 @@ func Text(r Report, o Options) string {
 }
 
 func header(r Report) string {
-	tool := r.Tool
-	if r.ToolVersion != "" {
-		tool += " " + r.ToolVersion
-	}
+	tool := core.ToolLabel(r.Tool, r.ToolVersion)
 	if r.Passed+r.Failed+r.Skipped+r.ParsingErrors == 0 {
 		return tool + ": nothing scanned"
 	}

@@ -59,10 +59,7 @@ func writeFixes(b *strings.Builder, findings []Finding) {
 }
 
 func header(r Report) string {
-	line := r.Tool
-	if r.ToolVersion != "" {
-		line += " " + r.ToolVersion
-	}
+	line := core.ToolLabel(r.Tool, r.ToolVersion)
 	if r.Artifact != "" {
 		line += ": " + r.Artifact
 		if r.ArtifactType != "" {
@@ -171,8 +168,5 @@ func lines(start, end int) string {
 }
 
 func title(s string) string {
-	if len(s) <= maxTitleBytes {
-		return s
-	}
-	return core.Truncate(s, maxTitleBytes-3) + "..."
+	return core.Ellipsis(s, maxTitleBytes)
 }
