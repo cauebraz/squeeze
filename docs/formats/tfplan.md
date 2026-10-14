@@ -104,7 +104,7 @@ Attribute symbols:
 - `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `actions`, `outputs`, `checks_failed`, `errored`, `complete`.
 - `changes` and `drift`: each with `address`, `action` and, when set, `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `replaced_by`, `attrs`, `attrs_omitted`.
 - `attrs`: `path`, `kind` (`update`, `add`, `remove`) and, when set, `before`, `after`, `unknown`, `sensitive`, `forces_replacement`, `reordered`. `before` and `after` are the scalar values with their JSON types and are never shortened; the 48-byte limit applies to text only.
-- `changes_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`) and `checks` (`address`, `kind`, `status` and, when set, `problems`), with the same failed instances the text lists.
+- `resources_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`) and `checks` (`address`, `kind`, `status` and, when set, `problems`), with the same failed instances the text lists.
 
 ## Limitations
 

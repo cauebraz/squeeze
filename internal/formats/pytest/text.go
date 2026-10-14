@@ -20,7 +20,7 @@ func Text(r Report, o Options) string {
 		writeFailure(&b, f, o.Full)
 	}
 	if r.FailuresOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more %s (--max-tests 0)\n", r.FailuresOmitted, core.Plural(r.FailuresOmitted, "failure or error", "failures and errors"))
+		fmt.Fprintf(&b, "... %d more %s (--max-tests 0)\n", r.FailuresOmitted, core.Plural(r.FailuresOmitted, "failed or errored test", "failed or errored tests"))
 	}
 	for _, w := range r.Warnings {
 		fmt.Fprintf(&b, "warning %s", w.Message)

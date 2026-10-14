@@ -6,4 +6,4 @@ FAILED more/test_more.py::test_parse
   more/test_more.py:13: ValueError
   ... 7 traceback lines (--full)
   ... 1 captured line in log call (--full)
-... 1 more failure or error (--max-tests 0)
+... 1 more failed or errored test (--max-tests 0)

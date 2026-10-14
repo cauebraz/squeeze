@@ -66,7 +66,7 @@ type Report struct {
 	Packages        PackageCounts    `json:"packages"`
 	BuildFailures   []BuildFailure   `json:"build_failures"`
 	Failures        []Failure        `json:"failures"`
-	FailuresOmitted int              `json:"failures_omitted"`
+	FailuresOmitted int              `json:"tests_omitted"`
 	PackageFailures []PackageFailure `json:"package_failures"`
 	Benchmarks      []Benchmark      `json:"benchmarks"`
 	Skipped         []TestRef        `json:"skipped"`
