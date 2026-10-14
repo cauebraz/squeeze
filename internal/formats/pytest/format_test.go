@@ -340,6 +340,36 @@ func TestReportLikeLinesInsideCapturedOutput(t *testing.T) {
 	}
 }
 
+func TestReportSectionsEndCapturedOutput(t *testing.T) {
+	t.Parallel()
+	for _, title := range []string{"tests coverage", "PASSES", "XFAILURES", "XPASSES"} {
+		input := lines(
+			"=== FAILURES ===",
+			"___ test_print ___",
+			"E   AssertionError: boom",
+			"---- Captured stdout call ----",
+			"hello from stdout",
+			"=== "+title+" ===",
+			"___ coverage: platform darwin, python 3.12.14-final-0 ___",
+			"Name    Stmts   Miss  Cover",
+			"=== short test summary info ===",
+			"FAILED t.py::test_print - AssertionError: boom",
+			"=== 1 failed in 0.01s ===",
+		)
+		r := report(t, input, DefaultOptions())
+		var names []string
+		for _, f := range r.Failures {
+			names = append(names, f.Test)
+		}
+		if diff := cmp.Diff([]string{"t.py::test_print"}, names); diff != "" {
+			t.Errorf("%s: failures (-want +got):\n%s", title, diff)
+		}
+		if got := r.Failures[0].Captured[0].Lines; len(got) != 1 {
+			t.Errorf("%s: captured lines = %v", title, got)
+		}
+	}
+}
+
 func TestNodeIDsWithSeparatorsInParameters(t *testing.T) {
 	t.Parallel()
 	input := lines(
