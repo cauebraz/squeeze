@@ -1,0 +1,22 @@
+{"Time":"2026-10-14T15:31:21.196169-03:00","Action":"start","Package":"example.com/covmod/calc"}
+{"Time":"2026-10-14T15:31:21.196296-03:00","Action":"start","Package":"example.com/covmod/empty"}
+{"Time":"2026-10-14T15:31:21.196335-03:00","Action":"start","Package":"example.com/covmod/text"}
+{"Time":"2026-10-14T15:31:21.247343-03:00","Action":"output","Package":"example.com/covmod/empty","Output":"\texample.com/covmod/empty\t\t"}
+{"Time":"2026-10-14T15:31:21.24739-03:00","Action":"pass","Package":"example.com/covmod/empty","Elapsed":0.051}
+{"Time":"2026-10-14T15:31:21.617779-03:00","Action":"run","Package":"example.com/covmod/text","Test":"TestUpper"}
+{"Time":"2026-10-14T15:31:21.617895-03:00","Action":"output","Package":"example.com/covmod/text","Test":"TestUpper","Output":"=== RUN   TestUpper\n","OutputType":"frame"}
+{"Time":"2026-10-14T15:31:21.617992-03:00","Action":"output","Package":"example.com/covmod/text","Test":"TestUpper","Output":"    text_test.go:7: Upper(a) = \"A\"\n","OutputType":"error"}
+{"Time":"2026-10-14T15:31:21.618082-03:00","Action":"output","Package":"example.com/covmod/text","Test":"TestUpper","Output":"--- FAIL: TestUpper (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-14T15:31:21.618097-03:00","Action":"fail","Package":"example.com/covmod/text","Test":"TestUpper","Elapsed":0}
+{"Time":"2026-10-14T15:31:21.618107-03:00","Action":"output","Package":"example.com/covmod/text","Output":"FAIL\n","OutputType":"frame"}
+{"Time":"2026-10-14T15:31:21.618139-03:00","Action":"run","Package":"example.com/covmod/calc","Test":"TestAdd"}
+{"Time":"2026-10-14T15:31:21.618195-03:00","Action":"output","Package":"example.com/covmod/calc","Test":"TestAdd","Output":"=== RUN   TestAdd\n","OutputType":"frame"}
+{"Time":"2026-10-14T15:31:21.618204-03:00","Action":"output","Package":"example.com/covmod/calc","Test":"TestAdd","Output":"--- PASS: TestAdd (0.00s)\n","OutputType":"frame"}
+{"Time":"2026-10-14T15:31:21.618213-03:00","Action":"pass","Package":"example.com/covmod/calc","Test":"TestAdd","Elapsed":0}
+{"Time":"2026-10-14T15:31:21.618219-03:00","Action":"output","Package":"example.com/covmod/calc","Output":"PASS\n","OutputType":"frame"}
+{"Time":"2026-10-14T15:31:21.619815-03:00","Action":"output","Package":"example.com/covmod/text","Output":"coverage: 50.0% of statements\n"}
+{"Time":"2026-10-14T15:31:21.619909-03:00","Action":"output","Package":"example.com/covmod/calc","Output":"coverage: 33.3% of statements\n"}
+{"Time":"2026-10-14T15:31:21.620937-03:00","Action":"output","Package":"example.com/covmod/text","Output":"FAIL\texample.com/covmod/text\t0.424s\n","OutputType":"frame"}
+{"Time":"2026-10-14T15:31:21.620997-03:00","Action":"output","Package":"example.com/covmod/calc","Output":"ok  \texample.com/covmod/calc\t0.424s\tcoverage: 33.3% of statements\n"}
+{"Time":"2026-10-14T15:31:21.621008-03:00","Action":"fail","Package":"example.com/covmod/text","Elapsed":0.425}
+{"Time":"2026-10-14T15:31:21.622639-03:00","Action":"pass","Package":"example.com/covmod/calc","Elapsed":0.426}

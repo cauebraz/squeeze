@@ -52,6 +52,12 @@ func Text(r Report, o Options) string {
 	for _, w := range r.Warnings {
 		fmt.Fprintf(&b, "warning %s\n", w)
 	}
+	for _, c := range r.Coverage {
+		fmt.Fprintf(&b, "coverage %s: %s\n", c.Package, c.Coverage)
+	}
+	if r.CoverageOmitted > 0 {
+		fmt.Fprintf(&b, "... %d more %s with coverage (--all)\n", r.CoverageOmitted, core.Plural(r.CoverageOmitted, "package", "packages"))
+	}
 	if len(r.Text.Lines) > 0 {
 		b.WriteString("output outside the test events:\n")
 		writeOutput(&b, r.Text)

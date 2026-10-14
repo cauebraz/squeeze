@@ -2,6 +2,7 @@ package gotest
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -233,6 +234,49 @@ func TestGoWarningsAreKept(t *testing.T) {
 	}
 	if !strings.Contains(r.Text, "warning p: testing: warning: no tests to run\n") {
 		t.Errorf("text:\n%s", r.Text)
+	}
+}
+
+func TestCoverageIsKept(t *testing.T) {
+	t.Parallel()
+	input := stream(
+		`{"Action":"output","Package":"a","Output":"coverage: 45.0% of statements in ./...\n"}`,
+		`{"Action":"output","Package":"a","Output":"ok  \ta\t0.1s\tcoverage: 45.0% of statements in ./...\n"}`,
+		`{"Action":"pass","Package":"a"}`,
+		`{"Action":"output","Package":"b","Output":"ok  \tb\t0.1s\tcoverage: [no statements]\n"}`,
+		`{"Action":"pass","Package":"b"}`,
+		`{"Action":"output","Package":"c","Output":"ok  \tc\t0.1s\n"}`,
+		`{"Action":"pass","Package":"c"}`,
+	)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []PackageCoverage{{Package: "a", Coverage: "45.0% of statements in ./..."}, {Package: "b", Coverage: "[no statements]"}}
+	if diff := cmp.Diff(want, r.Data.(Report).Coverage); diff != "" {
+		t.Errorf("coverage (-want +got):\n%s", diff)
+	}
+	if !strings.Contains(r.Text, "coverage a: 45.0% of statements in ./...\ncoverage b: [no statements]\n") {
+		t.Errorf("text:\n%s", r.Text)
+	}
+	var many []string
+	for i := range maxCoverage + 3 {
+		p := fmt.Sprintf("p%02d", i)
+		many = append(many, `{"Action":"output","Package":"`+p+`","Output":"coverage: 10.0% of statements\n"}`, `{"Action":"pass","Package":"`+p+`"}`)
+	}
+	r, err = Squeeze(stream(many...), DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := r.Data.(Report); len(got.Coverage) != maxCoverage || got.CoverageOmitted != 3 || !strings.Contains(r.Text, "... 3 more packages with coverage (--all)\n") {
+		t.Errorf("coverage = %d, omitted = %d, text:\n%s", len(got.Coverage), got.CoverageOmitted, r.Text)
+	}
+	r, err = Squeeze(stream(many...), Options{All: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := r.Data.(Report); len(got.Coverage) != maxCoverage+3 || got.CoverageOmitted != 0 {
+		t.Errorf("--all coverage = %d, omitted = %d", len(got.Coverage), got.CoverageOmitted)
 	}
 }
 
