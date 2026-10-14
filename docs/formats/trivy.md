@@ -49,10 +49,10 @@ OS Packages (license):
 
 | Condition | Present when |
 |---|---|
-| `critical` | a finding has severity `CRITICAL` |
+| `critical` | a listed finding, or one cut by `--max-findings`, has severity `CRITICAL`; misconfiguration exceptions and licenses below `HIGH` do not count, as for `fail` |
 | `fail` | a vulnerability, a failed misconfiguration, a secret, or a license of severity `HIGH` or `CRITICAL` |
 | `fixable` | a vulnerability has a fixed version |
-| `high` | a finding has severity `HIGH` or `CRITICAL` |
+| `high` | the same, with severity `HIGH` or `CRITICAL` |
 | `misconfiguration` | a misconfiguration failed |
 | `secret` | a secret was found |
 | `vulnerability` | a vulnerability was found |
