@@ -26,6 +26,8 @@ type linePayload struct {
 	TestRun     *streamTestRun          `json:"test_run"`
 	TestFile    *streamTestFile         `json:"test_file"`
 	TestSummary *streamTestSummary      `json:"test_summary"`
+	Cleanup     *streamTestCleanup      `json:"test_cleanup"`
+	Interrupt   *streamTestInterrupt    `json:"test_interrupt"`
 	Result      string                  `json:"result"`
 	Policy      string                  `json:"policy_address"`
 	Target      string                  `json:"target_address"`
@@ -95,4 +97,20 @@ type streamTestSummary struct {
 	Failed  int    `json:"failed"`
 	Errored int    `json:"errored"`
 	Skipped int    `json:"skipped"`
+}
+
+type streamTestResource struct {
+	Instance   string `json:"instance"`
+	DeposedKey string `json:"deposed_key"`
+}
+
+type streamTestCleanup struct {
+	FailedResources  []streamTestResource `json:"failed_resources"`
+	SkippedResources []streamTestResource `json:"skipped_resources"`
+}
+
+type streamTestInterrupt struct {
+	State   []streamTestResource            `json:"state"`
+	States  map[string][]streamTestResource `json:"states"`
+	Planned []string                        `json:"planned"`
 }

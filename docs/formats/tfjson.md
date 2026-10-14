@@ -45,6 +45,7 @@ error tests/network.tftest.hcl
 - Every `apply_errored`, `provision_errored`, `action_errored` and `ephemeral_op_errored` message is printed as an `error:` line, followed by the diagnostics.
 - A `policy_result` other than `AllowResult` is printed as a `policy:` line with the policy, the target and the enforcement level.
 - Test runs that fail or error are listed with their diagnostics, and so is a passing run that carries a diagnostic, such as a cleanup that failed after it; a test file that errors outside a run is listed with its own diagnostics. Passing runs are counted in `... N passing test runs (--all)`; no-op changes in `... N no-op changes (--all)`; drift in `... N drifted resources (--drift)` unless `--drift` lists it.
+- Resources that `terraform test` leaves in state print one line per `test_cleanup` or `test_interrupt` message, after the tests: `left in state after <file> "<run>" (<reason>): <address>, ...`, with `(deposed <key>)` after a deposed object. The reason is `cleanup failed` (Terraform could not destroy them; they need to be cleaned up by hand), `skip_cleanup` (the run sets `skip_cleanup`) or `interrupted`, with `state <name>` for a state other than the main one. Resources Terraform was creating when it was interrupted print as `maybe created by <file> "<run>" (interrupted): ...`. These lines are not cut (`internal/command/views/test.go` and `views/json/test.go` in Terraform).
 - Sensitive output values are never printed or stored; other scalar outputs print their value up to 48 bytes.
 - Every line at level `error` or `warn` becomes a diagnostic, whatever its type, so a message type squeeze does not know cannot hide a failure. A diagnostic severity other than `warning` counts as an error. Identical diagnostics print once with `(xN)`; `--max-diagnostics` counts printed lines, and `... N more diagnostics` and `diagnostics_omitted` count every cut diagnostic, N for an `(xN)` line.
 - A diagnostic's detail is wrapped to 100 bytes and cut after three lines with `...`; its code line is cut at 120 bytes.
@@ -86,7 +87,7 @@ error tests/network.tftest.hcl
 - `changes` and `drift`: `address`, `action` and, when set, `previous_address`, `reason`, `import_id`. `deferred` adds `reason` to `address` and `action`.
 - `failures`: `type`, `message` and, when set, `address`. `policies`: `policy`, `result` and, when set, `target`, `enforcement`.
 - `outputs`: `name` and, when set, `action`, `sensitive`, `value` (scalars only, never for sensitive outputs).
-- `tests`: `status`, `passed`, `failed`, `errored`, `skipped`, `runs` (`file`, `run`, `status`, `elapsed_ms` when set, `diagnostics`) and `files` (`file`, `status`, `diagnostics`).
+- `tests`: `status`, `passed`, `failed`, `errored`, `skipped`, `runs` (`file`, `run`, `status`, `elapsed_ms` when set, `diagnostics`) `files` (`file`, `status`, `diagnostics`) and `left_in_state` (`file`, `reason` as `cleanup_failed`, `skip_cleanup`, `interrupted` or `planned`, `resources` with `address` and `deposed_key` when set, and, when set, `run` and `state`).
 - Each diagnostic, at the top level or in `tests`: `severity`, `summary` and, when set, `detail`, `address`, `file`, `line`, `column`, `code`, `values`, `lhs`, `rhs`, `assertion_warning` (`lhs` and `rhs` in full) and `count`.
 
 ## Limitations

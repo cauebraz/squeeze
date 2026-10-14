@@ -20,6 +20,16 @@ var actionSymbols = map[string]string{
 	"remove": ".", "import": ">>", "move": "=", "noop": "=",
 }
 
+var leftPrefixes = map[string]string{
+	"cleanup_failed": "left in state after", "skip_cleanup": "left in state after",
+	"interrupted": "left in state after", "planned": "maybe created by",
+}
+
+var leftLabels = map[string]string{
+	"cleanup_failed": "cleanup failed", "skip_cleanup": "skip_cleanup",
+	"interrupted": "interrupted", "planned": "interrupted",
+}
+
 func symbol(action string) string {
 	if s, ok := actionSymbols[action]; ok {
 		return s
@@ -275,9 +285,32 @@ func writeTests(b *strings.Builder, t *Tests, o Options) {
 			tfdiag.Write(b, d, tfdiag.WriteOptions{Indent: "  ", NoDetail: o.NoDetail})
 		}
 	}
+	for _, l := range t.Left {
+		writeLeft(b, l)
+	}
 	if passing > 0 {
 		fmt.Fprintf(b, "... %d passing test %s (--all)\n", passing, core.Plural(passing, "run", "runs"))
 	}
+}
+
+func writeLeft(b *strings.Builder, l LeftInState) {
+	b.WriteString(leftPrefixes[l.Reason] + " " + l.File)
+	if l.Run != "" {
+		fmt.Fprintf(b, " %q", l.Run)
+	}
+	label := leftLabels[l.Reason]
+	if l.State != "" {
+		label += ", state " + l.State
+	}
+	items := make([]string, 0, len(l.Resources))
+	for _, r := range l.Resources {
+		item := r.Address
+		if r.DeposedKey != "" {
+			item += " (deposed " + r.DeposedKey + ")"
+		}
+		items = append(items, item)
+	}
+	fmt.Fprintf(b, " (%s): %s\n", label, strings.Join(items, ", "))
 }
 
 func writeOther(b *strings.Builder, r Report, all bool) {

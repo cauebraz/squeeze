@@ -86,8 +86,12 @@ func (b *builder) add(l Line) {
 	if l.Type == "init_output" || strings.HasPrefix(l.Type, "provider_") || strings.HasPrefix(l.Type, "migration_") {
 		b.sawInit = true
 	}
+	left := b.leftInState(l)
 	if l.Malformed || (l.Type != "diagnostic" && (l.Level == "error" || l.Level == "warn")) {
 		b.fallback(l)
+		return
+	}
+	if left {
 		return
 	}
 	switch {
@@ -219,9 +223,49 @@ func isScalar(v json.RawMessage) bool {
 
 func (b *builder) tests() *Tests {
 	if b.r.Tests == nil {
-		b.r.Tests = &Tests{Runs: []TestRun{}, Files: []TestFile{}}
+		b.r.Tests = &Tests{Runs: []TestRun{}, Files: []TestFile{}, Left: []LeftInState{}}
 	}
 	return b.r.Tests
+}
+
+func (b *builder) leftInState(l Line) bool {
+	switch {
+	case l.Type == "test_cleanup" && l.Cleanup != nil:
+		b.left(l, "cleanup_failed", "", l.Cleanup.FailedResources)
+		b.left(l, "skip_cleanup", "", l.Cleanup.SkippedResources)
+	case l.Type == "test_interrupt" && l.Interrupt != nil:
+		b.left(l, "interrupted", "", l.Interrupt.State)
+		keys := make([]string, 0, len(l.Interrupt.States))
+		for k := range l.Interrupt.States {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			b.left(l, "interrupted", k, l.Interrupt.States[k])
+		}
+		planned := make([]streamTestResource, 0, len(l.Interrupt.Planned))
+		for _, p := range l.Interrupt.Planned {
+			planned = append(planned, streamTestResource{Instance: p})
+		}
+		b.left(l, "planned", "", planned)
+	default:
+		return false
+	}
+	return true
+}
+
+func (b *builder) left(l Line, reason, state string, resources []streamTestResource) {
+	if len(resources) == 0 {
+		return
+	}
+	out := make([]LeftResource, 0, len(resources))
+	for _, r := range resources {
+		out = append(out, LeftResource{Address: core.Clean(r.Instance), DeposedKey: core.Clean(r.DeposedKey)})
+	}
+	t := b.tests()
+	t.Left = append(t.Left, LeftInState{
+		File: core.Clean(l.AtTestFile), Run: core.Clean(l.AtTestRun), Reason: reason, State: core.Clean(state), Resources: out,
+	})
 }
 
 func (b *builder) testRun(s streamTestRun) {

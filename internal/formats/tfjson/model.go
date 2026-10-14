@@ -74,14 +74,28 @@ type TestFile struct {
 	Diagnostics []tfdiag.Diagnostic `json:"diagnostics"`
 }
 
+type LeftResource struct {
+	Address    string `json:"address"`
+	DeposedKey string `json:"deposed_key,omitempty"`
+}
+
+type LeftInState struct {
+	File      string         `json:"file"`
+	Run       string         `json:"run,omitempty"`
+	Reason    string         `json:"reason"`
+	State     string         `json:"state,omitempty"`
+	Resources []LeftResource `json:"resources"`
+}
+
 type Tests struct {
-	Status  string     `json:"status"`
-	Passed  int        `json:"passed"`
-	Failed  int        `json:"failed"`
-	Errored int        `json:"errored"`
-	Skipped int        `json:"skipped"`
-	Runs    []TestRun  `json:"runs"`
-	Files   []TestFile `json:"files"`
+	Status  string        `json:"status"`
+	Passed  int           `json:"passed"`
+	Failed  int           `json:"failed"`
+	Errored int           `json:"errored"`
+	Skipped int           `json:"skipped"`
+	Runs    []TestRun     `json:"runs"`
+	Files   []TestFile    `json:"files"`
+	Left    []LeftInState `json:"left_in_state"`
 }
 
 type Report struct {

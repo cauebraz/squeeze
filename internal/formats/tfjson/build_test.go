@@ -228,6 +228,47 @@ func TestBuildTests(t *testing.T) {
 	}
 }
 
+func TestBuildLeftInState(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		want   []LeftInState
+		errors int
+		other  map[string]int
+	}{
+		"test-cleanup": {
+			want: []LeftInState{
+				{File: "tests/bucket.tftest.hcl", Run: "setup", Reason: "cleanup_failed", Resources: []LeftResource{
+					{Address: "aws_iam_role.writer"}, {Address: "aws_s3_bucket.this"}, {Address: "aws_s3_bucket.this", DeposedKey: "4f2a91c0"},
+				}},
+				{File: "tests/keep.tftest.hcl", Run: "seed", Reason: "skip_cleanup", Resources: []LeftResource{{Address: "aws_dynamodb_table.locks"}}},
+			},
+			errors: 2,
+			other:  map[string]int{"test_abstract": 1},
+		},
+		"test-interrupt": {
+			want: []LeftInState{
+				{File: "tests/vpc.tftest.hcl", Run: "peer", Reason: "interrupted", Resources: []LeftResource{{Address: "aws_vpc.main"}, {Address: "aws_subnet.a"}}},
+				{File: "tests/vpc.tftest.hcl", Run: "peer", Reason: "interrupted", State: "peer", Resources: []LeftResource{{Address: "aws_vpc.peer"}}},
+				{File: "tests/vpc.tftest.hcl", Run: "peer", Reason: "planned", Resources: []LeftResource{{Address: "aws_vpc_peering_connection.this"}}},
+			},
+			errors: 1,
+			other:  map[string]int{"log": 2, "test_abstract": 1},
+		},
+	}
+	for name, tt := range tests {
+		r := build(t, name, DefaultOptions())
+		if diff := cmp.Diff(tt.want, r.Tests.Left); diff != "" {
+			t.Errorf("%s: left_in_state (-want +got):\n%s", name, diff)
+		}
+		if r.Errors != tt.errors {
+			t.Errorf("%s: errors = %d, want %d", name, r.Errors, tt.errors)
+		}
+		if diff := cmp.Diff(tt.other, r.Other); diff != "" {
+			t.Errorf("%s: other (-want +got):\n%s", name, diff)
+		}
+	}
+}
+
 func TestBuildPolicy(t *testing.T) {
 	t.Parallel()
 	r := build(t, "policy-deny", DefaultOptions())
