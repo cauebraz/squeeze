@@ -13,6 +13,7 @@ type lineHeader struct {
 	AtTestFile string `json:"@testfile"`
 	AtTestRun  string `json:"@testrun"`
 	Terraform  string `json:"terraform"`
+	Tofu       string `json:"tofu"`
 }
 
 type linePayload struct {

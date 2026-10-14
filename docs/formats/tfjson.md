@@ -1,6 +1,6 @@
 # tfjson
 
-Input: Terraform's machine-readable UI, one JSON object per line, from `plan`, `apply`, `destroy`, `init` or `test` run with `-json`. Detected when one of the first five non-blank lines is a JSON object with `@level` and `type`. Lines that are not JSON, such as a state lock notice on the same stream, are counted and kept out of the way.
+Input: Terraform's machine-readable UI, one JSON object per line, from `plan`, `apply`, `destroy`, `init` or `test` run with `-json`. Detected when one of the first five non-blank lines is a JSON object with `@level` and `type`. Lines that are not JSON, such as a state lock notice on the same stream, are counted and kept out of the way. OpenTofu writes the same stream; its `version` line carries the key `tofu` instead of `terraform` (`internal/command/views/json_view.go` in OpenTofu), and the header and `tool` then name `tofu` with its version.
 
 ```
 terraform plan -json | squeeze
@@ -81,7 +81,7 @@ error tests/network.tftest.hcl
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `operation`, `summary` (Terraform's `change_summary` as `operation`, `add`, `change`, `remove`, `import`, `action_invocation`, `action_fail`, or null), `changes`, `resources_omitted`, `noop_hidden`, `drift`, `deferred`, `applied` (`count`, `slowest`), `failures`, `policies`, `errors`, `warnings`, `diagnostics`, `diagnostics_omitted`, `outputs`, `providers_installed`, `tests` (or null) and `other` (message counts by type).
+`data` holds `tool` (`terraform`, or `tofu` for an OpenTofu stream), `tool_version`, `operation`, `summary` (Terraform's `change_summary` as `operation`, `add`, `change`, `remove`, `import`, `action_invocation`, `action_fail`, or null), `changes`, `resources_omitted`, `noop_hidden`, `drift`, `deferred`, `applied` (`count`, `slowest`), `failures`, `policies`, `errors`, `warnings`, `diagnostics`, `diagnostics_omitted`, `outputs`, `providers_installed`, `tests` (or null) and `other` (message counts by type).
 
 - `changes` and `drift`: `address`, `action` and, when set, `previous_address`, `reason`, `import_id`. `deferred` adds `reason` to `address` and `action`.
 - `failures`: `type`, `message` and, when set, `address`. `policies`: `policy`, `result` and, when set, `target`, `enforcement`.

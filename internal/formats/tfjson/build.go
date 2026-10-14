@@ -91,6 +91,9 @@ func (b *builder) add(l Line) {
 		return
 	}
 	switch {
+	case l.Type == "version" && l.Tofu != "":
+		b.r.Tool = "tofu"
+		b.r.ToolVersion = core.Clean(l.Tofu)
 	case l.Type == "version":
 		b.r.ToolVersion = core.Clean(l.Terraform)
 	case l.Type == "diagnostic" && l.Diagnostic != nil:
