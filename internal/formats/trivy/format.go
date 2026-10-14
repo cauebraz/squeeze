@@ -53,11 +53,18 @@ func Squeeze(input []byte, o Options) (core.Result, error) {
 }
 
 func conditions(r Report) []string {
+	reported := map[string]int{}
+	for _, f := range r.Findings {
+		reported[f.Severity]++
+	}
+	for s, n := range r.OmittedBySeverity {
+		reported[s] += n
+	}
 	return core.Conditions(map[string]bool{
-		"critical":         r.BySeverity["CRITICAL"] > 0,
+		"critical":         reported["CRITICAL"] > 0,
 		"fail":             r.Vulnerabilities+r.Misconfigurations+r.Secrets+r.SevereLicenses > 0,
 		"fixable":          r.Fixable > 0,
-		"high":             r.BySeverity["HIGH"]+r.BySeverity["CRITICAL"] > 0,
+		"high":             reported["HIGH"]+reported["CRITICAL"] > 0,
 		"misconfiguration": r.Misconfigurations > 0,
 		"secret":           r.Secrets > 0,
 		"vulnerability":    r.Vulnerabilities > 0,

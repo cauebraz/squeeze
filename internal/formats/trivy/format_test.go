@@ -93,6 +93,45 @@ func TestConditions(t *testing.T) {
 	}
 }
 
+func TestHiddenFindingsSetNoSeverityCondition(t *testing.T) {
+	t.Parallel()
+	misconf := func(id, severity, status string) Misconfiguration {
+		return Misconfiguration{ID: id, Title: id, Severity: severity, Status: status}
+	}
+	tests := map[string]struct {
+		results []Result
+		o       Options
+		want    []string
+	}{
+		"a critical exception": {
+			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "CRITICAL", "EXCEPTION"), misconf("AVD-2", "LOW", "FAIL")}}},
+			o:       DefaultOptions(),
+			want:    []string{"fail", "misconfiguration"},
+		},
+		"a high exception beside a passed check": {
+			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "HIGH", "EXCEPTION"), misconf("AVD-2", "HIGH", "PASS")}}},
+			o:       DefaultOptions(),
+			want:    []string{},
+		},
+		"a critical finding cut by --max-findings": {
+			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "CRITICAL", "FAIL"), misconf("AVD-2", "LOW", "FAIL")}}},
+			o:       Options{MaxFindings: 1},
+			want:    []string{"critical", "fail", "high", "misconfiguration"},
+		},
+		"a critical finding listed with --all beside an exception": {
+			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "CRITICAL", "EXCEPTION"), misconf("AVD-2", "HIGH", "FAIL")}}},
+			o:       Options{All: true},
+			want:    []string{"fail", "high", "misconfiguration"},
+		},
+	}
+	for name, tt := range tests {
+		raw := &RawReport{SchemaVersion: 2, ArtifactName: ".", ArtifactType: "filesystem", Results: tt.results}
+		if diff := cmp.Diff(tt.want, conditions(Build(raw, tt.o))); diff != "" {
+			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
+		}
+	}
+}
+
 func TestCounts(t *testing.T) {
 	t.Parallel()
 	r := report(t, fixture(t, "image"), DefaultOptions())
