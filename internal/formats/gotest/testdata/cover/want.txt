@@ -1,0 +1,6 @@
+go test: fail; 2 tests: 1 passed, 1 failed, 0 skipped; 3 packages: 2 ok, 1 failed
+fail example.com/covmod/text TestUpper
+  text_test.go:7: Upper(a) = "A"
+coverage example.com/covmod/calc: 33.3% of statements
+coverage example.com/covmod/text: 50.0% of statements
+... 2 passing packages (--all)

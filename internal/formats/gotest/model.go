@@ -58,24 +58,31 @@ type PackageRef struct {
 	Elapsed float64 `json:"elapsed,omitempty"`
 }
 
+type PackageCoverage struct {
+	Package  string `json:"package"`
+	Coverage string `json:"coverage"`
+}
+
 type Report struct {
-	Tool            string           `json:"tool"`
-	ToolVersion     string           `json:"tool_version"`
-	Status          string           `json:"status"`
-	Tests           Counts           `json:"tests"`
-	Packages        PackageCounts    `json:"packages"`
-	BuildFailures   []BuildFailure   `json:"build_failures"`
-	Failures        []Failure        `json:"failures"`
-	FailuresOmitted int              `json:"tests_omitted"`
-	PackageFailures []PackageFailure `json:"package_failures"`
-	Benchmarks      []Benchmark      `json:"benchmarks"`
-	Skipped         []TestRef        `json:"skipped"`
-	Passing         []PackageRef     `json:"passing_packages"`
-	NoTests         []string         `json:"packages_without_tests"`
-	Text            Output           `json:"text"`
-	Warnings        []string         `json:"warning_messages"`
-	Panics          int              `json:"panics"`
-	Timeouts        int              `json:"timeouts"`
-	Races           int              `json:"races"`
-	Other           map[string]int   `json:"other"`
+	Tool            string            `json:"tool"`
+	ToolVersion     string            `json:"tool_version"`
+	Status          string            `json:"status"`
+	Tests           Counts            `json:"tests"`
+	Packages        PackageCounts     `json:"packages"`
+	BuildFailures   []BuildFailure    `json:"build_failures"`
+	Failures        []Failure         `json:"failures"`
+	FailuresOmitted int               `json:"tests_omitted"`
+	PackageFailures []PackageFailure  `json:"package_failures"`
+	Benchmarks      []Benchmark       `json:"benchmarks"`
+	Skipped         []TestRef         `json:"skipped"`
+	Passing         []PackageRef      `json:"passing_packages"`
+	NoTests         []string          `json:"packages_without_tests"`
+	Coverage        []PackageCoverage `json:"coverage"`
+	CoverageOmitted int               `json:"coverage_omitted"`
+	Text            Output            `json:"text"`
+	Warnings        []string          `json:"warning_messages"`
+	Panics          int               `json:"panics"`
+	Timeouts        int               `json:"timeouts"`
+	Races           int               `json:"races"`
+	Other           map[string]int    `json:"other"`
 }

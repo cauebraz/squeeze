@@ -13,7 +13,10 @@ var (
 	summaryLine = regexp.MustCompile(`^(PASS|FAIL|ok  \t.*|FAIL\t.*|\?   \t.*|coverage: .*|exit status \d+|testing: warning: no tests to run)$`)
 	benchResult = regexp.MustCompile(`^Benchmark\S*\s+\d+\s+.*/op`)
 	spaces      = regexp.MustCompile(`\s+`)
+	coverLine   = regexp.MustCompile(`^(?:ok  \t.*\t)?coverage: (.+)$`)
 )
+
+const maxCoverage = 20
 
 type line struct {
 	text string
@@ -172,6 +175,16 @@ func (b *builder) add(e Event) {
 	}
 }
 
+func coverage(lines []line) string {
+	found := ""
+	for _, l := range lines {
+		if m := coverLine.FindStringSubmatch(strings.TrimSpace(l.text)); m != nil && (found == "" || !strings.HasPrefix(l.text, "ok")) {
+			found = core.Clean(m[1])
+		}
+	}
+	return found
+}
+
 func displayPackage(importPath string) string {
 	if i := strings.Index(importPath, " ["); i > 0 {
 		return importPath[:i]
@@ -189,6 +202,7 @@ func (b *builder) finish() Report {
 		Skipped:         []TestRef{},
 		Passing:         []PackageRef{},
 		NoTests:         []string{},
+		Coverage:        []PackageCoverage{},
 		Text:            Output{Lines: []string{}},
 		Warnings:        []string{},
 		Other:           b.other,
@@ -220,6 +234,9 @@ func (b *builder) finish() Report {
 			r.Passing = append(r.Passing, PackageRef{Package: name, Elapsed: p.elapsed})
 		}
 		b.scan(&r, p.lines)
+		if c := coverage(p.lines); c != "" {
+			r.Coverage = append(r.Coverage, PackageCoverage{Package: name, Coverage: c})
+		}
 		for _, l := range p.lines {
 			text := strings.TrimSpace(l.text)
 			switch {
@@ -246,6 +263,9 @@ func (b *builder) finish() Report {
 	}
 	r.Tests.Failed = len(r.Failures)
 	r.Failures, r.FailuresOmitted = core.Limit(r.Failures, b.o.MaxTests)
+	if !b.o.All {
+		r.Coverage, r.CoverageOmitted = core.Limit(r.Coverage, maxCoverage)
+	}
 	for _, name := range sortedKeys(failedPkg) {
 		p := b.pkgs[name]
 		var kept []line

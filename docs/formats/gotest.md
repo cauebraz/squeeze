@@ -41,6 +41,7 @@ fail example.com/shop/calc TestTable/one
 - A test that started but has no result in a package that failed, as after a timeout or a killed binary, is listed with `(did not finish)`. A package without a result is listed the same way, with its own output.
 - Build errors are listed per package from the `build-output` events, without the `# package` line. A stream from a Go version before build events reports the package as build failed from its `[build failed]` summary, and the compiler output is in the lines outside the test events.
 - Benchmark results print as `bench <package> <result>`, with the spaces collapsed.
+- With `-cover`, each package's coverage prints as `coverage <package>: <text>`, the text the go command prints after `coverage: `, such as `33.3% of statements` or `[no statements]`. The package's own `coverage:` line wins over the one on its `ok` line. Without `--all`, the first 20 packages are listed and the rest counted in `... N more packages with coverage (--all)`.
 - Attributes from `t.Attr` and the directory from `t.ArtifactDir` print under the failure they belong to.
 - A `testing: warning:` line, such as `no tests to run`, prints as `warning <package>: ...` and sets the `warning` condition.
 - Lines that are not JSON print under `output outside the test events:`.
@@ -73,7 +74,7 @@ fail example.com/shop/calc TestTable/one
 
 ## JSON data
 
-`data` holds `tool`, `tool_version` (empty: the stream carries none), `status`, `tests` (`passed`, `failed`, `skipped`), `packages` (`ok`, `failed`, `build_failed`, `no_tests`), `build_failures`, `failures`, `tests_omitted`, `package_failures`, `benchmarks` (`package`, `result`), `skipped` (`package`, `test`), `passing_packages` (`package`, `elapsed` when set), `packages_without_tests`, `text`, `warning_messages` (one string per `testing: warning:` line), `panics`, `timeouts`, `races` (counts of matching lines) and `other` (unknown actions by count).
+`data` holds `tool`, `tool_version` (empty: the stream carries none), `status`, `tests` (`passed`, `failed`, `skipped`), `packages` (`ok`, `failed`, `build_failed`, `no_tests`), `build_failures`, `failures`, `tests_omitted`, `package_failures`, `benchmarks` (`package`, `result`), `skipped` (`package`, `test`), `passing_packages` (`package`, `elapsed` when set), `packages_without_tests`, `coverage` (`package`, `coverage`; every package with `--all`), `coverage_omitted`, `text`, `warning_messages` (one string per `testing: warning:` line), `panics`, `timeouts`, `races` (counts of matching lines) and `other` (unknown actions by count).
 
 - `failures`: `package`, `test`, `output` and, when set, `run` and `runs` (with `-count`), `elapsed`, `unfinished`, `attrs`, `artifacts`.
 - `build_failures`: `package`, `output`. `package_failures`: `package`, `output` and, when set, `unfinished`.
