@@ -16,7 +16,7 @@ The report prints, per task and arm, the pass rate and the mean tokens, tool byt
 
 | Task | Tool | Defect | Verifier |
 |---|---|---|---|
-| `pytest-failures` | pytest | a discount floor at 40 percent instead of 50, failing 3 of 68 tests | every test passes, no test skipped or removed |
+| `pytest-failures` | pytest | a discount floor at 40 percent instead of 50, and a receipt rounded half-even where the tests expect half-up: 48 of 328 tests fail, with dict diffs that pytest's short summary cuts at the terminal width | every test passes, no test skipped or removed |
 | `gotest-race` | go test | `Queue.Push` without the lock, caught by `-race` | `go test -race ./...` passes, the race test still exists |
 | `tflint-high` | tflint | an untyped variable, an unused one, an unpinned provider and a deprecated index | `tflint --minimum-failure-severity=warning` exits 0 with the resources intact |
 | `lint-log` | a shell script | a 400-line log with one error naming a config key | the script exits 0 with the key fixed |

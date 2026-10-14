@@ -9,3 +9,5 @@ research/
 plan.out
 .DS_Store
 bench/results/
+__pycache__/
+.venv/

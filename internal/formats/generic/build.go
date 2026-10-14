@@ -11,10 +11,27 @@ import (
 const minRun = 3
 
 var (
-	flagWords    = regexp.MustCompile(`(?i)\b(errors?|fail(s|ed|ures?)?|fatal|panic(s|ked)?|exceptions?|tracebacks?|warn(s|ed|ings?)?)\b`)
 	errorWords   = regexp.MustCompile(`(?i)\b(errors?|fail(s|ed|ures?)?|fatal|panic(s|ked)?|exceptions?|tracebacks?)\b`)
 	warningWords = regexp.MustCompile(`(?i)\b(warn(s|ed|ings?)?)\b`)
+	negated      = regexp.MustCompile(`(?i)(^|[^\w])(0|zero|no|without|non)[\s-]*$`)
+	zeroAfter    = regexp.MustCompile(`^\s*[:=]\s*0\b`)
 )
+
+func flagged(line string, words *regexp.Regexp) bool {
+	for _, m := range words.FindAllStringIndex(line, -1) {
+		if negated.MatchString(line[:m[0]]) || zeroAfter.MatchString(line[m[1]:]) {
+			continue
+		}
+		return true
+	}
+	return false
+}
+
+func isError(line string) bool { return flagged(line, errorWords) }
+
+func isWarning(line string) bool { return flagged(line, warningWords) }
+
+func isFlagged(line string) bool { return isError(line) || isWarning(line) }
 
 var digits = regexp.MustCompile(`[0-9]+`)
 
@@ -49,10 +66,10 @@ func Build(input []byte, o Options) (Report, string) {
 	lines := splitLines(string(input))
 	r.Lines = len(lines)
 	for _, l := range lines {
-		if errorWords.MatchString(l) {
+		if isError(l) {
 			r.ErrorLines++
 		}
-		if warningWords.MatchString(l) {
+		if isWarning(l) {
 			r.WarningLines++
 		}
 	}
@@ -103,7 +120,7 @@ func similar(a, b string) bool {
 	if a == b {
 		return true
 	}
-	if a == "" || b == "" || flagWords.MatchString(a) || flagWords.MatchString(b) {
+	if a == "" || b == "" || isFlagged(a) || isFlagged(b) {
 		return false
 	}
 	return digits.ReplaceAllString(a, "0") == digits.ReplaceAllString(b, "0")
@@ -111,7 +128,7 @@ func similar(a, b string) bool {
 
 func single(text string) group {
 	g := group{entries: []entry{{text: text}}, content: 1, lines: 1}
-	if flagWords.MatchString(text) {
+	if isFlagged(text) {
 		g.flagged, g.flags = true, 1
 	}
 	return g

@@ -41,7 +41,7 @@ exit status 2
 - Leading and trailing blank lines are dropped and a run of blank lines becomes one.
 - Three or more identical lines in a row print once, followed by `... N more identical lines (--no-fold)`.
 - Three or more lines in a row that differ only in their numbers print the first and the last with `... N similar lines (--no-fold)` between them. Lines with an error or warning word fold only when identical.
-- Error or warning words are `error`, `errors`, `fail`, `fails`, `failed`, `failure`, `failures`, `fatal`, `panic`, `panics`, `panicked`, `exception`, `exceptions`, `traceback`, `tracebacks`, `warn`, `warns`, `warned`, `warning` and `warnings`, as whole words in any case.
+- Error or warning words are `error`, `errors`, `fail`, `fails`, `failed`, `failure`, `failures`, `fatal`, `panic`, `panics`, `panicked`, `exception`, `exceptions`, `traceback`, `tracebacks`, `warn`, `warns`, `warned`, `warning` and `warnings`, as whole words in any case, unless the count before them is zero or the word is negated: `0 warnings suppressed`, `no errors`, `without warnings`, `errors: 0` and `non-fatal` do not count.
 - Past `--max-lines`, squeeze keeps the first quarter and the last half of the lines, and fills the remaining quarter with the first lines from the middle that carry an error or warning word. A folded run stays whole: its line and its fold notice are kept or cut together. Each gap prints `... N lines cut (--max-lines 0)` and how many of those lines carry such a word. Fold and cut notices do not count toward the limit.
 - A line longer than `--max-line-bytes` is cut at a character boundary, keeping at least one character, and ends with `... N more bytes (--max-line-bytes 0)`.
 - Input with no printable text prints `(no printable text)`.

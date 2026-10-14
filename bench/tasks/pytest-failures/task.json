@@ -1,8 +1,8 @@
 {
-  "prompt": "The test suite in this repository fails. Find the defect in the application code under shop/ and fix it there, not in the tests. Finish when every test passes.",
+  "prompt": "The test suite in this repository fails. Find the defects in the application code under shop/ and fix them there, not in the tests. Finish when every test passes.",
   "setup": "uv venv .venv -q && uv pip install -q --python .venv/bin/python pytest==9.1.1",
-  "verify": ".venv/bin/pytest -q -p no:cacheprovider tests >/dev/null 2>&1 && grep -q 'def test_discount_caps_at_half' tests/test_pricing.py && ! grep -q 'skip' tests/test_pricing.py",
-  "solution": "sed -i.bak 's/return max(price - discount, price \\* 0.4)/return max(price - discount, price * 0.5)/' shop/pricing.py && rm shop/pricing.py.bak",
+  "verify": ".venv/bin/pytest -q -p no:cacheprovider tests >/dev/null 2>&1 && [ \"$(grep -c 'def test_' tests/test_pricing.py)\" = 6 ] && [ \"$(grep -c 'def test_' tests/test_receipt.py)\" = 3 ] && ! grep -q 'skip' tests/test_pricing.py tests/test_receipt.py && grep -q 'range(120)' tests/test_receipt.py",
+  "solution": "sed -i.bak 's/return max(price - discount, price \\* 0.4)/return max(price - discount, price * 0.5)/' shop/pricing.py && rm shop/pricing.py.bak && /usr/bin/python3 -I -c \"s=open('shop/receipt.py').read(); s=s.replace('def money(value: float) -> float:\\n    return round(value, 2)', 'from decimal import ROUND_HALF_UP, Decimal\\n\\n\\ndef money(value: float) -> float:\\n    return float(Decimal(str(value)).quantize(Decimal(\\\"0.01\\\"), rounding=ROUND_HALF_UP))'); open('shop/receipt.py','w').write(s)\"",
   "tool": "pytest",
   "control": "- Run the tests with `.venv/bin/pytest -v tests` and read the output.",
   "squeeze": "- Run the tests with `.venv/bin/pytest -v tests 2>&1 | squeeze` and read squeeze's output instead of pytest's."
