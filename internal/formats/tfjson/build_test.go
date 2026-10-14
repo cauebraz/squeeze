@@ -38,18 +38,27 @@ func TestBuildPlan(t *testing.T) {
 	}
 }
 
-func TestBuildRepeatedPlannedChangeKeepsLast(t *testing.T) {
+func TestBuildRepeatedPlannedChange(t *testing.T) {
 	t.Parallel()
-	lines, err := Parse(stream(
-		`{"@level":"info","type":"planned_change","change":{"resource":{"addr":"a.b"},"action":"create"}}`,
-		`{"@level":"info","type":"planned_change","change":{"resource":{"addr":"a.b"},"action":"update"}}`,
-	))
-	if err != nil {
-		t.Fatal(err)
+	replace := `{"@level":"info","type":"planned_change","change":{"resource":{"addr":"a.b"},"action":"replace","reason":"cannot_update"}}`
+	deposed := `{"@level":"info","type":"planned_change","change":{"resource":{"addr":"a.b"},"action":"delete"}}`
+	tests := map[string]struct {
+		lines []string
+		want  []string
+	}{
+		"a deposed object's delete beside the replace": {[]string{replace, deposed}, []string{"- a.b", "-/+ a.b"}},
+		"the same order reversed":                      {[]string{deposed, replace}, []string{"- a.b", "-/+ a.b"}},
+		"an identical line from a repeated stream":     {[]string{replace, deposed, replace}, []string{"- a.b", "-/+ a.b"}},
 	}
-	r := Build(lines, DefaultOptions())
-	if diff := cmp.Diff([]string{"~ a.b"}, addresses(r.Changes)); diff != "" {
-		t.Errorf("changes (-want +got):\n%s", diff)
+	for name, tt := range tests {
+		lines, err := Parse(stream(tt.lines...))
+		if err != nil {
+			t.Fatal(err)
+		}
+		r := Build(lines, DefaultOptions())
+		if diff := cmp.Diff(tt.want, addresses(r.Changes)); diff != "" {
+			t.Errorf("%s: changes (-want +got):\n%s", name, diff)
+		}
 	}
 }
 

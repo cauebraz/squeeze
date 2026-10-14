@@ -1,0 +1,4 @@
+terraform 1.9.5 plan: 2 to add, 0 to change, 2 to destroy
+- aws_instance.web
+-/+ aws_instance.web (cannot_update)
++ aws_s3_bucket.logs

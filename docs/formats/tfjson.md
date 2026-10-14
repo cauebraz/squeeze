@@ -40,7 +40,7 @@ error tests/network.tftest.hcl
 ```
 
 - The header names the operation and uses Terraform's summary words: `plan: 1 to add, ...`, `apply: 2 added, ...`, `destroy: 2 destroyed`, `init: 2 providers installed`, `test: <status>, N passed, ...`. When an apply stops before its summary, the header says so and repeats the plan's counts.
-- Planned changes use the stream's actions with `tfplan`'s symbols: `-` delete, `-/+` replace, `.` remove from state, `~` update, `+` create, `<=` read, `>>` import, `=` move or no change. The stream carries no attributes; run `terraform show -json` on a saved plan and `squeeze tfplan` for those.
+- Planned changes use the stream's actions with `tfplan`'s symbols: `-` delete, `-/+` replace, `.` remove from state, `~` update, `+` create, `<=` read, `>>` import, `=` move or no change. The stream carries no attributes; run `terraform show -json` on a saved plan and `squeeze tfplan` for those. Each distinct `planned_change` prints its own line, so an address can appear twice: a replacement beside the delete of a deposed object, which Terraform emits as a separate change for the same address. An identical line seen again, as when two runs are piped together, prints once.
 - `applied:` counts completed resources and names the three slowest. Data source reads during a plan or apply are counted under `refresh`.
 - Every `apply_errored`, `provision_errored`, `action_errored` and `ephemeral_op_errored` message is printed as an `error:` line, followed by the diagnostics.
 - A `policy_result` other than `AllowResult` is printed as a `policy:` line with the policy, the target and the enforcement level.
@@ -89,4 +89,5 @@ error tests/network.tftest.hcl
 ## Limitations
 
 - The stream has no attribute diffs; `tfplan` is the format for those.
+- The stream carries no deposed key (`ResourceInstanceChange` in `internal/command/views/json/change.go`), so the delete of a deposed object prints as `- <address>` with nothing to tell it from a delete of the current object; `tfplan` prints the deposed key.
 - Detection reads the first five non-blank lines; a stream that starts with more text lines needs `squeeze tfjson`.
