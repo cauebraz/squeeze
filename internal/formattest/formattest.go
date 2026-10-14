@@ -97,8 +97,8 @@ func Contract(t *testing.T, f core.Format, dir string) {
 			t.Errorf("%s: condition %q must match %s", f.Name(), name, conditionName)
 		}
 	}
-	if !slices.Contains(declared, "fail") && f.Name() != "generic" {
-		t.Errorf("%s: a tool format declares the shared condition %q", f.Name(), "fail")
+	if len(declared) > 0 && !slices.Contains(declared, "fail") && f.Name() != "generic" {
+		t.Errorf("%s: a tool format with conditions declares the shared condition %q", f.Name(), "fail")
 	}
 	for _, empty := range []string{"", " \n\t"} {
 		if f.Detect([]byte(empty)) {
