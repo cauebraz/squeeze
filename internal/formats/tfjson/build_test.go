@@ -38,6 +38,28 @@ func TestBuildPlan(t *testing.T) {
 	}
 }
 
+func TestBuildToolFromVersionLine(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		line          string
+		tool, version string
+	}{
+		"terraform":  {`{"@level":"info","@message":"Terraform 1.9.5","terraform":"1.9.5","ui":"1.2","type":"version"}`, "terraform", "1.9.5"},
+		"opentofu":   {`{"@level":"info","@message":"OpenTofu 1.13.1","@module":"tofu.ui","tofu":"1.13.1","ui":"1.2","type":"version"}`, "tofu", "1.13.1"},
+		"no version": {`{"@level":"info","@message":"x","type":"log"}`, "terraform", ""},
+	}
+	for name, tt := range tests {
+		lines, err := Parse([]byte(tt.line + "\n"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		r := Build(lines, DefaultOptions())
+		if r.Tool != tt.tool || r.ToolVersion != tt.version {
+			t.Errorf("%s: tool = %q %q, want %q %q", name, r.Tool, r.ToolVersion, tt.tool, tt.version)
+		}
+	}
+}
+
 func TestBuildRepeatedPlannedChange(t *testing.T) {
 	t.Parallel()
 	replace := `{"@level":"info","type":"planned_change","change":{"resource":{"addr":"a.b"},"action":"replace","reason":"cannot_update"}}`
