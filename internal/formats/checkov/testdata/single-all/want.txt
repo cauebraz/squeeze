@@ -1,0 +1,26 @@
+checkov 3.3.29: 18 failed, 14 passed, 1 skipped; 4 resources
+aws_s3_bucket.logs (main.tf:5-7): 7 failed checks
+  CKV2_AWS_6 Ensure that S3 bucket has a Public Access block
+  CKV2_AWS_61 Ensure that an S3 bucket has a lifecycle configuration
+  CKV2_AWS_62 Ensure S3 buckets should have event notifications enabled
+  CKV_AWS_144 Ensure that S3 bucket has cross-region replication enabled
+  CKV_AWS_145 Ensure that S3 buckets are encrypted with KMS by default
+  CKV_AWS_18 Ensure the S3 bucket has access logging enabled
+  CKV_AWS_21 Ensure all data stored in the S3 bucket have versioning enabled
+aws_s3_bucket.assets (main.tf:9-12): 6 failed checks
+  CKV2_AWS_6 Ensure that S3 bucket has a Public Access block
+  CKV2_AWS_61 Ensure that an S3 bucket has a lifecycle configuration
+  CKV2_AWS_62 Ensure S3 buckets should have event notifications enabled
+  CKV_AWS_144 Ensure that S3 bucket has cross-region replication enabled
+  CKV_AWS_145 Ensure that S3 buckets are encrypted with KMS by default
+  CKV_AWS_21 Ensure all data stored in the S3 bucket have versioning enabled
+aws_security_group.web (main.tf:14-22): 3 failed checks
+  CKV2_AWS_5 Ensure that Security Groups are attached to another resource
+  CKV_AWS_23 Ensure every security group and rule has a description
+  CKV_AWS_24 Ensure no security groups allow ingress from 0.0.0.0:0 to port 22
+module.store.aws_ebs_volume.data (modules/store/main.tf:1-4, via main.tf:24-26): 2 failed checks
+  CKV_AWS_189 Ensure EBS Volume is encrypted by KMS using a customer managed Key (CMK)
+  CKV_AWS_3 Ensure all data stored in the EBS is securely encrypted
+skipped:
+aws_s3_bucket.assets (main.tf:9-12)
+  CKV_AWS_18 access logs go to the central account

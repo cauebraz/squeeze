@@ -64,7 +64,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 ```
 - Run Terraform with `-json` and pipe it through `squeeze`: `terraform validate -json | squeeze`,
   `terraform plan -json | squeeze`, `terraform test -json | squeeze`, `terraform show -json <planfile> | squeeze`.
-  Read squeeze's output instead of Terraform's. Run TFLint as `tflint --format json | squeeze`.
+  Read squeeze's output instead of Terraform's. Run TFLint as `tflint --format json | squeeze` and Checkov as `checkov -d . -o json | squeeze`.
 - Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names.
 - Run Python tests with `pytest 2>&1 | squeeze`; rerun one failure with `pytest <node id>`, using the node ID it prints.
 - Pipe other long output through `squeeze` too, for example `npm test 2>&1 | squeeze`: text that no format
@@ -83,6 +83,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `tfplan` | `terraform show -json <planfile>` | [docs/formats/tfplan.md](docs/formats/tfplan.md) |
 | `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
 | `tflint` | `tflint --format json` | [docs/formats/tflint.md](docs/formats/tflint.md) |
+| `checkov` | `checkov -o json` | [docs/formats/checkov.md](docs/formats/checkov.md) |
 | `tfjson` | `terraform plan`, `apply`, `destroy`, `init` or `test` with `-json` | [docs/formats/tfjson.md](docs/formats/tfjson.md) |
 | `pytest` | pytest's terminal output, default, `-v` or `-q` | [docs/formats/pytest.md](docs/formats/pytest.md) |
 | `gotest` | `go test -json` | [docs/formats/gotest.md](docs/formats/gotest.md) |
@@ -147,7 +148,7 @@ New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding ag
 ## Roadmap
 
 - `cargotest` format
-- `checkov` and `trivy` JSON output
+- `trivy` JSON output
 
 ## License
 

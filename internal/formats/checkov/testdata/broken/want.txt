@@ -1,0 +1,2 @@
+checkov 3.3.29: 0 failed, 0 passed, 0 skipped, 1 parsing error; 0 resources
+parse error: /home/dev/broken/main.tf

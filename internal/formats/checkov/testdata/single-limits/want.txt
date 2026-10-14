@@ -1,0 +1,8 @@
+checkov 3.3.29: 18 failed, 14 passed, 1 skipped; 4 resources
+aws_s3_bucket.logs (main.tf:5-7): 7 failed checks
+  CKV2_AWS_6 Ensure that S3 bucket has a Public Access block
+  CKV2_AWS_61 Ensure that an S3 bucket has a lifecycle configuration
+  CKV2_AWS_62 Ensure S3 buckets should have event notifications enabled
+  CKV_AWS_144 Ensure that S3 bucket has cross-region replication enabled
+... 14 more failed checks, CKV_AWS_145 2, CKV_AWS_21 2, CKV2_AWS_5 1, CKV2_AWS_6 1, CKV2_AWS_61 1, 7 other checks (--max-checks 0)
+... 1 skipped check (--all)

@@ -1,0 +1,1288 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ingress/[0]/from_port",
+                        "ingress/[0]/to_port",
+                        "ingress/[0]/cidr_blocks",
+                        "ingress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name = \"web\"\n"
+                    ],
+                    [
+                        16,
+                        "  ingress {\n"
+                    ],
+                    [
+                        17,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        18,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        19,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        20,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        21,
+                        "  }\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    14,
+                    22
+                ],
+                "resource": "aws_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ingress/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name = \"web\"\n"
+                    ],
+                    [
+                        16,
+                        "  ingress {\n"
+                    ],
+                    [
+                        17,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        18,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        19,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        20,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        21,
+                        "  }\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    14,
+                    22
+                ],
+                "resource": "aws_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_189",
+                "bc_check_id": "BC_AWS_GENERAL_109",
+                "check_name": "Ensure EBS Volume is encrypted by KMS using a customer managed Key (CMK)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "kms_key_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_ebs_volume\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  availability_zone = \"us-east-1a\"\n"
+                    ],
+                    [
+                        3,
+                        "  size              = 10\n"
+                    ],
+                    [
+                        4,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/modules/store/main.tf",
+                "file_abs_path": "/home/dev/shop/modules/store/main.tf",
+                "repo_file_path": "/home/dev/shop/modules/store/main.tf",
+                "file_line_range": [
+                    1,
+                    4
+                ],
+                "resource": "module.store.aws_ebs_volume.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EBSVolumeEncryptedWithCMK",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": "/main.tf",
+                "caller_file_line_range": [
+                    24,
+                    26
+                ],
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-109",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/modules/store/main.tf",
+                "breadcrumbs": {
+                    "source_module_": [
+                        {
+                            "type": "module",
+                            "name": "store",
+                            "path": "/home/dev/shop/main.tf",
+                            "idx": 0,
+                            "source_module_object": null
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_3",
+                "bc_check_id": "BC_AWS_GENERAL_3",
+                "check_name": "Ensure all data stored in the EBS is securely encrypted",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "encrypted"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_ebs_volume\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  availability_zone = \"us-east-1a\"\n"
+                    ],
+                    [
+                        3,
+                        "  size              = 10\n"
+                    ],
+                    [
+                        4,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/modules/store/main.tf",
+                "file_abs_path": "/home/dev/shop/modules/store/main.tf",
+                "repo_file_path": "/home/dev/shop/modules/store/main.tf",
+                "file_line_range": [
+                    1,
+                    4
+                ],
+                "resource": "module.store.aws_ebs_volume.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EBSEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": "/main.tf",
+                "caller_file_line_range": [
+                    24,
+                    26
+                ],
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-3-encrypt-ebs-volume",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/modules/store/main.tf",
+                "breadcrumbs": {
+                    "source_module_": [
+                        {
+                            "type": "module",
+                            "name": "store",
+                            "path": "/home/dev/shop/main.tf",
+                            "idx": 0,
+                            "source_module_object": null
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AWS_5",
+                "bc_check_id": "BC_AWS_NETWORKING_51",
+                "check_name": "Ensure that Security Groups are attached to another resource",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_security_group": {
+                            "web": {
+                                "__end_line__": 22,
+                                "__start_line__": 14,
+                                "ingress": [
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "from_port": [
+                                            22
+                                        ],
+                                        "protocol": [
+                                            "tcp"
+                                        ],
+                                        "to_port": [
+                                            22
+                                        ]
+                                    }
+                                ],
+                                "name": [
+                                    "web"
+                                ],
+                                "__address__": "aws_security_group.web",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "networking"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name = \"web\"\n"
+                    ],
+                    [
+                        16,
+                        "  ingress {\n"
+                    ],
+                    [
+                        17,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        18,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        19,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        20,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        21,
+                        "  }\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    14,
+                    22
+                ],
+                "resource": "aws_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_62",
+                "bc_check_id": "BC_AWS_LOGGING_36",
+                "check_name": "Ensure S3 buckets should have event notifications enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "logs": {
+                                "__end_line__": 7,
+                                "__start_line__": 5,
+                                "bucket": [
+                                    "shop-logs"
+                                ],
+                                "__address__": "aws_s3_bucket.logs",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket\" \"logs\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = \"shop-logs\"\n"
+                    ],
+                    [
+                        7,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    5,
+                    7
+                ],
+                "resource": "aws_s3_bucket.logs",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-62",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_62",
+                "bc_check_id": "BC_AWS_LOGGING_36",
+                "check_name": "Ensure S3 buckets should have event notifications enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "assets": {
+                                "__end_line__": 12,
+                                "__start_line__": 9,
+                                "bucket": [
+                                    "shop-assets"
+                                ],
+                                "__address__": "aws_s3_bucket.assets",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        9,
+                        "resource \"aws_s3_bucket\" \"assets\" {\n"
+                    ],
+                    [
+                        10,
+                        "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                    ],
+                    [
+                        11,
+                        "  bucket = \"shop-assets\"\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    9,
+                    12
+                ],
+                "resource": "aws_s3_bucket.assets",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-62",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_6",
+                "bc_check_id": "BC_AWS_NETWORKING_52",
+                "check_name": "Ensure that S3 bucket has a Public Access block",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "logs": {
+                                "__end_line__": 7,
+                                "__start_line__": 5,
+                                "bucket": [
+                                    "shop-logs"
+                                ],
+                                "__address__": "aws_s3_bucket.logs",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "block_public_policy",
+                        "block_public_acls"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket\" \"logs\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = \"shop-logs\"\n"
+                    ],
+                    [
+                        7,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    5,
+                    7
+                ],
+                "resource": "aws_s3_bucket.logs",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/s3-bucket-should-have-public-access-blocks-defaults-to-false-if-the-public-access-block-is-not-attached",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_6",
+                "bc_check_id": "BC_AWS_NETWORKING_52",
+                "check_name": "Ensure that S3 bucket has a Public Access block",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "assets": {
+                                "__end_line__": 12,
+                                "__start_line__": 9,
+                                "bucket": [
+                                    "shop-assets"
+                                ],
+                                "__address__": "aws_s3_bucket.assets",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "block_public_policy",
+                        "block_public_acls"
+                    ]
+                },
+                "code_block": [
+                    [
+                        9,
+                        "resource \"aws_s3_bucket\" \"assets\" {\n"
+                    ],
+                    [
+                        10,
+                        "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                    ],
+                    [
+                        11,
+                        "  bucket = \"shop-assets\"\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    9,
+                    12
+                ],
+                "resource": "aws_s3_bucket.assets",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/s3-bucket-should-have-public-access-blocks-defaults-to-false-if-the-public-access-block-is-not-attached",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_18",
+                "bc_check_id": "BC_AWS_S3_13",
+                "check_name": "Ensure the S3 bucket has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "logs": {
+                                "__end_line__": 7,
+                                "__start_line__": 5,
+                                "bucket": [
+                                    "shop-logs"
+                                ],
+                                "__address__": "aws_s3_bucket.logs",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "logging",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket\" \"logs\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = \"shop-logs\"\n"
+                    ],
+                    [
+                        7,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    5,
+                    7
+                ],
+                "resource": "aws_s3_bucket.logs",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_145",
+                "bc_check_id": "BC_AWS_GENERAL_56",
+                "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "logs": {
+                                "__end_line__": 7,
+                                "__start_line__": 5,
+                                "bucket": [
+                                    "shop-logs"
+                                ],
+                                "__address__": "aws_s3_bucket.logs",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                        "resource_type",
+                        "rule/apply_server_side_encryption_by_default/sse_algorithm"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket\" \"logs\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = \"shop-logs\"\n"
+                    ],
+                    [
+                        7,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    5,
+                    7
+                ],
+                "resource": "aws_s3_bucket.logs",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-buckets-are-encrypted-with-kms-by-default",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_145",
+                "bc_check_id": "BC_AWS_GENERAL_56",
+                "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "assets": {
+                                "__end_line__": 12,
+                                "__start_line__": 9,
+                                "bucket": [
+                                    "shop-assets"
+                                ],
+                                "__address__": "aws_s3_bucket.assets",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                        "resource_type",
+                        "rule/apply_server_side_encryption_by_default/sse_algorithm"
+                    ]
+                },
+                "code_block": [
+                    [
+                        9,
+                        "resource \"aws_s3_bucket\" \"assets\" {\n"
+                    ],
+                    [
+                        10,
+                        "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                    ],
+                    [
+                        11,
+                        "  bucket = \"shop-assets\"\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    9,
+                    12
+                ],
+                "resource": "aws_s3_bucket.assets",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-buckets-are-encrypted-with-kms-by-default",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_21",
+                "bc_check_id": "BC_AWS_S3_16",
+                "check_name": "Ensure all data stored in the S3 bucket have versioning enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "logs": {
+                                "__end_line__": 7,
+                                "__start_line__": 5,
+                                "bucket": [
+                                    "shop-logs"
+                                ],
+                                "__address__": "aws_s3_bucket.logs",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "versioning/enabled",
+                        "versioning_configuration/status"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket\" \"logs\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = \"shop-logs\"\n"
+                    ],
+                    [
+                        7,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    5,
+                    7
+                ],
+                "resource": "aws_s3_bucket.logs",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-16-enable-versioning",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_21",
+                "bc_check_id": "BC_AWS_S3_16",
+                "check_name": "Ensure all data stored in the S3 bucket have versioning enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "assets": {
+                                "__end_line__": 12,
+                                "__start_line__": 9,
+                                "bucket": [
+                                    "shop-assets"
+                                ],
+                                "__address__": "aws_s3_bucket.assets",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "versioning/enabled",
+                        "versioning_configuration/status"
+                    ]
+                },
+                "code_block": [
+                    [
+                        9,
+                        "resource \"aws_s3_bucket\" \"assets\" {\n"
+                    ],
+                    [
+                        10,
+                        "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                    ],
+                    [
+                        11,
+                        "  bucket = \"shop-assets\"\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    9,
+                    12
+                ],
+                "resource": "aws_s3_bucket.assets",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-16-enable-versioning",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_144",
+                "bc_check_id": "BC_AWS_GENERAL_72",
+                "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "logs": {
+                                "__end_line__": 7,
+                                "__start_line__": 5,
+                                "bucket": [
+                                    "shop-logs"
+                                ],
+                                "__address__": "aws_s3_bucket.logs",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "replication_configuration/rules/*/status",
+                        "rule/*/status"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket\" \"logs\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = \"shop-logs\"\n"
+                    ],
+                    [
+                        7,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    5,
+                    7
+                ],
+                "resource": "aws_s3_bucket.logs",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_144",
+                "bc_check_id": "BC_AWS_GENERAL_72",
+                "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "assets": {
+                                "__end_line__": 12,
+                                "__start_line__": 9,
+                                "bucket": [
+                                    "shop-assets"
+                                ],
+                                "__address__": "aws_s3_bucket.assets",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "replication_configuration/rules/*/status",
+                        "rule/*/status"
+                    ]
+                },
+                "code_block": [
+                    [
+                        9,
+                        "resource \"aws_s3_bucket\" \"assets\" {\n"
+                    ],
+                    [
+                        10,
+                        "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                    ],
+                    [
+                        11,
+                        "  bucket = \"shop-assets\"\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    9,
+                    12
+                ],
+                "resource": "aws_s3_bucket.assets",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_61",
+                "bc_check_id": "BC_AWS_LOGGING_35",
+                "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "logs": {
+                                "__end_line__": 7,
+                                "__start_line__": 5,
+                                "bucket": [
+                                    "shop-logs"
+                                ],
+                                "__address__": "aws_s3_bucket.logs",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "lifecycle_rule"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket\" \"logs\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = \"shop-logs\"\n"
+                    ],
+                    [
+                        7,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    5,
+                    7
+                ],
+                "resource": "aws_s3_bucket.logs",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-61",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_61",
+                "bc_check_id": "BC_AWS_LOGGING_35",
+                "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "assets": {
+                                "__end_line__": 12,
+                                "__start_line__": 9,
+                                "bucket": [
+                                    "shop-assets"
+                                ],
+                                "__address__": "aws_s3_bucket.assets",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "lifecycle_rule"
+                    ]
+                },
+                "code_block": [
+                    [
+                        9,
+                        "resource \"aws_s3_bucket\" \"assets\" {\n"
+                    ],
+                    [
+                        10,
+                        "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                    ],
+                    [
+                        11,
+                        "  bucket = \"shop-assets\"\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/dev/shop/main.tf",
+                "repo_file_path": "/home/dev/shop/main.tf",
+                "file_line_range": [
+                    9,
+                    12
+                ],
+                "resource": "aws_s3_bucket.assets",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-61",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/dev/shop/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 14,
+        "failed": 18,
+        "skipped": 1,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.29"
+    }
+}

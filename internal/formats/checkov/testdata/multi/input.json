@@ -1,0 +1,3720 @@
+[
+    {
+        "check_type": "terraform",
+        "results": {
+            "passed_checks": [
+                {
+                    "check_id": "CKV_AWS_41",
+                    "bc_check_id": "BC_AWS_SECRETS_5",
+                    "check_name": "Ensure no hard coded AWS access key and secret key exists in provider",
+                    "check_result": {
+                        "result": "PASSED",
+                        "evaluated_keys": []
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "provider \"aws\" {\n"
+                        ],
+                        [
+                            2,
+                            "  region = \"us-east-1\"\n"
+                        ],
+                        [
+                            3,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        1,
+                        3
+                    ],
+                    "resource": "aws.default",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.provider.aws.credentials",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/secrets-policies/bc-aws-secrets-5",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_93",
+                    "bc_check_id": "BC_AWS_S3_24",
+                    "check_name": "Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)",
+                    "check_result": {
+                        "result": "PASSED",
+                        "evaluated_keys": [
+                            "policy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.S3ProtectAgainstPolicyLockout",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/bc-aws-s3-24",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_93",
+                    "bc_check_id": "BC_AWS_S3_24",
+                    "check_name": "Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)",
+                    "check_result": {
+                        "result": "PASSED",
+                        "evaluated_keys": [
+                            "policy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.S3ProtectAgainstPolicyLockout",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/bc-aws-s3-24",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_260",
+                    "bc_check_id": "BC_AWS_NETWORKING_67",
+                    "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80",
+                    "check_result": {
+                        "result": "PASSED",
+                        "evaluated_keys": []
+                    },
+                    "code_block": [
+                        [
+                            14,
+                            "resource \"aws_security_group\" \"web\" {\n"
+                        ],
+                        [
+                            15,
+                            "  name = \"web\"\n"
+                        ],
+                        [
+                            16,
+                            "  ingress {\n"
+                        ],
+                        [
+                            17,
+                            "    from_port   = 22\n"
+                        ],
+                        [
+                            18,
+                            "    to_port     = 22\n"
+                        ],
+                        [
+                            19,
+                            "    protocol    = \"tcp\"\n"
+                        ],
+                        [
+                            20,
+                            "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                        ],
+                        [
+                            21,
+                            "  }\n"
+                        ],
+                        [
+                            22,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        14,
+                        22
+                    ],
+                    "resource": "aws_security_group.web",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress80",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-80",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_277",
+                    "bc_check_id": "BC_AWS_NETWORKING_78",
+                    "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port -1",
+                    "check_result": {
+                        "result": "PASSED",
+                        "evaluated_keys": []
+                    },
+                    "code_block": [
+                        [
+                            14,
+                            "resource \"aws_security_group\" \"web\" {\n"
+                        ],
+                        [
+                            15,
+                            "  name = \"web\"\n"
+                        ],
+                        [
+                            16,
+                            "  ingress {\n"
+                        ],
+                        [
+                            17,
+                            "    from_port   = 22\n"
+                        ],
+                        [
+                            18,
+                            "    to_port     = 22\n"
+                        ],
+                        [
+                            19,
+                            "    protocol    = \"tcp\"\n"
+                        ],
+                        [
+                            20,
+                            "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                        ],
+                        [
+                            21,
+                            "  }\n"
+                        ],
+                        [
+                            22,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        14,
+                        22
+                    ],
+                    "resource": "aws_security_group.web",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngressAny",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-aws-security-group-does-not-allow-all-traffic-on-all-ports",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_25",
+                    "bc_check_id": "BC_AWS_NETWORKING_2",
+                    "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389",
+                    "check_result": {
+                        "result": "PASSED",
+                        "evaluated_keys": []
+                    },
+                    "code_block": [
+                        [
+                            14,
+                            "resource \"aws_security_group\" \"web\" {\n"
+                        ],
+                        [
+                            15,
+                            "  name = \"web\"\n"
+                        ],
+                        [
+                            16,
+                            "  ingress {\n"
+                        ],
+                        [
+                            17,
+                            "    from_port   = 22\n"
+                        ],
+                        [
+                            18,
+                            "    to_port     = 22\n"
+                        ],
+                        [
+                            19,
+                            "    protocol    = \"tcp\"\n"
+                        ],
+                        [
+                            20,
+                            "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                        ],
+                        [
+                            21,
+                            "  }\n"
+                        ],
+                        [
+                            22,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        14,
+                        22
+                    ],
+                    "resource": "aws_security_group.web",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress3389",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-2",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_382",
+                    "bc_check_id": "BC_AWS_IAM_93",
+                    "check_name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1",
+                    "check_result": {
+                        "result": "PASSED",
+                        "evaluated_keys": [
+                            "from_port",
+                            "to_port",
+                            "cidr_ipv4",
+                            "cidr_ipv6"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            14,
+                            "resource \"aws_security_group\" \"web\" {\n"
+                        ],
+                        [
+                            15,
+                            "  name = \"web\"\n"
+                        ],
+                        [
+                            16,
+                            "  ingress {\n"
+                        ],
+                        [
+                            17,
+                            "    from_port   = 22\n"
+                        ],
+                        [
+                            18,
+                            "    to_port     = 22\n"
+                        ],
+                        [
+                            19,
+                            "    protocol    = \"tcp\"\n"
+                        ],
+                        [
+                            20,
+                            "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                        ],
+                        [
+                            21,
+                            "  }\n"
+                        ],
+                        [
+                            22,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        14,
+                        22
+                    ],
+                    "resource": "aws_security_group.web",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedEgressAny",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_20",
+                    "bc_check_id": "BC_AWS_S3_1",
+                    "check_name": "S3 Bucket has an ACL defined which allows public READ access.",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "access_control_policy/grant/*/grantee/uri",
+                            "access_control_policy/grant",
+                            "resource_type",
+                            "acl",
+                            "access_control_policy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-1-acl-read-permissions-everyone",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_20",
+                    "bc_check_id": "BC_AWS_S3_1",
+                    "check_name": "S3 Bucket has an ACL defined which allows public READ access.",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "access_control_policy/grant/*/grantee/uri",
+                            "access_control_policy/grant",
+                            "resource_type",
+                            "acl",
+                            "access_control_policy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-1-acl-read-permissions-everyone",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_57",
+                    "bc_check_id": "BC_AWS_S3_2",
+                    "check_name": "S3 Bucket has an ACL defined which allows public WRITE access.",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "access_control_policy/grant/*/grantee/uri",
+                            "access_control_policy/grant",
+                            "access_control_policy/grant/*/permission",
+                            "resource_type",
+                            "acl",
+                            "access_control_policy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-2-acl-write-permissions-everyone",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_57",
+                    "bc_check_id": "BC_AWS_S3_2",
+                    "check_name": "S3 Bucket has an ACL defined which allows public WRITE access.",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "access_control_policy/grant/*/grantee/uri",
+                            "access_control_policy/grant",
+                            "access_control_policy/grant/*/permission",
+                            "resource_type",
+                            "acl",
+                            "access_control_policy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-2-acl-write-permissions-everyone",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_2",
+                    "bc_check_id": "BC_AWS_GENERAL_60",
+                    "check_name": "Ensure that only encrypted EBS volumes are attached to EC2 instances",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "aws_ebs_volume": {
+                                "data": {
+                                    "__end_line__": 4,
+                                    "__start_line__": 1,
+                                    "availability_zone": [
+                                        "us-east-1a"
+                                    ],
+                                    "size": [
+                                        10
+                                    ],
+                                    "__address__": "module.store.aws_ebs_volume.data",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "encrypted",
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "resource \"aws_ebs_volume\" \"data\" {\n"
+                        ],
+                        [
+                            2,
+                            "  availability_zone = \"us-east-1a\"\n"
+                        ],
+                        [
+                            3,
+                            "  size              = 10\n"
+                        ],
+                        [
+                            4,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/modules/store/main.tf",
+                    "file_abs_path": "/home/dev/shop/modules/store/main.tf",
+                    "repo_file_path": "/home/dev/shop/modules/store/main.tf",
+                    "file_line_range": [
+                        1,
+                        4
+                    ],
+                    "resource": "module.store.aws_ebs_volume.data",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-only-encrypted-ebs-volumes-are-attached-to-ec2-instances",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/modules/store/main.tf",
+                    "breadcrumbs": {
+                        "source_module_": [
+                            {
+                                "type": "module",
+                                "name": "store",
+                                "path": "/home/dev/shop/main.tf",
+                                "idx": 0,
+                                "source_module_object": null
+                            }
+                        ]
+                    }
+                },
+                {
+                    "check_id": "CKV_AWS_19",
+                    "bc_check_id": "BC_AWS_S3_14",
+                    "check_name": "Ensure all data stored in the S3 bucket is securely encrypted at rest",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                            "resource_type",
+                            "rule/apply_server_side_encryption_by_default/sse_algorithm"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-14-data-encrypted-at-rest",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_19",
+                    "bc_check_id": "BC_AWS_S3_14",
+                    "check_name": "Ensure all data stored in the S3 bucket is securely encrypted at rest",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                            "resource_type",
+                            "rule/apply_server_side_encryption_by_default/sse_algorithm"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-14-data-encrypted-at-rest",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                }
+            ],
+            "failed_checks": [
+                {
+                    "check_id": "CKV_AWS_24",
+                    "bc_check_id": "BC_AWS_NETWORKING_1",
+                    "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "ingress/[0]/from_port",
+                            "ingress/[0]/to_port",
+                            "ingress/[0]/cidr_blocks",
+                            "ingress/[0]/ipv6_cidr_blocks"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            14,
+                            "resource \"aws_security_group\" \"web\" {\n"
+                        ],
+                        [
+                            15,
+                            "  name = \"web\"\n"
+                        ],
+                        [
+                            16,
+                            "  ingress {\n"
+                        ],
+                        [
+                            17,
+                            "    from_port   = 22\n"
+                        ],
+                        [
+                            18,
+                            "    to_port     = 22\n"
+                        ],
+                        [
+                            19,
+                            "    protocol    = \"tcp\"\n"
+                        ],
+                        [
+                            20,
+                            "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                        ],
+                        [
+                            21,
+                            "  }\n"
+                        ],
+                        [
+                            22,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        14,
+                        22
+                    ],
+                    "resource": "aws_security_group.web",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_23",
+                    "bc_check_id": "BC_AWS_NETWORKING_31",
+                    "check_name": "Ensure every security group and rule has a description",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "ingress/[0]"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            14,
+                            "resource \"aws_security_group\" \"web\" {\n"
+                        ],
+                        [
+                            15,
+                            "  name = \"web\"\n"
+                        ],
+                        [
+                            16,
+                            "  ingress {\n"
+                        ],
+                        [
+                            17,
+                            "    from_port   = 22\n"
+                        ],
+                        [
+                            18,
+                            "    to_port     = 22\n"
+                        ],
+                        [
+                            19,
+                            "    protocol    = \"tcp\"\n"
+                        ],
+                        [
+                            20,
+                            "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                        ],
+                        [
+                            21,
+                            "  }\n"
+                        ],
+                        [
+                            22,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        14,
+                        22
+                    ],
+                    "resource": "aws_security_group.web",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_189",
+                    "bc_check_id": "BC_AWS_GENERAL_109",
+                    "check_name": "Ensure EBS Volume is encrypted by KMS using a customer managed Key (CMK)",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "kms_key_id"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "resource \"aws_ebs_volume\" \"data\" {\n"
+                        ],
+                        [
+                            2,
+                            "  availability_zone = \"us-east-1a\"\n"
+                        ],
+                        [
+                            3,
+                            "  size              = 10\n"
+                        ],
+                        [
+                            4,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/modules/store/main.tf",
+                    "file_abs_path": "/home/dev/shop/modules/store/main.tf",
+                    "repo_file_path": "/home/dev/shop/modules/store/main.tf",
+                    "file_line_range": [
+                        1,
+                        4
+                    ],
+                    "resource": "module.store.aws_ebs_volume.data",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.EBSVolumeEncryptedWithCMK",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": "/main.tf",
+                    "caller_file_line_range": [
+                        24,
+                        26
+                    ],
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-109",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/modules/store/main.tf",
+                    "breadcrumbs": {
+                        "source_module_": [
+                            {
+                                "type": "module",
+                                "name": "store",
+                                "path": "/home/dev/shop/main.tf",
+                                "idx": 0,
+                                "source_module_object": null
+                            }
+                        ]
+                    }
+                },
+                {
+                    "check_id": "CKV_AWS_3",
+                    "bc_check_id": "BC_AWS_GENERAL_3",
+                    "check_name": "Ensure all data stored in the EBS is securely encrypted",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "encrypted"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "resource \"aws_ebs_volume\" \"data\" {\n"
+                        ],
+                        [
+                            2,
+                            "  availability_zone = \"us-east-1a\"\n"
+                        ],
+                        [
+                            3,
+                            "  size              = 10\n"
+                        ],
+                        [
+                            4,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/modules/store/main.tf",
+                    "file_abs_path": "/home/dev/shop/modules/store/main.tf",
+                    "repo_file_path": "/home/dev/shop/modules/store/main.tf",
+                    "file_line_range": [
+                        1,
+                        4
+                    ],
+                    "resource": "module.store.aws_ebs_volume.data",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.EBSEncryption",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": "/main.tf",
+                    "caller_file_line_range": [
+                        24,
+                        26
+                    ],
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-3-encrypt-ebs-volume",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/modules/store/main.tf",
+                    "breadcrumbs": {
+                        "source_module_": [
+                            {
+                                "type": "module",
+                                "name": "store",
+                                "path": "/home/dev/shop/main.tf",
+                                "idx": 0,
+                                "source_module_object": null
+                            }
+                        ]
+                    }
+                },
+                {
+                    "check_id": "CKV2_AWS_5",
+                    "bc_check_id": "BC_AWS_NETWORKING_51",
+                    "check_name": "Ensure that Security Groups are attached to another resource",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_security_group": {
+                                "web": {
+                                    "__end_line__": 22,
+                                    "__start_line__": 14,
+                                    "ingress": [
+                                        {
+                                            "cidr_blocks": [
+                                                [
+                                                    "0.0.0.0/0"
+                                                ]
+                                            ],
+                                            "from_port": [
+                                                22
+                                            ],
+                                            "protocol": [
+                                                "tcp"
+                                            ],
+                                            "to_port": [
+                                                22
+                                            ]
+                                        }
+                                    ],
+                                    "name": [
+                                        "web"
+                                    ],
+                                    "__address__": "aws_security_group.web",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "networking",
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            14,
+                            "resource \"aws_security_group\" \"web\" {\n"
+                        ],
+                        [
+                            15,
+                            "  name = \"web\"\n"
+                        ],
+                        [
+                            16,
+                            "  ingress {\n"
+                        ],
+                        [
+                            17,
+                            "    from_port   = 22\n"
+                        ],
+                        [
+                            18,
+                            "    to_port     = 22\n"
+                        ],
+                        [
+                            19,
+                            "    protocol    = \"tcp\"\n"
+                        ],
+                        [
+                            20,
+                            "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                        ],
+                        [
+                            21,
+                            "  }\n"
+                        ],
+                        [
+                            22,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        14,
+                        22
+                    ],
+                    "resource": "aws_security_group.web",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_62",
+                    "bc_check_id": "BC_AWS_LOGGING_36",
+                    "check_name": "Ensure S3 buckets should have event notifications enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-62",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_62",
+                    "bc_check_id": "BC_AWS_LOGGING_36",
+                    "check_name": "Ensure S3 buckets should have event notifications enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-62",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_6",
+                    "bc_check_id": "BC_AWS_NETWORKING_52",
+                    "check_name": "Ensure that S3 bucket has a Public Access block",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "block_public_acls",
+                            "block_public_policy",
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/s3-bucket-should-have-public-access-blocks-defaults-to-false-if-the-public-access-block-is-not-attached",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_6",
+                    "bc_check_id": "BC_AWS_NETWORKING_52",
+                    "check_name": "Ensure that S3 bucket has a Public Access block",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "block_public_acls",
+                            "block_public_policy",
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/s3-bucket-should-have-public-access-blocks-defaults-to-false-if-the-public-access-block-is-not-attached",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_18",
+                    "bc_check_id": "BC_AWS_S3_13",
+                    "check_name": "Ensure the S3 bucket has access logging enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type",
+                            "logging"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_61",
+                    "bc_check_id": "BC_AWS_LOGGING_35",
+                    "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type",
+                            "lifecycle_rule"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-61",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_61",
+                    "bc_check_id": "BC_AWS_LOGGING_35",
+                    "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type",
+                            "lifecycle_rule"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-61",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_145",
+                    "bc_check_id": "BC_AWS_GENERAL_56",
+                    "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                            "resource_type",
+                            "rule/apply_server_side_encryption_by_default/sse_algorithm"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-buckets-are-encrypted-with-kms-by-default",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_145",
+                    "bc_check_id": "BC_AWS_GENERAL_56",
+                    "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                            "resource_type",
+                            "rule/apply_server_side_encryption_by_default/sse_algorithm"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-buckets-are-encrypted-with-kms-by-default",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_21",
+                    "bc_check_id": "BC_AWS_S3_16",
+                    "check_name": "Ensure all data stored in the S3 bucket have versioning enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "versioning_configuration/status",
+                            "resource_type",
+                            "versioning/enabled"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-16-enable-versioning",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_21",
+                    "bc_check_id": "BC_AWS_S3_16",
+                    "check_name": "Ensure all data stored in the S3 bucket have versioning enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "versioning_configuration/status",
+                            "resource_type",
+                            "versioning/enabled"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-16-enable-versioning",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_144",
+                    "bc_check_id": "BC_AWS_GENERAL_72",
+                    "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "logs": {
+                                    "__end_line__": 7,
+                                    "__start_line__": 5,
+                                    "bucket": [
+                                        "shop-logs"
+                                    ],
+                                    "__address__": "aws_s3_bucket.logs",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "replication_configuration/rules/*/status",
+                            "resource_type",
+                            "rule/*/status"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            5,
+                            "resource \"aws_s3_bucket\" \"logs\" {\n"
+                        ],
+                        [
+                            6,
+                            "  bucket = \"shop-logs\"\n"
+                        ],
+                        [
+                            7,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        5,
+                        7
+                    ],
+                    "resource": "aws_s3_bucket.logs",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_144",
+                    "bc_check_id": "BC_AWS_GENERAL_72",
+                    "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "replication_configuration/rules/*/status",
+                            "resource_type",
+                            "rule/*/status"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                }
+            ],
+            "skipped_checks": [
+                {
+                    "check_id": "CKV_AWS_18",
+                    "bc_check_id": "BC_AWS_S3_13",
+                    "check_name": "Ensure the S3 bucket has access logging enabled",
+                    "check_result": {
+                        "result": "SKIPPED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "assets": {
+                                    "__end_line__": 12,
+                                    "__start_line__": 9,
+                                    "bucket": [
+                                        "shop-assets"
+                                    ],
+                                    "__address__": "aws_s3_bucket.assets",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type",
+                            "logging"
+                        ],
+                        "suppress_comment": "access logs go to the central account"
+                    },
+                    "code_block": [
+                        [
+                            9,
+                            "resource \"aws_s3_bucket\" \"assets\" {\n"
+                        ],
+                        [
+                            10,
+                            "  # checkov:skip=CKV_AWS_18:access logs go to the central account\n"
+                        ],
+                        [
+                            11,
+                            "  bucket = \"shop-assets\"\n"
+                        ],
+                        [
+                            12,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/dev/shop/main.tf",
+                    "repo_file_path": "/home/dev/shop/main.tf",
+                    "file_line_range": [
+                        9,
+                        12
+                    ],
+                    "resource": "aws_s3_bucket.assets",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/dev/shop/main.tf"
+                }
+            ],
+            "parsing_errors": []
+        },
+        "summary": {
+            "passed": 14,
+            "failed": 18,
+            "skipped": 1,
+            "parsing_errors": 0,
+            "resource_count": 4,
+            "checkov_version": "3.3.29"
+        },
+        "url": "Add an api key '--bc-api-key <api-key>' to see more detailed insights via https://bridgecrew.cloud"
+    },
+    {
+        "check_type": "dockerfile",
+        "results": {
+            "passed_checks": [
+                {
+                    "check_id": "CKV_DOCKER_11",
+                    "bc_check_id": "BC_DKR_GENERAL_9",
+                    "check_name": "Ensure From Alias are unique for multistage builds.",
+                    "check_result": {
+                        "result": "PASSED",
+                        "results_configuration": null
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "FROM ubuntu:latest\n"
+                        ],
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ],
+                        [
+                            3,
+                            "COPY . /app\n"
+                        ],
+                        [
+                            4,
+                            "CMD [\"/app/run\"]"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        1,
+                        4
+                    ],
+                    "resource": "/Dockerfile.",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.AliasIsUnique",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-from-alias-is-unique-for-multistage-builds",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_DOCKER_9",
+                    "bc_check_id": "BC_DKR_NETWORKING_1",
+                    "check_name": "Ensure that APT isn't used",
+                    "check_result": {
+                        "result": "PASSED",
+                        "results_configuration": null
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "FROM ubuntu:latest\n"
+                        ],
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ],
+                        [
+                            3,
+                            "COPY . /app\n"
+                        ],
+                        [
+                            4,
+                            "CMD [\"/app/run\"]"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        1,
+                        4
+                    ],
+                    "resource": "/Dockerfile.",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.RunUsingAPT",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-apt-is-not-used",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_1",
+                    "bc_check_id": "BC_DKR_GENERAL_11",
+                    "check_name": "Ensure that sudo isn't used",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-dont-use-sudo",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_12",
+                    "bc_check_id": "BC_DKR_GENERAL_22",
+                    "check_name": "Ensure that certificate validation isn't disabled for npm via the 'NPM_CONFIG_STRICT_SSL' environment variable",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-npm-strict-ssl",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_6",
+                    "bc_check_id": "BC_DKR_GENERAL_16",
+                    "check_name": "Ensure that certificate validation isn't disabled with the NODE_TLS_REJECT_UNAUTHORIZED environment variable",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-node-tls-secure",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_5",
+                    "bc_check_id": "BC_DKR_GENERAL_15",
+                    "check_name": "Ensure that certificate validation isn't disabled with the PYTHONHTTPSVERIFY environment variable",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-PYTHONHTTPSVERIFY-secure",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_17",
+                    "bc_check_id": "BC_DKR_GENERAL_27",
+                    "check_name": "Ensure that 'chpasswd' is not used to set or remove passwords",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/bc-docker-2-17",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_14",
+                    "bc_check_id": "BC_DKR_GENERAL_24",
+                    "check_name": "Ensure that certificate validation isn't disabled for git by setting the environment variable 'GIT_SSL_NO_VERIFY' to any value",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-git-ssl",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_16",
+                    "bc_check_id": "BC_DKR_GENERAL_26",
+                    "check_name": "Ensure that certificate validation isn't disabled with pip via the 'PIP_TRUSTED_HOST' environment variable",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-pip-trusted-host",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_11",
+                    "bc_check_id": "BC_DKR_GENERAL_21",
+                    "check_name": "Ensure that the '--force-yes' option is not used, as it disables signature validation and allows packages to be downgraded which can leave the system in a broken or inconsistent state",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-apt-force",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_4",
+                    "bc_check_id": "BC_DKR_GENERAL_14",
+                    "check_name": "Ensure that certificate validation isn't disabled with the pip '--trusted-host' option",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-pip-secure",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_13",
+                    "bc_check_id": "BC_DKR_GENERAL_23",
+                    "check_name": "Ensure that certificate validation isn't disabled for npm or yarn by setting the option strict-ssl to false",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-npm-strict-ssl2",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_9",
+                    "bc_check_id": "BC_DKR_GENERAL_19",
+                    "check_name": "Ensure that packages with untrusted or missing GPG signatures are not used by dnf, tdnf, or yum via the '--nogpgcheck' option",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-yum-signed",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_8",
+                    "bc_check_id": "BC_DKR_GENERAL_18",
+                    "check_name": "Ensure that packages with untrusted or missing signatures are not used by apt-get via the '--allow-unauthenticated' option",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-apt-authenticated",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_3",
+                    "bc_check_id": "BC_DKR_GENERAL_13",
+                    "check_name": "Ensure that certificate validation isn't disabled with wget",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-wget-secure",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_7",
+                    "bc_check_id": "BC_DKR_GENERAL_17",
+                    "check_name": "Ensure that packages with untrusted or missing signatures are not used by apk via the '--allow-untrusted' option",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-apk-trusted",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_10",
+                    "bc_check_id": "BC_DKR_GENERAL_20",
+                    "check_name": "Ensure that packages with untrusted or missing signatures are not used by rpm via the '--nodigest', '--nosignature', '--noverify', or '--nofiledigest' options",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-rpm-signed",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_2",
+                    "bc_check_id": "BC_DKR_GENERAL_12",
+                    "check_name": "Ensure that certificate validation isn't disabled with curl",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-curl-secure",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_15",
+                    "bc_check_id": "BC_DKR_GENERAL_25",
+                    "check_name": "Ensure that the yum and dnf package managers are not configured to disable SSL certificate validation via the 'sslverify' configuration option",
+                    "check_result": {
+                        "result": "PASSED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update",
+                                "__startline__": 1,
+                                "__endline__": 1
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update\n",
+                            "value": "apt-get update",
+                            "__startline__": 1,
+                            "__endline__": 1,
+                            "resource_type": "RUN",
+                            "hash": "e270e6051aa09b2ed42bf091e5acd28fae3ea627803263fa3fe58c3c8b6418ea"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-docker-yum-ssl",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                }
+            ],
+            "failed_checks": [
+                {
+                    "check_id": "CKV_DOCKER_7",
+                    "bc_check_id": "BC_DKR_7",
+                    "check_name": "Ensure the base image uses a non latest version tag",
+                    "check_result": {
+                        "result": "FAILED",
+                        "results_configuration": [
+                            {
+                                "instruction": "FROM",
+                                "startline": 0,
+                                "endline": 0,
+                                "content": "FROM ubuntu:latest\n",
+                                "value": "ubuntu:latest"
+                            }
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "FROM ubuntu:latest\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        1,
+                        1
+                    ],
+                    "resource": "/Dockerfile.FROM",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.ReferenceLatestTag",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-the-base-image-uses-a-non-latest-version-tag",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_DOCKER_5",
+                    "bc_check_id": "BC_DKR_4",
+                    "check_name": "Ensure update instructions are not use alone in the Dockerfile",
+                    "check_result": {
+                        "result": "FAILED",
+                        "results_configuration": [
+                            {
+                                "instruction": "RUN",
+                                "startline": 1,
+                                "endline": 1,
+                                "content": "RUN apt-get update\n",
+                                "value": "apt-get update"
+                            }
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        2,
+                        2
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.UpdateNotAlone",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-update-instructions-are-not-used-alone-in-the-dockerfile",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_DOCKER_2",
+                    "bc_check_id": "BC_DKR_2",
+                    "check_name": "Ensure that HEALTHCHECK instructions have been added to container images",
+                    "check_result": {
+                        "result": "FAILED",
+                        "results_configuration": null
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "FROM ubuntu:latest\n"
+                        ],
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ],
+                        [
+                            3,
+                            "COPY . /app\n"
+                        ],
+                        [
+                            4,
+                            "CMD [\"/app/run\"]"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        1,
+                        4
+                    ],
+                    "resource": "/Dockerfile.",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.HealthcheckExists",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-that-healthcheck-instructions-have-been-added-to-container-images",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_DOCKER_3",
+                    "bc_check_id": "BC_DKR_3",
+                    "check_name": "Ensure that a user for the container has been created",
+                    "check_result": {
+                        "result": "FAILED",
+                        "results_configuration": null
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "FROM ubuntu:latest\n"
+                        ],
+                        [
+                            2,
+                            "RUN apt-get update\n"
+                        ],
+                        [
+                            3,
+                            "COPY . /app\n"
+                        ],
+                        [
+                            4,
+                            "CMD [\"/app/run\"]"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/dev/shop/Dockerfile",
+                    "repo_file_path": "/home/dev/shop/Dockerfile",
+                    "file_line_range": [
+                        1,
+                        4
+                    ],
+                    "resource": "/Dockerfile.",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.UserExists",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-that-a-user-for-the-container-has-been-created",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                }
+            ],
+            "skipped_checks": [],
+            "parsing_errors": []
+        },
+        "summary": {
+            "passed": 19,
+            "failed": 4,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 1,
+            "checkov_version": "3.3.29"
+        },
+        "url": "Add an api key '--bc-api-key <api-key>' to see more detailed insights via https://bridgecrew.cloud"
+    }
+]
