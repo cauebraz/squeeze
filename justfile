@@ -33,6 +33,25 @@ check: fmt-check vet lint tidy-check test
 tidy-check:
     go mod tidy -diff
 
+commits base="origin/main":
+    scripts/check-commits.sh {{base}}
+
+check-each base="origin/main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    work="$(mktemp -d)"
+    trap 'git worktree remove --force "$work" 2>/dev/null || true; rm -rf "$work"' EXIT
+    for c in $(git rev-list --reverse {{base}}..HEAD); do
+        echo "== $(git log -1 --format='%h %s' "$c")"
+        git worktree remove --force "$work" 2>/dev/null || true
+        git worktree add -q --detach "$work" "$c"
+        if ! out="$(cd "$work" && just --quiet check 2>&1)"; then
+            echo "$out"
+            echo "just check fails at $(git rev-parse --short "$c")"
+            exit 1
+        fi
+    done
+
 cover:
     go test -coverpkg=./... -coverprofile=coverage.out ./...
     total="$(go tool cover -func=coverage.out | awk '/^total:/ {sub("%", "", $3); print $3}')"; \
