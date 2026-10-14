@@ -34,7 +34,7 @@ internal/formattest/    contract suite every format runs
 internal/formats/<name>/ one package per format; testdata/<case>/ holds input, args, want.txt, want.json
 docs/formats/<name>.md  user documentation of one format
 scripts/                check-commits.sh, behind just commits
-bench/                  agent measurement: tasks with verifiers and a runner for the Anthropic, OpenAI and OpenRouter APIs; bench/README.md holds the last results
+bench/                  agent measurement: tasks with verifiers and a runner for the Anthropic, OpenAI and OpenRouter APIs; bench/README.md and bench/results.svg hold the last results
 ```
 
 `internal/core` imports no format. `internal/cli` names a format in one place only, `DefaultRegistry`. Tool knowledge lives under `internal/formats/<name>/` and `docs/formats/<name>.md`.

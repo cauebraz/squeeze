@@ -89,5 +89,8 @@ conformance ref=terraform_ref:
 measure model runs="5" *args:
     bench/run.py --model {{model}} --runs {{runs}} {{args}}
 
+chart file:
+    bench/run.py --chart {{file}}
+
 measure-self-test:
     bench/run.py --self-test

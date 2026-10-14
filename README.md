@@ -22,6 +22,10 @@ terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace
 
 The plan JSON for this example is 6,294 bytes; the output is 485.
 
+On four agent tasks, an agent that pipes the tool through squeeze fixes the same defects with 65 percent fewer tokens ([bench/README.md](bench/README.md)):
+
+![Tokens an agent spends per task with and without squeeze](bench/results.svg)
+
 ## Why
 
 A coding agent reads tool output as context. That output is written for humans or for other programs, not for a model with a token budget:
@@ -145,6 +149,7 @@ just build          # bin/squeeze with the version from git describe
 just commits        # commit messages and branch name since origin/main
 just check-each     # just check on every commit since origin/main
 just measure <model> # tokens of an agent with and without squeeze, on the provider whose key is set (bench/run.py -h); results in bench/README.md
+just chart <file>   # bench/results.svg from a bench/results/<file>.jsonl run
 ```
 
 Go 1.26 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.
