@@ -148,6 +148,7 @@ func TestConditions(t *testing.T) {
 		"deferred":       {"change", "deferred", "fail", "incomplete"},
 		"errored":        {"change", "error", "fail", "incomplete"},
 		"forget-replace": {"change", "forget", "replace"},
+		"checks":         {"change", "check", "warning"},
 		"import":         {"change", "import"},
 		"moved":          {"change", "forget", "move"},
 	}

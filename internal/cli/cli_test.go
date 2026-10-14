@@ -567,7 +567,7 @@ func TestRunFailOn(t *testing.T) {
 		"matched several":         {replace, []string{"--fail-on", "drift,replace", "--fail-on", "destroy"}, ExitCondition, "squeeze: --fail-on matched: destroy, replace\n"},
 		"matched under a format":  {replace, []string{"tfplan", "--fail-on=replace"}, ExitCondition, "squeeze: --fail-on matched: replace\n"},
 		"not matched":             {noop, []string{"--fail-on", "destroy,change"}, ExitOK, ""},
-		"unknown condition auto":  {replace, []string{"--fail-on", "explode"}, ExitUsage, `--fail-on: tfplan has no condition "explode" (conditions: change, deferred`},
+		"unknown condition auto":  {replace, []string{"--fail-on", "explode"}, ExitUsage, `--fail-on: tfplan has no condition "explode" (conditions: change, check, deferred`},
 		"unknown condition named": {replace, []string{"tfplan", "--fail-on", "explode"}, ExitUsage, `--fail-on: tfplan has no condition "explode"`},
 		"empty name":              {replace, []string{"--fail-on", "destroy,"}, ExitUsage, "empty condition name"},
 	}
@@ -616,7 +616,7 @@ func TestRunFailOnJSON(t *testing.T) {
 func TestFormatHelpListsConditions(t *testing.T) {
 	t.Parallel()
 	r := runCLI(t, nil, "tfplan", "-h")
-	if !strings.Contains(r.stdout, "Conditions for --fail-on:\n  change, deferred, destroy, drift, error, fail, forget, import, incomplete, move, replace\n") {
+	if !strings.Contains(r.stdout, "Conditions for --fail-on:\n  change, check, deferred, destroy, drift, error, fail, forget, import, incomplete, move, replace, warning\n") {
 		t.Errorf("help lacks the condition list:\n%s", r.stdout)
 	}
 	if r := runCLI(t, nil, "generic", "-h"); !strings.Contains(r.stdout, "Conditions for --fail-on:\n  error, warning\n  fail: accepted, never present for this format\n") {

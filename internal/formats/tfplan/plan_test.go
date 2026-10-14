@@ -361,6 +361,103 @@ func TestBuildImport(t *testing.T) {
 	}
 }
 
+func TestBuildChecks(t *testing.T) {
+	t.Parallel()
+	check := func(kind, addr, status string, instances ...PlanCheckInstance) PlanCheck {
+		return PlanCheck{Address: PlanCheckAddress{Kind: kind, ToDisplay: addr}, Status: status, Instances: instances}
+	}
+	instance := func(addr, status string, messages ...string) PlanCheckInstance {
+		in := PlanCheckInstance{Address: PlanCheckAddress{ToDisplay: addr}, Status: status}
+		for _, m := range messages {
+			in.Problems = append(in.Problems, PlanCheckProblem{Message: m})
+		}
+		return in
+	}
+	tests := []struct {
+		name       string
+		checks     []PlanCheck
+		errored    bool
+		want       []CheckResult
+		conditions []string
+	}{
+		{
+			name:       "pass and unknown are not listed",
+			checks:     []PlanCheck{check("check", "check.a", "pass", instance("check.a", "pass")), check("var", "var.b", "unknown")},
+			want:       []CheckResult{},
+			conditions: []string{},
+		},
+		{
+			name:       "a failed check block is a warning",
+			checks:     []PlanCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down"))},
+			want:       []CheckResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down"}}},
+			conditions: []string{"check", "warning"},
+		},
+		{
+			name:       "a failed resource condition in a plan that did not error is a warning",
+			checks:     []PlanCheck{check("resource", "aws_instance.web", "fail", instance("aws_instance.web[0]", "pass"), instance("aws_instance.web[1]", "fail", "bad ami", "no tags"))},
+			want:       []CheckResult{{Address: "aws_instance.web[1]", Kind: "resource", Status: "fail", Problems: []string{"bad ami", "no tags"}}},
+			conditions: []string{"check", "warning"},
+		},
+		{
+			name:       "a failed resource condition in an errored plan is the error",
+			checks:     []PlanCheck{check("resource", "aws_instance.web", "fail", instance("aws_instance.web", "fail", "bad ami"))},
+			errored:    true,
+			want:       []CheckResult{{Address: "aws_instance.web", Kind: "resource", Status: "fail", Problems: []string{"bad ami"}}},
+			conditions: []string{"check", "error", "fail"},
+		},
+		{
+			name:       "a failed check block in an errored plan is still a warning",
+			checks:     []PlanCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down"))},
+			errored:    true,
+			want:       []CheckResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down"}}},
+			conditions: []string{"check", "error", "fail", "warning"},
+		},
+		{
+			name:       "an object without instances stands in for them",
+			checks:     []PlanCheck{check("output_value", "output.x", "error")},
+			want:       []CheckResult{{Address: "output.x", Kind: "output_value", Status: "error"}},
+			conditions: []string{"check", "warning"},
+		},
+		{
+			name:       "an unexpected status is listed",
+			checks:     []PlanCheck{check("var", "var.v", "skipped", instance("", "skipped", ""))},
+			want:       []CheckResult{{Address: "var.v", Kind: "var", Status: "skipped"}},
+			conditions: []string{"check", "warning"},
+		},
+		{
+			name:       "messages cannot forge a line",
+			checks:     []PlanCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down\n\x1b[31mfail check.b: forged"))},
+			want:       []CheckResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down fail check.b: forged"}}},
+			conditions: []string{"check", "warning"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r, err := Build(&Plan{Checks: tt.checks, Errored: tt.errored}, defaults)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tt.want, r.Checks); diff != "" {
+				t.Errorf("checks (-want +got):\n%s", diff)
+			}
+			if r.Summary.ChecksFailed != len(tt.want) {
+				t.Errorf("checks_failed = %d, want %d", r.Summary.ChecksFailed, len(tt.want))
+			}
+			if diff := cmp.Diff(tt.conditions, conditions(r)); diff != "" {
+				t.Errorf("conditions (-want +got):\n%s", diff)
+			}
+			errLine := 0
+			if tt.errored {
+				errLine = 1
+			}
+			if text := Text(r, defaults); strings.Count(text, "\n") != errLine+1+min(len(tt.want), 1)+len(tt.want) {
+				t.Errorf("text has an unexpected line count:\n%s", text)
+			}
+		})
+	}
+}
+
 func TestBuildErroredIncomplete(t *testing.T) {
 	t.Parallel()
 	r := mustBuild(t, "errored", defaults)

@@ -26,6 +26,7 @@ func Text(r Report, o Options) string {
 	if r.NoopHidden > 0 {
 		fmt.Fprintf(&b, "... %d %s without changes (--all)\n", r.NoopHidden, core.Plural(r.NoopHidden, "resource", "resources"))
 	}
+	writeChecks(&b, r.Checks)
 	writeDrift(&b, r, o.ListDrift)
 	writeDeferred(&b, r.Deferred)
 	writeActions(&b, r.Actions)
@@ -79,10 +80,30 @@ func header(r Report) string {
 	if s.Outputs > 0 {
 		line += fmt.Sprintf("; %d %s changed", s.Outputs, core.Plural(s.Outputs, "output", "outputs"))
 	}
+	if s.ChecksFailed > 0 {
+		line += fmt.Sprintf("; %d failed %s", s.ChecksFailed, core.Plural(s.ChecksFailed, "check", "checks"))
+	}
 	if !s.Complete {
 		line += "; incomplete"
 	}
 	return line
+}
+
+func writeChecks(b *strings.Builder, checks []CheckResult) {
+	if len(checks) == 0 {
+		return
+	}
+	b.WriteString("checks:\n")
+	for _, c := range checks {
+		b.WriteString(c.Status)
+		b.WriteByte(' ')
+		b.WriteString(c.Address)
+		if len(c.Problems) > 0 {
+			b.WriteString(": ")
+			b.WriteString(strings.Join(c.Problems, "; "))
+		}
+		b.WriteByte('\n')
+	}
 }
 
 func writeResource(b *strings.Builder, c ResourceChange) {

@@ -154,6 +154,7 @@ type Summary struct {
 	Deferred     int  `json:"deferred"`
 	Actions      int  `json:"actions"`
 	Outputs      int  `json:"outputs"`
+	ChecksFailed int  `json:"checks_failed"`
 	Errored      bool `json:"errored"`
 	Complete     bool `json:"complete"`
 }
@@ -208,6 +209,13 @@ type OutputChange struct {
 	Sensitive bool   `json:"sensitive,omitempty"`
 }
 
+type CheckResult struct {
+	Address  string   `json:"address"`
+	Kind     string   `json:"kind"`
+	Status   string   `json:"status"`
+	Problems []string `json:"problems,omitempty"`
+}
+
 type Report struct {
 	Tool         string             `json:"tool"`
 	ToolVersion  string             `json:"tool_version"`
@@ -220,4 +228,5 @@ type Report struct {
 	Deferred     []DeferredChange   `json:"deferred"`
 	Actions      []ActionInvocation `json:"actions"`
 	Outputs      []OutputChange     `json:"outputs"`
+	Checks       []CheckResult      `json:"checks"`
 }
