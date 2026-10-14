@@ -1,0 +1,5 @@
+terraform validate: invalid, 1 error
+error: Invalid function argument (main.tf:12:22)
+  Invalid value for "str" parameter: string required.
+  > bucket = lower(var.bucket_names)
+  | var.bucket_names is list of string with 2 elements

@@ -1,0 +1,26 @@
+terraform 1.16.4 test: fail, 0 passed, 4 failed, 0 errored, 0 skipped; 4 errors
+fail tests/app.tftest.hcl "replicas" 0.9s
+  error: Test assertion failed (tests/app.tftest.hcl:8:5)
+    api must run three replicas
+    > condition     = output.replicas == 3
+    lhs: 2
+    rhs: 3
+fail tests/app.tftest.hcl "tags" 0.9s
+  error: Test assertion failed (tests/app.tftest.hcl:15:5)
+    tags must name the owning team
+    > condition     = aws_s3_bucket.logs.tags == { env = "prod", team = "platform" }
+    lhs: {"env":"prod","team":"web services"}
+    rhs: {"env":"prod","team":"platform"}
+fail tests/app.tftest.hcl "port" 0.9s
+  error: Test assertion failed (tests/app.tftest.hcl:22:5)
+    listener must use port 8443
+    > condition     = aws_lb_listener.https.port == "8443"
+    lhs: 443
+    rhs: "8443"
+    note: LHS and RHS values are of different types
+fail tests/app.tftest.hcl "regions" 0.9s
+  error: Test assertion failed (tests/app.tftest.hcl:29:5)
+    us-east-1 must be one of the regions
+    > condition     = contains(var.regions, "us-east-1")
+    | var.regions is [ "eu-west-1", "sa-east-1" ]
+... 1 other message: test_abstract 1 (--all)

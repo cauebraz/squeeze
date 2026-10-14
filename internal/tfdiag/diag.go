@@ -1,6 +1,8 @@
 package tfdiag
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -10,6 +12,7 @@ import (
 
 const (
 	maxCodeBytes   = 120
+	maxValueBytes  = 200
 	maxDetailWidth = 100
 	maxDetailLines = 3
 )
@@ -26,10 +29,23 @@ type Range struct {
 }
 
 type Snippet struct {
-	Code                 string `json:"code"`
-	StartLine            int    `json:"start_line"`
-	HighlightStartOffset int    `json:"highlight_start_offset"`
-	HighlightEndOffset   int    `json:"highlight_end_offset"`
+	Code                 string            `json:"code"`
+	StartLine            int               `json:"start_line"`
+	HighlightStartOffset int               `json:"highlight_start_offset"`
+	HighlightEndOffset   int               `json:"highlight_end_offset"`
+	Values               []RawValue        `json:"values"`
+	TestAssertionExpr    *RawTestAssertion `json:"test_assertion_expr"`
+}
+
+type RawValue struct {
+	Traversal string `json:"traversal"`
+	Statement string `json:"statement"`
+}
+
+type RawTestAssertion struct {
+	LHS     string `json:"lhs"`
+	RHS     string `json:"rhs"`
+	Warning string `json:"warning"`
 }
 
 type Raw struct {
@@ -42,15 +58,19 @@ type Raw struct {
 }
 
 type Diagnostic struct {
-	Severity string `json:"severity"`
-	Summary  string `json:"summary"`
-	Detail   string `json:"detail,omitempty"`
-	Address  string `json:"address,omitempty"`
-	File     string `json:"file,omitempty"`
-	Line     int    `json:"line,omitempty"`
-	Column   int    `json:"column,omitempty"`
-	Code     string `json:"code,omitempty"`
-	Count    int    `json:"count,omitempty"`
+	Severity string   `json:"severity"`
+	Summary  string   `json:"summary"`
+	Detail   string   `json:"detail,omitempty"`
+	Address  string   `json:"address,omitempty"`
+	File     string   `json:"file,omitempty"`
+	Line     int      `json:"line,omitempty"`
+	Column   int      `json:"column,omitempty"`
+	Code     string   `json:"code,omitempty"`
+	Values   []string `json:"values,omitempty"`
+	LHS      string   `json:"lhs,omitempty"`
+	RHS      string   `json:"rhs,omitempty"`
+	Mismatch string   `json:"assertion_warning,omitempty"`
+	Count    int      `json:"count,omitempty"`
 }
 
 func Convert(r Raw) Diagnostic {
@@ -68,8 +88,19 @@ func Convert(r Raw) Diagnostic {
 		d.Line = r.Range.Start.Line
 		d.Column = r.Range.Start.Column
 	}
-	if r.Snippet != nil {
-		d.Code = codeLine(r.Snippet)
+	if s := r.Snippet; s != nil {
+		d.Code = codeLine(s)
+		if a := s.TestAssertionExpr; a != nil {
+			d.LHS = strings.TrimSpace(a.LHS)
+			d.RHS = strings.TrimSpace(a.RHS)
+			d.Mismatch = core.Clean(a.Warning)
+		} else {
+			for _, v := range s.Values {
+				if line := core.Clean(v.Traversal + " " + v.Statement); line != "" {
+					d.Values = append(d.Values, line)
+				}
+			}
+		}
 	}
 	return d
 }
@@ -88,18 +119,24 @@ func codeLine(s *Snippet) string {
 
 func Fold(ds []Diagnostic) []Diagnostic {
 	out := make([]Diagnostic, 0, len(ds))
-	index := map[Diagnostic]int{}
+	index := map[string]int{}
 	for _, d := range ds {
-		key := d
-		key.Count = 0
+		d.Count = 0
+		key := Key(d)
 		if i, ok := index[key]; ok {
 			out[i].Count = max(out[i].Count, 1) + 1
 			continue
 		}
 		index[key] = len(out)
-		out = append(out, key)
+		out = append(out, d)
 	}
 	return out
+}
+
+func Key(d Diagnostic) string {
+	d.Count = 0
+	key, _ := json.Marshal(d)
+	return string(key)
 }
 
 func severityRank(s string) int {
@@ -196,6 +233,35 @@ func Write(b *strings.Builder, d Diagnostic, o WriteOptions) {
 		b.WriteString(d.Code)
 		b.WriteByte('\n')
 	}
+	if o.NoDetail {
+		return
+	}
+	for _, v := range d.Values {
+		writeValue(b, o.Indent, "| ", v)
+	}
+	if d.LHS != "" || d.RHS != "" {
+		writeValue(b, o.Indent, "lhs: ", d.LHS)
+		writeValue(b, o.Indent, "rhs: ", d.RHS)
+	}
+	if d.Mismatch != "" {
+		writeValue(b, o.Indent, "note: ", d.Mismatch)
+	}
+}
+
+func writeValue(b *strings.Builder, indent, label, value string) {
+	b.WriteString(indent)
+	b.WriteString("  ")
+	b.WriteString(label)
+	b.WriteString(truncate(oneLine(value), maxValueBytes))
+	b.WriteByte('\n')
+}
+
+func oneLine(s string) string {
+	var buf bytes.Buffer
+	if json.Compact(&buf, []byte(s)) == nil {
+		return core.Clean(buf.String())
+	}
+	return strings.Join(strings.Fields(core.Clean(s)), " ")
 }
 
 func location(d Diagnostic) string {

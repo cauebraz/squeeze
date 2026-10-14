@@ -127,16 +127,14 @@ func callers(is RawIssue) []string {
 
 func fold(issues []Issue) []Issue {
 	var ds []tfdiag.Diagnostic
-	meta := map[tfdiag.Diagnostic][2]bool{}
+	meta := map[string][2]bool{}
 	for _, is := range issues {
 		ds = append(ds, is.Diagnostic)
-		meta[is.Diagnostic] = [2]bool{is.Fixable, is.Fixed}
+		meta[tfdiag.Key(is.Diagnostic)] = [2]bool{is.Fixable, is.Fixed}
 	}
 	out := make([]Issue, 0, len(ds))
 	for _, d := range tfdiag.Normalize(ds) {
-		key := d
-		key.Count = 0
-		m := meta[key]
+		m := meta[tfdiag.Key(d)]
 		out = append(out, Issue{Diagnostic: d, Rule: d.Address, Fixable: m[0], Fixed: m[1]})
 	}
 	return out

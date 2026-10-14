@@ -48,6 +48,7 @@ error tests/network.tftest.hcl
 - Sensitive output values are never printed or stored; other scalar outputs print their value up to 48 bytes.
 - Every line at level `error` or `warn` becomes a diagnostic, whatever its type, so a message type squeeze does not know cannot hide a failure. A diagnostic severity other than `warning` counts as an error. Identical diagnostics print once with `(xN)`; `--max-diagnostics` counts printed lines, and `... N more diagnostics` and `diagnostics_omitted` count every cut diagnostic, N for an `(xN)` line.
 - A diagnostic's detail is wrapped to 100 bytes and cut after three lines with `...`; its code line is cut at 120 bytes.
+- A failed `terraform test` assertion that compares two values (`snippet.test_assertion_expr`) prints them after the code line as `lhs:` and `rhs:`, each as compact JSON on one line cut at 200 bytes, and Terraform's warning about different types as `note:`. Terraform redacts sensitive and ephemeral values in both. Other diagnostics print the expression values (`snippet.values`) as `| <expression> <statement>`, cut at 200 bytes; for an assertion with `lhs` and `rhs` they are not printed, as Terraform does without `-verbose`. `--no-detail` hides all of them.
 - Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed, so an address or a name cannot forge a line of output.
 - Everything else is counted in `... N other messages: <type> <count>, ... (--all)`; `--all` prints those messages, each cut at 200 bytes with `...`; `--output json` carries only their counts.
 
@@ -86,10 +87,11 @@ error tests/network.tftest.hcl
 - `failures`: `type`, `message` and, when set, `address`. `policies`: `policy`, `result` and, when set, `target`, `enforcement`.
 - `outputs`: `name` and, when set, `action`, `sensitive`, `value` (scalars only, never for sensitive outputs).
 - `tests`: `status`, `passed`, `failed`, `errored`, `skipped`, `runs` (`file`, `run`, `status`, `elapsed_ms` when set, `diagnostics`) and `files` (`file`, `status`, `diagnostics`).
+- Each diagnostic, at the top level or in `tests`: `severity`, `summary` and, when set, `detail`, `address`, `file`, `line`, `column`, `code`, `values`, `lhs`, `rhs`, `assertion_warning` (`lhs` and `rhs` in full) and `count`.
 
 ## Limitations
 
 - The stream has no attribute diffs; `tfplan` is the format for those.
-- A diagnostic's detail is cut after three lines in the text; `--output json` carries the full detail. The code line is cut at 120 bytes in both.
+- A diagnostic's detail is cut after three lines in the text; `--output json` carries the full detail and the full `lhs` and `rhs`. The code line is cut at 120 bytes and each `values` line at 200 bytes in the text only.
 - The stream carries no deposed key (`ResourceInstanceChange` in `internal/command/views/json/change.go`), so the delete of a deposed object prints as `- <address>` with nothing to tell it from a delete of the current object; `tfplan` prints the deposed key.
 - Detection reads the first five non-blank lines; a stream that starts with more text lines needs `squeeze tfjson`.
