@@ -33,6 +33,24 @@ jobs:
       - run: just fuzz-all 20
         if: matrix.go == '1.27.2'
 
+  commits:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27.2"
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: 1.58.0
+      - run: just commits "origin/$GITHUB_BASE_REF"
+      - run: just check-each "origin/$GITHUB_BASE_REF"
+
   conformance:
     runs-on: ubuntu-latest
     steps:
