@@ -1,0 +1,8 @@
+terraform 1.9.5 state: 7 resources, 1 data source, 1 tainted, 1 deposed; 3 outputs, 1 sensitive
+aws_db_instance.main
+aws_instance.web[0]
+aws_instance.web[1] (tainted)
+... 6 more resources (--max-resources 0)
+outputs:
+bucket_name = "acme-logs-prod"
+... 2 more outputs (--max-outputs 0)
