@@ -38,6 +38,14 @@ func TestConvert(t *testing.T) {
 			`{"severity":"error","summary":"s","snippet":{"code":"x","start_line":1,"highlight_start_offset":99}}`,
 			Diagnostic{Severity: "error", Summary: "s", Code: "x"},
 		},
+		"expression values": {
+			`{"severity":"error","summary":"s","snippet":{"code":"x","values":[{"traversal":"var.a","statement":"is \"x\"\nand more"},{"traversal":"","statement":""}]}}`,
+			Diagnostic{Severity: "error", Summary: "s", Code: "x", Values: []string{`var.a is "x" and more`}},
+		},
+		"test assertion replaces values": {
+			`{"severity":"error","summary":"Test assertion failed","snippet":{"code":"x","values":[{"traversal":"output.n","statement":"is 2"}],"test_assertion_expr":{"lhs":"2\n","rhs":"{\n  \"a\": 1\n}","warning":"LHS and RHS values are of different types","show_verbose":false}}}`,
+			Diagnostic{Severity: "error", Summary: "Test assertion failed", Code: "x", LHS: "2", RHS: "{\n  \"a\": 1\n}", Mismatch: "LHS and RHS values are of different types"},
+		},
 		"control characters removed": {
 			"{\"severity\":\"error\",\"summary\":\"bad\\u001b[31m color\\tand tab\"}",
 			Diagnostic{Severity: "error", Summary: "bad color and tab"},
@@ -152,6 +160,31 @@ func TestWrite(t *testing.T) {
 			WriteOptions{Indent: "  ", NoDetail: true},
 			"  error: s\n    > x = 1\n",
 		},
+		"values": {
+			Diagnostic{Severity: "error", Summary: "s", Code: "x", Values: []string{`var.a is "x"`, "var.b is 2"}},
+			WriteOptions{},
+			"error: s\n  > x\n  | var.a is \"x\"\n  | var.b is 2\n",
+		},
+		"assertion sides as one line": {
+			Diagnostic{Severity: "error", Summary: "s", LHS: "{\n  \"team\": \"web  services\"\n}", RHS: "not json\n  at all\u001b[31m", Mismatch: "LHS and RHS values are of different types"},
+			WriteOptions{},
+			"error: s\n  lhs: {\"team\":\"web  services\"}\n  rhs: not json at all\n  note: LHS and RHS values are of different types\n",
+		},
+		"empty side still printed": {
+			Diagnostic{Severity: "error", Summary: "s", RHS: "3"},
+			WriteOptions{},
+			"error: s\n  lhs: \n  rhs: 3\n",
+		},
+		"long side is cut": {
+			Diagnostic{Severity: "error", Summary: "s", LHS: `"` + strings.Repeat("a", 300) + `"`, RHS: "1"},
+			WriteOptions{},
+			"error: s\n  lhs: \"" + strings.Repeat("a", maxValueBytes-4) + "...\n  rhs: 1\n",
+		},
+		"no detail hides values and sides": {
+			Diagnostic{Severity: "error", Summary: "s", Code: "x", Values: []string{"var.a is 1"}, LHS: "1", RHS: "2", Mismatch: "m"},
+			WriteOptions{NoDetail: true},
+			"error: s\n  > x\n",
+		},
 		"long detail is wrapped and cut": {
 			Diagnostic{Severity: "error", Summary: "s", Detail: long},
 			WriteOptions{},
@@ -167,6 +200,28 @@ func TestWrite(t *testing.T) {
 				t.Errorf("Write() (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestFoldKeepsDistinctValues(t *testing.T) {
+	t.Parallel()
+	a := Diagnostic{Severity: "error", Summary: "Test assertion failed", File: "t.tftest.hcl", Line: 3, LHS: "1", RHS: "2"}
+	b := a
+	b.LHS = "5"
+	c := Diagnostic{Severity: "error", Summary: "s", Values: []string{"var.a is 1"}}
+	d := c
+	d.Values = []string{"var.a is 2"}
+	got := Fold([]Diagnostic{a, b, a, c, d})
+	if len(got) != 4 || got[0].Count != 2 || got[1].Count != 0 {
+		t.Errorf("Fold() = %+v", got)
+	}
+	if Key(a) == Key(b) || Key(c) == Key(d) {
+		t.Errorf("Key() ignores values")
+	}
+	counted := a
+	counted.Count = 7
+	if Key(a) != Key(counted) {
+		t.Errorf("Key() depends on Count")
 	}
 }
 

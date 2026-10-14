@@ -34,9 +34,10 @@ warning: Argument is deprecated (storage.tf:7:3)
 - The header gives `valid` or `invalid` and the error and warning counts: Terraform's own, or the diagnostics counted when those are higher, so a missing count cannot hide an error from `--fail-on`.
 - A severity other than `warning` counts as an error, so an unexpected value cannot hide a failure.
 - Diagnostics are sorted errors first, then by file, line and column.
-- Identical diagnostics (same severity, summary, detail and location) are printed once with `(xN)`. `--max-diagnostics` counts printed lines, so an `(xN)` line takes one; `... N more diagnostics` and `diagnostics_omitted` count every cut diagnostic, N for an `(xN)` line.
+- Identical diagnostics (same severity, summary, detail, location and values) are printed once with `(xN)`. `--max-diagnostics` counts printed lines, so an `(xN)` line takes one; `... N more diagnostics` and `diagnostics_omitted` count every cut diagnostic, N for an `(xN)` line.
 - A diagnostic without a range prints its summary and detail; the resource address, when Terraform gives one, follows the location.
 - The detail is wrapped to 100 bytes and cut after three lines with `...`; the code line is cut at 120 bytes.
+- The expression values Terraform gives with a diagnostic (`snippet.values`, such as `var.bucket_names is list of string with 2 elements`) follow the code line, one per line as `| <expression> <statement>`, each cut at 200 bytes. `--no-detail` hides them.
 
 ## Flags
 
@@ -56,7 +57,7 @@ warning: Argument is deprecated (storage.tf:7:3)
 
 ## JSON data
 
-`data` holds `tool`, `tool_version` (empty: the validate JSON carries none), `valid`, `errors`, `warnings`, `diagnostics_omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code` and `count`.
+`data` holds `tool`, `tool_version` (empty: the validate JSON carries none), `valid`, `errors`, `warnings`, `diagnostics_omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code`, `values` and `count`.
 
 ## Limitations
 

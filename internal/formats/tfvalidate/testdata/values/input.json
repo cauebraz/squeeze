@@ -1,0 +1,52 @@
+{
+  "format_version": "1.0",
+  "valid": false,
+  "error_count": 1,
+  "warning_count": 0,
+  "diagnostics": [
+    {
+      "severity": "error",
+      "summary": "Invalid function argument",
+      "detail": "Invalid value for \"str\" parameter: string required.",
+      "range": {
+        "filename": "main.tf",
+        "start": {
+          "line": 12,
+          "column": 22,
+          "byte": 210
+        },
+        "end": {
+          "line": 12,
+          "column": 36,
+          "byte": 224
+        }
+      },
+      "snippet": {
+        "context": "resource \"aws_s3_bucket\" \"logs\"",
+        "code": "  bucket = lower(var.bucket_names)",
+        "start_line": 12,
+        "highlight_start_offset": 17,
+        "highlight_end_offset": 31,
+        "values": [
+          {
+            "traversal": "var.bucket_names",
+            "statement": "is list of string with 2 elements"
+          }
+        ],
+        "function_call": {
+          "called_as": "lower",
+          "signature": {
+            "description": "",
+            "return_type": "string",
+            "parameters": [
+              {
+                "name": "str",
+                "type": "string"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
