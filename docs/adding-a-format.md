@@ -37,7 +37,7 @@ A flag variant is a new case with an `args` file and a symlinked input, so every
 
 1. Create `internal/formats/<name>/` with the format and its unit tests. Use `github.com/google/go-cmp` for structural comparisons in tests.
 2. Add one case directory per scenario, from the tool's real output or its published schema. Never use private or employer material, and never copy test data from a source whose license is not compatible with MIT.
-3. Add a contract test; it checks detection, determinism, plain text, the cut-notice shape (`... N <what> (<flag>)`), that every declared condition appears in some case, the JSON envelope and the golden files of every case:
+3. Add a contract test; it checks detection, determinism, plain text, the cut-notice shape (`... N <what> (<flag>)`), that every declared condition appears in some case, the JSON envelope (one line of plain text, like the text output) and the golden files of every case:
 
    ```go
    func TestContract(t *testing.T) {

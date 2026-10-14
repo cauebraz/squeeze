@@ -118,7 +118,7 @@ Each format decides what to keep. Every format guarantees:
 {"schema_version":1,"format":"tfplan","input_bytes":6294,"text_bytes":485,"ratio":0.0771,"conditions":["change","destroy","replace"],"failed_on":[],"data":{...}}
 ```
 
-`data` is the format's own structure, described on its docs page. `ratio` is `text_bytes / input_bytes`. `conditions` lists every condition present in the input and `failed_on` the ones `--fail-on` matched.
+`data` is the format's own structure, described on its docs page. A value from the input keeps its control characters in `data`, written as JSON escapes (`\n`, `\u007f`, `\u009b`), so the line itself holds none. `ratio` is `text_bytes / input_bytes`. `conditions` lists every condition present in the input and `failed_on` the ones `--fail-on` matched.
 
 Until 1.0.0 the text output and the `data` of a format may change between commits; the envelope keys above and the exit codes do not.
 

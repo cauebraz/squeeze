@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 )
 
@@ -36,7 +37,23 @@ func Envelope(format string, inputBytes int, r Result, failOn []string) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	return append(out, '\n'), nil
+	return append(escapeControls(out), '\n'), nil
+}
+
+func escapeControls(b []byte) []byte {
+	out := make([]byte, 0, len(b))
+	for i := 0; i < len(b); i++ {
+		switch {
+		case b[i] == 0x7f:
+			out = append(out, `\u007f`...)
+		case b[i] == 0xc2 && i+1 < len(b) && b[i+1] >= 0x80 && b[i+1] < 0xa0:
+			out = fmt.Appendf(out, `\u%04x`, b[i+1])
+			i++
+		default:
+			out = append(out, b[i])
+		}
+	}
+	return out
 }
 
 func Ratio(outputBytes, inputBytes int) float64 {
