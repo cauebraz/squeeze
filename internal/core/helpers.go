@@ -24,6 +24,20 @@ func CountFlag(fs *flag.FlagSet, p *int, name, usage string) {
 	})
 }
 
+func ToolLabel(tool, version string) string {
+	if version == "" {
+		return tool
+	}
+	return tool + " " + version
+}
+
+func Ellipsis(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return Truncate(s, n-3) + "..."
+}
+
 func Plural(n int, one, many string) string {
 	if n == 1 {
 		return one

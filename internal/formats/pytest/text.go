@@ -58,10 +58,7 @@ func Text(r Report, o Options) string {
 }
 
 func header(r Report) string {
-	tool := r.Tool
-	if r.Version != "" {
-		tool += " " + r.Version
-	}
+	tool := core.ToolLabel(r.Tool, r.Version)
 	if !r.Complete {
 		return tool + ": no summary line"
 	}

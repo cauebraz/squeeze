@@ -75,6 +75,34 @@ func TestTruncate(t *testing.T) {
 	}
 }
 
+func TestToolLabel(t *testing.T) {
+	t.Parallel()
+	if got := ToolLabel("trivy", "0.75.0"); got != "trivy 0.75.0" {
+		t.Errorf("ToolLabel(trivy, 0.75.0) = %q", got)
+	}
+	if got := ToolLabel("trivy", ""); got != "trivy" {
+		t.Errorf("ToolLabel(trivy, \"\") = %q", got)
+	}
+}
+
+func TestEllipsis(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		in   string
+		n    int
+		want string
+	}{
+		{"abcdef", 6, "abcdef"},
+		{"abcdefg", 6, "abc..."},
+		{"ab\u00e9def", 6, "ab..."},
+		{"", 6, ""},
+	} {
+		if got := Ellipsis(tt.in, tt.n); got != tt.want {
+			t.Errorf("Ellipsis(%q, %d) = %q, want %q", tt.in, tt.n, got, tt.want)
+		}
+	}
+}
+
 func TestSeconds(t *testing.T) {
 	t.Parallel()
 	if Seconds(1.5) != "1.5s" || Seconds(2) != "2s" || Seconds(0.001) != "0.001s" {

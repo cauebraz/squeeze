@@ -36,10 +36,7 @@ func Text(r Report, o Options) string {
 
 func header(r Report) string {
 	s := r.Summary
-	tool := r.Tool
-	if r.ToolVersion != "" {
-		tool += " " + r.ToolVersion
-	}
+	tool := core.ToolLabel(r.Tool, r.ToolVersion)
 	var parts []string
 	if s.Changed() {
 		if s.Import > 0 {
