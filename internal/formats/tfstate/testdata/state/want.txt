@@ -1,0 +1,14 @@
+terraform 1.9.5 state: 7 resources, 1 data source, 1 tainted, 1 deposed; 3 outputs, 1 sensitive
+aws_db_instance.main
+aws_instance.web[0]
+aws_instance.web[1] (tainted)
+aws_instance.web[1] (deposed 00000001)
+aws_s3_bucket.logs
+data.aws_iam_policy_document.logs
+module.vpc.aws_subnet.private["a"]
+module.vpc.aws_subnet.private["b"]
+module.vpc.module.nat.aws_nat_gateway.this
+outputs:
+bucket_name = "acme-logs-prod"
+db_password = (sensitive)
+subnet_ids = ["subnet-0a1","subnet-0b2"]

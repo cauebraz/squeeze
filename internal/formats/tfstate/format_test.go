@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -50,7 +51,10 @@ func TestDetect(t *testing.T) {
 		"single value":    {`"acme-logs-prod"`, false},
 		"no type":         {`{"a":{"sensitive":false,"value":"x"}}`, false},
 		"sensitive word":  {`{"a":{"sensitive":"yes","type":"string"}}`, false},
-		"state":           {`{"format_version":"1.0","terraform_version":"1.9.5","values":{"outputs":{"a":{"sensitive":false,"value":"x","type":"string"}}}}`, false},
+		"state":           {`{"format_version":"1.0","terraform_version":"1.9.5","values":{"outputs":{},"root_module":{}}}`, true},
+		"state no module": {`{"format_version":"1.0","terraform_version":"1.9.5","values":{"outputs":{"a":{"sensitive":false,"value":"x","type":"string"}}}}`, false},
+		"plan prior":      {`{"format_version":"1.2","planned_values":{"root_module":{}},"prior_state":{"values":{"root_module":{}}}}`, false},
+		"state in array":  {`[{"format_version":"1.0","values":{"root_module":{}}}]`, false},
 		"plan":            {`{"format_version":"1.2","planned_values":{},"output_changes":{}}`, false},
 		"validate":        {`{"format_version":"1.0","valid":true,"diagnostics":[]}`, false},
 		"array of object": {`[{"a":{"sensitive":false,"type":"string","value":"x"}}]`, false},
@@ -96,6 +100,9 @@ func TestParseErrors(t *testing.T) {
 		"no sensitive":      {`{"a":{"type":"string","value":"x"}}`, ErrMissingSensitive, `output "a"`},
 		"sensitive string":  {`{"a":{"sensitive":"true","type":"string","value":"x"}}`, nil, "decode"},
 		"output not object": {`{"a":"x"}`, nil, "decode"},
+		"state major 2":     {`{"format_version":"2.0","values":{"root_module":{}}}`, nil, "unsupported format_version"},
+		"state output":      {`{"format_version":"1.0","values":{"outputs":{"a":{"value":"x"}},"root_module":{}}}`, ErrMissingSensitive, `output "a"`},
+		"state values":      {`{"format_version":"1.0","values":[]}`, nil, "decode"},
 	}
 	for name, tt := range tests {
 		_, err := Parse([]byte(tt.input))
@@ -116,7 +123,7 @@ func TestSensitiveValuesNeverPrinted(t *testing.T) {
 		t.Fatal(err)
 	}
 	var secrets []string
-	for _, o := range raw {
+	for _, o := range raw.Outputs {
 		if *o.Sensitive {
 			secrets = append(secrets, leaves(t, o.Value)...)
 		}
@@ -177,6 +184,133 @@ func TestNoForgedLines(t *testing.T) {
 	formattest.CheckText(t, r.Text)
 	if lines := strings.Count(r.Text, "\n"); lines != 2 {
 		t.Errorf("text has %d lines, want 2:\n%s", lines, r.Text)
+	}
+	state := []byte(`{"format_version":"1.0","terraform_version":"1.9\n5","values":{"root_module":{"resources":[{"address":"a.b\nforged.c","mode":"managed","deposed_key":"k\u001b[31m\n"}]}}}`)
+	r, err = Squeeze(state, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	formattest.CheckText(t, r.Text)
+	if lines := strings.Count(r.Text, "\n"); lines != 2 {
+		t.Errorf("state text has %d lines, want 2:\n%s", lines, r.Text)
+	}
+}
+
+func TestStateValuesNeverPrinted(t *testing.T) {
+	t.Parallel()
+	input := fixture(t, "state")
+	var doc struct {
+		Values struct {
+			Outputs    map[string]RawOutput `json:"outputs"`
+			RootModule json.RawMessage      `json:"root_module"`
+		} `json:"values"`
+	}
+	if err := json.Unmarshal(input, &doc); err != nil {
+		t.Fatal(err)
+	}
+	shown := map[string]bool{}
+	var secrets []string
+	for _, o := range doc.Values.Outputs {
+		for _, leaf := range leaves(t, o.Value) {
+			if *o.Sensitive {
+				secrets = append(secrets, leaf)
+			} else {
+				shown[leaf] = true
+			}
+		}
+	}
+	var modules func(json.RawMessage)
+	modules = func(raw json.RawMessage) {
+		var m struct {
+			Resources []struct {
+				Values json.RawMessage `json:"values"`
+			} `json:"resources"`
+			ChildModules []json.RawMessage `json:"child_modules"`
+		}
+		if err := json.Unmarshal(raw, &m); err != nil {
+			t.Fatal(err)
+		}
+		for _, res := range m.Resources {
+			for _, leaf := range leaves(t, res.Values) {
+				if !shown[leaf] {
+					secrets = append(secrets, leaf)
+				}
+			}
+		}
+		for _, child := range m.ChildModules {
+			modules(child)
+		}
+	}
+	modules(doc.Values.RootModule)
+	if !slices.Contains(secrets, "hunter2-STATE") || !slices.Contains(secrets, "hunter2-STATE-OUTPUT") || !slices.Contains(secrets, "10.0.2.0/24") {
+		t.Fatalf("fixture values = %v", secrets)
+	}
+	for _, o := range []Options{DefaultOptions(), {}} {
+		r, err := Squeeze(input, o)
+		if err != nil {
+			t.Fatal(err)
+		}
+		envelope, err := core.Envelope("tfstate", len(input), r, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, s := range secrets {
+			if strings.Contains(r.Text, s) || strings.Contains(string(envelope), s) {
+				t.Errorf("attribute or sensitive value %q reached the output", s)
+			}
+		}
+	}
+}
+
+func TestStateBuild(t *testing.T) {
+	t.Parallel()
+	in, err := Parse(fixture(t, "state"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := Build(in, DefaultOptions())
+	var got []string
+	for _, res := range r.State.Resources {
+		got = append(got, res.Address+" "+res.Mode+" "+res.DeposedKey)
+	}
+	want := []string{
+		"aws_db_instance.main managed ",
+		"aws_instance.web[0] managed ",
+		"aws_instance.web[1] managed ",
+		"aws_instance.web[1] managed 00000001",
+		"aws_s3_bucket.logs managed ",
+		"data.aws_iam_policy_document.logs data ",
+		`module.vpc.aws_subnet.private["a"] managed `,
+		`module.vpc.aws_subnet.private["b"] managed `,
+		"module.vpc.module.nat.aws_nat_gateway.this managed ",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("resources (-want +got):\n%s", diff)
+	}
+	if r.Source != "state" || r.ToolVersion != "1.9.5" || r.State.Managed != 7 || r.State.DataSources != 1 || r.State.Tainted != 1 || r.State.Deposed != 1 || r.Total != 3 || r.Sensitive != 1 {
+		t.Errorf("report = %+v", r)
+	}
+	limited := Build(in, Options{MaxResources: 2, MaxOutputs: 1})
+	if s := limited.State; len(s.Resources) != 2 || s.ResourcesOmitted != 7 || len(limited.Outputs) != 1 || limited.Omitted != 2 || s.Managed != 7 {
+		t.Errorf("limited = %+v", limited)
+	}
+}
+
+func TestStateHeader(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		input string
+		want  string
+	}{
+		"empty":        {`{"format_version":"1.0"}`, "terraform state: 0 resources\n"},
+		"outputs only": {`{"format_version":"1.0","terraform_version":"1.9.5","values":{"outputs":{"a":{"sensitive":false,"value":1,"type":"number"}},"root_module":{}}}`, "terraform 1.9.5 state: 0 resources; 1 output\noutputs:\na = 1\n"},
+		"one data":     {`{"format_version":"1.0","values":{"root_module":{"resources":[{"address":"data.x.y","mode":"data"}]}}}`, "terraform state: 0 resources, 1 data source\ndata.x.y\n"},
+	}
+	for name, tt := range tests {
+		r, err := Squeeze([]byte(tt.input), DefaultOptions())
+		if err != nil || r.Text != tt.want {
+			t.Errorf("%s: Squeeze() = %q, %v, want %q", name, r.Text, err, tt.want)
+		}
 	}
 }
 
@@ -271,7 +405,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(`{"a\n":{"sensitive":true,"type":"string","value":"secret-value"},"b":{"sensitive":false,"type":"string","value":"\u001b[31m"}}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		for _, o := range []Options{DefaultOptions(), {MaxOutputs: 1}} {
+		for _, o := range []Options{DefaultOptions(), {MaxOutputs: 1, MaxResources: 1}} {
 			r, err := Squeeze(input, o)
 			if err != nil {
 				return
@@ -290,8 +424,15 @@ func FuzzSqueeze(f *testing.F) {
 					t.Fatalf("sensitive output %q keeps its value in data: %s", out.Name, envelope)
 				}
 			}
-			if got := strings.Count(r.Text, "\n"); got > len(report.Outputs)+2 {
-				t.Fatalf("text has %d lines for %d outputs", got, len(report.Outputs))
+			listed := len(report.Outputs)
+			if report.State != nil {
+				listed += len(report.State.Resources) + 2
+				if o.MaxResources > 0 && len(report.State.Resources) > o.MaxResources {
+					t.Fatalf("%d resources over the limit %d", len(report.State.Resources), o.MaxResources)
+				}
+			}
+			if got := strings.Count(r.Text, "\n"); got > listed+2 {
+				t.Fatalf("text has %d lines for %d items", got, listed)
 			}
 		}
 	})
