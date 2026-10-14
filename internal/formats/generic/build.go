@@ -58,6 +58,7 @@ type group struct {
 	content int
 	lines   int
 	flags   int
+	errors  int
 	flagged bool
 }
 
@@ -120,7 +121,7 @@ func similar(a, b string) bool {
 	if a == b {
 		return true
 	}
-	if a == "" || b == "" || isFlagged(a) || isFlagged(b) {
+	if a == "" || b == "" || isError(a) || isError(b) {
 		return false
 	}
 	return digits.ReplaceAllString(a, "0") == digits.ReplaceAllString(b, "0")
@@ -130,6 +131,9 @@ func single(text string) group {
 	g := group{entries: []entry{{text: text}}, content: 1, lines: 1}
 	if isFlagged(text) {
 		g.flagged, g.flags = true, 1
+	}
+	if isError(text) {
+		g.errors = 1
 	}
 	return g
 }
@@ -156,11 +160,25 @@ func fold(lines []string, off bool, r *Report) []group {
 		if identical {
 			g.entries = append(g.entries, entry{text: fmt.Sprintf("... %d more identical %s (--no-fold)", n-1, core.Plural(n-1, "line", "lines")), marker: true})
 			g.flags *= n
+			g.errors *= n
 			r.Folded += n - 1
 		} else {
-			g.entries = append(g.entries,
-				entry{text: fmt.Sprintf("... %d similar %s (--no-fold)", n-2, core.Plural(n-2, "line", "lines")), marker: true},
-				entry{text: lines[j-1]})
+			hidden := 0
+			g.flags = 0
+			for k := i; k < j; k++ {
+				if isFlagged(lines[k]) {
+					g.flags++
+					if k > i && k < j-1 {
+						hidden++
+					}
+				}
+			}
+			g.flagged = g.flags > 0
+			text := fmt.Sprintf("... %d similar %s (--no-fold)", n-2, core.Plural(n-2, "line", "lines"))
+			if hidden > 0 {
+				text = fmt.Sprintf("... %d similar %s, %d with warning words (--no-fold)", n-2, core.Plural(n-2, "line", "lines"), hidden)
+			}
+			g.entries = append(g.entries, entry{text: text, marker: true}, entry{text: lines[j-1]})
 			g.content = 2
 			r.Folded += n - 2
 		}
@@ -204,9 +222,18 @@ func cut(groups []group, max int, r *Report) []group {
 		r.CutFlagged += gap.flags
 		gap = group{}
 	}
-	for _, g := range groups[head:tail] {
-		if g.flagged && g.content <= budget {
-			budget -= g.content
+	middle := groups[head:tail]
+	keep := make([]bool, len(middle))
+	for _, pass := range []func(group) bool{func(g group) bool { return g.errors > 0 }, func(g group) bool { return g.flagged }} {
+		for i, g := range middle {
+			if !keep[i] && pass(g) && g.content <= budget {
+				budget -= g.content
+				keep[i] = true
+			}
+		}
+	}
+	for i, g := range middle {
+		if keep[i] {
 			flush()
 			out = append(out, g)
 			continue

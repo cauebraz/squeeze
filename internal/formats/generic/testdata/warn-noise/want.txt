@@ -1,0 +1,8 @@
+[001/60] checking src/module_001.c ... ok (6 symbols, 1 warnings suppressed)
+... 28 similar lines, 19 with warning words (--no-fold)
+[030/60] checking src/module_030.c ... ok (35 symbols, 0 warnings suppressed)
+error: config/app.yaml: key 'timeout' must be an integer number of seconds
+[031/60] checking src/module_031.c ... ok (36 symbols, 1 warnings suppressed)
+... 28 similar lines, 19 with warning words (--no-fold)
+[060/60] checking src/module_060.c ... ok (65 symbols, 0 warnings suppressed)
+lint: 60 files checked

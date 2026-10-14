@@ -104,6 +104,16 @@ func TestText(t *testing.T) {
 			o:     Options{MaxLines: 4},
 			want:  "a\n... 2 more identical lines (--no-fold)\n... 6 lines cut (--max-lines 0)\nf\ng\n... 2 more identical lines (--no-fold)\n",
 		},
+		"similar warning lines fold and the error line survives the cut": {
+			input: lines("w 1 warnings", "w 2 warnings", "w 3 warnings", "w 4 warnings", "x", "error: boom", "y", "w 5 warnings", "w 6 warnings", "w 7 warnings", "z"),
+			o:     Options{MaxLines: 4},
+			want:  "w 1 warnings\n... 2 similar lines, 2 with warning words (--no-fold)\nw 4 warnings\n... 1 line cut (--max-lines 0)\nerror: boom\n... 4 lines cut, 3 with error or warning words (--max-lines 0)\nz\n",
+		},
+		"error lines fold only when identical": {
+			input: lines("error 1", "error 2", "error 3", "error 3", "error 3"),
+			o:     DefaultOptions(),
+			want:  "error 1\nerror 2\nerror 3\n... 2 more identical lines (--no-fold)\n",
+		},
 		"cut never leaves a fold notice without its line": {
 			input: lines("a", "b", "c", "d", "e", "same", "same", "same", "same", "z"),
 			o:     Options{MaxLines: 4},
@@ -155,9 +165,9 @@ func TestText(t *testing.T) {
 			want:  "a1\n... 3 lines cut (--max-lines 0)\nError: e\n... 3 lines cut (--max-lines 0)\ni\nj\n",
 		},
 		"cut counts flagged lines over the budget": {
-			input: lines("a", "warning 1", "warning 2", "warning 3", "b", "c"),
+			input: lines("a", "warning x", "warning y", "warning z", "b", "c"),
 			o:     Options{MaxLines: 4},
-			want:  "a\nwarning 1\n... 2 lines cut, 2 with error or warning words (--max-lines 0)\nb\nc\n",
+			want:  "a\nwarning x\n... 2 lines cut, 2 with error or warning words (--max-lines 0)\nb\nc\n",
 		},
 		"lines with zero warnings fold": {
 			input: lines("[1/4] ok (0 warnings)", "[2/4] ok (0 warnings)", "[3/4] ok (0 warnings)", "error: x", "[4/4] ok (0 warnings)"),
