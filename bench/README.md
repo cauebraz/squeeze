@@ -35,6 +35,27 @@ bench/run.py --report bench/results/<timestamp>.jsonl     # print the table agai
 
 `--model` takes an OpenRouter model id; the model must support tool calling. `--jobs` sets how many runs are in flight at once; every run has its own working copy and the API is the bottleneck, so ten jobs finish about ten times sooner until the provider's rate limit answers 429, which the runner retries five times with backoff. Rows land in the results file as runs finish, so `run` and `task` in each row, not the line order, identify a run. `--keep` leaves the working copies in the temp directory for inspection. Results are not committed.
 
+## Measured
+
+Run on 2026-10-14 with `anthropic/claude-opus-5.5` through OpenRouter, 5 runs per cell, `--jobs 10`, squeeze at the commit that folds pytest failures by location and folds similar warning lines in `generic`. All 40 runs passed the verifier. Tokens are prompt plus completion per run, averaged over the 5 runs; the range is the lowest and highest run.
+
+| Task | Control tokens | squeeze tokens | Saved | Tool bytes control -> squeeze | Turns control -> squeeze |
+|---|---|---|---|---|---|
+| `gotest-race` | 13010 (11539-15872) | 9310 (7181-12212) | 28% | 5.2 KB -> 2.9 KB | 4.4 -> 4.6 |
+| `lint-log` | 67479 (64154-80366) | 6008 (5919-6134) | 91% | 31.4 KB -> 0.9 KB | 5.2 -> 5.0 |
+| `pytest-failures` | 17215 (17042-17306) | 13052 (12831-13200) | 24% | 5.3 KB -> 4.9 KB | 6.0 -> 5.0 |
+| `tflint-high` | 11587 (7169-15421) | 9671 (9537-9773) | 17% | 3.1 KB -> 1.9 KB | 5.6 -> 5.8 |
+| all four | 109291 | 38041 | 65% | 46.1 KB -> 10.8 KB | 21.2 -> 20.4 |
+
+What the `commands` of each run show:
+
+- `lint-log` carries the total: the control agent reads the 400-line log once (32 KB) and then filters it with `grep -v ok`; the squeeze agent reads 8 lines, since the 399 `ok` lines fold into two notices around the `error:` line.
+- `pytest-failures`: the control agent avoids pytest's output on its own with `pytest -q | tail -30` and `grep FAILED`, so the saving is one turn less rather than fewer bytes; both arms spend most tool bytes on `cat` of the source and the tests. squeeze's own output is 1.7 KB for 48 failures (4 distinct assertions), against 2.4 KB for the control's `tail -30`.
+- `gotest-race` and `tflint-high`: the squeeze arm reads 2 KB less per run and takes the same number of turns; the model's variance between runs (7169 to 15421 tokens in the tflint control) is larger than the saving, so 5 runs settle the direction, not the size.
+- In both arms, the agent runs the tool a second time with `>/dev/null; echo $?` to learn the exit code, which a pipe into squeeze hides. `--fail-on` gives squeeze the tool's verdict as its own exit code; the task prompts do not mention it.
+
+A previous round at commit `fed4bb8`, before the two format fixes, measured `lint-log` at 15% and `pytest-failures` at -225%: every lint line carried a warning word and crowded the error out of the `--max-lines` budget, and 48 parametrized failures printed 48 tracebacks. The bench exists to find that kind of defect; read the `commands` before reading the percentages.
+
 ## Limitations
 
 - Four tasks, each small: the number says whether the effect exists, not its size on real work.
