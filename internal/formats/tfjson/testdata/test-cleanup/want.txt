@@ -1,0 +1,10 @@
+terraform 1.16.4 test: fail, 3 passed, 0 failed, 0 errored, 0 skipped; 2 errors
+pass tests/bucket.tftest.hcl "setup" 3.1s
+  error: Failed to destroy resource
+    deleting S3 Bucket (squeeze-test-bucket): BucketNotEmpty: The bucket you tried to delete is not
+    empty
+  error: Terraform left some resources in state after executing tests/bucket.tftest.hcl/setup, they need to be cleaned up manually.
+left in state after tests/bucket.tftest.hcl "setup" (cleanup failed): aws_iam_role.writer, aws_s3_bucket.this, aws_s3_bucket.this (deposed 4f2a91c0)
+left in state after tests/keep.tftest.hcl "seed" (skip_cleanup): aws_dynamodb_table.locks
+... 2 passing test runs (--all)
+... 1 other message: test_abstract 1 (--all)

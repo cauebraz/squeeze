@@ -1,0 +1,8 @@
+terraform 1.16.4 test: 1 error
+unknown tests/vpc.tftest.hcl "peer"
+  error: Terraform was interrupted during test execution, and may not have performed the expected cleanup operations.
+left in state after tests/vpc.tftest.hcl "peer" (interrupted): aws_vpc.main, aws_subnet.a
+left in state after tests/vpc.tftest.hcl "peer" (interrupted, state peer): aws_vpc.peer
+maybe created by tests/vpc.tftest.hcl "peer" (interrupted): aws_vpc_peering_connection.this
+... 1 passing test run (--all)
+... 3 other messages: log 2, test_abstract 1 (--all)
