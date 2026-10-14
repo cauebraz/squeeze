@@ -42,8 +42,8 @@ exit status 2
 - Leading and trailing blank lines are dropped and a run of blank lines becomes one.
 - Three or more identical lines in a row print once, followed by `... N more identical lines (--no-fold)`.
 - Three or more lines in a row that differ only in their numbers print the first and the last with `... N similar lines (--no-fold)` between them, and the notice counts the hidden lines that carry a warning word. Lines with an error word fold only when identical.
-- Error or warning words are `error`, `errors`, `fail`, `fails`, `failed`, `failure`, `failures`, `fatal`, `panic`, `panics`, `panicked`, `exception`, `exceptions`, `traceback`, `tracebacks`, `warn`, `warns`, `warned`, `warning` and `warnings`, as whole words in any case, unless the count before them is zero or the word is negated: `0 warnings suppressed`, `no errors`, `without warnings`, `errors: 0` and `non-fatal` do not count.
-- Past `--max-lines`, squeeze keeps the first quarter and the last half of the lines, and fills the remaining quarter with lines from the middle that carry an error word, then with lines that carry a warning word, in input order. A folded run stays whole: its line and its fold notice are kept or cut together. Each gap prints `... N lines cut (--max-lines 0)` and how many of those lines carry such a word. Fold and cut notices do not count toward the limit.
+- Error or warning words are `error`, `errors`, `fail`, `fails`, `failed`, `failure`, `failures`, `fatal`, `panic`, `panics`, `panicked`, `exception`, `exceptions`, `traceback`, `tracebacks`, `warn`, `warns`, `warned`, `warning` and `warnings`, as whole words in any case, unless the count before them is zero or the word is negated: `0 warnings suppressed`, `no errors`, `without warnings`, `errors: 0` and `non-fatal` do not count. An exception name also counts as an error word: a word that starts with a capital letter and ends in `Error` or `Exception`, followed by `:` or the end of the line, such as `ValueError: bad`, `E   AssertionError` or `java.lang.IllegalStateException: closed`; `handleError(ctx)` and `onError` do not count.
+- Past `--max-lines`, squeeze keeps the first quarter and the last half of the lines, and fills the remaining quarter with lines from the middle that carry an error word, then with lines that carry a warning word, then with the line just before each kept error line, such as the file name above a linter's error or the code line above an exception, in input order. A folded run stays whole: its line and its fold notice are kept or cut together. Each gap prints `... N lines cut (--max-lines 0)` and how many of those lines carry such a word. Fold and cut notices do not count toward the limit.
 - A line longer than `--max-line-bytes` is cut at a character boundary, keeping at least one character, and ends with `... N more bytes (--max-line-bytes 0)`.
 - Input with no printable text prints `(no printable text)`.
 
@@ -59,10 +59,10 @@ exit status 2
 
 | Condition | Present when |
 |---|---|
-| `error` | a line holds an error word: `error`, `fail`, `failed`, `failure`, `fatal`, `panic`, `exception` or `traceback`, with their plurals |
+| `error` | a line holds an error word: `error`, `fail`, `failed`, `failure`, `fatal`, `panic`, `exception` or `traceback`, with their plurals, or an exception name such as `ValueError:` |
 | `warning` | a line holds `warn`, `warns`, `warned`, `warning` or `warnings` |
 
-Both are word matches on the input, not the tool's verdict: a line such as `0 errors` sets `error`. Name the tool's format when one exists for an exact condition.
+Both are word matches on the input, not the tool's verdict: a line such as `retrying after error` sets `error` even when the run succeeded. Name the tool's format when one exists for an exact condition.
 
 ## JSON data
 

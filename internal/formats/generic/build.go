@@ -15,6 +15,7 @@ var (
 	warningWords = regexp.MustCompile(`(?i)\b(warn(s|ed|ings?)?)\b`)
 	negated      = regexp.MustCompile(`(?i)(^|[^\w])(0|zero|no|without|non)[\s-]*$`)
 	zeroAfter    = regexp.MustCompile(`^\s*[:=]\s*0\b`)
+	errorName    = regexp.MustCompile(`\b[A-Z]\w*(Error|Exception)(:|$)`)
 )
 
 func flagged(line string, words *regexp.Regexp) bool {
@@ -27,7 +28,7 @@ func flagged(line string, words *regexp.Regexp) bool {
 	return false
 }
 
-func isError(line string) bool { return flagged(line, errorWords) }
+func isError(line string) bool { return flagged(line, errorWords) || errorName.MatchString(line) }
 
 func isWarning(line string) bool { return flagged(line, warningWords) }
 
@@ -224,12 +225,25 @@ func cut(groups []group, max int, r *Report) []group {
 	}
 	middle := groups[head:tail]
 	keep := make([]bool, len(middle))
-	for _, pass := range []func(group) bool{func(g group) bool { return g.errors > 0 }, func(g group) bool { return g.flagged }} {
-		for i, g := range middle {
-			if !keep[i] && pass(g) && g.content <= budget {
-				budget -= g.content
-				keep[i] = true
-			}
+	take := func(i int) {
+		if !keep[i] && middle[i].content <= budget {
+			budget -= middle[i].content
+			keep[i] = true
+		}
+	}
+	for i, g := range middle {
+		if g.errors > 0 {
+			take(i)
+		}
+	}
+	for i, g := range middle {
+		if g.flagged {
+			take(i)
+		}
+	}
+	for i := 1; i < len(middle); i++ {
+		if keep[i] && middle[i].errors > 0 {
+			take(i - 1)
 		}
 	}
 	for i, g := range middle {
