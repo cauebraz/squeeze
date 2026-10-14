@@ -149,7 +149,7 @@ just build          # bin/squeeze with the version from git describe
 just commits        # commit messages and branch name since origin/main
 just check-each     # just check on every commit since origin/main
 just measure <model> # tokens of an agent with and without squeeze, on the provider whose key is set (bench/run.py -h); results in bench/README.md
-just chart <file>   # bench/results.svg from a bench/results/<file>.jsonl run
+just chart <path>   # bench/results.svg from a run, given as bench/results/<timestamp>.jsonl
 ```
 
 Go 1.26 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.

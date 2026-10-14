@@ -27,6 +27,7 @@ notice: resource name `LogsBucket` must match the following format: snake_case (
 - Issues are sorted errors first, then warnings, then notices, and by file, line and column. Identical issues print once with `(xN)`.
 - An issue TFLint raises through a module call is reported, as TFLint does, at the root-module expression that set the value; the module expressions it was evaluated in print under it, outermost first: `evaluated in main.tf:20:19 -> modules/app/main.tf:4:19`.
 - Entries of the `errors` array, which TFLint reports when it cannot parse a file or a plugin fails, print first as diagnostics with `tflint` in place of a rule, are never cut by `--max-issues`, and the header says not every check ran. `--no-detail` drops their explanation along with the call chains.
+- The call chain of an issue and the explanation of a tool error are wrapped to 100 bytes and cut after three lines with `...`.
 - Past `--max-issues`, the notice names the rules of the cut issues with their counts, so `... 116 more issues, terraform_naming_convention 60, terraform_unused_declarations 56 (--max-issues 0)` tells which rule to fix or disable first. Identical issues print once with `(xN)` and count N toward the limit.
 - Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
 
@@ -54,5 +55,6 @@ notice: resource name `LogsBucket` must match the following format: snake_case (
 ## Limitations
 
 - The rule documentation links are dropped from the text and the data; the rule name finds them.
+- A call chain or tool error explanation longer than three lines of 100 bytes is cut in the text; `--output json` carries it whole in `detail`.
 - Detection needs the input to start with `{"issues":` and to hold an `"errors":` key; a JSON document that starts the same way but has no `errors` array goes to `generic`.
 - `fail` follows TFLint's default failure severity. A run with `--minimum-failure-severity=warning` that only reports notices exits with 0 from TFLint, while `--fail-on fail` still matches; use `--fail-on error,warning` there.

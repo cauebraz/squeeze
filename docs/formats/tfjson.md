@@ -47,6 +47,7 @@ error tests/network.tftest.hcl
 - Test runs that fail or error are listed with their diagnostics; a test file that errors outside a run is listed with its own diagnostics. Passing runs are counted in `... N passing test runs (--all)`; no-op changes in `... N no-op changes (--all)`; drift in `... N drifted resources (--drift)` unless `--drift` lists it.
 - Sensitive output values are never printed or stored; other scalar outputs print their value up to 48 bytes.
 - Every line at level `error` or `warn` becomes a diagnostic, whatever its type, so a message type squeeze does not know cannot hide a failure. A diagnostic severity other than `warning` counts as an error.
+- A diagnostic's detail is wrapped to 100 bytes and cut after three lines with `...`; its code line is cut at 120 bytes.
 - Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed, so an address or a name cannot forge a line of output.
 - Everything else is counted in `... N other messages: <type> <count>, ... (--all)`; `--all` prints those messages, each cut at 200 bytes with `...`; `--output json` carries only their counts.
 
@@ -89,5 +90,6 @@ error tests/network.tftest.hcl
 ## Limitations
 
 - The stream has no attribute diffs; `tfplan` is the format for those.
+- A diagnostic's detail is cut after three lines in the text; `--output json` carries the full detail. The code line is cut at 120 bytes in both.
 - The stream carries no deposed key (`ResourceInstanceChange` in `internal/command/views/json/change.go`), so the delete of a deposed object prints as `- <address>` with nothing to tell it from a delete of the current object; `tfplan` prints the deposed key.
 - Detection reads the first five non-blank lines; a stream that starts with more text lines needs `squeeze tfjson`.
