@@ -1,0 +1,55 @@
+# example.com/shop/broken [example.com/shop/broken.test]
+broken/broken.go:3:23: cannot use "x" (untyped string constant) as int value in return statement
+FAIL	example.com/shop/broken [build failed]
+=== RUN   TestAdd
+    calc_test.go:6: adding
+--- PASS: TestAdd (0.00s)
+=== RUN   TestTable
+=== RUN   TestTable/a
+=== PAUSE TestTable/a
+=== RUN   TestTable/b
+=== PAUSE TestTable/b
+=== RUN   TestTable/c
+=== PAUSE TestTable/c
+=== CONT  TestTable/a
+=== CONT  TestTable/b
+    calc_test.go:18: Add(2, 3) = 5, want 6
+=== CONT  TestTable/c
+--- FAIL: TestTable (0.00s)
+    --- PASS: TestTable/a (0.00s)
+    --- FAIL: TestTable/b (0.00s)
+    --- PASS: TestTable/c (0.00s)
+=== RUN   TestSkip
+    calc_test.go:24: needs a database
+--- SKIP: TestSkip (0.00s)
+=== RUN   TestDiv
+--- FAIL: TestDiv (0.00s)
+panic: runtime error: integer divide by zero [recovered, repanicked]
+
+goroutine 34 [running]:
+testing.tRunner.func1.2({0x104f0a8e8, 0x104f44f50})
+	/usr/local/go/src/testing/testing.go:2125 +0x1a0
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:2128 +0x2c8
+panic({0x104f0a8e8?, 0x104f44f50?})
+	/usr/local/go/src/runtime/panic.go:859 +0x120
+example.com/shop/calc.Div(...)
+	/home/dev/shop/calc/calc.go:4
+example.com/shop/calc.TestDiv(0x3bd1d229c248?)
+	/home/dev/shop/calc/calc_test.go:27 +0x20
+testing.tRunner(0x3bd1d229c248, 0x104f27920)
+	/usr/local/go/src/testing/testing.go:2195 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2260 +0x3b8
+FAIL	example.com/shop/calc	0.199s
+=== RUN   TestTotal
+--- PASS: TestTotal (0.00s)
+PASS
+ok  	example.com/shop/cart	0.196s
+?   	example.com/shop/empty	[no test files]
+=== RUN   TestUpper
+    text_test.go:7: Upper(a) = "a"
+--- FAIL: TestUpper (0.00s)
+FAIL
+FAIL	example.com/shop/text	0.196s
+FAIL

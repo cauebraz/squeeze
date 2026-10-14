@@ -1,0 +1,16 @@
+go test: fail; 8 tests: 4 passed, 3 failed, 1 skipped; 5 packages: 1 ok, 2 failed, 1 build failed, 1 without tests
+build failed: example.com/shop/broken
+  broken/broken.go:3:23: cannot use "x" (untyped string constant) as int value in return statement
+fail example.com/shop/calc TestDiv
+  panic: runtime error: integer divide by zero [recovered, repanicked]
+  goroutine 11 [running]:
+  example.com/shop/calc.Div(...)
+      /home/dev/shop/calc/calc.go:4
+  example.com/shop/calc.TestDiv(0x2c54ee02efc8?)
+      /home/dev/shop/calc/calc_test.go:27 +0x20
+  ... 10 runtime and testing stack lines (--full)
+fail example.com/shop/calc TestTable/b
+  calc_test.go:18: Add(2, 3) = 5, want 6
+fail example.com/shop/text TestUpper
+  text_test.go:7: Upper(a) = "a"
+... 1 skipped test, 1 passing package, 1 package without tests (--all)

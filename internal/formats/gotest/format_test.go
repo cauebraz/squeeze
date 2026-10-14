@@ -2,6 +2,7 @@ package gotest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -44,13 +45,17 @@ func TestDetect(t *testing.T) {
 		input string
 		want  bool
 	}{
-		"start":         {`{"Action":"start","Package":"p"}`, true},
-		"build output":  {`{"ImportPath":"p","Action":"build-output","Output":"x\n"}`, true},
-		"after text":    {"go: downloading x v1\n{\"Action\":\"run\",\"Package\":\"p\",\"Test\":\"T\"}", true},
-		"unknown":       {`{"Action":"explode","Package":"p"}`, false},
-		"no package":    {`{"Action":"start"}`, false},
-		"tfjson stream": {`{"@level":"info","@message":"x","type":"version"}`, false},
-		"plain text":    {"ok  \tp\t0.1s\n", false},
+		"start":          {`{"Action":"start","Package":"p"}`, true},
+		"build output":   {`{"ImportPath":"p","Action":"build-output","Output":"x\n"}`, true},
+		"after text":     {"go: downloading x v1\n{\"Action\":\"run\",\"Package\":\"p\",\"Test\":\"T\"}", true},
+		"unknown":        {`{"Action":"explode","Package":"p"}`, false},
+		"no package":     {`{"Action":"start"}`, false},
+		"tfjson stream":  {`{"@level":"info","@message":"x","type":"version"}`, false},
+		"plain summary":  {"ok  \tp\t0.1s\n", true},
+		"plain run":      {"=== RUN   TestA\n", true},
+		"plain failure":  {"--- FAIL: TestA (0.00s)\n    a_test.go:3: x\n", true},
+		"summary spaces": {"ok    p    0.1s\n", false},
+		"pytest":         {"FAILED tests/test_a.py::test_x - assert 1 == 2\n", false},
 		"after module downloads": {strings.Repeat("go: downloading example.com/m v1.0.0\n", 12) +
 			"# example.com/p\n" + `{"Action":"start","Package":"p"}`, true},
 		"after twenty text lines": {strings.Repeat("x\n", 20) + `{"Action":"start","Package":"p"}`, false},
@@ -64,8 +69,70 @@ func TestDetect(t *testing.T) {
 
 func TestParseRejectsInputWithoutEvents(t *testing.T) {
 	t.Parallel()
-	if _, err := Squeeze([]byte("ok  \tp\t0.1s\n"), DefaultOptions()); err == nil {
-		t.Error("Squeeze() returned no error")
+	for _, input := range []string{"hello\n", "=== RUNNING tests\n", ""} {
+		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
+			t.Errorf("Squeeze(%q) returned no error", input)
+		}
+	}
+}
+
+func TestPlainTextMatchesJSON(t *testing.T) {
+	t.Parallel()
+	summary := func(name string, o Options) map[string]any {
+		data, err := os.ReadFile(filepath.Join(fixtureDir, name, map[bool]string{true: "input.txt", false: "input.jsonl"}[name == "plain-verbose"]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		r, err := Squeeze(data, o)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rep := r.Data.(Report)
+		var failures, builds []string
+		for _, f := range rep.Failures {
+			failures = append(failures, f.Package+" "+f.Test+" "+f.Output.Lines[len(f.Output.Lines)-1])
+		}
+		for _, b := range rep.BuildFailures {
+			builds = append(builds, b.Package+" "+strings.Join(b.Output.Lines, "|"))
+		}
+		return map[string]any{
+			"status": rep.Status, "tests": rep.Tests, "packages": rep.Packages, "failures": failures,
+			"builds": builds, "skipped": rep.Skipped, "no_tests": rep.NoTests, "panics": rep.Panics, "conditions": r.Conditions,
+		}
+	}
+	for _, o := range []Options{DefaultOptions(), {All: true, Full: true}} {
+		if diff := cmp.Diff(summary("plain-twin", o), summary("plain-verbose", o)); diff != "" {
+			t.Errorf("text and JSON of the same run differ (-json +text):\n%s", diff)
+		}
+	}
+}
+
+func TestPlainTextEdges(t *testing.T) {
+	t.Parallel()
+	input := []byte(strings.Join([]string{
+		"ok  \ta\t(cached)\tcoverage: 50.0% of statements",
+		"FAIL\tb [setup failed]",
+		"--- FAIL: TestC (1.50s)",
+		"    c_test.go:9: boom",
+		"FAIL",
+		"FAIL\tc\t1.502s",
+		"=== RUN   TestD",
+		"    d_test.go:1: still running",
+	}, "\n"))
+	r, err := Squeeze(input, Options{All: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep := r.Data.(Report)
+	if rep.Packages.OK != 1 || rep.Packages.Failed != 2 || len(rep.Coverage) != 1 || rep.Coverage[0].Coverage != "50.0% of statements" {
+		t.Errorf("packages = %+v, coverage = %+v", rep.Packages, rep.Coverage)
+	}
+	if len(rep.Failures) != 1 || rep.Failures[0].Test != "TestC" || rep.Failures[0].Elapsed != 1.5 {
+		t.Errorf("failures = %+v", rep.Failures)
+	}
+	want := []string{"=== RUN   TestD", "    d_test.go:1: still running"}
+	if diff := cmp.Diff(want, rep.Text.Lines); diff != "" {
+		t.Errorf("lines after the last summary (-want +got):\n%s", diff)
 	}
 }
 
@@ -399,6 +466,9 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add(stream(`{"Action":"run","Package":"a/b","Test":"T/x"}`, `{"Action":"output","Package":"a/b","Test":"T/x","Output":"goroutine 1 [x]:\nf(\n\tg.go:1\n"}`, `{"Action":"fail","Package":"a/b"}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
 		events, err := Parse(input)
+		if errors.Is(err, ErrNoEvents) {
+			events, err = ParseText(input)
+		}
 		if err != nil {
 			return
 		}

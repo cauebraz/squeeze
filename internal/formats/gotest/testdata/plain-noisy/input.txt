@@ -1,0 +1,650 @@
+=== RUN   TestCost
+=== RUN   TestCost/#00
+    route_test.go:10: loading route 0 from cache
+    route_test.go:11: route 0 has 0 stops
+=== RUN   TestCost/#01
+    route_test.go:10: loading route 1 from cache
+    route_test.go:11: route 1 has 1 stops
+=== RUN   TestCost/#02
+    route_test.go:10: loading route 2 from cache
+    route_test.go:11: route 2 has 2 stops
+=== RUN   TestCost/#03
+    route_test.go:10: loading route 3 from cache
+    route_test.go:11: route 3 has 3 stops
+=== RUN   TestCost/#04
+    route_test.go:10: loading route 4 from cache
+    route_test.go:11: route 4 has 4 stops
+=== RUN   TestCost/#05
+    route_test.go:10: loading route 5 from cache
+    route_test.go:11: route 5 has 5 stops
+=== RUN   TestCost/#06
+    route_test.go:10: loading route 6 from cache
+    route_test.go:11: route 6 has 6 stops
+=== RUN   TestCost/#07
+    route_test.go:10: loading route 7 from cache
+    route_test.go:11: route 7 has 7 stops
+=== RUN   TestCost/#08
+    route_test.go:10: loading route 8 from cache
+    route_test.go:11: route 8 has 8 stops
+=== RUN   TestCost/#09
+    route_test.go:10: loading route 9 from cache
+    route_test.go:11: route 9 has 0 stops
+=== RUN   TestCost/#10
+    route_test.go:10: loading route 10 from cache
+    route_test.go:11: route 10 has 1 stops
+=== RUN   TestCost/#11
+    route_test.go:10: loading route 11 from cache
+    route_test.go:11: route 11 has 2 stops
+=== RUN   TestCost/#12
+    route_test.go:10: loading route 12 from cache
+    route_test.go:11: route 12 has 3 stops
+=== RUN   TestCost/#13
+    route_test.go:10: loading route 13 from cache
+    route_test.go:11: route 13 has 4 stops
+=== RUN   TestCost/#14
+    route_test.go:10: loading route 14 from cache
+    route_test.go:11: route 14 has 5 stops
+=== RUN   TestCost/#15
+    route_test.go:10: loading route 15 from cache
+    route_test.go:11: route 15 has 6 stops
+=== RUN   TestCost/#16
+    route_test.go:10: loading route 16 from cache
+    route_test.go:11: route 16 has 7 stops
+=== RUN   TestCost/#17
+    route_test.go:10: loading route 17 from cache
+    route_test.go:11: route 17 has 8 stops
+=== RUN   TestCost/#18
+    route_test.go:10: loading route 18 from cache
+    route_test.go:11: route 18 has 0 stops
+=== RUN   TestCost/#19
+    route_test.go:10: loading route 19 from cache
+    route_test.go:11: route 19 has 1 stops
+=== RUN   TestCost/#20
+    route_test.go:10: loading route 20 from cache
+    route_test.go:11: route 20 has 2 stops
+=== RUN   TestCost/#21
+    route_test.go:10: loading route 21 from cache
+    route_test.go:11: route 21 has 3 stops
+=== RUN   TestCost/#22
+    route_test.go:10: loading route 22 from cache
+    route_test.go:11: route 22 has 4 stops
+=== RUN   TestCost/#23
+    route_test.go:10: loading route 23 from cache
+    route_test.go:11: route 23 has 5 stops
+=== RUN   TestCost/#24
+    route_test.go:10: loading route 24 from cache
+    route_test.go:11: route 24 has 6 stops
+=== RUN   TestCost/#25
+    route_test.go:10: loading route 25 from cache
+    route_test.go:11: route 25 has 7 stops
+=== RUN   TestCost/#26
+    route_test.go:10: loading route 26 from cache
+    route_test.go:11: route 26 has 8 stops
+=== RUN   TestCost/#27
+    route_test.go:10: loading route 27 from cache
+    route_test.go:11: route 27 has 0 stops
+=== RUN   TestCost/#28
+    route_test.go:10: loading route 28 from cache
+    route_test.go:11: route 28 has 1 stops
+=== RUN   TestCost/#29
+    route_test.go:10: loading route 29 from cache
+    route_test.go:11: route 29 has 2 stops
+=== RUN   TestCost/#30
+    route_test.go:10: loading route 30 from cache
+    route_test.go:11: route 30 has 3 stops
+=== RUN   TestCost/#31
+    route_test.go:10: loading route 31 from cache
+    route_test.go:11: route 31 has 4 stops
+=== RUN   TestCost/#32
+    route_test.go:10: loading route 32 from cache
+    route_test.go:11: route 32 has 5 stops
+=== RUN   TestCost/#33
+    route_test.go:10: loading route 33 from cache
+    route_test.go:11: route 33 has 6 stops
+=== RUN   TestCost/#34
+    route_test.go:10: loading route 34 from cache
+    route_test.go:11: route 34 has 7 stops
+=== RUN   TestCost/#35
+    route_test.go:10: loading route 35 from cache
+    route_test.go:11: route 35 has 8 stops
+=== RUN   TestCost/#36
+    route_test.go:10: loading route 36 from cache
+    route_test.go:11: route 36 has 0 stops
+=== RUN   TestCost/#37
+    route_test.go:10: loading route 37 from cache
+    route_test.go:11: route 37 has 1 stops
+=== RUN   TestCost/#38
+    route_test.go:10: loading route 38 from cache
+    route_test.go:11: route 38 has 2 stops
+=== RUN   TestCost/#39
+    route_test.go:10: loading route 39 from cache
+    route_test.go:11: route 39 has 3 stops
+=== RUN   TestCost/#40
+    route_test.go:10: loading route 40 from cache
+    route_test.go:11: route 40 has 4 stops
+=== RUN   TestCost/#41
+    route_test.go:10: loading route 41 from cache
+    route_test.go:11: route 41 has 5 stops
+=== RUN   TestCost/#42
+    route_test.go:10: loading route 42 from cache
+    route_test.go:11: route 42 has 6 stops
+=== RUN   TestCost/#43
+    route_test.go:10: loading route 43 from cache
+    route_test.go:11: route 43 has 7 stops
+=== RUN   TestCost/#44
+    route_test.go:10: loading route 44 from cache
+    route_test.go:11: route 44 has 8 stops
+=== RUN   TestCost/#45
+    route_test.go:10: loading route 45 from cache
+    route_test.go:11: route 45 has 0 stops
+=== RUN   TestCost/#46
+    route_test.go:10: loading route 46 from cache
+    route_test.go:11: route 46 has 1 stops
+=== RUN   TestCost/#47
+    route_test.go:10: loading route 47 from cache
+    route_test.go:11: route 47 has 2 stops
+=== RUN   TestCost/#48
+    route_test.go:10: loading route 48 from cache
+    route_test.go:11: route 48 has 3 stops
+=== RUN   TestCost/#49
+    route_test.go:10: loading route 49 from cache
+    route_test.go:11: route 49 has 4 stops
+=== RUN   TestCost/#50
+    route_test.go:10: loading route 50 from cache
+    route_test.go:11: route 50 has 5 stops
+=== RUN   TestCost/#51
+    route_test.go:10: loading route 51 from cache
+    route_test.go:11: route 51 has 6 stops
+=== RUN   TestCost/#52
+    route_test.go:10: loading route 52 from cache
+    route_test.go:11: route 52 has 7 stops
+=== RUN   TestCost/#53
+    route_test.go:10: loading route 53 from cache
+    route_test.go:11: route 53 has 8 stops
+=== RUN   TestCost/#54
+    route_test.go:10: loading route 54 from cache
+    route_test.go:11: route 54 has 0 stops
+=== RUN   TestCost/#55
+    route_test.go:10: loading route 55 from cache
+    route_test.go:11: route 55 has 1 stops
+=== RUN   TestCost/#56
+    route_test.go:10: loading route 56 from cache
+    route_test.go:11: route 56 has 2 stops
+=== RUN   TestCost/#57
+    route_test.go:10: loading route 57 from cache
+    route_test.go:11: route 57 has 3 stops
+=== RUN   TestCost/#58
+    route_test.go:10: loading route 58 from cache
+    route_test.go:11: route 58 has 4 stops
+=== RUN   TestCost/#59
+    route_test.go:10: loading route 59 from cache
+    route_test.go:11: route 59 has 5 stops
+=== RUN   TestCost/#60
+    route_test.go:10: loading route 60 from cache
+    route_test.go:11: route 60 has 6 stops
+=== RUN   TestCost/#61
+    route_test.go:10: loading route 61 from cache
+    route_test.go:11: route 61 has 7 stops
+=== RUN   TestCost/#62
+    route_test.go:10: loading route 62 from cache
+    route_test.go:11: route 62 has 8 stops
+=== RUN   TestCost/#63
+    route_test.go:10: loading route 63 from cache
+    route_test.go:11: route 63 has 0 stops
+=== RUN   TestCost/#64
+    route_test.go:10: loading route 64 from cache
+    route_test.go:11: route 64 has 1 stops
+=== RUN   TestCost/#65
+    route_test.go:10: loading route 65 from cache
+    route_test.go:11: route 65 has 2 stops
+=== RUN   TestCost/#66
+    route_test.go:10: loading route 66 from cache
+    route_test.go:11: route 66 has 3 stops
+=== RUN   TestCost/#67
+    route_test.go:10: loading route 67 from cache
+    route_test.go:11: route 67 has 4 stops
+=== RUN   TestCost/#68
+    route_test.go:10: loading route 68 from cache
+    route_test.go:11: route 68 has 5 stops
+=== RUN   TestCost/#69
+    route_test.go:10: loading route 69 from cache
+    route_test.go:11: route 69 has 6 stops
+=== RUN   TestCost/#70
+    route_test.go:10: loading route 70 from cache
+    route_test.go:11: route 70 has 7 stops
+=== RUN   TestCost/#71
+    route_test.go:10: loading route 71 from cache
+    route_test.go:11: route 71 has 8 stops
+=== RUN   TestCost/#72
+    route_test.go:10: loading route 72 from cache
+    route_test.go:11: route 72 has 0 stops
+=== RUN   TestCost/#73
+    route_test.go:10: loading route 73 from cache
+    route_test.go:11: route 73 has 1 stops
+=== RUN   TestCost/#74
+    route_test.go:10: loading route 74 from cache
+    route_test.go:11: route 74 has 2 stops
+=== RUN   TestCost/#75
+    route_test.go:10: loading route 75 from cache
+    route_test.go:11: route 75 has 3 stops
+=== RUN   TestCost/#76
+    route_test.go:10: loading route 76 from cache
+    route_test.go:11: route 76 has 4 stops
+=== RUN   TestCost/#77
+    route_test.go:10: loading route 77 from cache
+    route_test.go:11: route 77 has 5 stops
+=== RUN   TestCost/#78
+    route_test.go:10: loading route 78 from cache
+    route_test.go:11: route 78 has 6 stops
+=== RUN   TestCost/#79
+    route_test.go:10: loading route 79 from cache
+    route_test.go:11: route 79 has 7 stops
+=== RUN   TestCost/#80
+    route_test.go:10: loading route 80 from cache
+    route_test.go:11: route 80 has 8 stops
+=== RUN   TestCost/#81
+    route_test.go:10: loading route 81 from cache
+    route_test.go:11: route 81 has 0 stops
+=== RUN   TestCost/#82
+    route_test.go:10: loading route 82 from cache
+    route_test.go:11: route 82 has 1 stops
+=== RUN   TestCost/#83
+    route_test.go:10: loading route 83 from cache
+    route_test.go:11: route 83 has 2 stops
+=== RUN   TestCost/#84
+    route_test.go:10: loading route 84 from cache
+    route_test.go:11: route 84 has 3 stops
+=== RUN   TestCost/#85
+    route_test.go:10: loading route 85 from cache
+    route_test.go:11: route 85 has 4 stops
+=== RUN   TestCost/#86
+    route_test.go:10: loading route 86 from cache
+    route_test.go:11: route 86 has 5 stops
+=== RUN   TestCost/#87
+    route_test.go:10: loading route 87 from cache
+    route_test.go:11: route 87 has 6 stops
+=== RUN   TestCost/#88
+    route_test.go:10: loading route 88 from cache
+    route_test.go:11: route 88 has 7 stops
+=== RUN   TestCost/#89
+    route_test.go:10: loading route 89 from cache
+    route_test.go:11: route 89 has 8 stops
+=== RUN   TestCost/#90
+    route_test.go:10: loading route 90 from cache
+    route_test.go:11: route 90 has 0 stops
+=== RUN   TestCost/#91
+    route_test.go:10: loading route 91 from cache
+    route_test.go:11: route 91 has 1 stops
+=== RUN   TestCost/#92
+    route_test.go:10: loading route 92 from cache
+    route_test.go:11: route 92 has 2 stops
+=== RUN   TestCost/#93
+    route_test.go:10: loading route 93 from cache
+    route_test.go:11: route 93 has 3 stops
+=== RUN   TestCost/#94
+    route_test.go:10: loading route 94 from cache
+    route_test.go:11: route 94 has 4 stops
+=== RUN   TestCost/#95
+    route_test.go:10: loading route 95 from cache
+    route_test.go:11: route 95 has 5 stops
+=== RUN   TestCost/#96
+    route_test.go:10: loading route 96 from cache
+    route_test.go:11: route 96 has 6 stops
+=== RUN   TestCost/#97
+    route_test.go:10: loading route 97 from cache
+    route_test.go:11: route 97 has 7 stops
+=== RUN   TestCost/#98
+    route_test.go:10: loading route 98 from cache
+    route_test.go:11: route 98 has 8 stops
+=== RUN   TestCost/#99
+    route_test.go:10: loading route 99 from cache
+    route_test.go:11: route 99 has 0 stops
+=== RUN   TestCost/#100
+    route_test.go:10: loading route 100 from cache
+    route_test.go:11: route 100 has 1 stops
+=== RUN   TestCost/#101
+    route_test.go:10: loading route 101 from cache
+    route_test.go:11: route 101 has 2 stops
+=== RUN   TestCost/#102
+    route_test.go:10: loading route 102 from cache
+    route_test.go:11: route 102 has 3 stops
+=== RUN   TestCost/#103
+    route_test.go:10: loading route 103 from cache
+    route_test.go:11: route 103 has 4 stops
+=== RUN   TestCost/#104
+    route_test.go:10: loading route 104 from cache
+    route_test.go:11: route 104 has 5 stops
+=== RUN   TestCost/#105
+    route_test.go:10: loading route 105 from cache
+    route_test.go:11: route 105 has 6 stops
+=== RUN   TestCost/#106
+    route_test.go:10: loading route 106 from cache
+    route_test.go:11: route 106 has 7 stops
+=== RUN   TestCost/#107
+    route_test.go:10: loading route 107 from cache
+    route_test.go:11: route 107 has 8 stops
+=== RUN   TestCost/#108
+    route_test.go:10: loading route 108 from cache
+    route_test.go:11: route 108 has 0 stops
+=== RUN   TestCost/#109
+    route_test.go:10: loading route 109 from cache
+    route_test.go:11: route 109 has 1 stops
+=== RUN   TestCost/#110
+    route_test.go:10: loading route 110 from cache
+    route_test.go:11: route 110 has 2 stops
+=== RUN   TestCost/#111
+    route_test.go:10: loading route 111 from cache
+    route_test.go:11: route 111 has 3 stops
+=== RUN   TestCost/#112
+    route_test.go:10: loading route 112 from cache
+    route_test.go:11: route 112 has 4 stops
+=== RUN   TestCost/#113
+    route_test.go:10: loading route 113 from cache
+    route_test.go:11: route 113 has 5 stops
+=== RUN   TestCost/#114
+    route_test.go:10: loading route 114 from cache
+    route_test.go:11: route 114 has 6 stops
+=== RUN   TestCost/#115
+    route_test.go:10: loading route 115 from cache
+    route_test.go:11: route 115 has 7 stops
+=== RUN   TestCost/#116
+    route_test.go:10: loading route 116 from cache
+    route_test.go:11: route 116 has 8 stops
+=== RUN   TestCost/#117
+    route_test.go:10: loading route 117 from cache
+    route_test.go:11: route 117 has 0 stops
+=== RUN   TestCost/#118
+    route_test.go:10: loading route 118 from cache
+    route_test.go:11: route 118 has 1 stops
+=== RUN   TestCost/#119
+    route_test.go:10: loading route 119 from cache
+    route_test.go:11: route 119 has 2 stops
+=== RUN   TestCost/#120
+    route_test.go:10: loading route 120 from cache
+    route_test.go:11: route 120 has 3 stops
+=== RUN   TestCost/#121
+    route_test.go:10: loading route 121 from cache
+    route_test.go:11: route 121 has 4 stops
+=== RUN   TestCost/#122
+    route_test.go:10: loading route 122 from cache
+    route_test.go:11: route 122 has 5 stops
+=== RUN   TestCost/#123
+    route_test.go:10: loading route 123 from cache
+    route_test.go:11: route 123 has 6 stops
+=== RUN   TestCost/#124
+    route_test.go:10: loading route 124 from cache
+    route_test.go:11: route 124 has 7 stops
+=== RUN   TestCost/#125
+    route_test.go:10: loading route 125 from cache
+    route_test.go:11: route 125 has 8 stops
+=== RUN   TestCost/#126
+    route_test.go:10: loading route 126 from cache
+    route_test.go:11: route 126 has 0 stops
+=== RUN   TestCost/#127
+    route_test.go:10: loading route 127 from cache
+    route_test.go:11: route 127 has 1 stops
+=== RUN   TestCost/#128
+    route_test.go:10: loading route 128 from cache
+    route_test.go:11: route 128 has 2 stops
+=== RUN   TestCost/#129
+    route_test.go:10: loading route 129 from cache
+    route_test.go:11: route 129 has 3 stops
+=== RUN   TestCost/#130
+    route_test.go:10: loading route 130 from cache
+    route_test.go:11: route 130 has 4 stops
+=== RUN   TestCost/#131
+    route_test.go:10: loading route 131 from cache
+    route_test.go:11: route 131 has 5 stops
+=== RUN   TestCost/#132
+    route_test.go:10: loading route 132 from cache
+    route_test.go:11: route 132 has 6 stops
+=== RUN   TestCost/#133
+    route_test.go:10: loading route 133 from cache
+    route_test.go:11: route 133 has 7 stops
+=== RUN   TestCost/#134
+    route_test.go:10: loading route 134 from cache
+    route_test.go:11: route 134 has 8 stops
+=== RUN   TestCost/#135
+    route_test.go:10: loading route 135 from cache
+    route_test.go:11: route 135 has 0 stops
+=== RUN   TestCost/#136
+    route_test.go:10: loading route 136 from cache
+    route_test.go:11: route 136 has 1 stops
+=== RUN   TestCost/#137
+    route_test.go:10: loading route 137 from cache
+    route_test.go:11: route 137 has 2 stops
+=== RUN   TestCost/#138
+    route_test.go:10: loading route 138 from cache
+    route_test.go:11: route 138 has 3 stops
+=== RUN   TestCost/#139
+    route_test.go:10: loading route 139 from cache
+    route_test.go:11: route 139 has 4 stops
+=== RUN   TestCost/#140
+    route_test.go:10: loading route 140 from cache
+    route_test.go:11: route 140 has 5 stops
+=== RUN   TestCost/#141
+    route_test.go:10: loading route 141 from cache
+    route_test.go:11: route 141 has 6 stops
+=== RUN   TestCost/#142
+    route_test.go:10: loading route 142 from cache
+    route_test.go:11: route 142 has 7 stops
+=== RUN   TestCost/#143
+    route_test.go:10: loading route 143 from cache
+    route_test.go:11: route 143 has 8 stops
+=== RUN   TestCost/#144
+    route_test.go:10: loading route 144 from cache
+    route_test.go:11: route 144 has 0 stops
+=== RUN   TestCost/#145
+    route_test.go:10: loading route 145 from cache
+    route_test.go:11: route 145 has 1 stops
+=== RUN   TestCost/#146
+    route_test.go:10: loading route 146 from cache
+    route_test.go:11: route 146 has 2 stops
+=== RUN   TestCost/#147
+    route_test.go:10: loading route 147 from cache
+    route_test.go:11: route 147 has 3 stops
+=== RUN   TestCost/#148
+    route_test.go:10: loading route 148 from cache
+    route_test.go:11: route 148 has 4 stops
+=== RUN   TestCost/#149
+    route_test.go:10: loading route 149 from cache
+    route_test.go:11: route 149 has 5 stops
+=== RUN   TestCost/#150
+    route_test.go:10: loading route 150 from cache
+    route_test.go:11: route 150 has 6 stops
+=== RUN   TestCost/#151
+    route_test.go:10: loading route 151 from cache
+    route_test.go:11: route 151 has 7 stops
+    route_test.go:17: case 151: got 306 want 7
+=== RUN   TestCost/#152
+    route_test.go:10: loading route 152 from cache
+    route_test.go:11: route 152 has 8 stops
+=== RUN   TestCost/#153
+    route_test.go:10: loading route 153 from cache
+    route_test.go:11: route 153 has 0 stops
+=== RUN   TestCost/#154
+    route_test.go:10: loading route 154 from cache
+    route_test.go:11: route 154 has 1 stops
+=== RUN   TestCost/#155
+    route_test.go:10: loading route 155 from cache
+    route_test.go:11: route 155 has 2 stops
+=== RUN   TestCost/#156
+    route_test.go:10: loading route 156 from cache
+    route_test.go:11: route 156 has 3 stops
+=== RUN   TestCost/#157
+    route_test.go:10: loading route 157 from cache
+    route_test.go:11: route 157 has 4 stops
+=== RUN   TestCost/#158
+    route_test.go:10: loading route 158 from cache
+    route_test.go:11: route 158 has 5 stops
+=== RUN   TestCost/#159
+    route_test.go:10: loading route 159 from cache
+    route_test.go:11: route 159 has 6 stops
+--- FAIL: TestCost (0.00s)
+    --- PASS: TestCost/#00 (0.00s)
+    --- PASS: TestCost/#01 (0.00s)
+    --- PASS: TestCost/#02 (0.00s)
+    --- PASS: TestCost/#03 (0.00s)
+    --- PASS: TestCost/#04 (0.00s)
+    --- PASS: TestCost/#05 (0.00s)
+    --- PASS: TestCost/#06 (0.00s)
+    --- PASS: TestCost/#07 (0.00s)
+    --- PASS: TestCost/#08 (0.00s)
+    --- PASS: TestCost/#09 (0.00s)
+    --- PASS: TestCost/#10 (0.00s)
+    --- PASS: TestCost/#11 (0.00s)
+    --- PASS: TestCost/#12 (0.00s)
+    --- PASS: TestCost/#13 (0.00s)
+    --- PASS: TestCost/#14 (0.00s)
+    --- PASS: TestCost/#15 (0.00s)
+    --- PASS: TestCost/#16 (0.00s)
+    --- PASS: TestCost/#17 (0.00s)
+    --- PASS: TestCost/#18 (0.00s)
+    --- PASS: TestCost/#19 (0.00s)
+    --- PASS: TestCost/#20 (0.00s)
+    --- PASS: TestCost/#21 (0.00s)
+    --- PASS: TestCost/#22 (0.00s)
+    --- PASS: TestCost/#23 (0.00s)
+    --- PASS: TestCost/#24 (0.00s)
+    --- PASS: TestCost/#25 (0.00s)
+    --- PASS: TestCost/#26 (0.00s)
+    --- PASS: TestCost/#27 (0.00s)
+    --- PASS: TestCost/#28 (0.00s)
+    --- PASS: TestCost/#29 (0.00s)
+    --- PASS: TestCost/#30 (0.00s)
+    --- PASS: TestCost/#31 (0.00s)
+    --- PASS: TestCost/#32 (0.00s)
+    --- PASS: TestCost/#33 (0.00s)
+    --- PASS: TestCost/#34 (0.00s)
+    --- PASS: TestCost/#35 (0.00s)
+    --- PASS: TestCost/#36 (0.00s)
+    --- PASS: TestCost/#37 (0.00s)
+    --- PASS: TestCost/#38 (0.00s)
+    --- PASS: TestCost/#39 (0.00s)
+    --- PASS: TestCost/#40 (0.00s)
+    --- PASS: TestCost/#41 (0.00s)
+    --- PASS: TestCost/#42 (0.00s)
+    --- PASS: TestCost/#43 (0.00s)
+    --- PASS: TestCost/#44 (0.00s)
+    --- PASS: TestCost/#45 (0.00s)
+    --- PASS: TestCost/#46 (0.00s)
+    --- PASS: TestCost/#47 (0.00s)
+    --- PASS: TestCost/#48 (0.00s)
+    --- PASS: TestCost/#49 (0.00s)
+    --- PASS: TestCost/#50 (0.00s)
+    --- PASS: TestCost/#51 (0.00s)
+    --- PASS: TestCost/#52 (0.00s)
+    --- PASS: TestCost/#53 (0.00s)
+    --- PASS: TestCost/#54 (0.00s)
+    --- PASS: TestCost/#55 (0.00s)
+    --- PASS: TestCost/#56 (0.00s)
+    --- PASS: TestCost/#57 (0.00s)
+    --- PASS: TestCost/#58 (0.00s)
+    --- PASS: TestCost/#59 (0.00s)
+    --- PASS: TestCost/#60 (0.00s)
+    --- PASS: TestCost/#61 (0.00s)
+    --- PASS: TestCost/#62 (0.00s)
+    --- PASS: TestCost/#63 (0.00s)
+    --- PASS: TestCost/#64 (0.00s)
+    --- PASS: TestCost/#65 (0.00s)
+    --- PASS: TestCost/#66 (0.00s)
+    --- PASS: TestCost/#67 (0.00s)
+    --- PASS: TestCost/#68 (0.00s)
+    --- PASS: TestCost/#69 (0.00s)
+    --- PASS: TestCost/#70 (0.00s)
+    --- PASS: TestCost/#71 (0.00s)
+    --- PASS: TestCost/#72 (0.00s)
+    --- PASS: TestCost/#73 (0.00s)
+    --- PASS: TestCost/#74 (0.00s)
+    --- PASS: TestCost/#75 (0.00s)
+    --- PASS: TestCost/#76 (0.00s)
+    --- PASS: TestCost/#77 (0.00s)
+    --- PASS: TestCost/#78 (0.00s)
+    --- PASS: TestCost/#79 (0.00s)
+    --- PASS: TestCost/#80 (0.00s)
+    --- PASS: TestCost/#81 (0.00s)
+    --- PASS: TestCost/#82 (0.00s)
+    --- PASS: TestCost/#83 (0.00s)
+    --- PASS: TestCost/#84 (0.00s)
+    --- PASS: TestCost/#85 (0.00s)
+    --- PASS: TestCost/#86 (0.00s)
+    --- PASS: TestCost/#87 (0.00s)
+    --- PASS: TestCost/#88 (0.00s)
+    --- PASS: TestCost/#89 (0.00s)
+    --- PASS: TestCost/#90 (0.00s)
+    --- PASS: TestCost/#91 (0.00s)
+    --- PASS: TestCost/#92 (0.00s)
+    --- PASS: TestCost/#93 (0.00s)
+    --- PASS: TestCost/#94 (0.00s)
+    --- PASS: TestCost/#95 (0.00s)
+    --- PASS: TestCost/#96 (0.00s)
+    --- PASS: TestCost/#97 (0.00s)
+    --- PASS: TestCost/#98 (0.00s)
+    --- PASS: TestCost/#99 (0.00s)
+    --- PASS: TestCost/#100 (0.00s)
+    --- PASS: TestCost/#101 (0.00s)
+    --- PASS: TestCost/#102 (0.00s)
+    --- PASS: TestCost/#103 (0.00s)
+    --- PASS: TestCost/#104 (0.00s)
+    --- PASS: TestCost/#105 (0.00s)
+    --- PASS: TestCost/#106 (0.00s)
+    --- PASS: TestCost/#107 (0.00s)
+    --- PASS: TestCost/#108 (0.00s)
+    --- PASS: TestCost/#109 (0.00s)
+    --- PASS: TestCost/#110 (0.00s)
+    --- PASS: TestCost/#111 (0.00s)
+    --- PASS: TestCost/#112 (0.00s)
+    --- PASS: TestCost/#113 (0.00s)
+    --- PASS: TestCost/#114 (0.00s)
+    --- PASS: TestCost/#115 (0.00s)
+    --- PASS: TestCost/#116 (0.00s)
+    --- PASS: TestCost/#117 (0.00s)
+    --- PASS: TestCost/#118 (0.00s)
+    --- PASS: TestCost/#119 (0.00s)
+    --- PASS: TestCost/#120 (0.00s)
+    --- PASS: TestCost/#121 (0.00s)
+    --- PASS: TestCost/#122 (0.00s)
+    --- PASS: TestCost/#123 (0.00s)
+    --- PASS: TestCost/#124 (0.00s)
+    --- PASS: TestCost/#125 (0.00s)
+    --- PASS: TestCost/#126 (0.00s)
+    --- PASS: TestCost/#127 (0.00s)
+    --- PASS: TestCost/#128 (0.00s)
+    --- PASS: TestCost/#129 (0.00s)
+    --- PASS: TestCost/#130 (0.00s)
+    --- PASS: TestCost/#131 (0.00s)
+    --- PASS: TestCost/#132 (0.00s)
+    --- PASS: TestCost/#133 (0.00s)
+    --- PASS: TestCost/#134 (0.00s)
+    --- PASS: TestCost/#135 (0.00s)
+    --- PASS: TestCost/#136 (0.00s)
+    --- PASS: TestCost/#137 (0.00s)
+    --- PASS: TestCost/#138 (0.00s)
+    --- PASS: TestCost/#139 (0.00s)
+    --- PASS: TestCost/#140 (0.00s)
+    --- PASS: TestCost/#141 (0.00s)
+    --- PASS: TestCost/#142 (0.00s)
+    --- PASS: TestCost/#143 (0.00s)
+    --- PASS: TestCost/#144 (0.00s)
+    --- PASS: TestCost/#145 (0.00s)
+    --- PASS: TestCost/#146 (0.00s)
+    --- PASS: TestCost/#147 (0.00s)
+    --- PASS: TestCost/#148 (0.00s)
+    --- PASS: TestCost/#149 (0.00s)
+    --- PASS: TestCost/#150 (0.00s)
+    --- FAIL: TestCost/#151 (0.00s)
+    --- PASS: TestCost/#152 (0.00s)
+    --- PASS: TestCost/#153 (0.00s)
+    --- PASS: TestCost/#154 (0.00s)
+    --- PASS: TestCost/#155 (0.00s)
+    --- PASS: TestCost/#156 (0.00s)
+    --- PASS: TestCost/#157 (0.00s)
+    --- PASS: TestCost/#158 (0.00s)
+    --- PASS: TestCost/#159 (0.00s)
+FAIL
+FAIL	example.com/shop/route	0.254s
+=== RUN   TestTotal
+--- PASS: TestTotal (0.00s)
+PASS
+ok  	example.com/shop/cart	0.074s
+FAIL
