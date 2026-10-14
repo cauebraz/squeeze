@@ -13,7 +13,7 @@ build:
     go build -trimpath -ldflags "-s -w -X github.com/cauebraz/squeeze/internal/cli.Version={{version}}" -o bin/squeeze ./cmd/squeeze
 
 test:
-    go test ./...
+    go test -race ./...
 
 fmt:
     gofmt -w .
