@@ -64,6 +64,13 @@ func TestNegatedFlagWords(t *testing.T) {
 		"Fatal error":                                     {true, false},
 		"12 failed, 3 passed":                             {true, false},
 		"zero failures":                                   {false, false},
+		"ValueError: invalid literal":                     {true, false},
+		"E   AssertionError":                              {true, false},
+		"Caused by: java.lang.IllegalStateException: x":   {true, false},
+		"Uncaught TypeError: x is not a function":         {true, false},
+		"registered onError handler":                      {false, false},
+		"calling handleError(ctx)":                        {false, false},
+		"MirrorError retries 3":                           {false, false},
 	}
 	for line, want := range tests {
 		if got := [2]bool{isError(line), isWarning(line)}; got != want {
@@ -194,6 +201,11 @@ func TestText(t *testing.T) {
 			o:     DefaultOptions(),
 			want:  "  two\n    Tab\n",
 		},
+		"an exception line and the line before it survive the cut": {
+			input: lines("start", "a", "b", "c", "d", "e", "    raise ValueError(\"bad\")", "ValueError: bad", "f", "g", "h", "i", "end 1", "end 2"),
+			o:     Options{MaxLines: 6},
+			want:  "start\n... 5 lines cut (--max-lines 0)\n    raise ValueError(\"bad\")\nValueError: bad\n... 3 lines cut (--max-lines 0)\ni\nend 1\nend 2\n",
+		},
 		"nothing printable": {
 			input: []byte("\x1b[0m\n\x07\n"),
 			o:     DefaultOptions(),
@@ -218,7 +230,7 @@ func TestText(t *testing.T) {
 func TestReport(t *testing.T) {
 	t.Parallel()
 	r, _ := Build(lines("", "a", "a", "a", "b", "", "", strings.Repeat("z", 9), "Error x", "c", "d"), Options{MaxLines: 5, MaxLineBytes: 4})
-	want := Report{Tool: "text", Lines: 11, Printed: 4, BlankDropped: 2, Folded: 2, Cut: 3, LongLines: 1, ErrorLines: 1}
+	want := Report{Tool: "text", Lines: 11, Printed: 5, BlankDropped: 2, Folded: 2, Cut: 2, LongLines: 2, ErrorLines: 1}
 	if diff := cmp.Diff(want, r); diff != "" {
 		t.Errorf("report (-want +got):\n%s", diff)
 	}

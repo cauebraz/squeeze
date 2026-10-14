@@ -48,10 +48,12 @@ golf charlie handled by sierra worker
 hotel juliet handled by lima worker
 india quebec handled by echo worker
 juliet delta handled by romeo worker
-... 200 lines cut (--max-lines 0)
+... 199 lines cut (--max-lines 0)
+juliet delta handled by romeo worker
 ERROR db: timeout after 30s on query users
 WARNING retrying query users
-... 48 lines cut (--max-lines 0)
+... 47 lines cut (--max-lines 0)
+tango november handled by hotel worker
 panic: runtime error: index out of range
 ... 100 lines cut (--max-lines 0)
 bravo hotel handled by november worker
