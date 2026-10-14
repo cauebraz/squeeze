@@ -73,7 +73,7 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 | `--all` | off | print the short summary lines of passed, skipped, xfailed and xpassed tests and the sections squeeze only counts |
 | `--full` | off | print the whole traceback and the captured output of every failure |
 | `--max-output` | `20` | lines per failure and lines outside the sections, `0` for all |
-| `--max-tests` | `50` | failures and errors listed, `0` for all |
+| `--max-tests` | `50` | failed or errored tests listed, `0` for all |
 | `--max-warnings` | `10` | warnings listed, `0` for all |
 | `--no-fold` | off | print every failure, also one that fails at the same line as an earlier one |
 
@@ -93,7 +93,7 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `summary_found`, `summary`, `interrupted`, `stopped` and `internal_error` when set, `failures`, `failures_folded`, `failures_omitted`, `warning_messages` (`message`, `count`), `warnings_omitted`, `notes`, `notes_omitted`, `outcomes` (the other short summary lines) and `other_sections` (line counts by section title).
+`data` holds `tool`, `tool_version`, `summary_found`, `summary`, `interrupted`, `stopped` and `internal_error` when set, `failures`, `failures_folded`, `tests_omitted`, `warning_messages` (`message`, `count`), `warnings_omitted`, `notes`, `notes_omitted`, `outcomes` (the other short summary lines) and `other_sections` (line counts by section title).
 
 - `summary`: `failed`, `passed`, `skipped`, `deselected`, `xfailed`, `xpassed`, `warnings`, `errors`, `other` (counts of types pytest or a plugin adds, such as `subtests passed` or `rerun`), `duration` and `line`.
 - `failures`: `kind` (`failed` or `error`), `test`, `lines` and, when set, `subtest`, `when`, `message`, `hidden` (traceback lines not shown), `captured` (one object per section with `name`, `lines` and `omitted`), `omitted`, `from_summary_only`, `location` (the last `path:line` of the traceback) and `same_location_tests` (the node IDs folded into this entry).

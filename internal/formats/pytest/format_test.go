@@ -492,7 +492,7 @@ func TestWarningMessagesSpanLines(t *testing.T) {
 func TestOmittedFailuresPlural(t *testing.T) {
 	t.Parallel()
 	r, _ := Squeeze(fixture(t, "more"), Options{MaxTests: 9, NoFold: true})
-	if !strings.Contains(r.Text, "... 1 more failure or error (--max-tests 0)\n") {
+	if !strings.Contains(r.Text, "... 1 more failed or errored test (--max-tests 0)\n") {
 		t.Errorf("text:\n%s", r.Text)
 	}
 }

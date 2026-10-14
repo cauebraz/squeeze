@@ -49,7 +49,7 @@ type Report struct {
 	InternalError   bool           `json:"internal_error,omitempty"`
 	Stopped         string         `json:"stopped,omitempty"`
 	Failures        []Failure      `json:"failures"`
-	FailuresOmitted int            `json:"failures_omitted"`
+	FailuresOmitted int            `json:"tests_omitted"`
 	FailuresFolded  int            `json:"failures_folded"`
 	Warnings        []Warning      `json:"warning_messages"`
 	WarningsOmitted int            `json:"warnings_omitted"`

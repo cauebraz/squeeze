@@ -46,7 +46,7 @@ func (Format) Detect(head []byte) bool {
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	o := DefaultOptions()
-	core.CountFlag(fs, &o.MaxTests, "max-tests", "failures and errors listed, 0 for all")
+	core.CountFlag(fs, &o.MaxTests, "max-tests", "failed or errored tests listed, 0 for all")
 	core.CountFlag(fs, &o.MaxOutput, "max-output", "lines per failure and lines outside the sections, 0 for all")
 	core.CountFlag(fs, &o.MaxWarnings, "max-warnings", "warnings listed, 0 for all")
 	fs.BoolVar(&o.Full, "full", false, "print the whole traceback and the captured output of every failure")
