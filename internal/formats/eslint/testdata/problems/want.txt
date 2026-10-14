@@ -1,0 +1,13 @@
+eslint: 12 problems (7 errors, 5 warnings) in 3 of 5 files; 1 file not parsed; 6 fixable with --fix; 1 suppressed
+error: Parsing error: Unexpected keyword 'return' (src/broken/parse.js:2:3)
+error: 'count' is assigned a value but never used. (src/cart.js:3:7, no-unused-vars)
+error: Expected '===' and instead saw '=='. (src/cart.js:5:20, eqeqeq)
+error: Expected { after 'if' condition. (src/cart.js:5:29, curly, fixable)
+error: 'currency' is defined but never used. (src/lib/format.js:1:30, no-unused-vars)
+error: Expected '===' and instead saw '=='. (src/lib/format.js:3:13, eqeqeq)
+error: Expected { after 'if' condition. (src/lib/format.js:3:19, curly, fixable)
+warning: Unexpected var, use let or const instead. (src/cart.js:1:1, no-var, fixable)
+warning: 'count' is never reassigned. Use 'const' instead. (src/cart.js:3:7, prefer-const, fixable)
+warning: Unexpected console statement. (src/cart.js:8:3, no-console)
+warning: 'symbol' is never reassigned. Use 'const' instead. (src/lib/format.js:2:7, prefer-const, fixable)
+warning: Unused eslint-disable directive (no problems were reported from 'eqeqeq'). (src/lib/format.js:6:3, fixable)
