@@ -1,0 +1,652 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "fullName": "Trivy Vulnerability Scanner",
+          "informationUri": "https://github.com/aquasecurity/trivy",
+          "name": "Trivy",
+          "rules": [
+            {
+              "id": "CVE-2018-1000656",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "python-flask: Denial of Service via crafted JSON file"
+              },
+              "fullDescription": {
+                "text": "The Pallets Project flask version Before 0.12.3 contains a CWE-20: Improper Input Validation vulnerability in flask that can result in Large amount of memory usage possibly leading to denial of service. This attack appear to be exploitable via Attacker provides JSON data in incorrect encoding. This vulnerability appears to have been fixed in 0.12.3. NOTE: this may overlap CVE-2019-1010083."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2018-1000656",
+              "help": {
+                "text": "Vulnerability CVE-2018-1000656\nSeverity: HIGH\nPackage: flask\nFixed Version: 0.12.3\nLink: [CVE-2018-1000656](https://avd.aquasec.com/nvd/cve-2018-1000656)\nThe Pallets Project flask version Before 0.12.3 contains a CWE-20: Improper Input Validation vulnerability in flask that can result in Large amount of memory usage possibly leading to denial of service. This attack appear to be exploitable via Attacker provides JSON data in incorrect encoding. This vulnerability appears to have been fixed in 0.12.3. NOTE: this may overlap CVE-2019-1010083.",
+                "markdown": "**Vulnerability CVE-2018-1000656**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|HIGH|flask|0.12.3|[CVE-2018-1000656](https://avd.aquasec.com/nvd/cve-2018-1000656)|\n\nThe Pallets Project flask version Before 0.12.3 contains a CWE-20: Improper Input Validation vulnerability in flask that can result in Large amount of memory usage possibly leading to denial of service. This attack appear to be exploitable via Attacker provides JSON data in incorrect encoding. This vulnerability appears to have been fixed in 0.12.3. NOTE: this may overlap CVE-2019-1010083."
+              },
+              "properties": {
+                "cvssv3_baseScore": 7.5,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                "cvssv40_baseScore": 8.7,
+                "cvssv40_vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+                "precision": "very-high",
+                "security-severity": "7.5",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "HIGH"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2019-1010083",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "python-flask: unexpected memory usage can lead to denial of service via crafted encoded JSON data"
+              },
+              "fullDescription": {
+                "text": "The Pallets Project Flask before 1.0 is affected by: unexpected memory usage. The impact is: denial of service. The attack vector is: crafted encoded JSON data. The fixed version is: 1. NOTE: this may overlap CVE-2018-1000656."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2019-1010083",
+              "help": {
+                "text": "Vulnerability CVE-2019-1010083\nSeverity: HIGH\nPackage: flask\nFixed Version: 1.0\nLink: [CVE-2019-1010083](https://avd.aquasec.com/nvd/cve-2019-1010083)\nThe Pallets Project Flask before 1.0 is affected by: unexpected memory usage. The impact is: denial of service. The attack vector is: crafted encoded JSON data. The fixed version is: 1. NOTE: this may overlap CVE-2018-1000656.",
+                "markdown": "**Vulnerability CVE-2019-1010083**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|HIGH|flask|1.0|[CVE-2019-1010083](https://avd.aquasec.com/nvd/cve-2019-1010083)|\n\nThe Pallets Project Flask before 1.0 is affected by: unexpected memory usage. The impact is: denial of service. The attack vector is: crafted encoded JSON data. The fixed version is: 1. NOTE: this may overlap CVE-2018-1000656."
+              },
+              "properties": {
+                "cvssv3_baseScore": 7.5,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                "cvssv40_baseScore": 8.7,
+                "cvssv40_vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+                "precision": "very-high",
+                "security-severity": "7.5",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "HIGH"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2023-30861",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "flask: Possible disclosure of permanent session cookie due to missing Vary: Cookie header"
+              },
+              "fullDescription": {
+                "text": "Flask is a lightweight WSGI web application framework. When all of the following conditions are met, a response containing data intended for one client may be cached and subsequently sent by the proxy to other clients. If the proxy also caches `Set-Cookie` headers, it may send one client's `session` cookie to other clients. The severity depends on the application's use of the session and the proxy's behavior regarding cookies. The risk depends on all these conditions being met.\n\n1. The application must be hosted behind a caching proxy that does not strip cookies or ignore responses with cookies.\n2. The application sets `session.permanent = True`\n3. The application does not access or modify the session at any point during a request.\n4. `SESSION_REFRESH_EACH_REQUEST` enabled (the default).\n5. The application does not set a `Cache-Control` header to indicate that a page is private or should not be cached.\n\nThis happens because vulnerable versions of Flask only set the `Vary: Cookie` header when the session is accessed or modified, not when it is refreshed (re-sent to update the expiration) without being accessed or modified. This issue has been fixed in versions 2.3.2 and 2.2.5."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2023-30861",
+              "help": {
+                "text": "Vulnerability CVE-2023-30861\nSeverity: HIGH\nPackage: flask\nFixed Version: 2.3.2, 2.2.5\nLink: [CVE-2023-30861](https://avd.aquasec.com/nvd/cve-2023-30861)\nFlask is a lightweight WSGI web application framework. When all of the following conditions are met, a response containing data intended for one client may be cached and subsequently sent by the proxy to other clients. If the proxy also caches `Set-Cookie` headers, it may send one client's `session` cookie to other clients. The severity depends on the application's use of the session and the proxy's behavior regarding cookies. The risk depends on all these conditions being met.\n\n1. The application must be hosted behind a caching proxy that does not strip cookies or ignore responses with cookies.\n2. The application sets `session.permanent = True`\n3. The application does not access or modify the session at any point during a request.\n4. `SESSION_REFRESH_EACH_REQUEST` enabled (the default).\n5. The application does not set a `Cache-Control` header to indicate that a page is private or should not be cached.\n\nThis happens because vulnerable versions of Flask only set the `Vary: Cookie` header when the session is accessed or modified, not when it is refreshed (re-sent to update the expiration) without being accessed or modified. This issue has been fixed in versions 2.3.2 and 2.2.5.",
+                "markdown": "**Vulnerability CVE-2023-30861**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|HIGH|flask|2.3.2, 2.2.5|[CVE-2023-30861](https://avd.aquasec.com/nvd/cve-2023-30861)|\n\nFlask is a lightweight WSGI web application framework. When all of the following conditions are met, a response containing data intended for one client may be cached and subsequently sent by the proxy to other clients. If the proxy also caches `Set-Cookie` headers, it may send one client's `session` cookie to other clients. The severity depends on the application's use of the session and the proxy's behavior regarding cookies. The risk depends on all these conditions being met.\n\n1. The application must be hosted behind a caching proxy that does not strip cookies or ignore responses with cookies.\n2. The application sets `session.permanent = True`\n3. The application does not access or modify the session at any point during a request.\n4. `SESSION_REFRESH_EACH_REQUEST` enabled (the default).\n5. The application does not set a `Cache-Control` header to indicate that a page is private or should not be cached.\n\nThis happens because vulnerable versions of Flask only set the `Vary: Cookie` header when the session is accessed or modified, not when it is refreshed (re-sent to update the expiration) without being accessed or modified. This issue has been fixed in versions 2.3.2 and 2.2.5."
+              },
+              "properties": {
+                "cvssv3_baseScore": 7.5,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                "cvssv40_baseScore": 8.7,
+                "cvssv40_vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+                "precision": "very-high",
+                "security-severity": "7.5",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "HIGH"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2026-27205",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "flask: Flask: Information disclosure via improper caching of session data"
+              },
+              "fullDescription": {
+                "text": "Flask is a web server gateway interface (WSGI) web application framework. In versions 3.1.2 and below, when the session object is accessed, Flask should set the Vary: Cookie header., resulting in a Use of Cache Containing Sensitive Information vulnerability. The logic instructs caches not to cache the response, as it may contain information specific to a logged in user. This is handled in most cases, but some forms of access such as the Python in operator were overlooked. The severity and risk depend on the application being hosted behind a caching proxy that doesn't ignore responses with cookies, not setting a Cache-Control header to mark pages as private or non-cacheable, and accessing the session in a way that only touches keys without reading values or mutating the session. The issue has been fixed in version 3.1.3."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2026-27205",
+              "help": {
+                "text": "Vulnerability CVE-2026-27205\nSeverity: LOW\nPackage: flask\nFixed Version: 3.1.3\nLink: [CVE-2026-27205](https://avd.aquasec.com/nvd/cve-2026-27205)\nFlask is a web server gateway interface (WSGI) web application framework. In versions 3.1.2 and below, when the session object is accessed, Flask should set the Vary: Cookie header., resulting in a Use of Cache Containing Sensitive Information vulnerability. The logic instructs caches not to cache the response, as it may contain information specific to a logged in user. This is handled in most cases, but some forms of access such as the Python in operator were overlooked. The severity and risk depend on the application being hosted behind a caching proxy that doesn't ignore responses with cookies, not setting a Cache-Control header to mark pages as private or non-cacheable, and accessing the session in a way that only touches keys without reading values or mutating the session. The issue has been fixed in version 3.1.3.",
+                "markdown": "**Vulnerability CVE-2026-27205**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|LOW|flask|3.1.3|[CVE-2026-27205](https://avd.aquasec.com/nvd/cve-2026-27205)|\n\nFlask is a web server gateway interface (WSGI) web application framework. In versions 3.1.2 and below, when the session object is accessed, Flask should set the Vary: Cookie header., resulting in a Use of Cache Containing Sensitive Information vulnerability. The logic instructs caches not to cache the response, as it may contain information specific to a logged in user. This is handled in most cases, but some forms of access such as the Python in operator were overlooked. The severity and risk depend on the application being hosted behind a caching proxy that doesn't ignore responses with cookies, not setting a Cache-Control header to mark pages as private or non-cacheable, and accessing the session in a way that only touches keys without reading values or mutating the session. The issue has been fixed in version 3.1.3."
+              },
+              "properties": {
+                "cvssv40_baseScore": 2.3,
+                "cvssv40_vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+                "precision": "very-high",
+                "security-severity": "2.0",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "LOW"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2020-14343",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "PyYAML: incomplete fix for CVE-2020-1747"
+              },
+              "fullDescription": {
+                "text": "A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. This flaw allows an attacker to execute arbitrary code on the system by abusing the python/object/new constructor. This flaw is due to an incomplete fix for CVE-2020-1747."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2020-14343",
+              "help": {
+                "text": "Vulnerability CVE-2020-14343\nSeverity: CRITICAL\nPackage: pyyaml\nFixed Version: 5.4\nLink: [CVE-2020-14343](https://avd.aquasec.com/nvd/cve-2020-14343)\nA vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. This flaw allows an attacker to execute arbitrary code on the system by abusing the python/object/new constructor. This flaw is due to an incomplete fix for CVE-2020-1747.",
+                "markdown": "**Vulnerability CVE-2020-14343**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|CRITICAL|pyyaml|5.4|[CVE-2020-14343](https://avd.aquasec.com/nvd/cve-2020-14343)|\n\nA vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. This flaw allows an attacker to execute arbitrary code on the system by abusing the python/object/new constructor. This flaw is due to an incomplete fix for CVE-2020-1747."
+              },
+              "properties": {
+                "cvssv3_baseScore": 9.8,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                "cvssv40_baseScore": 9.3,
+                "cvssv40_vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+                "precision": "very-high",
+                "security-severity": "9.8",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "CRITICAL"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2020-1747",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "PyYAML: arbitrary command execution through python/object/new when FullLoader is used"
+              },
+              "fullDescription": {
+                "text": "A vulnerability was discovered in the PyYAML library in versions before 5.3.1, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. An attacker could use this flaw to execute arbitrary code on the system by abusing the python/object/new constructor."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2020-1747",
+              "help": {
+                "text": "Vulnerability CVE-2020-1747\nSeverity: CRITICAL\nPackage: pyyaml\nFixed Version: 5.3.1\nLink: [CVE-2020-1747](https://avd.aquasec.com/nvd/cve-2020-1747)\nA vulnerability was discovered in the PyYAML library in versions before 5.3.1, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. An attacker could use this flaw to execute arbitrary code on the system by abusing the python/object/new constructor.",
+                "markdown": "**Vulnerability CVE-2020-1747**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|CRITICAL|pyyaml|5.3.1|[CVE-2020-1747](https://avd.aquasec.com/nvd/cve-2020-1747)|\n\nA vulnerability was discovered in the PyYAML library in versions before 5.3.1, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. An attacker could use this flaw to execute arbitrary code on the system by abusing the python/object/new constructor."
+              },
+              "properties": {
+                "cvssv3_baseScore": 9.8,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                "cvssv40_baseScore": 9.3,
+                "cvssv40_vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+                "precision": "very-high",
+                "security-severity": "9.8",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "CRITICAL"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2018-18074",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "python-requests: Redirect from HTTPS to HTTP does not remove Authorization header"
+              },
+              "fullDescription": {
+                "text": "The Requests package before 2.20.0 for Python sends an HTTP Authorization header to an http URI upon receiving a same-hostname https-to-http redirect, which makes it easier for remote attackers to discover credentials by sniffing the network."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2018-18074",
+              "help": {
+                "text": "Vulnerability CVE-2018-18074\nSeverity: HIGH\nPackage: requests\nFixed Version: 2.20.0\nLink: [CVE-2018-18074](https://avd.aquasec.com/nvd/cve-2018-18074)\nThe Requests package before 2.20.0 for Python sends an HTTP Authorization header to an http URI upon receiving a same-hostname https-to-http redirect, which makes it easier for remote attackers to discover credentials by sniffing the network.",
+                "markdown": "**Vulnerability CVE-2018-18074**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|HIGH|requests|2.20.0|[CVE-2018-18074](https://avd.aquasec.com/nvd/cve-2018-18074)|\n\nThe Requests package before 2.20.0 for Python sends an HTTP Authorization header to an http URI upon receiving a same-hostname https-to-http redirect, which makes it easier for remote attackers to discover credentials by sniffing the network."
+              },
+              "properties": {
+                "cvssv3_baseScore": 7.5,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                "precision": "very-high",
+                "security-severity": "7.5",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "HIGH"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2023-32681",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "python-requests: Unintended leak of Proxy-Authorization header"
+              },
+              "fullDescription": {
+                "text": "Requests is a HTTP library. Since Requests 2.3.0, Requests has been leaking Proxy-Authorization headers to destination servers when redirected to an HTTPS endpoint. This is a product of how we use `rebuild_proxies` to reattach the `Proxy-Authorization` header to requests. For HTTP connections sent through the tunnel, the proxy will identify the header in the request itself and remove it prior to forwarding to the destination server. However when sent over HTTPS, the `Proxy-Authorization` header must be sent in the CONNECT request as the proxy has no visibility into the tunneled request. This results in Requests forwarding proxy credentials to the destination server unintentionally, allowing a malicious actor to potentially exfiltrate sensitive information. This issue has been patched in version 2.31.0."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2023-32681",
+              "help": {
+                "text": "Vulnerability CVE-2023-32681\nSeverity: MEDIUM\nPackage: requests\nFixed Version: 2.31.0\nLink: [CVE-2023-32681](https://avd.aquasec.com/nvd/cve-2023-32681)\nRequests is a HTTP library. Since Requests 2.3.0, Requests has been leaking Proxy-Authorization headers to destination servers when redirected to an HTTPS endpoint. This is a product of how we use `rebuild_proxies` to reattach the `Proxy-Authorization` header to requests. For HTTP connections sent through the tunnel, the proxy will identify the header in the request itself and remove it prior to forwarding to the destination server. However when sent over HTTPS, the `Proxy-Authorization` header must be sent in the CONNECT request as the proxy has no visibility into the tunneled request. This results in Requests forwarding proxy credentials to the destination server unintentionally, allowing a malicious actor to potentially exfiltrate sensitive information. This issue has been patched in version 2.31.0.",
+                "markdown": "**Vulnerability CVE-2023-32681**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|MEDIUM|requests|2.31.0|[CVE-2023-32681](https://avd.aquasec.com/nvd/cve-2023-32681)|\n\nRequests is a HTTP library. Since Requests 2.3.0, Requests has been leaking Proxy-Authorization headers to destination servers when redirected to an HTTPS endpoint. This is a product of how we use `rebuild_proxies` to reattach the `Proxy-Authorization` header to requests. For HTTP connections sent through the tunnel, the proxy will identify the header in the request itself and remove it prior to forwarding to the destination server. However when sent over HTTPS, the `Proxy-Authorization` header must be sent in the CONNECT request as the proxy has no visibility into the tunneled request. This results in Requests forwarding proxy credentials to the destination server unintentionally, allowing a malicious actor to potentially exfiltrate sensitive information. This issue has been patched in version 2.31.0."
+              },
+              "properties": {
+                "cvssv3_baseScore": 6.1,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:N/A:N",
+                "precision": "very-high",
+                "security-severity": "6.1",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "MEDIUM"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2024-35195",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "requests: subsequent requests to the same host ignore cert verification"
+              },
+              "fullDescription": {
+                "text": "Requests is a HTTP library. Prior to 2.32.0, when making requests through a Requests `Session`, if the first request is made with `verify=False` to disable cert verification, all subsequent requests to the same host will continue to ignore cert verification regardless of changes to the value of `verify`. This behavior will continue for the lifecycle of the connection in the connection pool. This vulnerability is fixed in 2.32.0."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2024-35195",
+              "help": {
+                "text": "Vulnerability CVE-2024-35195\nSeverity: MEDIUM\nPackage: requests\nFixed Version: 2.32.0\nLink: [CVE-2024-35195](https://avd.aquasec.com/nvd/cve-2024-35195)\nRequests is a HTTP library. Prior to 2.32.0, when making requests through a Requests `Session`, if the first request is made with `verify=False` to disable cert verification, all subsequent requests to the same host will continue to ignore cert verification regardless of changes to the value of `verify`. This behavior will continue for the lifecycle of the connection in the connection pool. This vulnerability is fixed in 2.32.0.",
+                "markdown": "**Vulnerability CVE-2024-35195**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|MEDIUM|requests|2.32.0|[CVE-2024-35195](https://avd.aquasec.com/nvd/cve-2024-35195)|\n\nRequests is a HTTP library. Prior to 2.32.0, when making requests through a Requests `Session`, if the first request is made with `verify=False` to disable cert verification, all subsequent requests to the same host will continue to ignore cert verification regardless of changes to the value of `verify`. This behavior will continue for the lifecycle of the connection in the connection pool. This vulnerability is fixed in 2.32.0."
+              },
+              "properties": {
+                "cvssv3_baseScore": 5.6,
+                "cvssv3_vector": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:H/A:N",
+                "precision": "very-high",
+                "security-severity": "5.6",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "MEDIUM"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2024-47081",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "requests: Requests vulnerable to .netrc credentials leak via malicious URLs"
+              },
+              "fullDescription": {
+                "text": "Requests is a HTTP library. Due to a URL parsing issue, Requests releases prior to 2.32.4 may leak .netrc credentials to third parties for specific maliciously-crafted URLs. Users should upgrade to version 2.32.4 to receive a fix. For older versions of Requests, use of the .netrc file can be disabled with `trust_env=False` on one's Requests Session."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2024-47081",
+              "help": {
+                "text": "Vulnerability CVE-2024-47081\nSeverity: MEDIUM\nPackage: requests\nFixed Version: 2.32.4\nLink: [CVE-2024-47081](https://avd.aquasec.com/nvd/cve-2024-47081)\nRequests is a HTTP library. Due to a URL parsing issue, Requests releases prior to 2.32.4 may leak .netrc credentials to third parties for specific maliciously-crafted URLs. Users should upgrade to version 2.32.4 to receive a fix. For older versions of Requests, use of the .netrc file can be disabled with `trust_env=False` on one's Requests Session.",
+                "markdown": "**Vulnerability CVE-2024-47081**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|MEDIUM|requests|2.32.4|[CVE-2024-47081](https://avd.aquasec.com/nvd/cve-2024-47081)|\n\nRequests is a HTTP library. Due to a URL parsing issue, Requests releases prior to 2.32.4 may leak .netrc credentials to third parties for specific maliciously-crafted URLs. Users should upgrade to version 2.32.4 to receive a fix. For older versions of Requests, use of the .netrc file can be disabled with `trust_env=False` on one's Requests Session."
+              },
+              "properties": {
+                "cvssv3_baseScore": 5.3,
+                "cvssv3_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+                "precision": "very-high",
+                "security-severity": "5.3",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "MEDIUM"
+                ]
+              }
+            },
+            {
+              "id": "CVE-2026-25645",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {
+                "text": "requests: Requests: Security bypass due to predictable temporary file creation"
+              },
+              "fullDescription": {
+                "text": "Requests is a HTTP library. Prior to version 2.33.0, the `requests.utils.extract_zipped_paths()` utility function uses a predictable filename when extracting files from zip archives into the system temporary directory. If the target file already exists, it is reused without validation. A local attacker with write access to the temp directory could pre-create a malicious file that would be loaded in place of the legitimate one. Standard usage of the Requests library is not affected by this vulnerability. Only applications that call `extract_zipped_paths()` directly are impacted. Starting in version 2.33.0, the library extracts files to a non-deterministic location. If developers are unable to upgrade, they can set `TMPDIR` in their environment to a directory with restricted write access."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://avd.aquasec.com/nvd/cve-2026-25645",
+              "help": {
+                "text": "Vulnerability CVE-2026-25645\nSeverity: MEDIUM\nPackage: requests\nFixed Version: 2.33.0\nLink: [CVE-2026-25645](https://avd.aquasec.com/nvd/cve-2026-25645)\nRequests is a HTTP library. Prior to version 2.33.0, the `requests.utils.extract_zipped_paths()` utility function uses a predictable filename when extracting files from zip archives into the system temporary directory. If the target file already exists, it is reused without validation. A local attacker with write access to the temp directory could pre-create a malicious file that would be loaded in place of the legitimate one. Standard usage of the Requests library is not affected by this vulnerability. Only applications that call `extract_zipped_paths()` directly are impacted. Starting in version 2.33.0, the library extracts files to a non-deterministic location. If developers are unable to upgrade, they can set `TMPDIR` in their environment to a directory with restricted write access.",
+                "markdown": "**Vulnerability CVE-2026-25645**\n| Severity | Package | Fixed Version | Link |\n| --- | --- | --- | --- |\n|MEDIUM|requests|2.33.0|[CVE-2026-25645](https://avd.aquasec.com/nvd/cve-2026-25645)|\n\nRequests is a HTTP library. Prior to version 2.33.0, the `requests.utils.extract_zipped_paths()` utility function uses a predictable filename when extracting files from zip archives into the system temporary directory. If the target file already exists, it is reused without validation. A local attacker with write access to the temp directory could pre-create a malicious file that would be loaded in place of the legitimate one. Standard usage of the Requests library is not affected by this vulnerability. Only applications that call `extract_zipped_paths()` directly are impacted. Starting in version 2.33.0, the library extracts files to a non-deterministic location. If developers are unable to upgrade, they can set `TMPDIR` in their environment to a directory with restricted write access."
+              },
+              "properties": {
+                "cvssv3_baseScore": 4.4,
+                "cvssv3_vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:N/I:H/A:N",
+                "precision": "very-high",
+                "security-severity": "4.4",
+                "tags": [
+                  "vulnerability",
+                  "security",
+                  "MEDIUM"
+                ]
+              }
+            }
+          ],
+          "version": "0.75.0"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CVE-2018-1000656",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "Package: flask\nInstalled Version: 0.12\nVulnerability CVE-2018-1000656\nSeverity: HIGH\nFixed Version: 0.12.3\nLink: [CVE-2018-1000656](https://avd.aquasec.com/nvd/cve-2018-1000656)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1,
+                  "endLine": 3,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: flask@0.12"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2019-1010083",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "Package: flask\nInstalled Version: 0.12\nVulnerability CVE-2019-1010083\nSeverity: HIGH\nFixed Version: 1.0\nLink: [CVE-2019-1010083](https://avd.aquasec.com/nvd/cve-2019-1010083)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1,
+                  "endLine": 3,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: flask@0.12"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2023-30861",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "Package: flask\nInstalled Version: 0.12\nVulnerability CVE-2023-30861\nSeverity: HIGH\nFixed Version: 2.3.2, 2.2.5\nLink: [CVE-2023-30861](https://avd.aquasec.com/nvd/cve-2023-30861)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1,
+                  "endLine": 3,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: flask@0.12"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2026-27205",
+          "ruleIndex": 3,
+          "level": "note",
+          "message": {
+            "text": "Package: flask\nInstalled Version: 0.12\nVulnerability CVE-2026-27205\nSeverity: LOW\nFixed Version: 3.1.3\nLink: [CVE-2026-27205](https://avd.aquasec.com/nvd/cve-2026-27205)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1,
+                  "endLine": 3,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: flask@0.12"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2020-14343",
+          "ruleIndex": 4,
+          "level": "error",
+          "message": {
+            "text": "Package: pyyaml\nInstalled Version: 5.3\nVulnerability CVE-2020-14343\nSeverity: CRITICAL\nFixed Version: 5.4\nLink: [CVE-2020-14343](https://avd.aquasec.com/nvd/cve-2020-14343)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 2,
+                  "startColumn": 1,
+                  "endLine": 2,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: pyyaml@5.3"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2020-1747",
+          "ruleIndex": 5,
+          "level": "error",
+          "message": {
+            "text": "Package: pyyaml\nInstalled Version: 5.3\nVulnerability CVE-2020-1747\nSeverity: CRITICAL\nFixed Version: 5.3.1\nLink: [CVE-2020-1747](https://avd.aquasec.com/nvd/cve-2020-1747)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 2,
+                  "startColumn": 1,
+                  "endLine": 2,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: pyyaml@5.3"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2018-18074",
+          "ruleIndex": 6,
+          "level": "error",
+          "message": {
+            "text": "Package: requests\nInstalled Version: 2.19.0\nVulnerability CVE-2018-18074\nSeverity: HIGH\nFixed Version: 2.20.0\nLink: [CVE-2018-18074](https://avd.aquasec.com/nvd/cve-2018-18074)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: requests@2.19.0"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2023-32681",
+          "ruleIndex": 7,
+          "level": "warning",
+          "message": {
+            "text": "Package: requests\nInstalled Version: 2.19.0\nVulnerability CVE-2023-32681\nSeverity: MEDIUM\nFixed Version: 2.31.0\nLink: [CVE-2023-32681](https://avd.aquasec.com/nvd/cve-2023-32681)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: requests@2.19.0"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2024-35195",
+          "ruleIndex": 8,
+          "level": "warning",
+          "message": {
+            "text": "Package: requests\nInstalled Version: 2.19.0\nVulnerability CVE-2024-35195\nSeverity: MEDIUM\nFixed Version: 2.32.0\nLink: [CVE-2024-35195](https://avd.aquasec.com/nvd/cve-2024-35195)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: requests@2.19.0"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2024-47081",
+          "ruleIndex": 9,
+          "level": "warning",
+          "message": {
+            "text": "Package: requests\nInstalled Version: 2.19.0\nVulnerability CVE-2024-47081\nSeverity: MEDIUM\nFixed Version: 2.32.4\nLink: [CVE-2024-47081](https://avd.aquasec.com/nvd/cve-2024-47081)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: requests@2.19.0"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CVE-2026-25645",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Package: requests\nInstalled Version: 2.19.0\nVulnerability CVE-2026-25645\nSeverity: MEDIUM\nFixed Version: 2.33.0\nLink: [CVE-2026-25645](https://avd.aquasec.com/nvd/cve-2026-25645)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "requirements.txt",
+                  "uriBaseId": "ROOTPATH"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 1
+                }
+              },
+              "message": {
+                "text": "requirements.txt: requests@2.19.0"
+              }
+            }
+          ]
+        }
+      ],
+      "columnKind": "utf16CodeUnits",
+      "originalUriBaseIds": {
+        "ROOTPATH": {
+          "uri": "file:///home/dev/shop/web/"
+        }
+      }
+    }
+  ]
+}
