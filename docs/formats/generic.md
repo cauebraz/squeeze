@@ -45,6 +45,7 @@ exit status 2
 - Error or warning words are `error`, `errors`, `fail`, `fails`, `failed`, `failure`, `failures`, `fatal`, `panic`, `panics`, `panicked`, `exception`, `exceptions`, `traceback`, `tracebacks`, `warn`, `warns`, `warned`, `warning` and `warnings`, as whole words in any case, unless the count before them is zero or the word is negated: `0 warnings suppressed`, `no errors`, `without warnings`, `errors: 0` and `non-fatal` do not count. An exception name also counts as an error word: a word that starts with a capital letter and ends in `Error` or `Exception`, followed by `:` or the end of the line, such as `ValueError: bad`, `E   AssertionError` or `java.lang.IllegalStateException: closed`; `handleError(ctx)` and `onError` do not count.
 - Past `--max-lines`, squeeze keeps the first quarter and the last half of the lines, and fills the remaining quarter with lines from the middle that carry an error word, then with lines that carry a warning word, then with the line just before each kept error line, such as the file name above a linter's error or the code line above an exception, in input order. A folded run stays whole: its line and its fold notice are kept or cut together. Each gap prints `... N lines cut (--max-lines 0)` and how many of those lines carry such a word. Fold and cut notices do not count toward the limit.
 - A line longer than `--max-line-bytes` is cut at a character boundary, keeping at least one character, and ends with `... N more bytes (--max-line-bytes 0)`.
+- Input that is one JSON document on a single line longer than `--max-line-bytes`, as `eslint -f json` prints, is first split with one value or key per line and no indentation, so the cut keeps whole values instead of the first 512 bytes. A document that fits in `--max-lines` after the split prints about 10 percent larger than the input; a larger one is cut like any text. JSON on several lines, several documents and invalid JSON are read as they are.
 - Input with no printable text prints `(no printable text)`.
 
 ## Flags
@@ -66,7 +67,7 @@ Both are word matches on the input, not the tool's verdict: a line such as `retr
 
 ## JSON data
 
-`data` holds `tool`, always `text` since no tool is known, and counts of input lines: `lines`, `printed`, `blank_dropped`, `folded`, `lines_omitted`, `flagged_lines_omitted` (omitted lines with an error or warning word), `long_lines` (printed lines cut by `--max-line-bytes`), `error_lines` and `warning_lines` (lines with an error or a warning word, counted before folding and cutting). `printed + blank_dropped + folded + lines_omitted` equals `lines`.
+`data` holds `tool`, always `text` since no tool is known, and counts of input lines: `lines`, `printed`, `blank_dropped`, `folded`, `lines_omitted`, `flagged_lines_omitted` (omitted lines with an error or warning word), `long_lines` (printed lines cut by `--max-line-bytes`), `error_lines` and `warning_lines` (lines with an error or a warning word, counted before folding and cutting), and `json_indented` (the input was a one-line JSON document split as above; the line counts are then of the split text). `printed + blank_dropped + folded + lines_omitted` equals `lines`.
 
 ## Limitations
 
