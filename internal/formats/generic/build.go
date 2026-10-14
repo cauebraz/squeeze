@@ -1,6 +1,8 @@
 package generic
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -47,6 +49,7 @@ type Report struct {
 	LongLines    int    `json:"long_lines"`
 	ErrorLines   int    `json:"error_lines"`
 	WarningLines int    `json:"warning_lines"`
+	JSONIndented bool   `json:"json_indented"`
 }
 
 type entry struct {
@@ -65,6 +68,9 @@ type group struct {
 
 func Build(input []byte, o Options) (Report, string) {
 	r := Report{Tool: "text"}
+	if indented, ok := indentJSON(input, o.MaxLineBytes); ok {
+		input, r.JSONIndented = indented, true
+	}
 	lines := splitLines(string(input))
 	r.Lines = len(lines)
 	for _, l := range lines {
@@ -79,6 +85,18 @@ func Build(input []byte, o Options) (Report, string) {
 	groups := fold(cleaned, o.NoFold, &r)
 	groups = cut(groups, o.MaxLines, &r)
 	return r, render(groups, o.MaxLineBytes, &r)
+}
+
+func indentJSON(input []byte, maxBytes int) ([]byte, bool) {
+	trimmed := bytes.TrimSpace(input)
+	if maxBytes <= 0 || len(trimmed) <= maxBytes || (trimmed[0] != '{' && trimmed[0] != '[') || bytes.IndexByte(trimmed, '\n') >= 0 || !json.Valid(trimmed) {
+		return nil, false
+	}
+	var b bytes.Buffer
+	if err := json.Indent(&b, trimmed, "", ""); err != nil {
+		return nil, false
+	}
+	return b.Bytes(), true
 }
 
 func splitLines(s string) []string {

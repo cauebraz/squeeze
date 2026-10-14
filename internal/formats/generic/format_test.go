@@ -227,6 +227,37 @@ func TestText(t *testing.T) {
 	}
 }
 
+func TestOneLineJSON(t *testing.T) {
+	t.Parallel()
+	long := `{"items":[` + strings.Repeat(`{"id":1,"msg":"ok"},`, 40) + `{"id":2,"msg":"error: boom"}]}`
+	tests := map[string]struct {
+		input    string
+		o        Options
+		indented bool
+	}{
+		"a long document":          {long + "\n", DefaultOptions(), true},
+		"a short document":         {`{"a":1}` + "\n", DefaultOptions(), false},
+		"no byte limit":            {long + "\n", Options{MaxLines: 200}, false},
+		"two documents":            {long + "\n" + long + "\n", DefaultOptions(), false},
+		"invalid JSON":             {long[:len(long)-1] + "\n", DefaultOptions(), false},
+		"already on several lines": {"{\n" + `"a":` + strings.Repeat("1", 600) + "\n}\n", DefaultOptions(), false},
+	}
+	for name, tt := range tests {
+		r, err := Squeeze([]byte(tt.input), tt.o)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rep := r.Data.(Report)
+		if rep.JSONIndented != tt.indented {
+			t.Errorf("%s: json_indented = %v, want %v", name, rep.JSONIndented, tt.indented)
+		}
+		checkAccounting(t, rep)
+		if tt.indented && (!strings.Contains(r.Text, "\"msg\": \"error: boom\"\n") || strings.Contains(r.Text, "more bytes")) {
+			t.Errorf("%s: text:\n%s", name, r.Text)
+		}
+	}
+}
+
 func TestReport(t *testing.T) {
 	t.Parallel()
 	r, _ := Build(lines("", "a", "a", "a", "b", "", "", strings.Repeat("z", 9), "Error x", "c", "d"), Options{MaxLines: 5, MaxLineBytes: 4})
