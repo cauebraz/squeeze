@@ -1,6 +1,9 @@
 package core
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 type Registry struct {
 	formats  []Format
@@ -68,8 +71,11 @@ func (r *Registry) Lookup(name string) (Format, bool) {
 
 func (r *Registry) Detect(input []byte) (Format, error) {
 	head := Head(input)
-	for _, f := range r.formats {
-		if !r.isFallback(f) && f.Detect(head) {
+	if f := r.detect(head); f != nil {
+		return f, nil
+	}
+	if len(input) > len(head) && jsonDocument(head) {
+		if f := r.detect(input); f != nil {
 			return f, nil
 		}
 	}
@@ -77,6 +83,20 @@ func (r *Registry) Detect(input []byte) (Format, error) {
 		return r.fallback, nil
 	}
 	return nil, ErrUnknownFormat
+}
+
+func (r *Registry) detect(input []byte) Format {
+	for _, f := range r.formats {
+		if !r.isFallback(f) && f.Detect(input) {
+			return f
+		}
+	}
+	return nil
+}
+
+func jsonDocument(head []byte) bool {
+	trimmed := bytes.TrimLeft(head, " \t\r\n")
+	return len(trimmed) > 0 && (trimmed[0] == '{' || trimmed[0] == '[')
 }
 
 func (r *Registry) Formats() []Format {

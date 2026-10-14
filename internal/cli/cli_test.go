@@ -67,6 +67,26 @@ func TestRunAutoDetect(t *testing.T) {
 	}
 }
 
+func TestRunAutoDetectPlanWithVariablesPastHead(t *testing.T) {
+	t.Parallel()
+	const secret = "hunter2-SECRET"
+	vars := `"variables": {"db_password": {"value": "` + secret + `"}, "pad": {"value": "` + strings.Repeat("x", core.HeadSize) + `"},`
+	input := bytes.Replace(readFixture(t, "tfplan", "replace-forced"), []byte(`"variables": {`), []byte(vars), 1)
+	if bytes.Contains(core.Head(input), []byte(`"planned_values"`)) {
+		t.Fatal("planned_values is inside the head; the test does not exercise detection past it")
+	}
+	r := runCLI(t, input)
+	if r.code != ExitOK || r.stderr != "" {
+		t.Fatalf("code = %d, stderr = %q", r.code, r.stderr)
+	}
+	if !strings.HasPrefix(r.stdout, "terraform 1.9.5 plan: ") {
+		t.Errorf("stdout = %q", r.stdout)
+	}
+	if strings.Contains(r.stdout, secret) {
+		t.Errorf("stdout holds the variable value: %q", r.stdout)
+	}
+}
+
 func TestRunFallback(t *testing.T) {
 	t.Parallel()
 	input := []byte("\x1b[32mok\x1b[0m 3 tests\nok 3 tests\nok 3 tests\nok 3 tests\n")

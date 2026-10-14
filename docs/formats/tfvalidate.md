@@ -1,6 +1,6 @@
 # tfvalidate
 
-Input: the JSON that `terraform validate -json` prints, `format_version` 1.x. Detected when the input is a JSON object whose first 64 KiB contain `"format_version"`, `"valid"` and `"diagnostics"`, and neither `"planned_values"` nor `"resource_changes"`.
+Input: the JSON that `terraform validate -json` prints, `format_version` 1.x. Detected when the input is a JSON object that contains `"format_version"`, `"valid"` and `"diagnostics"`, and neither `"planned_values"` nor `"resource_changes"`.
 
 ```
 terraform validate -json | squeeze

@@ -1,6 +1,6 @@
 # tfplan
 
-Input: the JSON that `terraform show -json <planfile>` prints, `format_version` 1.x. Detected when the input is a JSON object whose first 64 KiB contain `"format_version"` and `"planned_values"` or `"resource_changes"`. A state file (`terraform show -json` without a plan) is rejected.
+Input: the JSON that `terraform show -json <planfile>` prints, `format_version` 1.x. Detected when the input is a JSON object that contains `"format_version"` and `"planned_values"` or `"resource_changes"`, anywhere in the document. A state file (`terraform show -json` without a plan) is rejected.
 
 ```
 terraform show -json plan.out | squeeze

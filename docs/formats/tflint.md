@@ -1,6 +1,6 @@
 # tflint
 
-Input: the JSON that `tflint --format json` prints, as `formatter/json.go` in TFLint defines it: an object with an `issues` array and an `errors` array. Detected when the input is a JSON object that starts with `"issues"` and has an `"errors"` key in its first 64 KiB.
+Input: the JSON that `tflint --format json` prints, as `formatter/json.go` in TFLint defines it: an object with an `issues` array and an `errors` array. Detected when the input is a JSON object that starts with `"issues"` and has an `"errors"` key anywhere in the document.
 
 ```
 tflint --format json | squeeze
