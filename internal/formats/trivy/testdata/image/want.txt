@@ -1,0 +1,13 @@
+trivy 0.75.0: registry.example.com/shop/api:1.4.0 (container_image, debian 12.7): 5 vulnerabilities, 1 misconfiguration, 2 licenses; 1 CRITICAL, 4 HIGH, 1 LOW, 1 UNKNOWN; 3 fixable; 40 misconfiguration checks passed
+registry.example.com/shop/api:1.4.0 (debian 12.7) (debian):
+  CRITICAL CVE-2024-45491 libexpat1 2.5.0-1 -> 2.5.0-1+deb12u1: libexpat: Integer Overflow or Wraparound
+  HIGH CVE-2023-52425 libexpat1 2.5.0-1 (affected): expat: parsing large tokens can trigger a denial of service
+  LOW CVE-2011-3374 apt 2.6.1 (will not fix): It was found that apt-key in apt, all versions, do not correctly validate gpg keys
+  UNKNOWN CVE-2024-28085 util-linux 2.38.1-5+b1 -> 2.38.1-5+deb12u1: util-linux: CVE-2024-28085: wall: escape sequence injection
+app/package-lock.json (npm):
+  HIGH CVE-2024-21538 cross-spawn 7.0.3 -> 7.0.5, 6.0.6: cross-spawn: regular expression denial of service
+app/deploy/values.yaml (helm):
+  HIGH KSV-0014 Deployment/api lines 30-52: Root file system is not read-only
+OS Packages (license):
+  HIGH GPL-3.0-only libreadline8: restricted
+... 1 misconfiguration exception, 1 license below HIGH (--all)

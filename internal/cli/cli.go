@@ -22,6 +22,7 @@ import (
 	"github.com/cauebraz/squeeze/internal/formats/tflint"
 	"github.com/cauebraz/squeeze/internal/formats/tfplan"
 	"github.com/cauebraz/squeeze/internal/formats/tfvalidate"
+	"github.com/cauebraz/squeeze/internal/formats/trivy"
 )
 
 var Version = "dev"
@@ -35,7 +36,7 @@ const (
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{}, tfvalidate.Format{}, tflint.Format{}, checkov.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
+	return core.NewRegistry(tfplan.Format{}, tfvalidate.Format{}, tflint.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
 }
 
 type invocation struct {

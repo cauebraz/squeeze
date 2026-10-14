@@ -1,0 +1,187 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.75.0"
+  },
+  "CreatedAt": "2026-10-13T12:00:00Z",
+  "ArtifactName": "registry.example.com/shop/api:1.4.0",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "Size": 81234567,
+    "OS": {
+      "Family": "debian",
+      "Name": "12.7"
+    },
+    "ImageID": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "RepoTags": [
+      "registry.example.com/shop/api:1.4.0"
+    ]
+  },
+  "Results": [
+    {
+      "Target": "registry.example.com/shop/api:1.4.0 (debian 12.7)",
+      "Class": "os-pkgs",
+      "Type": "debian",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-45491",
+          "PkgName": "libexpat1",
+          "InstalledVersion": "2.5.0-1",
+          "FixedVersion": "2.5.0-1+deb12u1",
+          "Status": "fixed",
+          "Severity": "CRITICAL",
+          "Title": "libexpat: Integer Overflow or Wraparound",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-45491",
+          "Description": "long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description ",
+          "References": [
+            "https://example.com/CVE-2024-45491",
+            "https://example.com/CVE-2024-45491",
+            "https://example.com/CVE-2024-45491",
+            "https://example.com/CVE-2024-45491",
+            "https://example.com/CVE-2024-45491"
+          ]
+        },
+        {
+          "VulnerabilityID": "CVE-2023-52425",
+          "PkgName": "libexpat1",
+          "InstalledVersion": "2.5.0-1",
+          "FixedVersion": "",
+          "Status": "affected",
+          "Severity": "HIGH",
+          "Title": "expat: parsing large tokens can trigger a denial of service",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2023-52425",
+          "Description": "long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description ",
+          "References": [
+            "https://example.com/CVE-2023-52425",
+            "https://example.com/CVE-2023-52425",
+            "https://example.com/CVE-2023-52425",
+            "https://example.com/CVE-2023-52425",
+            "https://example.com/CVE-2023-52425"
+          ]
+        },
+        {
+          "VulnerabilityID": "CVE-2011-3374",
+          "PkgName": "apt",
+          "InstalledVersion": "2.6.1",
+          "FixedVersion": "",
+          "Status": "will_not_fix",
+          "Severity": "LOW",
+          "Title": "It was found that apt-key in apt, all versions, do not correctly validate gpg keys",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2011-3374",
+          "Description": "long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description ",
+          "References": [
+            "https://example.com/CVE-2011-3374",
+            "https://example.com/CVE-2011-3374",
+            "https://example.com/CVE-2011-3374",
+            "https://example.com/CVE-2011-3374",
+            "https://example.com/CVE-2011-3374"
+          ]
+        },
+        {
+          "VulnerabilityID": "CVE-2024-28085",
+          "PkgName": "util-linux",
+          "InstalledVersion": "2.38.1-5+b1",
+          "FixedVersion": "2.38.1-5+deb12u1",
+          "Status": "fixed",
+          "Severity": "UNKNOWN",
+          "Title": "util-linux: CVE-2024-28085: wall: escape sequence injection",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-28085",
+          "Description": "long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description ",
+          "References": [
+            "https://example.com/CVE-2024-28085",
+            "https://example.com/CVE-2024-28085",
+            "https://example.com/CVE-2024-28085",
+            "https://example.com/CVE-2024-28085",
+            "https://example.com/CVE-2024-28085"
+          ]
+        }
+      ]
+    },
+    {
+      "Target": "app/package-lock.json",
+      "Class": "lang-pkgs",
+      "Type": "npm",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-21538",
+          "PkgName": "cross-spawn",
+          "InstalledVersion": "7.0.3",
+          "FixedVersion": "7.0.5, 6.0.6",
+          "Status": "fixed",
+          "Severity": "HIGH",
+          "Title": "cross-spawn: regular expression denial of service",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-21538",
+          "Description": "long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description long description ",
+          "References": [
+            "https://example.com/CVE-2024-21538",
+            "https://example.com/CVE-2024-21538",
+            "https://example.com/CVE-2024-21538",
+            "https://example.com/CVE-2024-21538",
+            "https://example.com/CVE-2024-21538"
+          ]
+        }
+      ]
+    },
+    {
+      "Target": "app/deploy/values.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 40,
+        "Failures": 1
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Helm Security Check",
+          "ID": "KSV-0014",
+          "Title": "Root file system is not read-only",
+          "Message": "Container 'api' should set 'securityContext.readOnlyRootFilesystem' to true",
+          "Severity": "HIGH",
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "Deployment/api",
+            "StartLine": 30,
+            "EndLine": 52
+          }
+        },
+        {
+          "Type": "Helm Security Check",
+          "ID": "KSV-0118",
+          "Title": "Default security context configured",
+          "Message": "deployment api in default namespace is using the default security context",
+          "Severity": "HIGH",
+          "Status": "EXCEPTION",
+          "CauseMetadata": {
+            "Resource": "Deployment/api",
+            "StartLine": 30,
+            "EndLine": 52
+          }
+        }
+      ]
+    },
+    {
+      "Target": "OS Packages",
+      "Class": "license",
+      "Licenses": [
+        {
+          "Severity": "HIGH",
+          "Category": "restricted",
+          "PkgName": "libreadline8",
+          "FilePath": "",
+          "Name": "GPL-3.0-only",
+          "Confidence": 1,
+          "Link": ""
+        },
+        {
+          "Severity": "LOW",
+          "Category": "notice",
+          "PkgName": "zlib1g",
+          "FilePath": "",
+          "Name": "Zlib",
+          "Confidence": 1,
+          "Link": ""
+        }
+      ]
+    }
+  ]
+}

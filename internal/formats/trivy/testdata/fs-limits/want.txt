@@ -1,0 +1,9 @@
+trivy 0.75.0: app (filesystem): 20 vulnerabilities, 1 secret; 1 CRITICAL, 9 HIGH, 10 MEDIUM, 1 LOW; 20 fixable
+requirements.txt (pip):
+  HIGH CVE-2023-30861 flask 2.2.0 -> 2.3.2, 2.2.5: flask: Possible disclosure of permanent session cookie due to missing Vary: Cookie header
+  HIGH CVE-2018-18074 requests 2.19.0 -> 2.20.0: python-requests: Redirect from HTTPS to HTTP does not remove Authorization header
+  HIGH CVE-2019-11324 urllib3 1.24.1 -> 1.24.2: python-urllib3: Certification mishandle when error should be thrown
+  HIGH CVE-2023-43804 urllib3 1.24.1 -> 2.0.6, 1.26.17: python-urllib3: Cookie request header isn't stripped during cross-origin redirects
+app.env (secret):
+  CRITICAL github-pat line 2: GitHub Personal Access Token
+... 16 more findings, 5 HIGH, 10 MEDIUM, 1 LOW (--max-findings 0)

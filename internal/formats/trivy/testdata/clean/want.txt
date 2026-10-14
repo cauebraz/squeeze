@@ -1,0 +1,1 @@
+trivy 0.75.0: clean (filesystem): no findings; 27 misconfiguration checks passed

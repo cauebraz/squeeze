@@ -1,0 +1,20 @@
+trivy 0.75.0: infra (filesystem): 18 misconfigurations; 11 HIGH, 2 MEDIUM, 5 LOW; 70 misconfiguration checks passed
+main.tf (terraform):
+  HIGH AWS-0086 aws_s3_bucket.assets lines 10-13: S3 Access block should block public ACL
+  HIGH AWS-0087 aws_s3_bucket.assets lines 10-13: S3 Access block should block public policy
+  HIGH AWS-0091 aws_s3_bucket.assets lines 10-13: S3 Access Block should Ignore Public ACL
+  HIGH AWS-0093 aws_s3_bucket.assets lines 10-13: S3 Access block should restrict public bucket to limit access
+  HIGH AWS-0132 aws_s3_bucket.assets lines 10-13: S3 encryption should use Customer Managed Keys
+  HIGH AWS-0086 aws_s3_bucket.logs lines 6-8: S3 Access block should block public ACL
+  HIGH AWS-0087 aws_s3_bucket.logs lines 6-8: S3 Access block should block public policy
+  HIGH AWS-0091 aws_s3_bucket.logs lines 6-8: S3 Access Block should Ignore Public ACL
+  HIGH AWS-0093 aws_s3_bucket.logs lines 6-8: S3 Access block should restrict public bucket to limit access
+  HIGH AWS-0132 aws_s3_bucket.logs lines 6-8: S3 encryption should use Customer Managed Keys
+  HIGH AWS-0107 aws_security_group.web line 21: Security groups should not allow unrestricted ingress to SSH or RDP from any IP address.
+  MEDIUM AWS-0090 aws_s3_bucket.assets lines 10-13: S3 Data should be versioned
+  MEDIUM AWS-0090 aws_s3_bucket.logs lines 6-8: S3 Data should be versioned
+  LOW AWS-0089 aws_s3_bucket.assets lines 10-13: S3 Bucket Logging
+  LOW AWS-0094 aws_s3_bucket.assets lines 10-13: S3 buckets should each define an aws_s3_bucket_public_access_block
+  LOW AWS-0094 aws_s3_bucket.logs lines 6-8: S3 buckets should each define an aws_s3_bucket_public_access_block
+  LOW AWS-0099 aws_security_group.web lines 15-23: Missing description for security group.
+  LOW AWS-0124 aws_security_group.web lines 17-22: Missing description for security group rule.

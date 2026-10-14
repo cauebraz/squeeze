@@ -1,0 +1,24 @@
+trivy 0.75.0: app (filesystem): 20 vulnerabilities, 1 secret; 1 CRITICAL, 9 HIGH, 10 MEDIUM, 1 LOW; 20 fixable
+requirements.txt (pip):
+  HIGH CVE-2023-30861 flask 2.2.0 -> 2.3.2, 2.2.5: flask: Possible disclosure of permanent session cookie due to missing Vary: Cookie header
+  HIGH CVE-2018-18074 requests 2.19.0 -> 2.20.0: python-requests: Redirect from HTTPS to HTTP does not remove Authorization header
+  HIGH CVE-2019-11324 urllib3 1.24.1 -> 1.24.2: python-urllib3: Certification mishandle when error should be thrown
+  HIGH CVE-2023-43804 urllib3 1.24.1 -> 2.0.6, 1.26.17: python-urllib3: Cookie request header isn't stripped during cross-origin redirects
+  HIGH CVE-2025-66418 urllib3 1.24.1 -> 2.6.0: urllib3: urllib3: Unbounded decompression chain leads to resource exhaustion
+  HIGH CVE-2025-66471 urllib3 1.24.1 -> 2.6.0: urllib3: urllib3 Streaming API improperly handles highly compressed data
+  HIGH CVE-2026-21441 urllib3 1.24.1 -> 2.6.3: urllib3: urllib3 vulnerable to decompression-bomb safeguard bypass when following HTTP redirects ...
+  HIGH CVE-2026-44431 urllib3 1.24.1 -> 2.7.0: urllib3: urllib3: Information disclosure via cross-origin redirects forwarding sensitive headers
+  HIGH CVE-2026-97689 urllib3 1.24.1 -> 2.8.0: urllib3: urllib3: Denial of Service via unbounded memory allocation in chunk parser
+  MEDIUM CVE-2023-32681 requests 2.19.0 -> 2.31.0: python-requests: Unintended leak of Proxy-Authorization header
+  MEDIUM CVE-2024-35195 requests 2.19.0 -> 2.32.0: requests: subsequent requests to the same host ignore cert verification
+  MEDIUM CVE-2024-47081 requests 2.19.0 -> 2.32.4: requests: Requests vulnerable to .netrc credentials leak via malicious URLs
+  MEDIUM CVE-2026-25645 requests 2.19.0 -> 2.33.0: requests: Requests: Security bypass due to predictable temporary file creation
+  MEDIUM CVE-2018-25091 urllib3 1.24.1 -> 1.24.2: urllib3: urllib3 does not remove the authorization HTTP header when following a cross-origin redi...
+  MEDIUM CVE-2019-11236 urllib3 1.24.1 -> 1.24.3: python-urllib3: CRLF injection due to not encoding the '\r\n' sequence leading to possible attack...
+  MEDIUM CVE-2020-26137 urllib3 1.24.1 -> 1.25.9: python-urllib3: CRLF injection via HTTP request method
+  MEDIUM CVE-2023-45803 urllib3 1.24.1 -> 2.0.7, 1.26.18: urllib3: Request body not stripped after redirect from 303 status changes request method to GET
+  MEDIUM CVE-2024-37891 urllib3 1.24.1 -> 1.26.19, 2.2.2: urllib3: proxy-authorization request header is not stripped during cross-origin redirects
+  MEDIUM CVE-2025-50181 urllib3 1.24.1 -> 2.5.0: urllib3: urllib3 redirects are not disabled when retries are disabled on PoolManager instantiation
+  LOW CVE-2026-27205 flask 2.2.0 -> 3.1.3: flask: Flask: Information disclosure via improper caching of session data
+app.env (secret):
+  CRITICAL github-pat line 2: GitHub Personal Access Token
