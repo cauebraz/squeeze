@@ -141,6 +141,15 @@ func Normalize(ds []Diagnostic) []Diagnostic {
 	return out
 }
 
+func Limit(ds []Diagnostic, n int) ([]Diagnostic, int) {
+	kept, _ := core.Limit(ds, n)
+	omitted := 0
+	for _, d := range ds[len(kept):] {
+		omitted += max(d.Count, 1)
+	}
+	return kept, omitted
+}
+
 func Count(ds []Diagnostic) (errors, warnings int) {
 	for _, d := range ds {
 		n := max(d.Count, 1)

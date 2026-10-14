@@ -101,24 +101,12 @@ func Build(out *Output, o Options) Report {
 	}
 	r.Rules = core.SortedCounts(counts)
 	issues = fold(issues)
-	total := 0
-	for _, is := range issues {
-		total += max(is.Count, 1)
-	}
-	var kept []Issue
-	shown := 0
-	for _, is := range issues {
-		if o.MaxIssues > 0 && shown+max(is.Count, 1) > o.MaxIssues && shown > 0 {
-			break
-		}
-		kept = append(kept, is)
-		shown += max(is.Count, 1)
-	}
+	kept, _ := core.Limit(issues, o.MaxIssues)
 	r.Issues = append(r.Issues, kept...)
-	r.IssuesOmitted = total - shown
 	cut := map[string]int{}
 	for _, is := range issues[len(kept):] {
 		cut[is.Rule] += max(is.Count, 1)
+		r.IssuesOmitted += max(is.Count, 1)
 	}
 	r.OmittedByRule = core.SortedCounts(cut)
 	return r

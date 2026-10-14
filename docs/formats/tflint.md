@@ -28,7 +28,7 @@ notice: resource name `LogsBucket` must match the following format: snake_case (
 - An issue TFLint raises through a module call is reported, as TFLint does, at the root-module expression that set the value; the module expressions it was evaluated in print under it, outermost first: `evaluated in main.tf:20:19 -> modules/app/main.tf:4:19`.
 - Entries of the `errors` array, which TFLint reports when it cannot parse a file or a plugin fails, print first as diagnostics with `tflint` in place of a rule, are never cut by `--max-issues`, and the header says not every check ran. `--no-detail` drops their explanation along with the call chains.
 - The call chain of an issue and the explanation of a tool error are wrapped to 100 bytes and cut after three lines with `...`.
-- Past `--max-issues`, the notice names the rules of the cut issues with their counts, so `... 116 more issues, terraform_naming_convention 60, terraform_unused_declarations 56 (--max-issues 0)` tells which rule to fix or disable first. Identical issues print once with `(xN)` and count N toward the limit.
+- Past `--max-issues`, the notice names the rules of the cut issues with their counts, so `... 116 more issues, terraform_naming_convention 60, terraform_unused_declarations 56 (--max-issues 0)` tells which rule to fix or disable first. Identical issues print once with `(xN)` and take one line of the limit; the notice and `issues_omitted` count every cut issue, N for an `(xN)` line.
 - Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
 
 ## Flags
