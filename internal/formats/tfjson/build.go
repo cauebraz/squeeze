@@ -33,7 +33,7 @@ func rank(action string) int {
 type builder struct {
 	o        Options
 	r        Report
-	changes  map[string]int
+	changes  map[Change]bool
 	runs     map[[2]string]int
 	files    map[string]int
 	diags    []tfdiag.Diagnostic
@@ -47,7 +47,7 @@ type builder struct {
 func Build(lines []Line, o Options) Report {
 	b := builder{
 		o:       o,
-		changes: map[string]int{},
+		changes: map[Change]bool{},
 		runs:    map[[2]string]int{},
 		files:   map[string]int{},
 		r: Report{
@@ -173,11 +173,10 @@ func (b *builder) change(sc streamChange) {
 		return
 	}
 	c := convertChange(sc)
-	if i, ok := b.changes[c.Address]; ok {
-		b.r.Changes[i] = c
+	if b.changes[c] {
 		return
 	}
-	b.changes[c.Address] = len(b.r.Changes)
+	b.changes[c] = true
 	b.r.Changes = append(b.r.Changes, c)
 }
 
