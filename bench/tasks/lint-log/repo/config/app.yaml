@@ -1,0 +1,4 @@
+name: shop-api
+port: 8080
+timeout: thirty
+workers: 4

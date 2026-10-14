@@ -31,6 +31,7 @@ internal/jsonl/         line-delimited JSON input shared by tfjson and gotest
 internal/formattest/    contract suite every format runs
 internal/formats/<name>/ one package per format; testdata/<case>/ holds input, args, want.txt, want.json
 docs/formats/<name>.md  user documentation of one format
+bench/                  agent measurement: tasks with verifiers and the OpenRouter runner; results are not committed
 ```
 
 `internal/core` imports no format. `internal/cli` names a format in one place only, `DefaultRegistry`. Tool knowledge lives under `internal/formats/<name>/` and `docs/formats/<name>.md`.

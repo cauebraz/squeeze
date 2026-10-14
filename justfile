@@ -66,3 +66,9 @@ conformance ref=terraform_ref:
     git -C "$work" fetch -q --depth 1 --filter=blob:none origin {{ref}}
     git -C "$work" checkout -q FETCH_HEAD
     SQUEEZE_REAL_DIR="$work/internal/command/testdata" go test ./internal/formats/tfplan ./internal/formats/tfvalidate ./internal/formats/tfjson -run '^TestRealInputs$' -count=1 -v | grep -E '^(=== RUN|--- |ok|FAIL|PASS)|ratio|leaks|: '
+
+measure model runs="5" *args:
+    OPENROUTER_API_KEY="${OPENROUTER_API_KEY:?set OPENROUTER_API_KEY}" bench/run.py --model {{model}} --runs {{runs}} {{args}}
+
+measure-self-test:
+    bench/run.py --self-test

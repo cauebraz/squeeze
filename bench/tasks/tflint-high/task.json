@@ -1,0 +1,9 @@
+{
+  "prompt": "TFLint reports problems in this Terraform configuration. Fix every warning and error it reports without changing what the configuration provisions; notices (info level) may stay. Finish when tflint exits 0 with --minimum-failure-severity=warning.",
+  "setup": "",
+  "verify": "tflint --minimum-failure-severity=warning >/dev/null 2>&1 && grep -q 'resource \"cloud_bucket\" \"logs\"' main.tf && grep -q 'resource \"cloud_instance\" \"web\"' main.tf && grep -q 'module \"network\"' main.tf",
+  "solution": "/usr/bin/python3 -I -c \"s=open('main.tf').read(); s=s.replace('variable \\\"region\\\" {\\n  default = \\\"us-east-1\\\"\\n}', 'variable \\\"region\\\" {\\n  type    = string\\n  default = \\\"us-east-1\\\"\\n}'); s=s.replace('variable \\\"unused\\\" {\\n  type        = string\\n  description = \\\"never read\\\"\\n}\\n\\n', ''); s=s.replace('module.network.zones.0', 'module.network.zones[0]'); s=s.replace('    cloud = {\\n      source = \\\"example/cloud\\\"\\n    }', '    cloud = {\\n      source  = \\\"example/cloud\\\"\\n      version = \\\"~> 1.0\\\"\\n    }'); open('main.tf','w').write(s)\"",
+  "tool": "tflint",
+  "control": "- Run `tflint` and read its output.",
+  "squeeze": "- Run `tflint --format json | squeeze` and read squeeze's output instead of TFLint's."
+}

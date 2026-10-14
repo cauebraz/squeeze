@@ -1,0 +1,9 @@
+{
+  "prompt": "./scripts/lint.sh fails in this repository. Find what it complains about, fix the file it names, and finish when the script exits 0.",
+  "setup": "",
+  "verify": "./scripts/lint.sh >/dev/null 2>&1 && grep -q 'timeout: 30' config/app.yaml",
+  "solution": "sed -i.bak 's/^timeout: thirty$/timeout: 30/' config/app.yaml && rm config/app.yaml.bak",
+  "tool": "generic",
+  "control": "- Run `./scripts/lint.sh` and read its output.",
+  "squeeze": "- Run `./scripts/lint.sh 2>&1 | squeeze` and read squeeze's output instead of the script's."
+}

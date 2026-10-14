@@ -1,0 +1,9 @@
+{
+  "prompt": "go test -race ./... fails in this module. Fix the defect in the package code so the tests pass with the race detector on. Do not edit the tests.",
+  "setup": "",
+  "verify": "go test -race ./... >/dev/null 2>&1 && grep -q 'func TestConcurrentPush' queue/queue_test.go",
+  "solution": "/usr/bin/python3 -I -c \"s=open('queue/queue.go').read(); s=s.replace('func (q *Queue) Push(v int) {\\n', 'func (q *Queue) Push(v int) {\\n\\tq.mu.Lock()\\n\\tdefer q.mu.Unlock()\\n'); open('queue/queue.go','w').write(s)\"",
+  "tool": "gotest",
+  "control": "- Run the tests with `go test -race -v ./...` and read the output.",
+  "squeeze": "- Run the tests with `go test -race -json ./... 2>&1 | squeeze` and read squeeze's output instead of Go's."
+}
