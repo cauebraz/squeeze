@@ -14,6 +14,7 @@ type Options struct {
 	MaxWarnings int
 	Full        bool
 	All         bool
+	NoFold      bool
 }
 
 func DefaultOptions() Options {
@@ -49,6 +50,7 @@ func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	core.CountFlag(fs, &o.MaxOutput, "max-output", "lines per failure and lines outside the sections, 0 for all")
 	core.CountFlag(fs, &o.MaxWarnings, "max-warnings", "warnings listed, 0 for all")
 	fs.BoolVar(&o.Full, "full", false, "print the whole traceback and the captured output of every failure")
+	fs.BoolVar(&o.NoFold, "no-fold", false, "print every failure, also one that fails at the same line as an earlier one")
 	fs.BoolVar(&o.All, "all", false, "print the short summary lines of passed, skipped, xfailed and xpassed tests and the sections squeeze only counts")
 	return func(input []byte) (core.Result, error) {
 		return Squeeze(input, o)

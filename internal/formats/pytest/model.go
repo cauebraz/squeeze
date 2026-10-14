@@ -31,6 +31,8 @@ type Failure struct {
 	Captured  []Captured `json:"captured,omitempty"`
 	Omitted   int        `json:"omitted,omitempty"`
 	Untracked bool       `json:"from_summary_only,omitempty"`
+	Location  string     `json:"location,omitempty"`
+	Same      []string   `json:"same_location_tests,omitempty"`
 }
 
 type Warning struct {
@@ -48,6 +50,7 @@ type Report struct {
 	Stopped         string         `json:"stopped,omitempty"`
 	Failures        []Failure      `json:"failures"`
 	FailuresOmitted int            `json:"failures_omitted"`
+	FailuresFolded  int            `json:"failures_folded"`
 	Warnings        []Warning      `json:"warning_messages"`
 	WarningsOmitted int            `json:"warnings_omitted"`
 	Notes           []string       `json:"notes"`

@@ -57,6 +57,7 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 - A report-looking line inside captured output, such as a test that prints `===== running migrations =====` or `1 failed, 2 passed in 0.50s`, stays in the captured section; only an entry title, one of pytest's section titles or a `=`-framed summary line ends it.
 - With `--tb=line`, each failure is the `E` lines followed by its `path:line: message` line; squeeze pairs them with the short summary in order.
 - pytest's built-in subtests print as `FAILED <node id> [label] (i=1)`, with the label from the `SUBFAILED` summary line; the parent test's `contains N failed subtests` entry follows.
+- Failures of the same kind that fail at the same `path:line` with the same `>` source lines, as the cases of a parametrized test do, print once: the first entry in full, then `... N more failures from tests/test_x.py:23 (--no-fold)`. The folded node IDs are in `--output json` under `same_location_tests`. `--max-tests` counts the entries left after folding. A failure without a location line, as with `--tb=no`, never folds.
 - Past `--max-output`, squeeze keeps the last lines of the traceback, of each captured section and of the output outside the sections, where the error is, and counts the earlier ones.
 - A failure or error that is only in the short summary, as with `--tb=no`, prints with the summary's message.
 - Paths under the session's `rootdir` print relative to it. `-q` prints no session header, so paths stay as pytest printed them.
@@ -74,6 +75,7 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 | `--max-output` | `20` | lines per failure and lines outside the sections, `0` for all |
 | `--max-tests` | `50` | failures and errors listed, `0` for all |
 | `--max-warnings` | `10` | warnings listed, `0` for all |
+| `--no-fold` | off | print every failure, also one that fails at the same line as an earlier one |
 
 ## Conditions for `--fail-on`
 
@@ -91,10 +93,10 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `summary_found`, `summary`, `interrupted`, `stopped` and `internal_error` when set, `failures`, `failures_omitted`, `warning_messages` (`message`, `count`), `warnings_omitted`, `notes`, `notes_omitted`, `outcomes` (the other short summary lines) and `other_sections` (line counts by section title).
+`data` holds `tool`, `tool_version`, `summary_found`, `summary`, `interrupted`, `stopped` and `internal_error` when set, `failures`, `failures_folded`, `failures_omitted`, `warning_messages` (`message`, `count`), `warnings_omitted`, `notes`, `notes_omitted`, `outcomes` (the other short summary lines) and `other_sections` (line counts by section title).
 
 - `summary`: `failed`, `passed`, `skipped`, `deselected`, `xfailed`, `xpassed`, `warnings`, `errors`, `other` (counts of types pytest or a plugin adds, such as `subtests passed` or `rerun`), `duration` and `line`.
-- `failures`: `kind` (`failed` or `error`), `test`, `lines` and, when set, `subtest`, `when`, `message`, `hidden` (traceback lines not shown), `captured` (one object per section with `name`, `lines` and `omitted`), `omitted` and `from_summary_only`.
+- `failures`: `kind` (`failed` or `error`), `test`, `lines` and, when set, `subtest`, `when`, `message`, `hidden` (traceback lines not shown), `captured` (one object per section with `name`, `lines` and `omitted`), `omitted`, `from_summary_only`, `location` (the last `path:line` of the traceback) and `same_location_tests` (the node IDs folded into this entry).
 
 ## Limitations
 

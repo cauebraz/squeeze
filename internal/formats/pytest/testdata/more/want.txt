@@ -14,43 +14,4 @@ FAILED more/test_more.py::test_many[3]
   E assert (3 % 7) != 3
   more/test_more.py:23: AssertionError
   ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[10]
-  > assert n % 7 != 3
-  E assert (10 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[17]
-  > assert n % 7 != 3
-  E assert (17 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[24]
-  > assert n % 7 != 3
-  E assert (24 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[31]
-  > assert n % 7 != 3
-  E assert (31 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[38]
-  > assert n % 7 != 3
-  E assert (38 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[45]
-  > assert n % 7 != 3
-  E assert (45 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[52]
-  > assert n % 7 != 3
-  E assert (52 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[59]
-  > assert n % 7 != 3
-  E assert (59 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
+  ... 8 more failures from more/test_more.py:23 (--no-fold)

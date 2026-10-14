@@ -491,15 +491,52 @@ func TestWarningMessagesSpanLines(t *testing.T) {
 
 func TestOmittedFailuresPlural(t *testing.T) {
 	t.Parallel()
-	r, _ := Squeeze(fixture(t, "more"), Options{MaxTests: 9})
+	r, _ := Squeeze(fixture(t, "more"), Options{MaxTests: 9, NoFold: true})
 	if !strings.Contains(r.Text, "... 1 more failure or error (--max-tests 0)\n") {
 		t.Errorf("text:\n%s", r.Text)
 	}
 }
 
+func TestFoldFailures(t *testing.T) {
+	t.Parallel()
+	at := func(kind, when, test, src, loc string) Failure {
+		return Failure{Kind: kind, When: when, Test: test, Lines: []string{"> " + src, "E boom", loc + ": AssertionError"}, Location: loc}
+	}
+	in := []Failure{
+		at("failed", "", "t.py::p[1]", "assert f(x)", "t.py:8"),
+		at("failed", "", "t.py::p[2]", "assert f(x)", "t.py:8"),
+		at("failed", "", "t.py::q", "assert g(x)", "t.py:8"),
+		at("failed", "", "t.py::p[3]", "assert f(x)", "t.py:9"),
+		at("error", "setup", "t.py::r", "assert f(x)", "t.py:8"),
+		at("error", "teardown", "t.py::s", "assert f(x)", "t.py:8"),
+		{Kind: "failed", Test: "t.py::u", Lines: []string{}, Untracked: true},
+		{Kind: "failed", Test: "t.py::v", Lines: []string{}, Untracked: true},
+		at("failed", "", "t.py::p[4]", "assert f(x)", "t.py:8"),
+	}
+	out, folded := foldFailures(in)
+	if folded != 2 {
+		t.Errorf("folded %d, want 2", folded)
+	}
+	var names []string
+	for _, f := range out {
+		names = append(names, f.Test)
+	}
+	want := []string{"t.py::p[1]", "t.py::q", "t.py::p[3]", "t.py::r", "t.py::s", "t.py::u", "t.py::v"}
+	if diff := cmp.Diff(want, names); diff != "" {
+		t.Errorf("kept failures (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"t.py::p[2]", "t.py::p[4]"}, out[0].Same); diff != "" {
+		t.Errorf("folded into the first (-want +got):\n%s", diff)
+	}
+	text := Text(Report{Failures: out, Complete: true, Tool: "pytest"}, DefaultOptions())
+	if !strings.Contains(text, "  ... 2 more failures from t.py:8 (--no-fold)\n") {
+		t.Errorf("text:\n%s", text)
+	}
+}
+
 func TestLimits(t *testing.T) {
 	t.Parallel()
-	r := report(t, fixture(t, "more"), Options{MaxTests: 3, MaxOutput: 2})
+	r := report(t, fixture(t, "more"), Options{MaxTests: 3, MaxOutput: 2, NoFold: true})
 	if len(r.Failures) != 3 || r.FailuresOmitted != 7 {
 		t.Errorf("failures = %d, omitted %d", len(r.Failures), r.FailuresOmitted)
 	}
@@ -513,6 +550,14 @@ func TestLimits(t *testing.T) {
 	}
 	if diff := cmp.Diff(r.Summary.Failed, len(r.Failures)+r.FailuresOmitted, cmpopts.EquateEmpty()); diff != "" {
 		t.Errorf("failure count (-want +got):\n%s", diff)
+	}
+	r = report(t, fixture(t, "more"), Options{MaxTests: 3, MaxOutput: 2})
+	same := 0
+	for _, f := range r.Failures {
+		same += len(f.Same)
+	}
+	if r.FailuresFolded != 8 || same != 8 || len(r.Failures)+r.FailuresOmitted+r.FailuresFolded != r.Summary.Failed {
+		t.Errorf("folded %d, same %d, failures %d, omitted %d, want %d in total", r.FailuresFolded, same, len(r.Failures), r.FailuresOmitted, r.Summary.Failed)
 	}
 }
 

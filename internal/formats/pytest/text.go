@@ -101,6 +101,11 @@ func writeFailure(b *strings.Builder, f Failure, full bool) {
 	if len(hidden) > 0 {
 		fmt.Fprintf(b, "  ... %s (--full)\n", strings.Join(hidden, "; "))
 	}
+	defer func() {
+		if n := len(f.Same); n > 0 {
+			fmt.Fprintf(b, "  ... %d more %s from %s (--no-fold)\n", n, core.Plural(n, failureWord(f), failureWord(f)+"s"), f.Location)
+		}
+	}()
 	if !full {
 		names := make([]string, 0, len(f.Captured))
 		count := 0
@@ -122,6 +127,13 @@ func writeFailure(b *strings.Builder, f Failure, full bool) {
 			b.WriteString("    " + l + "\n")
 		}
 	}
+}
+
+func failureWord(f Failure) string {
+	if f.Kind == "error" {
+		return "error"
+	}
+	return "failure"
 }
 
 func writeCounted(b *strings.Builder, r Report) {

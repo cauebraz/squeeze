@@ -6,14 +6,4 @@ FAILED more/test_more.py::test_parse
   more/test_more.py:13: ValueError
   ... 7 traceback lines (--full)
   ... 1 captured line in log call (--full)
-FAILED more/test_more.py::test_many[3]
-  > assert n % 7 != 3
-  E assert (3 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-FAILED more/test_more.py::test_many[10]
-  > assert n % 7 != 3
-  E assert (10 % 7) != 3
-  more/test_more.py:23: AssertionError
-  ... 3 traceback lines (--full)
-... 7 more failures and errors (--max-tests 0)
+... 1 more failure or error (--max-tests 0)

@@ -310,6 +310,9 @@ func (p *parser) finish(o Options) {
 		}
 		failures = append(failures, Failure{Kind: kind, Test: rec.test, Subtest: rec.label, Message: rec.message, Lines: []string{}, Untracked: true})
 	}
+	if !o.NoFold {
+		failures, p.r.FailuresFolded = foldFailures(failures)
+	}
 	failures, p.r.FailuresOmitted = core.Limit(failures, o.MaxTests)
 	if failures != nil {
 		p.r.Failures = failures
@@ -337,12 +340,58 @@ func (p *parser) failure(e *entry, o Options) Failure {
 		f.Test, f.Subtest, f.Message = rec.test, rec.label, rec.message
 	}
 	f.Lines, f.Hidden = selectLines(e.body, o.Full)
+	f.Location = lastLocation(f.Lines)
 	f.Lines, f.Omitted = core.LimitTail(f.Lines, o.MaxOutput)
 	for _, c := range e.captured {
 		kept, omitted := core.LimitTail(nonNil(c.lines), o.MaxOutput)
 		f.Captured = append(f.Captured, Captured{Name: c.name, Lines: kept, Omitted: omitted})
 	}
 	return f
+}
+
+func lastLocation(lines []string) string {
+	for i := len(lines) - 1; i >= 0; i-- {
+		if m := location.FindStringSubmatch(lines[i]); m != nil {
+			return strings.TrimSuffix(strings.TrimSuffix(lines[i], m[1]), ":")
+		}
+	}
+	return ""
+}
+
+func signature(f Failure) string {
+	if f.Location == "" {
+		return ""
+	}
+	parts := []string{f.Kind, f.When, f.Location}
+	for _, l := range f.Lines {
+		if strings.HasPrefix(l, ">") || location.MatchString(l) {
+			parts = append(parts, l)
+		}
+	}
+	return strings.Join(parts, "\n")
+}
+
+func foldFailures(failures []Failure) ([]Failure, int) {
+	first := map[string]int{}
+	out := failures[:0:0]
+	folded := 0
+	for _, f := range failures {
+		sig := signature(f)
+		if i, ok := first[sig]; ok && sig != "" {
+			name := f.Test
+			if f.Subtest != "" {
+				name += " " + f.Subtest
+			}
+			out[i].Same = append(out[i].Same, name)
+			folded++
+			continue
+		}
+		if sig != "" {
+			first[sig] = len(out)
+		}
+		out = append(out, f)
+	}
+	return out, folded
 }
 
 func (p *parser) match(f Failure) *record {
