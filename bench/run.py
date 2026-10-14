@@ -11,7 +11,7 @@ shell tool returned, the number of turns, and whether the verifier passed.
 
 Usage:
   OPENROUTER_API_KEY=... bench/run.py --model <openrouter model id> [--runs 5]
-      [--arm both|control|squeeze] [--task name ...] [--max-turns 30]
+      [--arm both|control|squeeze] [--task name ...] [--max-turns 30] [--jobs 1]
   bench/run.py --self-test            # setup, verify and solution of every task, no API calls
   bench/run.py --report bench/results/<file>.jsonl
 
@@ -19,6 +19,7 @@ Results go to bench/results/<timestamp>.jsonl, one line per run.
 """
 
 import argparse
+import concurrent.futures
 import datetime as dt
 import json
 import os
@@ -258,6 +259,7 @@ def main():
     ap.add_argument("--arm", choices=["both", "control", "squeeze"], default="both")
     ap.add_argument("--task", action="append", default=[])
     ap.add_argument("--max-turns", type=int, default=30)
+    ap.add_argument("--jobs", type=int, default=1, help="runs in flight at once")
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--report", metavar="FILE")
     ap.add_argument("--keep", action="store_true", help="keep the working copies")
@@ -279,31 +281,30 @@ def main():
     out_path = os.path.join(RESULTS, dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ") + ".jsonl")
     arms = ["control", "squeeze"] if args.arm == "both" else [args.arm]
     print("writing " + out_path)
-    with open(out_path, "w") as out:
-        for i in range(args.runs):
-            for name, task in tasks.items():
-                for arm in arms:
-                    base, work, env = workdir(name, task, arm, squeeze_bin)
-                    start = time.time()
-                    usage, tool_bytes, turns, commands = run_agent(key, args.model, task, work, env, args.max_turns)
-                    passed = verify(task, work, env)
-                    row = {
-                        "task": name, "arm": arm, "run": i + 1, "model": args.model, "passed": passed,
-                        "prompt_tokens": usage["prompt_tokens"], "completion_tokens": usage["completion_tokens"],
-                        "cached_tokens": usage["cached_tokens"], "tool_bytes": tool_bytes, "turns": turns,
-                        "seconds": round(time.time() - start, 1), "commands": commands,
-                    }
-                    out.write(json.dumps(row) + "\n")
-                    out.flush()
-                    print("run %d %-18s %-8s %s  in=%d out=%d tool=%dKB turns=%d" % (
-                        i + 1, name, arm, "pass" if passed else "FAIL",
-                        usage["prompt_tokens"], usage["completion_tokens"], tool_bytes // 1024, turns))
-                    if args.keep:
-                        print("  kept " + work)
-                    else:
-                        shutil.rmtree(base)
-    print()
-    report(out_path)
+    def one(i, name, task, arm):
+        base, work, env = workdir(name, task, arm, squeeze_bin)
+        start = time.time()
+        usage, tool_bytes, turns, commands = run_agent(key, args.model, task, work, env, args.max_turns)
+        passed = verify(task, work, env)
+        if not args.keep:
+            shutil.rmtree(base, ignore_errors=True)
+        return {
+            "task": name, "arm": arm, "run": i + 1, "model": args.model, "passed": passed,
+            "prompt_tokens": usage["prompt_tokens"], "completion_tokens": usage["completion_tokens"],
+            "cached_tokens": usage["cached_tokens"], "tool_bytes": tool_bytes, "turns": turns,
+            "seconds": round(time.time() - start, 1), "commands": commands,
+        }
+
+    cells = [(i, name, task, arm) for i in range(args.runs) for name, task in tasks.items() for arm in arms]
+    with open(out_path, "w") as out, concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+        futures = [pool.submit(one, *c) for c in cells]
+        for future in concurrent.futures.as_completed(futures):
+            row = future.result()
+            out.write(json.dumps(row) + "\n")
+            out.flush()
+            print("run %d %-18s %-8s %s  in=%d out=%d tool=%dKB turns=%d" % (
+                row["run"], row["task"], row["arm"], "pass" if row["passed"] else "FAIL",
+                row["prompt_tokens"], row["completion_tokens"], row["tool_bytes"] // 1024, row["turns"]))
 
 
 if __name__ == "__main__":

@@ -29,10 +29,11 @@ The tasks need `uv`, `go` and `tflint` on `PATH`.
 bench/run.py --self-test                                  # verifiers and solutions, no API calls
 OPENROUTER_API_KEY=... just measure anthropic/claude-sonnet-4.5 5
 OPENROUTER_API_KEY=... bench/run.py --model <id> --runs 5 --arm squeeze --task pytest-failures
+OPENROUTER_API_KEY=... just measure anthropic/claude-opus-5.5 10 --jobs 10
 bench/run.py --report bench/results/<timestamp>.jsonl     # print the table again
 ```
 
-`--model` takes an OpenRouter model id; the model must support tool calling. `--keep` leaves the working copies in the temp directory for inspection. Results are not committed.
+`--model` takes an OpenRouter model id; the model must support tool calling. `--jobs` sets how many runs are in flight at once; every run has its own working copy and the API is the bottleneck, so ten jobs finish about ten times sooner until the provider's rate limit answers 429, which the runner retries five times with backoff. Rows land in the results file as runs finish, so `run` and `task` in each row, not the line order, identify a run. `--keep` leaves the working copies in the temp directory for inspection. Results are not committed.
 
 ## Limitations
 
