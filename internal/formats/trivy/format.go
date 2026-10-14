@@ -22,7 +22,7 @@ func (Format) Name() string { return "trivy" }
 
 func (Format) Description() string { return "Trivy findings from trivy --format json" }
 
-var conditionNames = []string{"critical", "fail", "fixable", "high", "misconfig", "secret", "vuln"}
+var conditionNames = []string{"critical", "fail", "fixable", "high", "misconfiguration", "secret", "vulnerability"}
 
 func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
 
@@ -54,12 +54,12 @@ func Squeeze(input []byte, o Options) (core.Result, error) {
 
 func conditions(r Report) []string {
 	return core.Conditions(map[string]bool{
-		"critical":  r.BySeverity["CRITICAL"] > 0,
-		"fail":      r.Vulnerabilities+r.Misconfigurations+r.Secrets+r.SevereLicenses > 0,
-		"fixable":   r.Fixable > 0,
-		"high":      r.BySeverity["HIGH"]+r.BySeverity["CRITICAL"] > 0,
-		"misconfig": r.Misconfigurations > 0,
-		"secret":    r.Secrets > 0,
-		"vuln":      r.Vulnerabilities > 0,
+		"critical":         r.BySeverity["CRITICAL"] > 0,
+		"fail":             r.Vulnerabilities+r.Misconfigurations+r.Secrets+r.SevereLicenses > 0,
+		"fixable":          r.Fixable > 0,
+		"high":             r.BySeverity["HIGH"]+r.BySeverity["CRITICAL"] > 0,
+		"misconfiguration": r.Misconfigurations > 0,
+		"secret":           r.Secrets > 0,
+		"vulnerability":    r.Vulnerabilities > 0,
 	})
 }

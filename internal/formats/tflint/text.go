@@ -12,20 +12,21 @@ func Text(r Report, o Options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
-	for _, d := range r.Diagnostics {
+	for _, d := range r.Problems {
 		tfdiag.Write(&b, d, tfdiag.WriteOptions{NoDetail: o.NoDetail})
 	}
-	if r.DiagnosticsOmitted > 0 {
-		items := make([]string, 0, maxRulesInNotice+1)
-		for i, rc := range r.OmittedRules {
-			if i == maxRulesInNotice {
-				rest := len(r.OmittedRules) - maxRulesInNotice
-				items = append(items, fmt.Sprintf("%d other %s", rest, core.Plural(rest, "rule", "rules")))
-				break
-			}
-			items = append(items, fmt.Sprintf("%s %d", rc.Rule, rc.Count))
+	for _, is := range r.Issues {
+		d := is.Diagnostic
+		switch {
+		case is.Fixed:
+			d.Address += ", fixed"
+		case is.Fixable:
+			d.Address += ", fixable"
 		}
-		fmt.Fprintf(&b, "... %d more %s, %s (--max-issues 0)\n", r.DiagnosticsOmitted, core.Plural(r.DiagnosticsOmitted, "issue", "issues"), strings.Join(items, ", "))
+		tfdiag.Write(&b, d, tfdiag.WriteOptions{NoDetail: o.NoDetail})
+	}
+	if r.IssuesOmitted > 0 {
+		fmt.Fprintf(&b, "... %d more %s, %s (--max-issues 0)\n", r.IssuesOmitted, core.Plural(r.IssuesOmitted, "issue", "issues"), core.TopCounts(r.OmittedByRule, maxRulesInNotice, "rule", "rules"))
 	}
 	return b.String()
 }
@@ -46,16 +47,16 @@ func header(r Report) string {
 	}
 	line := fmt.Sprintf("tflint: %d %s", total, core.Plural(total, "issue", "issues"))
 	if len(parts) > 0 {
-		line += ": " + strings.Join(parts, ", ")
+		line += ", " + strings.Join(parts, ", ")
 	}
 	if r.Fixable > 0 {
-		line += fmt.Sprintf("; %d fixable with tflint --fix", r.Fixable)
+		line += fmt.Sprintf("; %d fixable", r.Fixable)
 	}
 	if r.Fixed > 0 {
 		line += fmt.Sprintf("; %d fixed", r.Fixed)
 	}
 	if r.ToolErrors > 0 {
-		line += fmt.Sprintf("; tflint reported %d %s and did not finish every check", r.ToolErrors, core.Plural(r.ToolErrors, "error", "errors"))
+		line += fmt.Sprintf("; %d tflint %s, not every check ran", r.ToolErrors, core.Plural(r.ToolErrors, "error", "errors"))
 	}
 	return line
 }

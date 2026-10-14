@@ -180,7 +180,7 @@ func TestText(t *testing.T) {
 func TestReport(t *testing.T) {
 	t.Parallel()
 	r, _ := Build(lines("", "a", "a", "a", "b", "", "", strings.Repeat("z", 9), "Error x", "c", "d"), Options{MaxLines: 5, MaxLineBytes: 4})
-	want := Report{Lines: 11, Printed: 4, BlankDropped: 2, Folded: 2, Cut: 3, LongLines: 1, ErrorLines: 1}
+	want := Report{Tool: "text", Lines: 11, Printed: 4, BlankDropped: 2, Folded: 2, Cut: 3, LongLines: 1, ErrorLines: 1}
 	if diff := cmp.Diff(want, r); diff != "" {
 		t.Errorf("report (-want +got):\n%s", diff)
 	}

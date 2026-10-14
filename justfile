@@ -65,4 +65,4 @@ conformance ref=terraform_ref:
     git -C "$work" sparse-checkout set internal/command/testdata
     git -C "$work" fetch -q --depth 1 --filter=blob:none origin {{ref}}
     git -C "$work" checkout -q FETCH_HEAD
-    SQUEEZE_REAL_DIR="$work/internal/command/testdata" go test ./internal/formats/... -run '^TestRealInputs$' -count=1 -v | grep -E '^(=== RUN|--- |ok|FAIL|PASS)|ratio|leaks|: '
+    SQUEEZE_REAL_DIR="$work/internal/command/testdata" go test ./internal/formats/tfplan ./internal/formats/tfvalidate ./internal/formats/tfjson -run '^TestRealInputs$' -count=1 -v | grep -E '^(=== RUN|--- |ok|FAIL|PASS)|ratio|leaks|: '

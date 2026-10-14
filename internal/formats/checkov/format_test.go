@@ -137,6 +137,34 @@ func TestGroupsAreOrderedByWorstSeverityThenLocation(t *testing.T) {
 	}
 }
 
+func TestNullResultsAndCountsOnly(t *testing.T) {
+	t.Parallel()
+	list := []byte(`[{"check_type":"terraform","results":{"failed_checks":[],"passed_checks":[],"skipped_checks":[],"parsing_errors":[]},"summary":{"passed":1,"checkov_version":"3"}},` +
+		`{"check_type":"dockerfile","results":null,"summary":{"passed":2,"checkov_version":"3"}}]`)
+	if r := report(t, list, DefaultOptions()); r.Passed != 3 || len(r.Frameworks) != 2 {
+		t.Errorf("report = %+v", r)
+	}
+	counts := []byte(`{"passed":3,"failed":2,"skipped":1,"parsing_errors":0,"resource_count":2,"checkov_version":"3.3.29"}`)
+	r, err := Squeeze(counts, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(r.Text, "checkov 3.3.29: 2 failed, 3 passed, 1 skipped; 2 resources; counts only, the input holds no checks\n") {
+		t.Errorf("text:\n%s", r.Text)
+	}
+}
+
+func TestUnknownSeverityIsNamed(t *testing.T) {
+	t.Parallel()
+	input := []byte(`{"check_type":"t","summary":{"failed":2,"checkov_version":"3"},"results":{"failed_checks":[` +
+		`{"check_id":"A","check_name":"a","file_path":"/a.tf","resource":"r","severity":"Bogus"},` +
+		`{"check_id":"B","check_name":"b","file_path":"/a.tf","resource":"r","severity":"low"}],"passed_checks":[],"skipped_checks":[],"parsing_errors":[]}}`)
+	r := report(t, input, DefaultOptions())
+	if r.FailedChecks[0].Severity != "LOW" || r.FailedChecks[1].Severity != "UNKNOWN" || r.BySeverity["UNKNOWN"] != 1 {
+		t.Errorf("severities = %+v", r.FailedChecks)
+	}
+}
+
 func TestLimitNamesTheOmittedChecks(t *testing.T) {
 	t.Parallel()
 	r, err := Squeeze(fixture(t, "single"), Options{MaxChecks: 4})

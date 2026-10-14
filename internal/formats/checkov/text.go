@@ -16,16 +16,7 @@ func Text(r Report, o Options) string {
 	}
 	writeGroups(&b, r.FailedChecks, r.failedPerResource(), false)
 	if r.ChecksOmitted > 0 {
-		items := make([]string, 0, maxChecksInNotice+1)
-		for i, cc := range r.OmittedChecks {
-			if i == maxChecksInNotice {
-				rest := len(r.OmittedChecks) - maxChecksInNotice
-				items = append(items, fmt.Sprintf("%d other %s", rest, core.Plural(rest, "check", "checks")))
-				break
-			}
-			items = append(items, fmt.Sprintf("%s %d", cc.CheckID, cc.Count))
-		}
-		fmt.Fprintf(&b, "... %d more failed %s, %s (--max-checks 0)\n", r.ChecksOmitted, core.Plural(r.ChecksOmitted, "check", "checks"), strings.Join(items, ", "))
+		fmt.Fprintf(&b, "... %d more failed %s, %s (--max-checks 0)\n", r.ChecksOmitted, core.Plural(r.ChecksOmitted, "check", "checks"), core.TopCounts(r.OmittedChecks, maxChecksInNotice, "check", "checks"))
 	}
 	switch {
 	case o.All && len(r.SkippedChecks) > 0:
@@ -50,6 +41,9 @@ func header(r Report) string {
 		line += fmt.Sprintf(", %d parsing %s", r.ParsingErrors, core.Plural(r.ParsingErrors, "error", "errors"))
 	}
 	line += fmt.Sprintf("; %d %s", r.Resources, core.Plural(r.Resources, "resource", "resources"))
+	if r.CountsOnly && r.Failed > 0 {
+		line += "; counts only, the input holds no checks"
+	}
 	if len(r.Frameworks) > 1 {
 		parts := make([]string, 0, len(r.Frameworks))
 		for _, f := range r.Frameworks {

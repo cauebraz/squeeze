@@ -2,7 +2,6 @@ package tflint
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -11,23 +10,27 @@ import (
 
 const maxRulesInNotice = 5
 
-type RuleCount struct {
-	Rule  string `json:"rule"`
-	Count int    `json:"count"`
+type Issue struct {
+	tfdiag.Diagnostic
+	Rule    string `json:"rule"`
+	Fixable bool   `json:"fixable,omitempty"`
+	Fixed   bool   `json:"fixed,omitempty"`
 }
 
 type Report struct {
-	Tool               string              `json:"tool"`
-	Errors             int                 `json:"errors"`
-	Warnings           int                 `json:"warnings"`
-	Notices            int                 `json:"notices"`
-	ToolErrors         int                 `json:"tool_errors"`
-	Fixable            int                 `json:"fixable"`
-	Fixed              int                 `json:"fixed"`
-	Rules              []RuleCount         `json:"rules"`
-	Diagnostics        []tfdiag.Diagnostic `json:"diagnostics"`
-	DiagnosticsOmitted int                 `json:"diagnostics_omitted"`
-	OmittedRules       []RuleCount         `json:"omitted_rules"`
+	Tool          string              `json:"tool"`
+	ToolVersion   string              `json:"tool_version"`
+	Errors        int                 `json:"errors"`
+	Warnings      int                 `json:"warnings"`
+	Notices       int                 `json:"notices"`
+	ToolErrors    int                 `json:"tool_errors"`
+	Fixable       int                 `json:"fixable"`
+	Fixed         int                 `json:"fixed"`
+	Rules         []core.Count        `json:"rules"`
+	Problems      []tfdiag.Diagnostic `json:"problems"`
+	Issues        []Issue             `json:"issues"`
+	IssuesOmitted int                 `json:"issues_omitted"`
+	OmittedByRule []core.Count        `json:"omitted_by_rule"`
 }
 
 func severity(s string) string {
@@ -54,8 +57,8 @@ func where(r Range) string {
 }
 
 func Build(out *Output, o Options) Report {
-	r := Report{Tool: "tflint", Rules: []RuleCount{}, Diagnostics: []tfdiag.Diagnostic{}, OmittedRules: []RuleCount{}}
-	var ds []tfdiag.Diagnostic
+	r := Report{Tool: "tflint", Rules: []core.Count{}, Problems: []tfdiag.Diagnostic{}, Issues: []Issue{}, OmittedByRule: []core.Count{}}
+	var problems []tfdiag.Diagnostic
 	for _, e := range *out.Errors {
 		d := tfdiag.Diagnostic{Severity: severity(e.Severity), Summary: core.Clean(e.Summary), Detail: strings.TrimSpace(e.Message), Address: "tflint"}
 		if d.Summary == "" {
@@ -68,27 +71,17 @@ func Build(out *Output, o Options) Report {
 			d.Severity = "warning"
 		}
 		r.ToolErrors++
-		ds = append(ds, d)
+		problems = append(problems, d)
 	}
+	r.Problems = append(r.Problems, tfdiag.Normalize(problems)...)
 	counts := map[string]int{}
+	var issues []Issue
 	for _, is := range *out.Issues {
 		name := core.Clean(is.Rule.Name)
 		d := tfdiag.Diagnostic{Severity: severity(is.Rule.Severity), Summary: core.Clean(is.Message), Address: name}
 		d.File, d.Line, d.Column = location(is.Range)
-		switch {
-		case is.Fixed:
-			d.Address += ", fixed"
-			r.Fixed++
-		case is.Fixable:
-			d.Address += ", fixable"
-			r.Fixable++
-		}
-		if len(is.Callers) > 0 {
-			chain := make([]string, 0, len(is.Callers))
-			for _, c := range is.Callers {
-				chain = append(chain, where(c))
-			}
-			d.Detail = "called from " + strings.Join(chain, " <- ")
+		if chain := callers(is); len(chain) > 0 {
+			d.Detail = "evaluated in " + strings.Join(chain, " -> ")
 		}
 		switch d.Severity {
 		case "error":
@@ -98,40 +91,65 @@ func Build(out *Output, o Options) Report {
 		case "notice":
 			r.Notices++
 		}
+		if is.Fixed {
+			r.Fixed++
+		} else if is.Fixable {
+			r.Fixable++
+		}
 		counts[name]++
-		ds = append(ds, d)
+		issues = append(issues, Issue{Diagnostic: d, Rule: name, Fixable: is.Fixable && !is.Fixed, Fixed: is.Fixed})
 	}
-	for name, n := range counts {
-		r.Rules = append(r.Rules, RuleCount{Rule: name, Count: n})
+	r.Rules = core.SortedCounts(counts)
+	issues = fold(issues)
+	total := 0
+	for _, is := range issues {
+		total += max(is.Count, 1)
 	}
-	sortRules(r.Rules)
-	ds = tfdiag.Normalize(ds)
-	kept, omitted := core.Limit(ds, o.MaxIssues)
-	r.Diagnostics = append(r.Diagnostics, kept...)
-	r.DiagnosticsOmitted = omitted
-	if omitted > 0 {
-		cut := map[string]int{}
-		for _, d := range ds[len(kept):] {
-			cut[ruleOf(d)] += max(d.Count, 1)
+	var kept []Issue
+	shown := 0
+	for _, is := range issues {
+		if o.MaxIssues > 0 && shown+max(is.Count, 1) > o.MaxIssues && shown > 0 {
+			break
 		}
-		for name, n := range cut {
-			r.OmittedRules = append(r.OmittedRules, RuleCount{Rule: name, Count: n})
-		}
-		sortRules(r.OmittedRules)
+		kept = append(kept, is)
+		shown += max(is.Count, 1)
 	}
+	r.Issues = append(r.Issues, kept...)
+	r.IssuesOmitted = total - shown
+	cut := map[string]int{}
+	for _, is := range issues[len(kept):] {
+		cut[is.Rule] += max(is.Count, 1)
+	}
+	r.OmittedByRule = core.SortedCounts(cut)
 	return r
 }
 
-func ruleOf(d tfdiag.Diagnostic) string {
-	name, _, _ := strings.Cut(d.Address, ", ")
-	return name
+func callers(is RawIssue) []string {
+	issueAt := where(is.Range)
+	var chain []string
+	for i, c := range is.Callers {
+		at := where(c)
+		if i == 0 && at == issueAt {
+			continue
+		}
+		chain = append(chain, at)
+	}
+	return chain
 }
 
-func sortRules(rs []RuleCount) {
-	sort.Slice(rs, func(i, j int) bool {
-		if rs[i].Count != rs[j].Count {
-			return rs[i].Count > rs[j].Count
-		}
-		return rs[i].Rule < rs[j].Rule
-	})
+func fold(issues []Issue) []Issue {
+	var ds []tfdiag.Diagnostic
+	meta := map[tfdiag.Diagnostic][2]bool{}
+	for _, is := range issues {
+		ds = append(ds, is.Diagnostic)
+		meta[is.Diagnostic] = [2]bool{is.Fixable, is.Fixed}
+	}
+	out := make([]Issue, 0, len(ds))
+	for _, d := range tfdiag.Normalize(ds) {
+		key := d
+		key.Count = 0
+		m := meta[key]
+		out = append(out, Issue{Diagnostic: d, Rule: d.Address, Fixable: m[0], Fixed: m[1]})
+	}
+	return out
 }

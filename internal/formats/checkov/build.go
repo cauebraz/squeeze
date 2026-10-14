@@ -10,7 +10,7 @@ import (
 
 const maxChecksInNotice = 5
 
-var severityRank = map[string]int{"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
+var severityRank = map[string]int{"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4, "UNKNOWN": 5}
 
 type Check struct {
 	Framework string `json:"framework"`
@@ -35,11 +35,6 @@ type Framework struct {
 	Resources     int    `json:"resource_count"`
 }
 
-type CheckCount struct {
-	CheckID string `json:"check_id"`
-	Count   int    `json:"count"`
-}
-
 type Report struct {
 	Tool           string         `json:"tool"`
 	ToolVersion    string         `json:"tool_version"`
@@ -52,9 +47,10 @@ type Report struct {
 	BySeverity     map[string]int `json:"failed_by_severity"`
 	FailedChecks   []Check        `json:"failed_checks"`
 	ChecksOmitted  int            `json:"failed_checks_omitted"`
-	OmittedChecks  []CheckCount   `json:"omitted_check_ids"`
+	OmittedChecks  []core.Count   `json:"omitted_by_check_id"`
 	SkippedChecks  []Check        `json:"skipped_checks"`
 	ParseErrorPath []string       `json:"parsing_error_files"`
+	CountsOnly     bool           `json:"counts_only,omitempty"`
 	PerResource    map[string]int `json:"-"`
 }
 
@@ -81,9 +77,15 @@ func convert(framework string, rec Record) Check {
 		File:      relative(rec.FilePath),
 		Comment:   core.Clean(rec.CheckResult.SuppressComment),
 	}
+	if framework == "secrets" {
+		c.Resource = "secret"
+	}
 	c.Start, c.End = lines(rec.FileLineRange)
-	if rec.Severity != nil {
+	if rec.Severity != nil && *rec.Severity != "" {
 		c.Severity = strings.ToUpper(core.Clean(*rec.Severity))
+		if _, ok := severityRank[c.Severity]; !ok {
+			c.Severity = "UNKNOWN"
+		}
 	}
 	if rec.Guideline != nil {
 		c.Guideline = core.Clean(*rec.Guideline)
@@ -119,13 +121,16 @@ func Build(reports []RawReport, o Options) Report {
 		Frameworks:     []Framework{},
 		BySeverity:     map[string]int{},
 		FailedChecks:   []Check{},
-		OmittedChecks:  []CheckCount{},
+		OmittedChecks:  []core.Count{},
 		SkippedChecks:  []Check{},
 		ParseErrorPath: []string{},
 	}
 	var failed []Check
 	for _, rep := range reports {
 		s, res := rep.Summary, rep.Results
+		if rep.CountsOnly {
+			r.CountsOnly = true
+		}
 		if r.ToolVersion == "" {
 			r.ToolVersion = core.Clean(s.CheckovVersion)
 		}
@@ -171,15 +176,7 @@ func Build(reports []RawReport, o Options) Report {
 		for _, c := range failed[len(kept):] {
 			counts[c.CheckID]++
 		}
-		for id, n := range counts {
-			r.OmittedChecks = append(r.OmittedChecks, CheckCount{CheckID: id, Count: n})
-		}
-		sort.Slice(r.OmittedChecks, func(i, j int) bool {
-			if r.OmittedChecks[i].Count != r.OmittedChecks[j].Count {
-				return r.OmittedChecks[i].Count > r.OmittedChecks[j].Count
-			}
-			return r.OmittedChecks[i].CheckID < r.OmittedChecks[j].CheckID
-		})
+		r.OmittedChecks = core.SortedCounts(counts)
 	}
 	return r
 }

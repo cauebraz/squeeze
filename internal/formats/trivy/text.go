@@ -93,20 +93,15 @@ func header(r Report) string {
 }
 
 func writeTargets(b *strings.Builder, r Report, findings []Finding) {
-	types := map[string]string{}
-	for _, t := range r.Targets {
-		types[t.Name] = t.Type
-		if types[t.Name] == "" {
-			types[t.Name] = t.Class
-		}
-	}
-	last := ""
+	last := -1
 	for _, f := range findings {
-		if f.Target != last {
-			last = f.Target
+		if f.TargetIdx != last {
+			last = f.TargetIdx
 			b.WriteString(f.Target)
-			if t := types[f.Target]; t != "" {
-				b.WriteString(" (" + t + ")")
+			if t := r.Targets[f.TargetIdx]; t.Type != "" {
+				b.WriteString(" (" + t.Type + ")")
+			} else if t.Class != "" {
+				b.WriteString(" (" + t.Class + ")")
 			}
 			b.WriteString(":\n")
 		}

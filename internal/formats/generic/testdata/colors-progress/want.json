@@ -1,1 +1,1 @@
-{"schema_version":1,"format":"generic","input_bytes":238,"text_bytes":127,"ratio":0.5336,"conditions":["error"],"failed_on":[],"data":{"lines":9,"printed":7,"blank_dropped":2,"folded":0,"lines_omitted":0,"flagged_lines_omitted":0,"long_lines":0,"error_lines":1,"warning_lines":0}}
+{"schema_version":1,"format":"generic","input_bytes":238,"text_bytes":127,"ratio":0.5336,"conditions":["error"],"failed_on":[],"data":{"tool":"text","lines":9,"printed":7,"blank_dropped":2,"folded":0,"lines_omitted":0,"flagged_lines_omitted":0,"long_lines":0,"error_lines":1,"warning_lines":0}}

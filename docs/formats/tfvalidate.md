@@ -56,7 +56,7 @@ warning: Argument is deprecated (storage.tf:7:3)
 
 ## JSON data
 
-`data` holds `tool`, `valid`, `errors`, `warnings`, `diagnostics_omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code` and `count`.
+`data` holds `tool`, `tool_version` (empty: the validate JSON carries none), `valid`, `errors`, `warnings`, `diagnostics_omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code` and `count`.
 
 ## Limitations
 

@@ -77,10 +77,10 @@ func TestParseErrors(t *testing.T) {
 func TestConditions(t *testing.T) {
 	t.Parallel()
 	tests := map[string][]string{
-		"fs":     {"critical", "fail", "fixable", "high", "secret", "vuln"},
-		"config": {"fail", "high", "misconfig"},
+		"fs":     {"critical", "fail", "fixable", "high", "secret", "vulnerability"},
+		"config": {"fail", "high", "misconfiguration"},
 		"clean":  {},
-		"image":  {"critical", "fail", "fixable", "high", "misconfig", "vuln"},
+		"image":  {"critical", "fail", "fixable", "high", "misconfiguration", "vulnerability"},
 	}
 	for name, want := range tests {
 		r, err := Squeeze(fixture(t, name), DefaultOptions())
@@ -102,6 +102,23 @@ func TestCounts(t *testing.T) {
 	}
 	if len(r.Hidden) != 2 {
 		t.Errorf("hidden = %+v", r.Hidden)
+	}
+}
+
+func TestResultsWithTheSameTargetStayApart(t *testing.T) {
+	t.Parallel()
+	input := []byte(`{"SchemaVersion":2,"ArtifactName":"app","Results":[` +
+		`{"Target":"requirements.txt","Class":"lang-pkgs","Type":"pip","Vulnerabilities":[{"VulnerabilityID":"CVE-1","PkgName":"requests","InstalledVersion":"2.25.1","FixedVersion":"2.32.0","Severity":"HIGH"}]},` +
+		`{"Target":"requirements.txt","Class":"secret","Secrets":[{"RuleID":"aws-access-key-id","Severity":"CRITICAL","Title":"AWS Access Key ID","StartLine":3,"EndLine":3}]}]}`)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "trivy: app: 1 vulnerability, 1 secret; 1 CRITICAL, 1 HIGH; 1 fixable\n" +
+		"requirements.txt (pip):\n  HIGH CVE-1 requests 2.25.1 -> 2.32.0\n" +
+		"requirements.txt (secret):\n  CRITICAL aws-access-key-id line 3: AWS Access Key ID\n"
+	if diff := cmp.Diff(want, r.Text); diff != "" {
+		t.Errorf("text (-want +got):\n%s", diff)
 	}
 }
 

@@ -7,13 +7,13 @@ trivy fs --scanners vuln,secret,misconfig --format json . | squeeze
 trivy image --format json registry.example.com/shop/api:1.4.0 | squeeze --fail-on critical
 ```
 
-Trivy's JSON carries, for every vulnerability, its description, references, CVSS vectors, vendor severities and dates, and for every misconfiguration its description, query, references and code. squeeze keeps one line per finding with severity, ID, package or resource, and fix. On the fixtures captured from Trivy 0.75.0 the text is 1.4 to 3.2 percent of the input; on the container-image fixture written from the schema, which holds few findings, it is 15 percent.
+Trivy's JSON carries, for every vulnerability, its description, references, CVSS vectors, vendor severities and dates, and for every misconfiguration its description, query, references and code. squeeze keeps one line per finding with severity, ID, package or resource, and fix. On the default-flag fixtures with findings captured from Trivy 0.75.0 the text is 1.4 to 3.2 percent of the input; on the container-image fixture written from the schema, which holds few findings, it is 15 percent.
 
 ## Output
 
 ```
 $ squeeze < internal/formats/trivy/testdata/image/input.json
-trivy 0.75.0: registry.example.com/shop/api:1.4.0 (container_image, debian 12.7): 5 vulnerabilities, 1 misconfiguration, 2 licenses; 1 CRITICAL, 4 HIGH, 1 LOW, 1 UNKNOWN; 3 fixable; 40 misconfiguration checks passed
+trivy 0.75.0: registry.example.com/shop/api:1.4.0 (container_image, debian 12.7): 5 vulnerabilities, 1 misconfiguration, 2 licenses; 1 CRITICAL, 5 HIGH, 2 LOW, 1 UNKNOWN; 3 fixable; 40 misconfiguration checks passed
 registry.example.com/shop/api:1.4.0 (debian 12.7) (debian):
   CRITICAL CVE-2024-45491 libexpat1 2.5.0-1 -> 2.5.0-1+deb12u1: libexpat: Integer Overflow or Wraparound
   HIGH CVE-2023-52425 libexpat1 2.5.0-1 (affected): expat: parsing large tokens can trigger a denial of service
@@ -28,8 +28,8 @@ OS Packages (license):
 ... 1 misconfiguration exception, 1 license below HIGH (--all)
 ```
 
-- The header names the artifact, its type and, for an image, its OS; then the count of vulnerabilities, misconfigurations, secrets and licenses, the count by severity, how many vulnerabilities have a fixed version, and how many misconfiguration checks passed.
-- Findings are grouped by Trivy's targets, in Trivy's order, with the target type. Inside a target they are sorted by kind, severity, package or resource, line and ID.
+- The header names the artifact, its type and, for an image, its OS; then the count of vulnerabilities, misconfigurations, secrets and licenses, the count by severity (the hidden exceptions and licenses included), how many vulnerabilities have a fixed version, and how many misconfiguration checks passed.
+- Findings are grouped by Trivy's results, in Trivy's order, with the target name and type; two results with the same target name, such as a `requirements.txt` scanned for packages and for secrets, stay apart. Inside a target they are sorted by kind, severity, package or resource, line and ID.
 - A vulnerability prints its package, the installed version and `-> fixed versions`, or Trivy's status (`affected`, `will not fix`, ...) when there is no fix.
 - A misconfiguration prints its resource and lines from Trivy's cause metadata. Passed checks are counted in the header; checks with status `EXCEPTION` are counted in `... N misconfiguration exceptions (--all)`.
 - A secret prints its rule and line. The `Match` and `Code` fields, which hold the line from the file, are never read, so the secret never reaches the text or the JSON, even where Trivy did not mask it.
@@ -53,13 +53,13 @@ OS Packages (license):
 | `fail` | a vulnerability, a failed misconfiguration, a secret, or a license of severity `HIGH` or `CRITICAL` |
 | `fixable` | a vulnerability has a fixed version |
 | `high` | a finding has severity `HIGH` or `CRITICAL` |
-| `misconfig` | a misconfiguration failed |
+| `misconfiguration` | a misconfiguration failed |
 | `secret` | a secret was found |
-| `vuln` | a vulnerability was found |
+| `vulnerability` | a vulnerability was found |
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity`, `targets` (`name`, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity` and `hidden` (exceptions and licenses below HIGH). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `start_line`, `end_line` and `url`.
+`data` holds `tool`, `tool_version`, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity`, `targets` (`name`, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity` and `hidden` (exceptions and licenses below HIGH). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `target_index` (into `targets`), `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `start_line`, `end_line` and `url`.
 
 ## Limitations
 
@@ -67,3 +67,4 @@ OS Packages (license):
 - A severity outside Trivy's `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` and `UNKNOWN` is reported as `UNKNOWN`.
 - The `image` fixture is written from Trivy's schema, since scanning a real image needs the network; the other fixtures are captured runs.
 - `SchemaVersion` other than 2 exits with code 1 and names it.
+- `ExperimentalModifiedFindings`, the findings a VEX statement or an ignore file suppressed, are not read; Trivy itself hides them unless asked.

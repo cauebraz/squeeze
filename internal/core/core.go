@@ -10,6 +10,8 @@ const HeadSize = 64 << 10
 
 var ErrUnknownFormat = errors.New("input matches no known format")
 
+var SharedConditions = []string{"error", "fail", "warning"}
+
 type Result struct {
 	Text       string
 	Data       any

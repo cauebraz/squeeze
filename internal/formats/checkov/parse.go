@@ -44,9 +44,10 @@ type Results struct {
 }
 
 type RawReport struct {
-	CheckType string   `json:"check_type"`
-	Results   *Results `json:"results"`
-	Summary   *Summary `json:"summary"`
+	CountsOnly bool     `json:"-"`
+	CheckType  string   `json:"check_type"`
+	Results    *Results `json:"results"`
+	Summary    *Summary `json:"summary"`
 }
 
 func Parse(input []byte) ([]RawReport, error) {
@@ -59,9 +60,12 @@ func Parse(input []byte) ([]RawReport, error) {
 		if err := json.Unmarshal(trimmed, &reports); err != nil {
 			return nil, fmt.Errorf("decode: %w", err)
 		}
-		for _, r := range reports {
-			if r.Results == nil || r.Summary == nil {
+		for i := range reports {
+			if reports[i].Summary == nil {
 				return nil, ErrNotCheckov
+			}
+			if reports[i].Results == nil {
+				reports[i].Results = &Results{}
 			}
 		}
 		return reports, nil
@@ -78,7 +82,7 @@ func Parse(input []byte) ([]RawReport, error) {
 	}
 	if probe.Summary.CheckovVersion != "" {
 		s := probe.Summary
-		return []RawReport{{Summary: &s, Results: &Results{}}}, nil
+		return []RawReport{{Summary: &s, Results: &Results{}, CountsOnly: true}}, nil
 	}
 	return nil, ErrNotCheckov
 }

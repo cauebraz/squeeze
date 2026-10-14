@@ -97,6 +97,9 @@ func Contract(t *testing.T, f core.Format, dir string) {
 			t.Errorf("%s: condition %q must match %s", f.Name(), name, conditionName)
 		}
 	}
+	if !slices.Contains(declared, "fail") && f.Name() != "generic" {
+		t.Errorf("%s: a tool format declares the shared condition %q", f.Name(), "fail")
+	}
 	for _, empty := range []string{"", " \n\t"} {
 		if f.Detect([]byte(empty)) {
 			t.Errorf("%s: Detect(%q) = true", f.Name(), empty)
@@ -138,11 +141,13 @@ func Contract(t *testing.T, f core.Format, dir string) {
 					t.Fatalf("Envelope() error = %v", err)
 				}
 				var doc struct {
-					Format string          `json:"format"`
-					Data   json.RawMessage `json:"data"`
+					Format string `json:"format"`
+					Data   struct {
+						Tool string `json:"tool"`
+					} `json:"data"`
 				}
-				if err := json.Unmarshal(envelope, &doc); err != nil || doc.Format != f.Name() || len(doc.Data) == 0 {
-					t.Errorf("Envelope() does not round-trip: %v\n%s", err, envelope)
+				if err := json.Unmarshal(envelope, &doc); err != nil || doc.Format != f.Name() || doc.Data.Tool == "" {
+					t.Errorf("Envelope() does not round-trip to an object with a tool: %v\n%s", err, envelope)
 				}
 				golden(t, filepath.Join(c.Dir, "want.txt"), []byte(first.Text))
 				golden(t, filepath.Join(c.Dir, "want.json"), envelope)

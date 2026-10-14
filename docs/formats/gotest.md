@@ -73,7 +73,7 @@ fail example.com/shop/calc TestTable/one
 
 ## JSON data
 
-`data` holds `tool`, `status`, `tests` (`passed`, `failed`, `skipped`), `packages` (`ok`, `failed`, `build_failed`, `no_tests`), `build_failures`, `failures`, `failures_omitted`, `package_failures`, `benchmarks` (`package`, `result`), `skipped` (`package`, `test`), `passing_packages` (`package`, `elapsed` when set), `packages_without_tests`, `text`, `warning_messages` (one string per `testing: warning:` line), `panics`, `timeouts`, `races` (counts of matching lines) and `other` (unknown actions by count).
+`data` holds `tool`, `tool_version` (empty: the stream carries none), `status`, `tests` (`passed`, `failed`, `skipped`), `packages` (`ok`, `failed`, `build_failed`, `no_tests`), `build_failures`, `failures`, `failures_omitted`, `package_failures`, `benchmarks` (`package`, `result`), `skipped` (`package`, `test`), `passing_packages` (`package`, `elapsed` when set), `packages_without_tests`, `text`, `warning_messages` (one string per `testing: warning:` line), `panics`, `timeouts`, `races` (counts of matching lines) and `other` (unknown actions by count).
 
 - `failures`: `package`, `test`, `output` and, when set, `run` and `runs` (with `-count`), `elapsed`, `unfinished`, `attrs`, `artifacts`.
 - `build_failures`: `package`, `output`. `package_failures`: `package`, `output` and, when set, `unfinished`.

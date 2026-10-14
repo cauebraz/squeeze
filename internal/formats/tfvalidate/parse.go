@@ -26,6 +26,7 @@ type Validation struct {
 
 type Report struct {
 	Tool        string              `json:"tool"`
+	ToolVersion string              `json:"tool_version"`
 	Valid       bool                `json:"valid"`
 	Errors      int                 `json:"errors"`
 	Warnings    int                 `json:"warnings"`

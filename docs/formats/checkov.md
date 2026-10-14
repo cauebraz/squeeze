@@ -7,7 +7,7 @@ checkov -d . -o json | squeeze
 checkov -d . --framework terraform dockerfile -o json | squeeze --fail-on high
 ```
 
-Checkov's JSON carries every passed check as well as every failed one, each with its code block, evaluated keys, entity, benchmarks and guideline link. squeeze keeps the counts and one line per failed check, grouped by resource. On the fixtures, captured from Checkov 3.3.29, the text is 1.2 to 3.1 percent of the input.
+Checkov's JSON carries every passed check as well as every failed one, each with its code block, evaluated keys, entity, benchmarks and guideline link. squeeze keeps the counts and one line per failed check, grouped by resource. On the default-flag fixtures with findings, captured from Checkov 3.3.29, the text is 1.2 to 3.1 percent of the input.
 
 ## Output
 
@@ -41,8 +41,9 @@ module.store.aws_ebs_volume.data (modules/store/main.tf:1-4, via main.tf:24-26):
 
 - The header gives Checkov's version and the failed, passed and skipped counts from Checkov's own `summary`, so `--quiet` output, which lists only the failed checks, still reports every count. Parsing errors and the resource count follow. With several frameworks, the header adds the failed count of each.
 - Failed checks are grouped by resource. A group line gives the resource, `file:start-end` (with Checkov's leading `/` removed), `via file:start-end` for a resource created through a module call, and the number of failed checks on it. Each check prints its ID and Checkov's check name.
-- When Checkov reports a severity, which needs a platform API key, each check starts with it (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`). Groups are sorted by their worst severity, then by file and line; checks inside a group by severity, then ID.
-- Every file Checkov could not parse prints as `parse error: <path>`.
+- When Checkov reports a severity, which needs a platform API key, each check starts with it (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`); any other value prints as `UNKNOWN`. Groups are sorted by their worst severity, then by file and line; checks inside a group by severity, then ID.
+- Every file Checkov could not parse prints as `parse error: <path>`, with the path as Checkov gives it, which is absolute where check paths are relative to the scan root.
+- A finding of the `secrets` framework prints `secret` in place of the resource: Checkov's resource there is a hash of the secret value, which would reveal that two files hold the same value.
 - Skipped checks are counted in `... N skipped checks (--all)`; `--all` lists them under `skipped:` with the suppression comment in place of the check name.
 - Past `--max-checks`, the notice names the IDs of the cut checks with their counts, so `... 14 more failed checks, CKV_AWS_145 2, CKV_AWS_21 2, ... (--max-checks 0)` tells which check to fix or suppress first.
 - The code block, the evaluated keys, the entity and the evaluations are never read, so a value the secrets framework or a check shows in them never reaches the text or the JSON.
@@ -67,10 +68,12 @@ module.store.aws_ebs_volume.data (modules/store/main.tf:1-4, via main.tf:24-26):
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count`, `frameworks` (`check_type`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count` per report), `failed_by_severity`, `failed_checks`, `failed_checks_omitted`, `omitted_check_ids` (`check_id`, `count`), `skipped_checks` and `parsing_error_files`. Each check has `framework`, `check_id`, `name`, `resource`, `file` and, when set, `start_line`, `end_line`, `severity`, `caller`, `guideline` and `suppress_comment`.
+`data` holds `tool`, `tool_version`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count`, `frameworks` (`check_type`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count` per report), `failed_by_severity`, `failed_checks`, `failed_checks_omitted`, `omitted_by_check_id` (`name`, `count`), `skipped_checks` and `parsing_error_files`. Each check has `framework`, `check_id`, `name`, `resource`, `file` and, when set, `start_line`, `end_line`, `severity`, `caller`, `guideline` and `suppress_comment`.
 
 ## Limitations
 
 - Severities need a Prisma Cloud API key; without one Checkov reports `null`, and `critical` and `high` never match. The `severity` fixture is a captured run with severities filled in as the schema allows.
 - SCA reports (`sca_package`, `sca_image`) are read as checks: their vulnerability details, such as the CVE and the fixed version, are not printed.
 - Passed checks are counted, not listed.
+- A summary-only input with nonzero counts, which Checkov prints when no framework produced a report, says `counts only, the input holds no checks` in the header.
+- `checkov -o json -o cli` prints the CLI report before the JSON, so the input is not detected; use `-o json` alone, or `--output-file-path` for the other format.

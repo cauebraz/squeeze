@@ -4,7 +4,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -54,6 +56,38 @@ func Truncate(s string, n int) string {
 		_, n = utf8.DecodeRuneInString(s)
 	}
 	return s[:n]
+}
+
+type Count struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+func SortedCounts(counts map[string]int) []Count {
+	out := make([]Count, 0, len(counts))
+	for name, n := range counts {
+		out = append(out, Count{Name: name, Count: n})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Count != out[j].Count {
+			return out[i].Count > out[j].Count
+		}
+		return out[i].Name < out[j].Name
+	})
+	return out
+}
+
+func TopCounts(counts []Count, max int, one, many string) string {
+	items := make([]string, 0, max+1)
+	for i, c := range counts {
+		if i == max {
+			rest := len(counts) - max
+			items = append(items, fmt.Sprintf("%d other %s", rest, Plural(rest, one, many)))
+			break
+		}
+		items = append(items, fmt.Sprintf("%s %d", c.Name, c.Count))
+	}
+	return strings.Join(items, ", ")
 }
 
 func Seconds(s float64) string {

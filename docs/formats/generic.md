@@ -65,7 +65,7 @@ Both are word matches on the input, not the tool's verdict: a line such as `0 er
 
 ## JSON data
 
-`data` holds counts of input lines: `lines`, `printed`, `blank_dropped`, `folded`, `lines_omitted`, `flagged_lines_omitted` (omitted lines with an error or warning word), `long_lines` (printed lines cut by `--max-line-bytes`), `error_lines` and `warning_lines` (lines with an error or a warning word, counted before folding and cutting). `printed + blank_dropped + folded + lines_omitted` equals `lines`.
+`data` holds `tool`, always `text` since no tool is known, and counts of input lines: `lines`, `printed`, `blank_dropped`, `folded`, `lines_omitted`, `flagged_lines_omitted` (omitted lines with an error or warning word), `long_lines` (printed lines cut by `--max-line-bytes`), `error_lines` and `warning_lines` (lines with an error or a warning word, counted before folding and cutting). `printed + blank_dropped + folded + lines_omitted` equals `lines`.
 
 ## Limitations
 

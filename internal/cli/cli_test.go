@@ -599,7 +599,7 @@ func TestFormatHelpListsConditions(t *testing.T) {
 	if !strings.Contains(r.stdout, "Conditions for --fail-on:\n  change, deferred, destroy, drift, error, fail, forget, import, incomplete, move, replace\n") {
 		t.Errorf("help lacks the condition list:\n%s", r.stdout)
 	}
-	if r := runCLI(t, nil, "generic", "-h"); !strings.HasSuffix(r.stdout, "Conditions for --fail-on:\n  error, warning\n") {
+	if r := runCLI(t, nil, "generic", "-h"); !strings.Contains(r.stdout, "Conditions for --fail-on:\n  error, warning\n  fail: accepted, never present for this format\n") {
 		t.Errorf("generic help:\n%s", r.stdout)
 	}
 	root := runCLI(t, nil, "-h")
@@ -617,6 +617,41 @@ func TestListFlag(t *testing.T) {
 	}
 	if (listFlag{}).String() != "" {
 		t.Error("zero listFlag String() is not empty")
+	}
+}
+
+func TestSharedConditionsAreAcceptedEverywhere(t *testing.T) {
+	t.Parallel()
+	for _, f := range DefaultRegistry().Formats() {
+		cases := formattest.Cases(t, filepath.Join(formatsDir, f.Name(), "testdata"))
+		r := runCLI(t, cases[0].Input, f.Name(), "--fail-on", "error,fail,warning")
+		if r.code != ExitOK && r.code != ExitCondition {
+			t.Errorf("%s: code = %d, stderr = %q", f.Name(), r.code, r.stderr)
+		}
+	}
+	r := runCLI(t, nil, "trivy", "-h")
+	if !strings.Contains(r.stdout, "  error, warning: accepted, never present for this format\n") {
+		t.Errorf("trivy help:\n%s", r.stdout)
+	}
+}
+
+func TestREADMEFormatTableFollowsTheRegistry(t *testing.T) {
+	t.Parallel()
+	readme, err := os.ReadFile(filepath.Join("..", "..", "README.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rows []string
+	for _, line := range strings.Split(string(readme), "\n") {
+		if strings.HasPrefix(line, "| `") {
+			name, _, _ := strings.Cut(strings.TrimPrefix(line, "| `"), "`")
+			if _, ok := DefaultRegistry().Lookup(name); ok {
+				rows = append(rows, name)
+			}
+		}
+	}
+	if got := strings.Join(rows, ", "); got != formatList {
+		t.Errorf("README rows %q, registry %q", got, formatList)
 	}
 }
 
@@ -669,8 +704,31 @@ func TestDocsFlagTablesMatchHelp(t *testing.T) {
 		for name := range documented {
 			t.Errorf("%s: docs table lists --%s, which the format does not register", f.Name(), name)
 		}
+		_, conditions, ok := strings.Cut(string(doc), "## Conditions for `--fail-on`\n")
+		if !ok {
+			t.Errorf("%s: docs page has no conditions section", f.Name())
+			continue
+		}
+		conditions, _, _ = strings.Cut(conditions, "\n## ")
+		listed := map[string]bool{}
+		for _, line := range strings.Split(conditions, "\n") {
+			if m := condRow.FindStringSubmatch(line); m != nil {
+				listed[m[1]] = true
+			}
+		}
+		for _, name := range f.Conditions() {
+			if !listed[name] {
+				t.Errorf("%s: condition %q has no row in the docs", f.Name(), name)
+			}
+			delete(listed, name)
+		}
+		for name := range listed {
+			t.Errorf("%s: docs list condition %q, which the format does not declare", f.Name(), name)
+		}
 	}
 }
+
+var condRow = regexp.MustCompile("^\\| `([a-z_]+)` \\| ")
 
 func TestRunRawDirSkipsEmptyInput(t *testing.T) {
 	t.Parallel()

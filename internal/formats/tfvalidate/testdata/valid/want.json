@@ -1,1 +1,1 @@
-{"schema_version":1,"format":"tfvalidate","input_bytes":110,"text_bytes":26,"ratio":0.2364,"conditions":[],"failed_on":[],"data":{"tool":"terraform","valid":true,"errors":0,"warnings":0,"diagnostics":[],"diagnostics_omitted":0}}
+{"schema_version":1,"format":"tfvalidate","input_bytes":110,"text_bytes":26,"ratio":0.2364,"conditions":[],"failed_on":[],"data":{"tool":"terraform","tool_version":"","valid":true,"errors":0,"warnings":0,"diagnostics":[],"diagnostics_omitted":0}}

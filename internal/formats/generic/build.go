@@ -19,15 +19,16 @@ var (
 var digits = regexp.MustCompile(`[0-9]+`)
 
 type Report struct {
-	Lines        int `json:"lines"`
-	Printed      int `json:"printed"`
-	BlankDropped int `json:"blank_dropped"`
-	Folded       int `json:"folded"`
-	Cut          int `json:"lines_omitted"`
-	CutFlagged   int `json:"flagged_lines_omitted"`
-	LongLines    int `json:"long_lines"`
-	ErrorLines   int `json:"error_lines"`
-	WarningLines int `json:"warning_lines"`
+	Tool         string `json:"tool"`
+	Lines        int    `json:"lines"`
+	Printed      int    `json:"printed"`
+	BlankDropped int    `json:"blank_dropped"`
+	Folded       int    `json:"folded"`
+	Cut          int    `json:"lines_omitted"`
+	CutFlagged   int    `json:"flagged_lines_omitted"`
+	LongLines    int    `json:"long_lines"`
+	ErrorLines   int    `json:"error_lines"`
+	WarningLines int    `json:"warning_lines"`
 }
 
 type entry struct {
@@ -44,7 +45,7 @@ type group struct {
 }
 
 func Build(input []byte, o Options) (Report, string) {
-	var r Report
+	r := Report{Tool: "text"}
 	lines := splitLines(string(input))
 	r.Lines = len(lines)
 	for _, l := range lines {

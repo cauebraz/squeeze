@@ -130,7 +130,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 func checkConditions(f core.Format, failOn []string) error {
 	known := f.Conditions()
 	for _, name := range failOn {
-		if !slices.Contains(known, name) {
+		if !slices.Contains(known, name) && !slices.Contains(core.SharedConditions, name) {
 			return fmt.Errorf("--fail-on: %s has no condition %q (conditions: %s)", f.Name(), name, conditionList(known))
 		}
 	}
@@ -248,6 +248,15 @@ func formatUsage(w io.Writer, fs *flag.FlagSet, f core.Format) {
 	fmt.Fprintf(w, "usage: squeeze %s [flags] < input\n\n%s\n\nFlags:\n", f.Name(), f.Description())
 	fs.PrintDefaults()
 	fmt.Fprintf(w, "\nConditions for --fail-on:\n  %s\n", conditionList(f.Conditions()))
+	var silent []string
+	for _, name := range core.SharedConditions {
+		if !slices.Contains(f.Conditions(), name) {
+			silent = append(silent, name)
+		}
+	}
+	if len(silent) > 0 {
+		fmt.Fprintf(w, "  %s: accepted, never present for this format\n", strings.Join(silent, ", "))
+	}
 }
 
 func saveRaw(dir string, input []byte) (string, error) {

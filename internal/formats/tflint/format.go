@@ -31,13 +31,13 @@ func (Format) Detect(head []byte) bool {
 	if !bytes.HasPrefix(trimmed, []byte(`{"issues":`)) && !bytes.HasPrefix(trimmed, []byte(`{"issues" :`)) {
 		return false
 	}
-	return bytes.Contains(head, []byte(`"errors"`))
+	return bytes.Contains(head, []byte(`"errors":`)) || bytes.Contains(head, []byte(`"errors" :`))
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	o := DefaultOptions()
 	core.CountFlag(fs, &o.MaxIssues, "max-issues", "issues listed, 0 for all")
-	fs.BoolVar(&o.NoDetail, "no-detail", false, "print the issue, its location and rule only, without the module call chain")
+	fs.BoolVar(&o.NoDetail, "no-detail", false, "print the issue, its location and rule only")
 	return func(input []byte) (core.Result, error) {
 		return Squeeze(input, o)
 	}

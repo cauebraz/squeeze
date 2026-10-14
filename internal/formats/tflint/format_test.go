@@ -111,11 +111,49 @@ func TestSeverities(t *testing.T) {
 		t.Errorf("counts = %+v", r)
 	}
 	var order []string
-	for _, d := range r.Diagnostics {
+	for _, d := range r.Problems {
 		order = append(order, d.Severity+" "+d.Summary)
+	}
+	for _, is := range r.Issues {
+		order = append(order, is.Severity+" "+is.Summary)
 	}
 	if diff := cmp.Diff([]string{"error plugin crashed", "error u", "warning w", "notice n"}, order); diff != "" {
 		t.Errorf("order (-want +got):\n%s", diff)
+	}
+}
+
+func TestFoldedIssuesCountInTheCut(t *testing.T) {
+	t.Parallel()
+	dup := `{"rule":{"name":"r_dup","severity":"warning"},"message":"d","range":{"filename":"a.tf","start":{"line":9,"column":1}},"callers":[]}`
+	input := []byte(`{"issues":[` + dup + `,` + dup + `,` + dup + `,` +
+		`{"rule":{"name":"r_err","severity":"error"},"message":"e1","range":{"filename":"a.tf","start":{"line":1,"column":1}},"callers":[],"fixed":true},` +
+		`{"rule":{"name":"r_err","severity":"error"},"message":"e2","range":{"filename":"a.tf","start":{"line":2,"column":1}},"callers":[]}],` +
+		`"errors":[{"message":"late","severity":"warning"}]}`)
+	r, err := Squeeze(input, Options{MaxIssues: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := r.Data.(Report)
+	if len(report.Issues) != 2 || report.IssuesOmitted != 3 || len(report.Problems) != 1 {
+		t.Errorf("issues %d, omitted %d, problems %d", len(report.Issues), report.IssuesOmitted, len(report.Problems))
+	}
+	if !strings.Contains(r.Text, "warning: late (tflint)\n") || !strings.HasSuffix(r.Text, "... 3 more issues, r_dup 3 (--max-issues 0)\n") {
+		t.Errorf("text:\n%s", r.Text)
+	}
+	if !strings.Contains(r.Text, "(a.tf:1:1, r_err, fixed)") {
+		t.Errorf("fixed marker missing:\n%s", r.Text)
+	}
+}
+
+func TestCallerChainReadsRootToModule(t *testing.T) {
+	t.Parallel()
+	r, err := Squeeze(fixture(t, "modules"), DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := r.Data.(Report)
+	if report.Issues[0].Detail != "evaluated in main.tf:20:19 -> modules/app/main.tf:4:19" || report.Issues[1].Detail != "evaluated in modules/app/main.tf:4:19" {
+		t.Errorf("details = %q, %q", report.Issues[0].Detail, report.Issues[1].Detail)
 	}
 }
 
@@ -126,11 +164,11 @@ func TestLimitNamesTheOmittedRules(t *testing.T) {
 		t.Fatal(err)
 	}
 	report := r.Data.(Report)
-	if len(report.Diagnostics) != 5 || report.DiagnosticsOmitted != 116 {
-		t.Fatalf("diagnostics = %d, omitted %d", len(report.Diagnostics), report.DiagnosticsOmitted)
+	if len(report.Issues) != 5 || report.IssuesOmitted != 116 {
+		t.Fatalf("issues = %d, omitted %d", len(report.Issues), report.IssuesOmitted)
 	}
-	want := []RuleCount{{Rule: "terraform_naming_convention", Count: 60}, {Rule: "terraform_unused_declarations", Count: 56}}
-	if diff := cmp.Diff(want, report.OmittedRules); diff != "" {
+	want := []core.Count{{Name: "terraform_naming_convention", Count: 60}, {Name: "terraform_unused_declarations", Count: 56}}
+	if diff := cmp.Diff(want, report.OmittedByRule); diff != "" {
 		t.Errorf("omitted rules (-want +got):\n%s", diff)
 	}
 	if !strings.HasSuffix(r.Text, "... 116 more issues, terraform_naming_convention 60, terraform_unused_declarations 56 (--max-issues 0)\n") {
@@ -169,11 +207,11 @@ func TestDataPayload(t *testing.T) {
 	}
 	var doc struct {
 		Data struct {
-			Diagnostics []any `json:"diagnostics"`
-			Rules       []any `json:"rules"`
+			Issues []any `json:"issues"`
+			Rules  []any `json:"rules"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal(out, &doc); err != nil || doc.Data.Diagnostics == nil || doc.Data.Rules == nil {
+	if err := json.Unmarshal(out, &doc); err != nil || doc.Data.Issues == nil || doc.Data.Rules == nil {
 		t.Errorf("envelope = %s, err = %v", out, err)
 	}
 }
@@ -198,10 +236,17 @@ func FuzzSqueeze(f *testing.F) {
 			if r.ToolErrors != len(*out.Errors) {
 				t.Fatalf("%d tool errors counted, %d in the input", r.ToolErrors, len(*out.Errors))
 			}
-			if o.MaxIssues > 0 && len(r.Diagnostics) > o.MaxIssues {
-				t.Fatalf("%d diagnostics over the limit %d", len(r.Diagnostics), o.MaxIssues)
+			shown := 0
+			for _, is := range r.Issues {
+				shown += max(is.Count, 1)
 			}
-			if r.DiagnosticsOmitted > 0 && !strings.Contains(res.Text, "(--max-issues 0)") {
+			if shown+r.IssuesOmitted != len(*out.Issues) {
+				t.Fatalf("%d issues shown and %d omitted, %d in the input", shown, r.IssuesOmitted, len(*out.Issues))
+			}
+			if o.MaxIssues > 0 && len(r.Issues) > 1 && shown > o.MaxIssues {
+				t.Fatalf("%d issues over the limit %d", shown, o.MaxIssues)
+			}
+			if r.IssuesOmitted > 0 && !strings.Contains(res.Text, "(--max-issues 0)") {
 				t.Fatalf("issues cut without a notice:\n%s", res.Text)
 			}
 			if _, err := core.Envelope("tflint", len(input), res, nil); err != nil {

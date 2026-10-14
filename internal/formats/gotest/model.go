@@ -60,6 +60,7 @@ type PackageRef struct {
 
 type Report struct {
 	Tool            string           `json:"tool"`
+	ToolVersion     string           `json:"tool_version"`
 	Status          string           `json:"status"`
 	Tests           Counts           `json:"tests"`
 	Packages        PackageCounts    `json:"packages"`

@@ -26,7 +26,7 @@ type Rule struct {
 	Link     string `json:"link"`
 }
 
-type Issue struct {
+type RawIssue struct {
 	Rule    Rule    `json:"rule"`
 	Message string  `json:"message"`
 	Range   Range   `json:"range"`
@@ -43,7 +43,7 @@ type ToolError struct {
 }
 
 type Output struct {
-	Issues *[]Issue     `json:"issues"`
+	Issues *[]RawIssue  `json:"issues"`
 	Errors *[]ToolError `json:"errors"`
 }
 

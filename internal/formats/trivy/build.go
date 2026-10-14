@@ -29,6 +29,7 @@ func severity(s string) string {
 type Finding struct {
 	Kind      string `json:"kind"`
 	Target    string `json:"target"`
+	TargetIdx int    `json:"target_index"`
 	Severity  string `json:"severity"`
 	ID        string `json:"id"`
 	Title     string `json:"title,omitempty"`
@@ -93,10 +94,15 @@ func Build(raw *RawReport, o Options) Report {
 	for ti, res := range raw.Results {
 		t := Target{Name: core.Clean(res.Target), Class: core.Clean(res.Class), Type: core.Clean(res.Type)}
 		add := func(f Finding) {
-			f.Target, f.order = t.Name, ti
+			f.Target, f.TargetIdx, f.order = t.Name, ti, ti
 			findings = append(findings, f)
 			r.BySeverity[f.Severity]++
 			t.Findings++
+		}
+		hide := func(f Finding) {
+			f.Target, f.TargetIdx, f.order = t.Name, ti, ti
+			r.BySeverity[f.Severity]++
+			r.Hidden = append(r.Hidden, f)
 		}
 		for _, v := range res.Vulnerabilities {
 			f := Finding{Kind: "vulnerability", Severity: severity(v.Severity), ID: core.Clean(v.VulnerabilityID), Title: core.Clean(v.Title),
@@ -122,9 +128,7 @@ func Build(raw *RawReport, o Options) Report {
 				continue
 			case "EXCEPTION":
 				r.Exceptions++
-				f.order = ti
-				f.Target = t.Name
-				r.Hidden = append(r.Hidden, f)
+				hide(f)
 				continue
 			}
 			r.Misconfigurations++
@@ -142,8 +146,7 @@ func Build(raw *RawReport, o Options) Report {
 				add(f)
 				continue
 			}
-			f.Target, f.order = t.Name, ti
-			r.Hidden = append(r.Hidden, f)
+			hide(f)
 		}
 		r.Targets = append(r.Targets, t)
 	}
