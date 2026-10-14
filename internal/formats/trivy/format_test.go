@@ -132,6 +132,48 @@ func TestHiddenFindingsSetNoSeverityCondition(t *testing.T) {
 	}
 }
 
+func TestFixesListEachCheckOnce(t *testing.T) {
+	t.Parallel()
+	long := strings.Repeat("x", 120)
+	misconf := func(id, severity, status, resource, fix string) Misconfiguration {
+		return Misconfiguration{ID: id, Title: id, Severity: severity, Status: status, Resolution: fix, CauseMetadata: Cause{Resource: resource}}
+	}
+	raw := &RawReport{SchemaVersion: 2, ArtifactName: ".", ArtifactType: "filesystem", Results: []Result{{Target: "main.tf", Type: "terraform", Misconfigurations: []Misconfiguration{
+		misconf("AVD-1", "HIGH", "FAIL", "a", "fix one"),
+		misconf("AVD-1", "HIGH", "FAIL", "b", "fix one"),
+		misconf("AVD-2", "MEDIUM", "FAIL", "a", long),
+		misconf("AVD-3", "LOW", "FAIL", "a", ""),
+		misconf("AVD-4", "LOW", "FAIL", "z", "fix four"),
+		misconf("AVD-5", "CRITICAL", "EXCEPTION", "a", "fix five"),
+	}}}}
+	tests := map[string]struct {
+		o    Options
+		want []string
+	}{
+		"default":      {DefaultOptions(), []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "...", "AVD-4: fix four"}},
+		"--all":        {Options{All: true}, []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "...", "AVD-4: fix four", "AVD-5: fix five"}},
+		"cut to three": {Options{MaxFindings: 3}, []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "..."}},
+	}
+	for name, tt := range tests {
+		r := Build(raw, tt.o)
+		text := Text(r, tt.o)
+		_, section, ok := strings.Cut(text, "fixes:\n")
+		if !ok {
+			t.Fatalf("%s: no fixes section:\n%s", name, text)
+		}
+		var got []string
+		for _, l := range strings.Split(strings.TrimSuffix(section, "\n"), "\n") {
+			got = append(got, strings.TrimPrefix(l, "  "))
+		}
+		if diff := cmp.Diff(tt.want, got); diff != "" {
+			t.Errorf("%s: fixes (-want +got):\n%s", name, diff)
+		}
+		if r.Findings[2].Fix != long {
+			t.Errorf("%s: resolution in data = %q, want it whole", name, r.Findings[2].Fix)
+		}
+	}
+}
+
 func TestCounts(t *testing.T) {
 	t.Parallel()
 	r := report(t, fixture(t, "image"), DefaultOptions())

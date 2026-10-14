@@ -39,6 +39,7 @@ type Finding struct {
 	Status    string `json:"status,omitempty"`
 	Resource  string `json:"resource,omitempty"`
 	Message   string `json:"message,omitempty"`
+	Fix       string `json:"resolution,omitempty"`
 	StartLine int    `json:"start_line,omitempty"`
 	EndLine   int    `json:"end_line,omitempty"`
 	URL       string `json:"url,omitempty"`
@@ -118,7 +119,7 @@ func Build(raw *RawReport, o Options) Report {
 			r.ChecksPassed += t.Passed
 		}
 		for _, m := range res.Misconfigurations {
-			f := Finding{Kind: "misconfiguration", Severity: severity(m.Severity), ID: core.Clean(m.ID), Title: core.Clean(m.Title), Message: core.Clean(m.Message),
+			f := Finding{Kind: "misconfiguration", Severity: severity(m.Severity), ID: core.Clean(m.ID), Title: core.Clean(m.Title), Message: core.Clean(m.Message), Fix: core.Clean(m.Resolution),
 				Resource: core.Clean(m.CauseMetadata.Resource), StartLine: m.CauseMetadata.StartLine, EndLine: m.CauseMetadata.EndLine, URL: core.Clean(m.PrimaryURL), Status: core.Clean(m.Status)}
 			if f.ID == "" {
 				f.ID = core.Clean(m.AVDID)

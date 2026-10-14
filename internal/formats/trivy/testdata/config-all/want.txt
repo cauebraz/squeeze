@@ -18,3 +18,15 @@ main.tf (terraform):
   LOW AWS-0094 aws_s3_bucket.logs lines 6-8: S3 buckets should each define an aws_s3_bucket_public_access_block
   LOW AWS-0099 aws_security_group.web lines 15-23: Missing description for security group.
   LOW AWS-0124 aws_security_group.web lines 17-22: Missing description for security group rule.
+fixes:
+  AWS-0086: Enable blocking any PUT calls with a public ACL specified
+  AWS-0087: Prevent policies that allow public access being PUT
+  AWS-0091: Enable ignoring the application of public ACLs in PUT calls
+  AWS-0093: Limit the access to public buckets to only the owner or AWS Services (eg; CloudFront)
+  AWS-0132: Use SSE-KMS with a customer managed key (CMK)
+  AWS-0107: Set a more restrictive CIDR range
+  AWS-0090: Enable versioning to protect against accidental/malicious removal or modification
+  AWS-0089: Add a logging block to the resource to enable access logging
+  AWS-0094: Define a aws_s3_bucket_public_access_block for the given bucket to control public access policies
+  AWS-0099: Add descriptions for all security groups
+  AWS-0124: Add descriptions for all security groups rules

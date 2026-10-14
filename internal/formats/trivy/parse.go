@@ -31,6 +31,7 @@ type Misconfiguration struct {
 	AVDID         string `json:"AVDID"`
 	Title         string `json:"Title"`
 	Message       string `json:"Message"`
+	Resolution    string `json:"Resolution"`
 	Severity      string `json:"Severity"`
 	Status        string `json:"Status"`
 	PrimaryURL    string `json:"PrimaryURL"`

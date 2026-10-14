@@ -7,7 +7,7 @@ trivy fs --scanners vuln,secret,misconfig --format json . | squeeze
 trivy image --format json registry.example.com/shop/api:1.4.0 | squeeze --fail-on critical
 ```
 
-Trivy's JSON carries, for every vulnerability, its description, references, CVSS vectors, vendor severities and dates, and for every misconfiguration its description, query, references and code. squeeze keeps one line per finding with severity, ID, package or resource, and fix. On the default-flag fixtures with findings captured from Trivy 0.75.0 the text is 1.4 to 3.2 percent of the input; on the container-image fixture written from the schema, which holds few findings, it is 15 percent.
+Trivy's JSON carries, for every vulnerability, its description, references, CVSS vectors, vendor severities and dates, and for every misconfiguration its description, query, references and code. squeeze keeps one line per finding with severity, ID, package or resource, and fix, plus one line per misconfiguration check with Trivy's resolution. On the default-flag fixtures with findings captured from Trivy 0.75.0 the text is 2.0 to 4.5 percent of the input; on the container-image fixture written from the schema, which holds few findings, it is 15 percent.
 
 ## Output
 
@@ -34,7 +34,8 @@ OS Packages (license):
 - A misconfiguration prints its resource and lines from Trivy's cause metadata. Passed checks are counted in the header; checks with status `EXCEPTION` are counted in `... N misconfiguration exceptions (--all)`.
 - A secret prints its rule and line. The `Match` and `Code` fields, which hold the line from the file, are never read, so the secret never reaches the text or the JSON, even where Trivy did not mask it.
 - Licenses of severity `HIGH` or `CRITICAL` print with their package and category; the others are counted in `... N licenses below HIGH (--all)`.
-- Titles are cut at 100 bytes with `...`; `--output json` carries them whole.
+- A `fixes:` section closes the output with one line per misconfiguration check listed above, `<ID>: <Resolution>`, in the order the checks first appear; findings cut by `--max-findings` add none, and exceptions add theirs with `--all`. Trivy's `Message` is in `--output json` only, as it mostly restates the title.
+- Titles and resolutions are cut at 100 bytes with `...`; `--output json` carries them whole.
 - Past `--max-findings`, squeeze keeps the most severe findings across all targets and counts the rest by severity: `... 16 more findings, 5 HIGH, 10 MEDIUM, 1 LOW (--max-findings 0)`.
 - Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
 
@@ -59,7 +60,7 @@ OS Packages (license):
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity`, `targets` (`name`, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity` and `hidden` (exceptions and licenses below HIGH). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `target_index` (into `targets`), `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `start_line`, `end_line` and `url`.
+`data` holds `tool`, `tool_version`, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity`, `targets` (`name`, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity` and `hidden` (exceptions and licenses below HIGH). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `target_index` (into `targets`), `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `resolution`, `start_line`, `end_line` and `url`.
 
 ## Limitations
 
