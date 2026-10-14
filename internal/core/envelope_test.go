@@ -34,6 +34,32 @@ func TestEnvelope(t *testing.T) {
 	}
 }
 
+func TestEnvelopeEscapesDELAndC1(t *testing.T) {
+	t.Parallel()
+	value := "a\x7fb\u0085c\u009b31m\u00a0d\u00e9"
+	out, err := Envelope("demo", 10, Result{Text: "x\n", Data: map[string]string{"v": value}}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := `"v":"a\u007fb\u0085c\u009b31m` + "\u00a0d\u00e9" + `"`; !strings.Contains(string(out), want) {
+		t.Errorf("Envelope() = %s, want it to contain %s", out, want)
+	}
+	for i, r := range string(out) {
+		if r == 0x7f || (r >= 0x80 && r < 0xa0) {
+			t.Errorf("Envelope() holds control character %#x at %d", r, i)
+		}
+	}
+	var doc struct {
+		Data map[string]string `json:"data"`
+	}
+	if err := json.Unmarshal(out, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if doc.Data["v"] != value {
+		t.Errorf("value after a round trip = %q, want %q", doc.Data["v"], value)
+	}
+}
+
 func TestEnvelopeNilData(t *testing.T) {
 	t.Parallel()
 	out, err := Envelope("demo", 0, Result{}, nil)

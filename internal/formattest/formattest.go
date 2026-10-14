@@ -140,6 +140,7 @@ func Contract(t *testing.T, f core.Format, dir string) {
 				if err != nil {
 					t.Fatalf("Envelope() error = %v", err)
 				}
+				CheckText(t, string(envelope))
 				var doc struct {
 					Format string `json:"format"`
 					Data   struct {
