@@ -23,10 +23,12 @@ func Text(r Report, o Options) string {
 		}
 		fmt.Fprintf(&b, "... %d more %s, %s (--max-findings 0)\n", r.FindingsOmitted, core.Plural(r.FindingsOmitted, "finding", "findings"), strings.Join(parts, ", "))
 	}
+	listed := r.Findings
 	if len(r.Hidden) > 0 {
 		if o.All {
 			b.WriteString("also reported:\n")
 			writeTargets(&b, r, r.Hidden)
+			listed = append(append([]Finding(nil), r.Findings...), r.Hidden...)
 		} else {
 			var parts []string
 			if r.Exceptions > 0 {
@@ -38,7 +40,22 @@ func Text(r Report, o Options) string {
 			fmt.Fprintf(&b, "... %s (--all)\n", strings.Join(parts, ", "))
 		}
 	}
+	writeFixes(&b, listed)
 	return b.String()
+}
+
+func writeFixes(b *strings.Builder, findings []Finding) {
+	seen := map[string]bool{}
+	for _, f := range findings {
+		if f.Kind != "misconfiguration" || f.Fix == "" || seen[f.ID] {
+			continue
+		}
+		if len(seen) == 0 {
+			b.WriteString("fixes:\n")
+		}
+		seen[f.ID] = true
+		b.WriteString("  " + f.ID + ": " + title(f.Fix) + "\n")
+	}
 }
 
 func header(r Report) string {
