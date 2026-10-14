@@ -1,6 +1,6 @@
 # checkov
 
-Input: the JSON that `checkov -o json` prints, as `common/output/report.py` and `common/runners/runner_registry.py` in Checkov build it: one report object for one framework, a list of report objects for several, or only the summary when there was nothing to scan. `--quiet` and `--compact` output are read too. Detected when the input is a JSON object or array whose first 64 KiB contain `"check_type"` and `"results"`, or a summary object with `"checkov_version"` and `"resource_count"`.
+Input: the JSON that `checkov -o json` prints, as `common/output/report.py` and `common/runners/runner_registry.py` in Checkov build it: one report object for one framework, a list of report objects for several, or only the summary when there was nothing to scan. `--quiet` and `--compact` output are read too. Detected when the input is a JSON object or array that contains `"check_type"` and `"results"`, or a summary object with `"checkov_version"` and `"resource_count"`.
 
 ```
 checkov -d . -o json | squeeze

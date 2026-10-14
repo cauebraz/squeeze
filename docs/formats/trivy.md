@@ -1,6 +1,6 @@
 # trivy
 
-Input: the JSON that `trivy --format json` prints for `trivy fs`, `trivy config`, `trivy image` and the other targets, `SchemaVersion` 2, as `pkg/types/report.go` in Trivy defines it. Detected when the input is a JSON object whose first 64 KiB contain `"SchemaVersion"` and `"ArtifactName"` or `"Results"`.
+Input: the JSON that `trivy --format json` prints for `trivy fs`, `trivy config`, `trivy image` and the other targets, `SchemaVersion` 2, as `pkg/types/report.go` in Trivy defines it. Detected when the input is a JSON object that contains `"SchemaVersion"` and `"ArtifactName"` or `"Results"`, anywhere in the document.
 
 ```
 trivy fs --scanners vuln,secret,misconfig --format json . | squeeze

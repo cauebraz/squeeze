@@ -73,6 +73,42 @@ func TestRegistryDetectSeesOnlyHead(t *testing.T) {
 	}
 }
 
+type marker struct {
+	name, key string
+}
+
+func (m marker) Name() string        { return m.name }
+func (m marker) Description() string { return "marker " + m.name }
+func (m marker) Detect(input []byte) bool {
+	return bytes.Contains(input, []byte(m.key))
+}
+func (m marker) Conditions() []string { return nil }
+func (m marker) Configure(*flag.FlagSet) Squeezer {
+	return func([]byte) (Result, error) { return Result{Text: m.name}, nil }
+}
+
+func TestRegistryDetectJSONPastHead(t *testing.T) {
+	t.Parallel()
+	r := NewRegistry(marker{"plan", `"resource_changes"`}).WithFallback(marker{"text", ""})
+	pad := bytes.Repeat([]byte(" "), HeadSize)
+	tests := []struct {
+		name  string
+		input []byte
+		want  string
+	}{
+		{"object past head", slices.Concat([]byte(`{"v":"`), pad, []byte(`","resource_changes":[]}`)), "plan"},
+		{"array past head", slices.Concat([]byte(` [{"v":"`), pad, []byte(`","resource_changes":[]}]`)), "plan"},
+		{"text past head", slices.Concat([]byte("log "), pad, []byte(`"resource_changes"`)), "text"},
+		{"object without marker", slices.Concat([]byte(`{"v":"`), pad, []byte(`"}`)), "text"},
+	}
+	for _, tt := range tests {
+		f, err := r.Detect(tt.input)
+		if err != nil || f.Name() != tt.want {
+			t.Errorf("%s: Detect() = %v, %v; want %s", tt.name, f, err, tt.want)
+		}
+	}
+}
+
 func TestNewRegistryPanics(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
