@@ -1,2 +1,0 @@
-tsc: 0 errors
-... 4 other lines (--all)

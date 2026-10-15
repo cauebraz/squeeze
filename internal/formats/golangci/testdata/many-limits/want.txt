@@ -1,7 +1,0 @@
-golangci-lint: 100 issues (100 errors) from unused 42, errcheck 30, ineffassign 16, staticcheck 12; 6 linters enabled; 12 fixable
-error: func remove0 is unused (gen/gen.go:8:6, unused)
-error: Error return value of `os.Remove` is not checked (gen/gen.go:9:11, errcheck)
-error: func remove1 is unused (gen/gen.go:12:6, unused)
-error: Error return value of `os.Remove` is not checked (gen/gen.go:13:11, errcheck)
-error: func remove2 is unused (gen/gen.go:16:6, unused)
-... 95 more issues, unused 39, errcheck 28, ineffassign 16, staticcheck 12 (--max-issues 0)

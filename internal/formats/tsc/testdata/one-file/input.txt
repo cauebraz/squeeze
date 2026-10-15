@@ -1,8 +1,0 @@
-[96msrc/lib/format.ts[0m:[93m6[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'missing' does not exist on type 'string'.
-
-[7m6[0m   return input.missing();
-[7m [0m [91m               ~~~~~~~[0m
-
-
-Found 1 error in src/lib/format.ts[90m:6[0m
-

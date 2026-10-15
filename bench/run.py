@@ -83,7 +83,7 @@ SQUEEZE_BLOCK = """- squeeze is installed. Pipe tool output through it as the li
   rerun with the flag it names only if what you need is not in the output.
 - After `tool | squeeze`, `$?` is squeeze's exit code, not the tool's. Start the
   command with `set -o pipefail;` to get the tool's failure in `$?`, for example
-  `set -o pipefail; npx tsc --noEmit | squeeze; echo $?`.
+  `set -o pipefail; go test -json ./... | squeeze; echo $?`.
 """
 
 

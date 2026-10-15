@@ -1,2 +1,0 @@
-tsc: 1 error in 1 file
-error: Property 'missing' does not exist on type 'string'. (src/lib/format.ts:6:16, TS2339)

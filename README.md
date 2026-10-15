@@ -74,12 +74,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
   sensitive values print as `(sensitive)`.
   Read squeeze's output instead of Terraform's. Run TFLint as `tflint --format json | squeeze`, Checkov as `checkov -d . -o json | squeeze`, and Trivy as `trivy fs --format json . | squeeze` or `trivy k8s --format json | squeeze`.
 - Read a failed CI run as `gh run view <run-id> --log-failed | squeeze`.
-- Run Ansible as `ansible-playbook site.yml 2>&1 | squeeze`; `squeeze ansible --all` lists the changed tasks.
 - Build images as `docker buildx build --progress=plain . 2>&1 | squeeze`.
-- Run Rust builds as `cargo clippy --message-format=json 2>&1 | squeeze` and tests as `cargo test --no-fail-fast 2>&1 | squeeze`;
-  `cargo fix` or `cargo clippy --fix` applies the diagnostics marked `fixable`; rerun a failed target with the `rerun:` arguments it prints.
-- Run golangci-lint as `golangci-lint run --output.json.path stdout ./... | squeeze`; `golangci-lint run --fix`
-  applies the issues marked `fixable`.
 - Run Jest as `npx jest --json 2>/dev/null | squeeze` and Vitest as
   `npx vitest run --reporter=json --outputFile=/dev/stdout | squeeze`; rerun a failing file with the path it prints.
 - Read a JUnit XML test report as `squeeze < report.xml`, for example the `TEST-*.xml` files of Maven Surefire.
@@ -88,7 +83,6 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 - Run npm audit as `npm audit --json | squeeze`; `--fail-on high` stops where `npm audit --audit-level=high` would.
 - Run pre-commit as `pre-commit run --all-files 2>&1 | squeeze`; a hook marked `files modified` changed
   the files itself, so rerun pre-commit before editing them by hand.
-- Type-check TypeScript with `npx tsc --noEmit | squeeze`; it lists each error with its file, line and `TS` code.
 - Pipe a SARIF log through `squeeze` when a tool only writes SARIF, for example `semgrep --sarif | squeeze`.
 - Run ESLint as `npx eslint -f json . | squeeze`; `npx eslint --fix` applies the problems marked `fixable`.
 - Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names, and with the `-test.shuffle` seed it prints after a `-shuffle` run.
@@ -98,7 +92,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 - To stop on a condition, add `--fail-on error,fail`; exit code 3 means it matched. Every format accepts
   `error`, `fail` and `warning`, and `squeeze <format> -h` lists the format's own names, such as `destroy`.
 - After `tool | squeeze`, `$?` is squeeze's exit code, not the tool's: start the command with `set -o pipefail;`
-  (bash, zsh) to see the tool's failure in the same command, for example `set -o pipefail; npx tsc --noEmit | squeeze; echo $?`.
+  (bash, zsh) to see the tool's failure in the same command, for example `set -o pipefail; go test -json ./... | squeeze; echo $?`.
 - When squeeze reports cut lines and what you need is not in the output, rerun with the flag it names, for example
   `squeeze tfplan --max-attrs 0`; the kept lines already hold every error and warning.
 - Add `--raw-dir .squeeze` to keep the full input (ignore `.squeeze/` in git) and read that file only when
@@ -116,16 +110,12 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `eslint` | `eslint -f json` or `-f json-with-metadata` | [docs/formats/eslint.md](docs/formats/eslint.md) |
 | `sarif` | SARIF 2.1.0 from `trivy`, `tflint`, `checkov`, `semgrep` or any other tool | [docs/formats/sarif.md](docs/formats/sarif.md) |
 | `ghactions` | `gh run view --log` or `--log-failed` | [docs/formats/ghactions.md](docs/formats/ghactions.md) |
-| `ansible` | `ansible-playbook` default output, or the `ansible.posix.json` callback | [docs/formats/ansible.md](docs/formats/ansible.md) |
 | `buildkit` | `docker buildx build --progress=plain` or `--progress=rawjson` | [docs/formats/buildkit.md](docs/formats/buildkit.md) |
-| `cargo` | `cargo build`, `check` or `clippy` with `--message-format=json`, and `cargo test` text | [docs/formats/cargo.md](docs/formats/cargo.md) |
-| `golangci` | `golangci-lint run --output.json.path stdout` | [docs/formats/golangci.md](docs/formats/golangci.md) |
 | `jest` | `jest --json`, Vitest `--reporter=json` | [docs/formats/jest.md](docs/formats/jest.md) |
 | `junit` | JUnit XML reports from `pytest --junitxml`, `gotestsum`, `go-junit-report`, Surefire, `jest-junit`, `checkov -o junitxml` | [docs/formats/junit.md](docs/formats/junit.md) |
 | `kubectl` | `kubectl get <resources> -o json`, a list or one object | [docs/formats/kubectl.md](docs/formats/kubectl.md) |
 | `npmaudit` | `npm audit --json` | [docs/formats/npmaudit.md](docs/formats/npmaudit.md) |
 | `precommit` | `pre-commit run`, with or without `--verbose` and color | [docs/formats/precommit.md](docs/formats/precommit.md) |
-| `tsc` | `tsc`, `tsc --noEmit` or `tsc -b`, plain or `--pretty` | [docs/formats/tsc.md](docs/formats/tsc.md) |
 | `checkov` | `checkov -o json` | [docs/formats/checkov.md](docs/formats/checkov.md) |
 | `trivy` | `trivy fs`, `config`, `image` or `k8s` with `--format json` | [docs/formats/trivy.md](docs/formats/trivy.md) |
 | `pytest` | pytest's terminal output, default, `-v` or `-q` | [docs/formats/pytest.md](docs/formats/pytest.md) |

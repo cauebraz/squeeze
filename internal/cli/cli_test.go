@@ -246,7 +246,7 @@ func TestEmptyInputSaysTheCommandPrintedNothing(t *testing.T) {
 		{"whitespace with a format", []byte(" \n\t"), []string{"tfplan"}, "no output: the command printed nothing\n"},
 		{"fail-on", nil, []string{"--fail-on", "error,fail"}, "no output: the command printed nothing\n"},
 		{"json", nil, []string{"--output", "json"}, `{"schema_version":1,"format":"","input_bytes":0,"text_bytes":39,"ratio":0,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
-		{"json with a format", []byte("\n"), []string{"tsc", "--output", "json"}, `{"schema_version":1,"format":"tsc","input_bytes":1,"text_bytes":39,"ratio":39,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
+		{"json with a format", []byte("\n"), []string{"eslint", "--output", "json"}, `{"schema_version":1,"format":"eslint","input_bytes":1,"text_bytes":39,"ratio":39,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()

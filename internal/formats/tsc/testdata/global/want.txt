@@ -1,2 +1,0 @@
-tsc: 1 error
-error: Unknown compiler option '--notAFlag'. (TS5023)
