@@ -1,0 +1,2 @@
+kubectl: 1 object (Node 1), 1 unhealthy
+unhealthy Node squeeze-kubectl-control-plane: NotReady,SchedulingDisabled, MemoryPressure KubeletHasInsufficientMemory, kubelet v1.33.1; Kubelet stopped posting node status.

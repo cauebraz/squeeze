@@ -1,0 +1,24 @@
+junit: 6 tests in 1 suite: 2 passed, 2 failures, 1 error, 1 skipped, 1 flaky
+fail com.example.shop.CartTest totalAppliesQuantity: expected: <4> but was: <2>
+  org.opentest4j.AssertionFailedError: expected: <4> but was: <2>
+      at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+      at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+      at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+      at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+      at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
+      at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:531)
+      at com.example.shop.CartTest.totalAppliesQuantity(CartTest.java:27)
+      at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+      at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  ... 2 more lines (--max-lines 0)
+  stdout:
+    cart has 1 line
+    price list loaded from /home/dev/shop/prices.csv
+fail com.example.shop.CheckoutTest checkoutTimesOut: execution timed out after 5 s
+error com.example.shop.PaymentTest paymentGateway: Connection refused: localhost/127.0.0.1:8089
+  java.net.ConnectException: Connection refused: localhost/127.0.0.1:8089
+      at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+      at com.example.shop.PaymentClient.charge(PaymentClient.java:42)
+      at com.example.shop.PaymentTest.paymentGateway(PaymentTest.java:19)
+  stderr:
+    WARN retrying payment gateway in 100 ms

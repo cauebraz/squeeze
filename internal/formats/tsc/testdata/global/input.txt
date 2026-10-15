@@ -1,0 +1,1 @@
+error TS5023: Unknown compiler option '--notAFlag'.

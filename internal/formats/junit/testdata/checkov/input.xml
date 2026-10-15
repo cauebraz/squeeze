@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<testsuites disabled="0" errors="0" failures="2" tests="9" time="0.0">
+	<testsuite disabled="0" errors="0" failures="2" name="terraform scan" skipped="0" tests="9" time="0">
+		<properties>
+			<property name="directory" value="['shop']"/>
+			<property name="add_check" value="False"/>
+			<property name="list" value="False"/>
+			<property name="output" value="['junitxml']"/>
+			<property name="output_bc_ids" value="False"/>
+			<property name="include_all_checkov_policies" value="True"/>
+			<property name="quiet" value="True"/>
+			<property name="compact" value="True"/>
+			<property name="framework" value="['all']"/>
+			<property name="skip_framework" value="[]"/>
+			<property name="run_all_external_checks" value="False"/>
+			<property name="soft_fail" value="False"/>
+			<property name="skip_results_upload" value="False"/>
+			<property name="repo_id" value="cli_repo/shop"/>
+			<property name="branch" value="master"/>
+			<property name="skip_download" value="False"/>
+			<property name="use_enforcement_rules" value="False"/>
+			<property name="external_modules_download_path" value=".external_modules"/>
+			<property name="evaluate_variables" value="True"/>
+			<property name="no_cert_verify" value="False"/>
+			<property name="create_baseline" value="False"/>
+			<property name="output_baseline_as_skipped" value="False"/>
+			<property name="secrets_scan_file_type" value="[]"/>
+			<property name="enable_secret_scan_all_files" value="False"/>
+			<property name="block_list_secret_scan" value="[]"/>
+			<property name="summary_position" value="top"/>
+			<property name="skip_resources_without_violations" value="False"/>
+			<property name="deep_analysis" value="False"/>
+			<property name="no_fail_on_crash" value="False"/>
+			<property name="mask" value="defaultdict(&lt;class 'set'&gt;, {})"/>
+			<property name="scan_secrets_history" value="False"/>
+			<property name="secrets_history_timeout" value="12h"/>
+			<property name="custom_tool_name" value="Checkov"/>
+		</properties>
+		<testcase name="[NONE][CKV_AWS_93] Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)" classname="/main.tf.aws_s3_bucket.assets" file="/main.tf"/>
+		<testcase name="[NONE][CKV_AWS_260] Ensure no security groups allow ingress from 0.0.0.0:0 to port 80" classname="/main.tf.aws_security_group.web" file="/main.tf"/>
+		<testcase name="[NONE][CKV_AWS_277] Ensure no security groups allow ingress from 0.0.0.0:0 to port -1" classname="/main.tf.aws_security_group.web" file="/main.tf"/>
+		<testcase name="[NONE][CKV_AWS_25] Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389" classname="/main.tf.aws_security_group.web" file="/main.tf"/>
+		<testcase name="[NONE][CKV_AWS_382] Ensure no security groups allow egress from 0.0.0.0:0 to port -1" classname="/main.tf.aws_security_group.web" file="/main.tf"/>
+		<testcase name="[NONE][CKV_AWS_168] Ensure SQS queue policy is not public by only allowing specific services or principals to access it" classname="/main.tf.aws_sqs_queue.orders" file="/main.tf"/>
+		<testcase name="[NONE][CKV_AWS_27] Ensure all data stored in the SQS queue is encrypted" classname="/main.tf.aws_sqs_queue.orders" file="/main.tf"/>
+		<testcase name="[NONE][CKV_AWS_24] Ensure no security groups allow ingress from 0.0.0.0:0 to port 22" classname="/main.tf.aws_security_group.web" file="/main.tf">
+			<failure type="failure" message="Ensure no security groups allow ingress from 0.0.0.0:0 to port 22">
+Resource: aws_security_group.web
+File: /main.tf: 5-13
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security
+
+		5  | resource "aws_security_group" "web" {
+		6  |   name = "web"
+		7  |   ingress {
+		8  |     from_port   = 22
+		9  |     to_port     = 22
+		10 |     protocol    = "tcp"
+		11 |     cidr_blocks = ["0.0.0.0/0"]
+		12 |   }
+		13 | }
+</failure>
+		</testcase>
+		<testcase name="[NONE][CKV_AWS_23] Ensure every security group and rule has a description" classname="/main.tf.aws_security_group.web" file="/main.tf">
+			<failure type="failure" message="Ensure every security group and rule has a description">
+Resource: aws_security_group.web
+File: /main.tf: 5-13
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+
+		5  | resource "aws_security_group" "web" {
+		6  |   name = "web"
+		7  |   ingress {
+		8  |     from_port   = 22
+		9  |     to_port     = 22
+		10 |     protocol    = "tcp"
+		11 |     cidr_blocks = ["0.0.0.0/0"]
+		12 |   }
+		13 | }
+</failure>
+		</testcase>
+	</testsuite>
+</testsuites>
+

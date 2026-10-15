@@ -1,0 +1,74 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 238B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/alpine:3.21
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507
+#4 resolve docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507 done
+#4 DONE 0.0s
+
+#5 [2/5] WORKDIR /app
+#5 CACHED
+
+#6 [3/5] RUN echo "step one"
+#6 0.070 step one
+#6 DONE 0.1s
+
+#7 [4/5] RUN for i in $(seq 1 25); do echo "compiling module $i"; done; echo "error: module 26 failed: undefined symbol shop_init" >&2; exit 1
+#7 0.148 compiling module 1
+#7 0.148 compiling module 2
+#7 0.148 compiling module 3
+#7 0.148 compiling module 4
+#7 0.148 compiling module 5
+#7 0.148 compiling module 6
+#7 0.148 compiling module 7
+#7 0.148 compiling module 8
+#7 0.148 compiling module 9
+#7 0.148 compiling module 10
+#7 0.148 compiling module 11
+#7 0.148 compiling module 12
+#7 0.148 compiling module 13
+#7 0.148 compiling module 14
+#7 0.148 compiling module 15
+#7 0.148 compiling module 16
+#7 0.148 compiling module 17
+#7 0.148 compiling module 18
+#7 0.148 compiling module 19
+#7 0.148 compiling module 20
+#7 0.148 compiling module 21
+#7 0.148 compiling module 22
+#7 0.148 compiling module 23
+#7 0.148 compiling module 24
+#7 0.148 compiling module 25
+#7 0.149 error: module 26 failed: undefined symbol shop_init
+#7 ERROR: process "/bin/sh -c for i in $(seq 1 25); do echo \"compiling module $i\"; done; echo \"error: module 26 failed: undefined symbol shop_init\" >&2; exit 1" did not complete successfully: exit code: 1
+------
+ > [4/5] RUN for i in $(seq 1 25); do echo "compiling module $i"; done; echo "error: module 26 failed: undefined symbol shop_init" >&2; exit 1:
+0.148 compiling module 17
+0.148 compiling module 18
+0.148 compiling module 19
+0.148 compiling module 20
+0.148 compiling module 21
+0.148 compiling module 22
+0.148 compiling module 23
+0.148 compiling module 24
+0.148 compiling module 25
+0.149 error: module 26 failed: undefined symbol shop_init
+------
+Dockerfile:4
+--------------------
+   2 |     WORKDIR /app
+   3 |     RUN echo "step one"
+   4 | >>> RUN for i in $(seq 1 25); do echo "compiling module $i"; done; echo "error: module 26 failed: undefined symbol shop_init" >&2; exit 1
+   5 |     RUN echo never
+   6 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c for i in $(seq 1 25); do echo \"compiling module $i\"; done; echo \"error: module 26 failed: undefined symbol shop_init\" >&2; exit 1" did not complete successfully: exit code: 1

@@ -1,0 +1,96 @@
+
+running 1 test
+test tests::it_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test tests::charge_card ... ignored, needs the payment sandbox
+test tests::total_of_empty_cart ... ok
+test tests::parse_bad_qty ... FAILED
+test tests::discount_ten_percent ... FAILED
+test tests::labels_match ... FAILED
+test tests::parse_rejects_words - should panic ... ok
+
+failures:
+
+---- tests::parse_bad_qty stdout ----
+
+thread 'tests::parse_bad_qty' (1515807) panicked at shop/src/lib.rs:25:15:
+quantity must be a number: ParseIntError { kind: InvalidDigit }
+
+---- tests::discount_ten_percent stdout ----
+
+thread 'tests::discount_ten_percent' (1515805) panicked at shop/src/lib.rs:40:9:
+assertion `left == right` failed
+  left: 181
+ right: 180
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tests::labels_match stdout ----
+
+thread 'tests::labels_match' (1515806) panicked at shop/src/lib.rs:51:9:
+assertion `left == right` failed: labels differ for cart 7
+  left: ["pen", "ink"]
+ right: ["pen", "paper"]
+
+
+failures:
+    tests::discount_ten_percent
+    tests::labels_match
+    tests::parse_bad_qty
+
+test result: FAILED. 2 passed; 3 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 2 tests
+test checkout_total ... ok
+test checkout_prints ... FAILED
+
+failures:
+
+---- checkout_prints stdout ----
+checking out 2 items
+
+thread 'checkout_prints' (1515811) panicked at shop/tests/checkout.rs:10:5:
+empty cart must not be free
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    checkout_prints
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 2 tests
+test shop/src/lib.rs - total (line 7) ... ok
+test shop/src/lib.rs - discount (line 17) ... FAILED
+
+failures:
+
+---- shop/src/lib.rs - discount (line 17) stdout ----
+Test executable failed (exit status: 101).
+
+stderr:
+
+thread 'main' (1515900) panicked at /tmp/rustdoctest8T4GBx/doctest_bundle_2024.rs:6:1:
+assertion `left == right` failed
+  left: 91
+ right: 90
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+
+failures:
+    shop/src/lib.rs - discount (line 17)
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.31s; merged doctests compilation took 0.12s

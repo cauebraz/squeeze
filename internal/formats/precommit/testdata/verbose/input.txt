@@ -1,0 +1,49 @@
+trim trailing whitespace.................................................Failed
+- hook id: trailing-whitespace
+- duration: 0.07s
+- exit code: 1
+- files were modified by this hook
+
+Fixing pre_commit_hooks/util.py
+Fixing pre_commit_hooks/removed.py
+
+fix end of files.........................................................Failed
+- hook id: end-of-file-fixer
+- duration: 0.08s
+- exit code: 1
+- files were modified by this hook
+
+Fixing pre_commit_hooks/util.py
+Fixing CHANGELOG.md
+
+check yaml...............................................................Failed
+- hook id: check-yaml
+- duration: 0.05s
+- exit code: 1
+
+while parsing a flow sequence
+  in ".pre-commit-hooks.yaml", line 214, column 11
+expected ',' or ']', but got '<stream end>'
+  in ".pre-commit-hooks.yaml", line 215, column 1
+
+check json...........................................(no files to check)Skipped
+- hook id: check-json
+check for added large files..............................................Passed
+- hook id: check-added-large-files
+- duration: 0.1s
+expand tabs in markdown..................................................Failed
+- hook id: expand-tabs
+- duration: 0.02s
+- files were modified by this hook
+forbid TODO markers......................................................Failed
+- hook id: no-todo
+- duration: 0.05s
+- exit code: 1
+
+73:# TODO: sort keys
+pre_commit_hooks/check_yaml.py: TODO markers are not allowed
+39:# TODO drop python 3.9 support
+pre_commit_hooks/check_json.py: TODO markers are not allowed
+
+go vet...............................................(no files to check)Skipped
+- hook id: go-vet

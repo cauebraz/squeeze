@@ -1,0 +1,1 @@
+golangci-lint: 0 issues; 6 linters enabled

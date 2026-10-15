@@ -1,0 +1,1 @@
+{"schema_version":1,"format":"buildkit","input_bytes":1543,"text_bytes":56,"ratio":0.0363,"conditions":[],"failed_on":[],"data":{"tool":"buildkit","tool_version":"","progress":"plain","builder":"desktop-linux","total_steps":10,"cached_steps":1,"failed_steps":0,"canceled_steps":0,"warnings":[],"errors":[],"location":"","steps":[],"other_steps":10}}

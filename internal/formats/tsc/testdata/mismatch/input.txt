@@ -1,0 +1,61 @@
+[96msrc/cart.ts[0m:[93m14[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType 'string' is not assignable to type 'number'.
+
+[7m14[0m   return formatPrice(sum);
+[7m  [0m [91m  ~~~~~~[0m
+
+[96msrc/cart.ts[0m:[93m17[0m:[93m64[0m - [91merror[0m[90m TS2322: [0mType 'string' is not assignable to type 'number'.
+
+[7m17[0m const broken: Item = { sku: "a", price: 1, tags: [{ name: "x", weight: "heavy" }] };
+[7m  [0m [91m                                                               ~~~~~~[0m
+
+  [96msrc/cart.ts[0m:[93m6[0m:[93m25[0m
+    [7m6[0m   tags: { name: string; weight: number }[];
+    [7m [0m [96m                        ~~~~~~[0m
+    The expected type comes from property 'weight' which is declared here on type '{ name: string; weight: number; }'
+
+[96msrc/cart.ts[0m:[93m18[0m:[93m33[0m - [91merror[0m[90m TS2322: [0mType 'string' is not assignable to type 'number'.
+
+[7m18[0m const other: Item = { sku: "b", price: "2", tags: [] };
+[7m  [0m [91m                                ~~~~~[0m
+
+  [96msrc/cart.ts[0m:[93m5[0m:[93m3[0m
+    [7m5[0m   price: number;
+    [7m [0m [96m  ~~~~~[0m
+    The expected type comes from property 'price' which is declared here on type 'Item'
+
+[96msrc/lib/format.ts[0m:[93m6[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'missing' does not exist on type 'string'.
+
+[7m6[0m   return input.missing();
+[7m [0m [91m               ~~~~~~~[0m
+
+[96msrc/order.ts[0m:[93m2[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module './missing' or its corresponding type declarations.
+
+[7m2[0m import { nothing } from "./missing";
+[7m [0m [91m                        ~~~~~~~~~~~[0m
+
+[96msrc/order.ts[0m:[93m6[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType '(event: { id: string; payload: { items: string[]; }; }) => void' is not assignable to type 'Handler'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type '{ id: number; payload: { items: Item[]; }; }' is not assignable to type '{ id: string; payload: { items: string[]; }; }'.
+      Types of property 'id' are incompatible.
+        Type 'number' is not assignable to type 'string'.
+
+[7m6[0m const handler: Handler = (event: { id: string; payload: { items: string[] } }) => {
+[7m [0m [91m      ~~~~~~~[0m
+
+[96msrc/order.ts[0m:[93m11[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType 'number' is not assignable to type 'string'.
+
+[7m11[0m   const t: string = total(items);
+[7m  [0m [91m        ~[0m
+
+[96msrc/order.ts[0m:[93m15[0m:[93m24[0m - [91merror[0m[90m TS7006: [0mParameter 'x' implicitly has an 'any' type.
+
+[7m15[0m export function unused(x) {
+[7m  [0m [91m                       ~[0m
+
+
+Found 9 errors in 3 files.
+
+Errors  Files
+     4  src/cart.ts[90m:10[0m
+     1  src/lib/format.ts[90m:6[0m
+     4  src/order.ts[90m:2[0m

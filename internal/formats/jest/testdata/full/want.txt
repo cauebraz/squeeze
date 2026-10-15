@@ -1,0 +1,131 @@
+jest: fail; 14 tests: 8 passed, 4 failed, 1 skipped, 1 todo; 6 files: 1 passed, 2 failed, 3 failed to run; 1 snapshot: 1 failed
+test/broken.test.js: failed to run
+    SyntaxError: test/broken.test.js: Unexpected token, expected "," (4:26)
+      2 |
+      3 | test('never runs', () => {
+    > 4 |   expect(total([]).toBe(0);
+        |                           ^
+      5 | });
+      6 |
+      at constructor (node_modules/@babel/parser/src/parse-error.ts:96:45)
+      at Parser.toParseError [as raise] (node_modules/@babel/parser/src/tokenizer/index.ts:1504:19)
+      at Parser.raise [as unexpected] (node_modules/@babel/parser/src/tokenizer/index.ts:1544:16)
+      at Parser.unexpected [as expect] (node_modules/@babel/parser/src/parser/util.ts:157:12)
+      at Parser.expect [as parseCallExpressionArguments] (node_modules/@babel/parser/src/parser/expression.ts:1058:14)
+      at Parser.parseCallExpressionArguments [as parseCoverCallAndAsyncArrowHead] (node_modules/@babel/parser/src/parser/expression.ts:949:29)
+      at Parser.parseCoverCallAndAsyncArrowHead [as parseSubscript] (node_modules/@babel/parser/src/parser/expression.ts:822:19)
+      at Parser.parseSubscript [as parseSubscripts] (node_modules/@babel/parser/src/parser/expression.ts:781:19)
+      at Parser.parseSubscripts [as parseExprSubscripts] (node_modules/@babel/parser/src/parser/expression.ts:748:17)
+      at Parser.parseExprSubscripts [as parseUpdate] (node_modules/@babel/parser/src/parser/expression.ts:721:21)
+      at Parser.parseUpdate [as parseMaybeUnary] (node_modules/@babel/parser/src/parser/expression.ts:683:23)
+      at Parser.parseMaybeUnary [as parseMaybeUnaryOrPrivate] (node_modules/@babel/parser/src/parser/expression.ts:417:14)
+      at Parser.parseMaybeUnaryOrPrivate [as parseExprOps] (node_modules/@babel/parser/src/parser/expression.ts:429:23)
+    ... 64 more lines (--max-output 0)
+test/cart.test.js
+  fail cart > applyDiscount > takes ten off with TEN
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 80
+    Received: 90
+        at Object.toBe (test/cart.test.js:17:41)
+        at Promise.finally.completed (node_modules/jest-circus/build/jestAdapterInit.js:1834:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (node_modules/jest-circus/build/jestAdapterInit.js:1774:10)
+        at _callCircusTest (node_modules/jest-circus/build/jestAdapterInit.js:1167:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTestInContext (node_modules/jest-circus/build/jestAdapterInit.js:1103:3)
+        at runTestWithContext (node_modules/jest-circus/build/jestAdapterInit.js:996:5)
+        at _runTestsForDescribeBlockOnce (node_modules/jest-circus/build/jestAdapterInit.js:1008:11)
+        at _runTestsForDescribeBlock (node_modules/jest-circus/build/jestAdapterInit.js:824:5)
+        at _runTestsForDescribeBlockOnce (node_modules/jest-circus/build/jestAdapterInit.js:1003:11)
+        at _runTestsForDescribeBlock (node_modules/jest-circus/build/jestAdapterInit.js:824:5)
+        at _runTestsForDescribeBlockOnce (node_modules/jest-circus/build/jestAdapterInit.js:1003:11)
+        at _runTestsForDescribeBlock (node_modules/jest-circus/build/jestAdapterInit.js:824:5)
+        at run (node_modules/jest-circus/build/jestAdapterInit.js:789:3)
+        at runAndTransformResultsToJestFormat (node_modules/jest-circus/build/jestAdapterInit.js:2300:21)
+        at jestAdapter (node_modules/jest-circus/build/runner.js:111:19)
+    ... 2 more lines (--max-output 0)
+  fail cart > summary lists tags
+    Error: expect(received).toEqual(expected) // deep equality
+    - Expected  - 2
+    + Received  + 2
+      Object {
+        "count": 2,
+    -   "currency": "EUR",
+    +   "currency": "USD",
+        "tags": Array [
+          "a",
+    -     "c",
+    +     "b",
+        ],
+        "total": 3,
+      }
+        at Object.toEqual (test/cart.test.js:25:87)
+        at Promise.finally.completed (node_modules/jest-circus/build/jestAdapterInit.js:1834:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (node_modules/jest-circus/build/jestAdapterInit.js:1774:10)
+        at _callCircusTest (node_modules/jest-circus/build/jestAdapterInit.js:1167:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ... 11 more lines (--max-output 0)
+  fail cart > parses a price
+    TypeError: price must be a string, got number
+        at parsePrice (src/cart.js:13:36)
+        at Object.parsePrice (test/cart.test.js:33:12)
+        at Promise.finally.completed (node_modules/jest-circus/build/jestAdapterInit.js:1834:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (node_modules/jest-circus/build/jestAdapterInit.js:1774:10)
+        at _callCircusTest (node_modules/jest-circus/build/jestAdapterInit.js:1167:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTestInContext (node_modules/jest-circus/build/jestAdapterInit.js:1103:3)
+        at runTestWithContext (node_modules/jest-circus/build/jestAdapterInit.js:996:5)
+        at _runTestsForDescribeBlockOnce (node_modules/jest-circus/build/jestAdapterInit.js:1008:11)
+        at _runTestsForDescribeBlock (node_modules/jest-circus/build/jestAdapterInit.js:824:5)
+        at _runTestsForDescribeBlockOnce (node_modules/jest-circus/build/jestAdapterInit.js:1003:11)
+        at _runTestsForDescribeBlock (node_modules/jest-circus/build/jestAdapterInit.js:824:5)
+        at run (node_modules/jest-circus/build/jestAdapterInit.js:789:3)
+        at runAndTransformResultsToJestFormat (node_modules/jest-circus/build/jestAdapterInit.js:2300:21)
+        at jestAdapter (node_modules/jest-circus/build/runner.js:111:19)
+        at runTestInternal (node_modules/jest-runner/build/index.js:247:16)
+        at runTest (node_modules/jest-runner/build/index.js:315:7)
+test/format.test.js
+  fail summary snapshot
+    Error: expect(received).toMatchSnapshot()
+    Snapshot name: `summary snapshot 1`
+    - Snapshot  - 1
+    + Received  + 1
+    @@ -2,7 +2,7 @@
+        "count": 1,
+        "currency": "USD",
+        "tags": [
+          "x",
+        ],
+    -   "total": 5,
+    +   "total": 6,
+      }
+        at Object.toMatchSnapshot (test/format.test.js:4:53)
+        at Promise.finally.completed (node_modules/jest-circus/build/jestAdapterInit.js:1834:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (node_modules/jest-circus/build/jestAdapterInit.js:1774:10)
+        at _callCircusTest (node_modules/jest-circus/build/jestAdapterInit.js:1167:40)
+        at _runTestInContext (node_modules/jest-circus/build/jestAdapterInit.js:1103:3)
+        at runTestWithContext (node_modules/jest-circus/build/jestAdapterInit.js:996:5)
+    ... 7 more lines (--max-output 0)
+test/hooks.test.js: failed to run
+    could not close db: connection reset
+      1 | const db = { open: true };
+      2 | afterAll(() => {
+    > 3 |   throw new Error('could not close db: connection reset');
+        |         ^
+      4 | });
+      5 | test('reads from db', () => {
+      6 |   expect(db.open).toBe(true);
+      at Object.<anonymous> (test/hooks.test.js:3:9)
+test/missing.test.js: failed to run
+    Cannot find module '../src/refund' from 'test/missing.test.js'
+    > 1 | const { refund } = require('../src/refund');
+        |                    ^
+      2 |
+      3 | test('refunds', () => {
+      4 |   expect(refund(1)).toBe(1);
+      at Resolver._throwModNotFoundError (node_modules/jest-resolve/build/index.js:1031:11)
+      at Object.require (test/missing.test.js:1:20)
+... 1 skipped test, 1 todo test, 1 passing file (--all)

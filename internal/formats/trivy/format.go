@@ -20,15 +20,23 @@ type Format struct{}
 
 func (Format) Name() string { return "trivy" }
 
-func (Format) Description() string { return "Trivy findings from trivy --format json" }
+func (Format) Description() string {
+	return "Trivy findings from trivy --format json, including trivy k8s"
+}
 
-var conditionNames = []string{"critical", "fail", "fixable", "high", "misconfiguration", "secret", "vulnerability"}
+var conditionNames = []string{"critical", "error", "fail", "fixable", "high", "misconfiguration", "secret", "vulnerability"}
 
 func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
 
 func (Format) Detect(head []byte) bool {
 	trimmed := bytes.TrimLeft(head, " \t\r\n")
-	if len(trimmed) == 0 || trimmed[0] != '{' || !bytes.Contains(head, []byte(`"SchemaVersion"`)) {
+	if len(trimmed) == 0 || trimmed[0] != '{' {
+		return false
+	}
+	if bytes.Contains(head, []byte(`"ClusterName"`)) {
+		return bytes.Contains(head, []byte(`"Resources"`)) || bytes.Contains(head, []byte(`"Findings"`))
+	}
+	if !bytes.Contains(head, []byte(`"SchemaVersion"`)) {
 		return false
 	}
 	return bytes.Contains(head, []byte(`"ArtifactName"`)) || bytes.Contains(head, []byte(`"Results"`))
@@ -62,6 +70,7 @@ func conditions(r Report) []string {
 	}
 	return core.Conditions(map[string]bool{
 		"critical":         reported["CRITICAL"] > 0,
+		"error":            scanErrors(r) > 0,
 		"fail":             r.Vulnerabilities+r.Misconfigurations+r.Secrets+r.SevereLicenses > 0,
 		"fixable":          r.Fixable > 0,
 		"high":             reported["HIGH"]+reported["CRITICAL"] > 0,
@@ -69,4 +78,14 @@ func conditions(r Report) []string {
 		"secret":           r.Secrets > 0,
 		"vulnerability":    r.Vulnerabilities > 0,
 	})
+}
+
+func scanErrors(r Report) int {
+	n := 0
+	for _, res := range r.Resources {
+		if res.Error != "" {
+			n++
+		}
+	}
+	return n
 }

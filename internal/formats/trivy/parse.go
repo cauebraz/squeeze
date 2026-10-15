@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-var ErrNotTrivy = errors.New("input has no trivy SchemaVersion")
+var ErrNotTrivy = errors.New("input has no trivy SchemaVersion or ClusterName")
 
 type Vulnerability struct {
 	VulnerabilityID  string `json:"VulnerabilityID"`
@@ -71,6 +71,14 @@ type Result struct {
 	Licenses          []License          `json:"Licenses"`
 }
 
+type K8sResource struct {
+	Namespace string   `json:"Namespace"`
+	Kind      string   `json:"Kind"`
+	Name      string   `json:"Name"`
+	Results   []Result `json:"Results"`
+	Error     string   `json:"Error"`
+}
+
 type RawReport struct {
 	SchemaVersion int `json:"SchemaVersion"`
 	Trivy         struct {
@@ -84,7 +92,10 @@ type RawReport struct {
 			Name   string `json:"Name"`
 		} `json:"OS"`
 	} `json:"Metadata"`
-	Results []Result `json:"Results"`
+	Results     []Result      `json:"Results"`
+	ClusterName *string       `json:"ClusterName"`
+	Resources   []K8sResource `json:"Resources"`
+	Findings    []K8sResource `json:"Findings"`
 }
 
 func Parse(input []byte) (*RawReport, error) {
@@ -93,7 +104,10 @@ func Parse(input []byte) (*RawReport, error) {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	if r.SchemaVersion == 0 {
-		return nil, ErrNotTrivy
+		if r.ClusterName == nil {
+			return nil, ErrNotTrivy
+		}
+		return &r, nil
 	}
 	if r.SchemaVersion != 2 {
 		return nil, fmt.Errorf("unsupported SchemaVersion %d", r.SchemaVersion)

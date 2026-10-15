@@ -1,0 +1,16 @@
+terraform state show random_password.db: 15 attributes, 3 sensitive
+bcrypt_hash = (sensitive)
+id = "none"
+keepers = {"rotation":(sensitive),"team":"platform"}
+length = 24
+lower = true
+min_lower = 0
+min_numeric = 0
+min_special = 0
+min_upper = 0
+number = true
+numeric = true
+result = (sensitive)
+special = true
+upper = true
+... 1 null attribute (--output json)

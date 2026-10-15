@@ -21,6 +21,20 @@ var failureTypes = map[string]bool{
 	"apply_errored": true, "provision_errored": true, "action_errored": true, "ephemeral_op_errored": true,
 }
 
+var policyOutcomes = map[string]string{
+	"AllowResult": "pass", "pass": "pass", "n/a": "pass",
+	"DenyResult": "fail", "fail": "fail",
+	"UnknownResult": "unknown", "unknown": "unknown",
+	"InvalidResult": "error", "PolicyErrorResult": "error", "SetupErrorResult": "error", "error": "error",
+}
+
+func policyOutcome(result string) string {
+	if o, ok := policyOutcomes[result]; ok {
+		return o
+	}
+	return "error"
+}
+
 var failingTestStatus = map[string]bool{"fail": true, "error": true}
 
 func rank(action string) int {
@@ -34,11 +48,15 @@ type builder struct {
 	o        Options
 	r        Report
 	changes  map[Change]bool
+	actions  map[ActionInvocation]bool
+	lists    map[string]int
+	found    map[string][]FoundResource
 	runs     map[[2]string]int
 	files    map[string]int
 	diags    []tfdiag.Diagnostic
 	timings  []Timing
 	sawTest  bool
+	sawQuery bool
 	sawInit  bool
 	sawPlan  bool
 	sawApply bool
@@ -48,6 +66,9 @@ func Build(lines []Line, o Options) Report {
 	b := builder{
 		o:       o,
 		changes: map[Change]bool{},
+		actions: map[ActionInvocation]bool{},
+		lists:   map[string]int{},
+		found:   map[string][]FoundResource{},
 		runs:    map[[2]string]int{},
 		files:   map[string]int{},
 		r: Report{
@@ -55,6 +76,9 @@ func Build(lines []Line, o Options) Report {
 			Changes:  []Change{},
 			Drift:    []Change{},
 			Deferred: []Deferred{},
+			Actions:  []ActionInvocation{},
+			Lists:    []ListBlock{},
+			Found:    []FoundResource{},
 			Failures: []Failure{},
 			Policies: []PolicyResult{},
 			Outputs:  []Output{},
@@ -87,7 +111,7 @@ func (b *builder) add(l Line) {
 		b.sawInit = true
 	}
 	left := b.leftInState(l)
-	if l.Malformed || (l.Type != "diagnostic" && (l.Level == "error" || l.Level == "warn")) {
+	if l.Malformed || (!isDiagnostic(l) && (l.Level == "error" || l.Level == "warn")) {
 		b.fallback(l)
 		return
 	}
@@ -102,9 +126,26 @@ func (b *builder) add(l Line) {
 		b.r.ToolVersion = core.Clean(l.Terraform)
 	case l.Type == "diagnostic" && l.Diagnostic != nil:
 		b.diagnostic(tfdiag.Convert(*l.Diagnostic), l.AtTestFile, l.AtTestRun)
+	case l.Type == "policy_diagnostic" && l.PolicyDiag != nil:
+		b.diagnostic(policyDiagnostic(*l.PolicyDiag, l.Target), l.AtTestFile, l.AtTestRun)
 	case l.Type == "planned_change" && l.Change != nil:
 		b.sawPlan = true
 		b.change(*l.Change)
+	case l.Type == "planned_action_invocation" && l.Invocation != nil:
+		b.sawPlan = true
+		b.invocation(*l.Invocation)
+	case l.Type == "action_complete":
+		b.r.ActionsCompleted++
+	case l.Type == "list_start" && l.ListStart != nil:
+		b.list(*l.ListStart)
+	case l.Type == "list_resource_found" && l.ListFound != nil:
+		f := l.ListFound
+		b.list(streamList{Address: f.Address})
+		addr := core.Clean(f.Address)
+		b.found[addr] = append(b.found[addr], FoundResource{Address: addr, DisplayName: core.Clean(f.DisplayName), Identity: f.Identity})
+	case l.Type == "list_complete" && l.ListDone != nil:
+		lb := b.list(*l.ListDone)
+		lb.Total, lb.Complete = l.ListDone.Total, true
 	case l.Type == "resource_drift" && l.Change != nil:
 		b.r.Drift = append(b.r.Drift, convertChange(*l.Change))
 	case l.Type == "deferred_change" && l.Deferred != nil && l.Deferred.Change != nil:
@@ -126,7 +167,7 @@ func (b *builder) add(l Line) {
 		}
 		f := Failure{Type: l.Type, Message: core.Clean(l.Message)}
 		if l.Hook != nil {
-			f.Address = core.Clean(l.Hook.Resource.Addr)
+			f.Address = core.Clean(hookAddress(*l.Hook))
 		}
 		b.r.Failures = append(b.r.Failures, f)
 	case l.Type == "outputs" && l.Outputs != nil:
@@ -139,16 +180,74 @@ func (b *builder) add(l Line) {
 		b.testRun(*l.TestRun)
 	case l.Type == "test_file" && l.TestFile != nil:
 		b.testFile(core.Clean(l.TestFile.Path), core.Clean(l.TestFile.Status))
-	case l.Type == "policy_result" && l.Result != "" && l.Result != "AllowResult":
-		p := PolicyResult{Policy: core.Clean(l.Policy), Target: core.Clean(l.Target), Result: core.Clean(l.Result)}
+	case l.Type == "policy_result" && l.Result != "":
+		var enforcement string
 		if l.PolicyMeta != nil {
-			p.Enforcement = core.Clean(l.PolicyMeta.EnforcementLevel)
+			enforcement = l.PolicyMeta.EnforcementLevel
 		}
-		b.r.Policies = append(b.r.Policies, p)
+		if !b.policy(l.Policy, l.Target, l.Result, enforcement) {
+			b.other(l.Type, policyLine(PolicyResult{Policy: core.Clean(l.Policy), Target: core.Clean(l.Target), Result: core.Clean(l.Result)}))
+		}
+	case l.Type == "policy_info" && l.PolicyInfo != nil:
+		b.other(l.Type, policyInfo(l))
+	case l.Type == "policy_query_summary" && l.ListBlock != "":
+		b.querySummary(l.Query)
 	case l.Type == "provider_version_installation_complete":
 		b.r.Providers++
 	default:
 		b.fallback(l)
+	}
+}
+
+func isDiagnostic(l Line) bool {
+	return l.Type == "diagnostic" || (l.Type == "policy_diagnostic" && l.PolicyDiag != nil)
+}
+
+func policyDiagnostic(raw tfdiag.Raw, target string) tfdiag.Diagnostic {
+	d := tfdiag.Convert(raw)
+	if d.Address == "" {
+		d.Address = core.Clean(target)
+	}
+	return d
+}
+
+func (b *builder) policy(name, target, result, enforcement string) bool {
+	outcome := policyOutcome(result)
+	if outcome == "pass" {
+		return false
+	}
+	b.r.Policies = append(b.r.Policies, PolicyResult{
+		Policy: core.Clean(name), Target: core.Clean(target), Result: core.Clean(result),
+		Outcome: outcome, Enforcement: core.Clean(enforcement),
+	})
+	return true
+}
+
+func policyInfo(l Line) string {
+	parts := []string{"policy info:"}
+	if l.PolicyMeta != nil && l.PolicyMeta.PolicyName != "" {
+		parts = append(parts, core.Clean(l.PolicyMeta.PolicyName))
+	}
+	if l.Target != "" {
+		parts = append(parts, "for "+core.Clean(l.Target))
+	}
+	return strings.Join(parts, " ") + ": " + core.Clean(l.PolicyInfo.Message)
+}
+
+func (b *builder) querySummary(results []streamQueryResult) {
+	for _, r := range results {
+		listed := false
+		for _, p := range r.Policies {
+			for _, raw := range p.Diagnostics {
+				b.diagnostic(policyDiagnostic(raw, r.Target), "", "")
+			}
+			if b.policy(p.Meta.PolicyName, r.Target, p.Result, p.Meta.EnforcementLevel) {
+				listed = true
+			}
+		}
+		if !listed {
+			b.policy("", r.Target, r.Result, "")
+		}
 	}
 }
 
@@ -161,6 +260,15 @@ func (b *builder) fallback(l Line) {
 	default:
 		b.other(core.Clean(l.Type), core.Clean(l.Message))
 	}
+}
+
+func hookAddress(h streamHook) string {
+	if h.Resource.Addr != "" {
+		return h.Resource.Addr
+	}
+	var action streamActionAddr
+	_ = json.Unmarshal(h.Action, &action)
+	return action.Addr
 }
 
 func convertChange(c streamChange) Change {
@@ -185,6 +293,38 @@ func (b *builder) change(sc streamChange) {
 	}
 	b.changes[c] = true
 	b.r.Changes = append(b.r.Changes, c)
+}
+
+func (b *builder) list(s streamList) *ListBlock {
+	b.sawQuery = true
+	addr := core.Clean(s.Address)
+	i, ok := b.lists[addr]
+	if !ok {
+		i = len(b.r.Lists)
+		b.lists[addr] = i
+		b.r.Lists = append(b.r.Lists, ListBlock{Address: addr})
+	}
+	lb := &b.r.Lists[i]
+	if s.ResourceType != "" {
+		lb.ResourceType = core.Clean(s.ResourceType)
+	}
+	return lb
+}
+
+func (b *builder) invocation(s streamInvocation) {
+	a := ActionInvocation{Address: core.Clean(s.Action.Addr)}
+	switch {
+	case s.Lifecycle != nil:
+		a.Event = core.Clean(s.Lifecycle.Event)
+		a.Resource = core.Clean(s.Lifecycle.Resource.Addr)
+	case s.Invoke != nil:
+		a.Invoked = true
+	}
+	if b.actions[a] {
+		return
+	}
+	b.actions[a] = true
+	b.r.Actions = append(b.r.Actions, a)
 }
 
 func (b *builder) applied(h streamHook, message string) {
@@ -345,6 +485,15 @@ func (b *builder) finish() Report {
 		r.Changes = visible
 	}
 	r.Changes, r.Omitted = core.Limit(r.Changes, b.o.MaxResources)
+	sort.SliceStable(r.Lists, func(i, j int) bool { return r.Lists[i].Address < r.Lists[j].Address })
+	for i := range r.Lists {
+		found := b.found[r.Lists[i].Address]
+		if !r.Lists[i].Complete {
+			r.Lists[i].Total = len(found)
+		}
+		r.Found = append(r.Found, found...)
+	}
+	r.Found, r.FoundOmitted = core.Limit(r.Found, b.o.MaxResources)
 	sort.SliceStable(b.timings, func(i, j int) bool { return b.timings[i].Seconds > b.timings[j].Seconds })
 	for _, t := range b.timings {
 		if len(r.Applied.Slowest) == 3 || t.Seconds <= 0 {
@@ -382,6 +531,8 @@ func (b *builder) operation() string {
 		return b.r.Summary.Operation
 	case b.sawTest:
 		return "test"
+	case b.sawQuery:
+		return "query"
 	case b.sawPlan:
 		return "plan"
 	case b.sawInit:

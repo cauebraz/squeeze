@@ -61,11 +61,13 @@ Attribute symbols:
 - Values longer than 48 bytes, maps and lists print the attribute path only.
 - List elements are matched by value, so an element that only moves is not printed. This covers sets, which the plan JSON stores as lists in an order that shifts when an element is added. Elements without a match are paired in order when both are objects or share an index, and their attributes are compared; a pair that changed position shows both indices, as in `~ rule[0->2].priority: 1 -> 4`. The rest print as `-` with the old index or `+` with the new one. A list whose matched elements change order prints `~ <path>: order changed`. Lists nested more than 32 deep are compared by index. This follows Terraform's set rendering (`processSet` in `internal/command/jsonformat/differ/set.go`) and its object pairing for lists (`ProcessSlice` in `internal/command/jsonformat/collections/slice.go`).
 - Create and delete print no attributes, since the whole object is new or gone.
-- Line notes carry the deposed key, `moved from <address>`, `import`, the attributes that force replacement and Terraform's `action_reason`.
+- Line notes carry the deposed key, `moved from <address>`, `import`, the size of the generated config, the attributes that force replacement and Terraform's `action_reason`.
+- A resource whose configuration Terraform generated (`plan -generate-config-out`, the change's `generated_config`) prints `N lines of generated config in --output json`, as in `>> aws_s3_bucket.legacy (8 lines of generated config in --output json)`. The text does not print the HCL; `--output json` holds it, with control characters and color codes removed, tabs expanded and trailing spaces and newlines trimmed. Terraform writes the same HCL to the file named by `-generate-config-out`, and writes a sensitive attribute as `null # sensitive` (`internal/genconfig/generate_config.go` at v1.17.0-rc2). With `--no-values` the note drops `in --output json` and the JSON keeps the line count only.
 - Drift is shown the way Terraform shows it: only attributes listed in the plan's `relevant_attributes`. A relevant path that goes through a list index makes the whole list relevant, as Terraform's renderer treats every element of a relevant list (`internal/command/jsonformat/differ/list.go`).
 - A replacement path that names a set element by its value prints the element as `[*]`, so the value never reaches the text. Drift that affects the plan is counted in `... N drifted resources (--drift)` unless `--drift` lists it; drift that does not affect the plan is counted in a `... N drifted resources not affecting this plan (--all)` line. Resources without changes are counted in `... N resources without changes (--all)`.
 - Deferred resources (`deferred_changes`, in incomplete plans) are listed with Terraform's reason. Deferred no-ops are hidden unless moved.
 - Action invocations (`action_invocations`) are listed with their trigger event and resource.
+- Deferred action invocations (`deferred_action_invocations`, in incomplete plans) are listed on one `deferred actions:` line in the plan's order, each with its trigger and Terraform's deferral reason (`unknown`, `instance_count_unknown`, `resource_config_unknown`, `provider_config_unknown`, `deferred_prereq` or `absent_prereq`; `internal/command/jsonplan/action_invocations.go` at v1.17.0-rc2), and counted in the header as `N deferred actions`.
 - Failed checks (`checks`) are listed under `checks:` as `<status> <address>: <error_message>`, one line per failed instance, and counted in the header as `N failed checks`. A check is a `check` block assertion, a resource or output precondition or postcondition, or a variable validation. Terraform's statuses are `pass`, `fail`, `error` and `unknown` (`internal/command/jsonchecks/status.go`); `pass` and `unknown` are not listed, as Terraform's plan output does not show them, and any other status is. An object with no instances, such as a resource whose `count` is 0 or could not be evaluated, is listed by its own address. A failed precondition, postcondition or validation stops a normal plan, which then reports `errored: true`; a plan that holds one and did not error, such as a refresh-only plan (`show-json/conditions` in Terraform's testdata), reported it as a warning.
 
 ## Flags
@@ -84,7 +86,7 @@ Attribute symbols:
 |---|---|
 | `change` | the plan creates, updates, destroys, replaces, imports, moves, forgets or reads anything |
 | `check` | a check failed or errored |
-| `deferred` | a change was deferred |
+| `deferred` | a resource change or an action invocation was deferred |
 | `destroy` | a resource is deleted or replaced by destroying it |
 | `drift` | drift that affects the plan |
 | `error` | Terraform reports `errored: true` |
@@ -101,10 +103,10 @@ Attribute symbols:
 `data` in the `--output json` envelope holds:
 
 - `tool`, `tool_version`.
-- `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `actions`, `outputs`, `checks_failed`, `errored`, `complete`.
-- `changes` and `drift`: each with `address`, `action` and, when set, `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `replaced_by`, `attrs`, `attrs_omitted`.
+- `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `deferred_actions`, `actions`, `outputs`, `checks_failed`, `errored`, `complete`.
+- `changes` and `drift`: each with `address`, `action` and, when set, `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `generated_config_lines`, `generated_config` (the HCL, left out with `--no-values`), `replaced_by`, `attrs`, `attrs_omitted`.
 - `attrs`: `path`, `kind` (`update`, `add`, `remove`) and, when set, `before`, `after`, `unknown`, `sensitive`, `forces_replacement`, `reordered`. `before` and `after` are the scalar values with their JSON types and are never shortened; the 48-byte limit applies to text only.
-- `resources_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `actions` (`address`, `event`, `resource`, `invoked`) `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`) and `checks` (`address`, `kind`, `status` and, when set, `problems`), with the same failed instances the text lists.
+- `resources_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `deferred_actions` (the `actions` keys plus `reason`), `actions` (`address`, `event`, `resource`, `invoked`), `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`) and `checks` (`address`, `kind`, `status` and, when set, `problems`), with the same failed instances the text lists.
 
 ## Limitations
 

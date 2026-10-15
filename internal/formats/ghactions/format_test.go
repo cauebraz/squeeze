@@ -124,19 +124,6 @@ func TestMatrix(t *testing.T) {
 	}
 }
 
-func TestCutKeepsErrorLinesTheLineAfterAndTheTail(t *testing.T) {
-	t.Parallel()
-	lines := []string{"a", "b", "--- FAIL: TestX (0.01s)", "x_test.go:9: got 1 want 2", "c", "d", "e", "f"}
-	got, omitted := cut(lines, 2)
-	want := []string{"... 2 lines cut (--max-lines 0)", "--- FAIL: TestX (0.01s)", "x_test.go:9: got 1 want 2", "... 2 lines cut (--max-lines 0)", "e", "f"}
-	if diff := cmp.Diff(want, got); diff != "" || omitted != 4 {
-		t.Errorf("omitted %d, lines (-want +got):\n%s", omitted, diff)
-	}
-	if got, omitted := cut(lines, 0); len(got) != len(lines) || omitted != 0 {
-		t.Errorf("--max-lines 0 cut %d lines", omitted)
-	}
-}
-
 func TestWarningsAreNeverDropped(t *testing.T) {
 	t.Parallel()
 	r, err := Squeeze(fixture(t, "warning"), DefaultOptions())

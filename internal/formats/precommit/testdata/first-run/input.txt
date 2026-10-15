@@ -1,0 +1,45 @@
+[WARNING] Unexpected key(s) present at root: minimum_pre_commit_versoin
+[INFO] Initializing environment for https://github.com/pre-commit/pre-commit-hooks.
+[INFO] Installing environment for https://github.com/pre-commit/pre-commit-hooks.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+trim trailing whitespace.................................................Failed
+- hook id: trailing-whitespace
+- exit code: 1
+- files were modified by this hook
+
+Fixing pre_commit_hooks/util.py
+Fixing pre_commit_hooks/removed.py
+
+fix end of files.........................................................Failed
+- hook id: end-of-file-fixer
+- exit code: 1
+- files were modified by this hook
+
+Fixing pre_commit_hooks/util.py
+Fixing CHANGELOG.md
+
+check yaml...............................................................Failed
+- hook id: check-yaml
+- exit code: 1
+
+while parsing a flow sequence
+  in ".pre-commit-hooks.yaml", line 214, column 11
+expected ',' or ']', but got '<stream end>'
+  in ".pre-commit-hooks.yaml", line 215, column 1
+
+check json...........................................(no files to check)Skipped
+check for added large files..............................................Passed
+expand tabs in markdown..................................................Failed
+- hook id: expand-tabs
+- files were modified by this hook
+forbid TODO markers......................................................Failed
+- hook id: no-todo
+- exit code: 1
+
+73:# TODO: sort keys
+pre_commit_hooks/check_yaml.py: TODO markers are not allowed
+39:# TODO drop python 3.9 support
+pre_commit_hooks/check_json.py: TODO markers are not allowed
+
+go vet...............................................(no files to check)Skipped

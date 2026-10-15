@@ -1,0 +1,8 @@
+trim trailing whitespace.................................................Passed
+fix end of files.........................................................Passed
+check yaml...............................................................Passed
+check json...........................................(no files to check)Skipped
+check for added large files..............................................Passed
+expand tabs in markdown..................................................Passed
+forbid TODO markers......................................................Passed
+go vet...............................................(no files to check)Skipped

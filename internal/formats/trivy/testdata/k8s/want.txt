@@ -1,0 +1,69 @@
+trivy: cluster kind-squeeze-trivy, 5 resources: 49 vulnerabilities, 34 misconfigurations; 4 CRITICAL, 12 HIGH, 33 MEDIUM, 34 LOW; 49 fixable; 518 misconfiguration checks passed
+error: shop/Deployment/worker: scan error: unable to initialize a scan service: unable to initialize artifact: unable to initialize container image: unable to find the specified image "registry.invalid/shop/worker:1.0.0" in ["docker" "containerd" "podman" "remote"]: 4 errors occurred: * docker error: unable to inspect the image (registry.invalid/shop/worker:1.0.0): Error response from daemon: No such image: registry.invalid/shop/worker:1.0.0 * containerd error: containerd socket not found: /run/containerd/containerd.sock * podman error: unable to initialize Podman client: no podman socket found: stat podman/podman.sock: no such file or directory * remote error: Get "https://registry.invalid/v2/": dial tcp: lookup registry.invalid: no such host
+shop/Deployment/api:
+  Deployment/api (kubernetes):
+    HIGH KSV-0118 lines 31-46: Default security context configured
+    HIGH KSV-0014 lines 33-41: Root file system is not read-only
+    HIGH KSV-0118 lines 33-41: Default security context configured
+    MEDIUM KSV-0001 lines 33-41: Can elevate its own privileges
+    MEDIUM KSV-0012 lines 33-41: Runs as root user
+    MEDIUM KSV-0104 lines 33-41: Seccomp policies disabled
+    LOW KSV-0003 lines 33-41: Default capabilities: some containers do not drop all
+  alpine:3.18.0 (alpine 3.18.0) (alpine):
+    CRITICAL CVE-2022-48174 busybox 1.36.0-r9 -> 1.36.1-r1: busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution
+    CRITICAL CVE-2022-48174 busybox-binsh 1.36.0-r9 -> 1.36.1-r1: busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution
+    CRITICAL CVE-2022-48174 ssl_client 1.36.0-r9 -> 1.36.1-r1: busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution
+    HIGH CVE-2023-5363 libcrypto3 3.1.0-r4 -> 3.1.4-r0: openssl: Incorrect cipher key and IV length processing
+    HIGH CVE-2024-6119 libcrypto3 3.1.0-r4 -> 3.1.7-r0: openssl: Possible denial of service in X.509 name checks
+    HIGH CVE-2023-5363 libssl3 3.1.0-r4 -> 3.1.4-r0: openssl: Incorrect cipher key and IV length processing
+    HIGH CVE-2024-6119 libssl3 3.1.0-r4 -> 3.1.7-r0: openssl: Possible denial of service in X.509 name checks
+    HIGH CVE-2025-26519 musl 1.2.4-r0 -> 1.2.4-r3: musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write ...
+    HIGH CVE-2025-26519 musl-utils 1.2.4-r0 -> 1.2.4-r3: musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write ...
+    MEDIUM CVE-2023-42363 busybox 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free in awk
+    MEDIUM CVE-2023-42364 busybox 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free
+    MEDIUM CVE-2023-42365 busybox 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free
+    MEDIUM CVE-2023-42366 busybox 1.36.0-r9 -> 1.36.1-r6: busybox: A heap-buffer-overflow
+    MEDIUM CVE-2023-42363 busybox-binsh 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free in awk
+    MEDIUM CVE-2023-42364 busybox-binsh 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free
+    MEDIUM CVE-2023-42365 busybox-binsh 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free
+    MEDIUM CVE-2023-42366 busybox-binsh 1.36.0-r9 -> 1.36.1-r6: busybox: A heap-buffer-overflow
+    MEDIUM CVE-2023-2650 libcrypto3 3.1.0-r4 -> 3.1.1-r0: openssl: Possible DoS translating ASN.1 object identifiers
+    MEDIUM CVE-2023-2975 libcrypto3 3.1.0-r4 -> 3.1.1-r2: openssl: AES-SIV cipher implementation contains a bug that causes it to ignore empty associated d...
+    MEDIUM CVE-2023-3446 libcrypto3 3.1.0-r4 -> 3.1.1-r3: openssl: Excessive time spent checking DH keys and parameters
+    MEDIUM CVE-2023-3817 libcrypto3 3.1.0-r4 -> 3.1.2-r0: OpenSSL: Excessive time spent checking DH q parameter value
+    MEDIUM CVE-2023-5678 libcrypto3 3.1.0-r4 -> 3.1.4-r1: openssl: Generating excessively long X9.42 DH keys or checking excessively long X9.42 DH keys or ...
+    MEDIUM CVE-2023-6129 libcrypto3 3.1.0-r4 -> 3.1.4-r3: openssl: POLY1305 MAC implementation corrupts vector registers on PowerPC
+    MEDIUM CVE-2024-0727 libcrypto3 3.1.0-r4 -> 3.1.4-r5: openssl: denial of service via null dereference
+    MEDIUM CVE-2023-2650 libssl3 3.1.0-r4 -> 3.1.1-r0: openssl: Possible DoS translating ASN.1 object identifiers
+    MEDIUM CVE-2023-2975 libssl3 3.1.0-r4 -> 3.1.1-r2: openssl: AES-SIV cipher implementation contains a bug that causes it to ignore empty associated d...
+    MEDIUM CVE-2023-3446 libssl3 3.1.0-r4 -> 3.1.1-r3: openssl: Excessive time spent checking DH keys and parameters
+    MEDIUM CVE-2023-3817 libssl3 3.1.0-r4 -> 3.1.2-r0: OpenSSL: Excessive time spent checking DH q parameter value
+    MEDIUM CVE-2023-5678 libssl3 3.1.0-r4 -> 3.1.4-r1: openssl: Generating excessively long X9.42 DH keys or checking excessively long X9.42 DH keys or ...
+    MEDIUM CVE-2023-6129 libssl3 3.1.0-r4 -> 3.1.4-r3: openssl: POLY1305 MAC implementation corrupts vector registers on PowerPC
+    MEDIUM CVE-2024-0727 libssl3 3.1.0-r4 -> 3.1.4-r5: openssl: denial of service via null dereference
+    MEDIUM CVE-2023-42363 ssl_client 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free in awk
+    MEDIUM CVE-2023-42364 ssl_client 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free
+    MEDIUM CVE-2023-42365 ssl_client 1.36.0-r9 -> 1.36.1-r7: busybox: use-after-free
+    MEDIUM CVE-2023-42366 ssl_client 1.36.0-r9 -> 1.36.1-r6: busybox: A heap-buffer-overflow
+shop/Deployment/worker:
+  Deployment/worker (kubernetes):
+    HIGH KSV-0118 lines 31-43: Default security context configured
+    HIGH KSV-0014 lines 33-38: Root file system is not read-only
+    HIGH KSV-0118 lines 33-38: Default security context configured
+    MEDIUM KSV-0001 lines 33-38: Can elevate its own privileges
+    MEDIUM KSV-0012 lines 33-38: Runs as root user
+    MEDIUM KSV-0104 lines 33-38: Seccomp policies disabled
+    MEDIUM KSV-0125 lines 33-38: Restrict container images to trusted registries
+shop/Role/admin:
+  Role/admin (kubernetes):
+    CRITICAL KSV-0112 lines 10-15: Manage all resources at the namespace
+... 33 more findings, 33 LOW (--max-findings 0)
+fixes:
+  KSV-0118: To enhance security, it is strongly recommended not to rely on the default security context. Inst...
+  KSV-0014: Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.
+  KSV-0001: Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.
+  KSV-0012: Set 'containers[].securityContext.runAsNonRoot' to true.
+  KSV-0104: Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod ...
+  KSV-0003: Add 'ALL' to containers[].securityContext.capabilities.drop.
+  KSV-0125: Use images from trusted registries.
+  KSV-0112: Remove '*' from 'rules.resources'. Provide specific list of resources to be managed by role in na...

@@ -1,0 +1,2 @@
+kubectl: 1 object (Pod 1), 1 unhealthy
+unhealthy Pod shop/worker-56bff96fc9-c8xj6: CrashLoopBackOff, 0/1 ready, 3 restarts; worker waiting CrashLoopBackOff, last Error exit 1

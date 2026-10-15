@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- written from the Apache Ant JUnit schema (JUnit.xsd): an aggregated report with a nested suite -->
+<testsuites>
+  <testsuite package="com.example.shop" id="0" name="CartTest" timestamp="2026-10-14T12:00:00" hostname="localhost" tests="2" failures="0" errors="0" skipped="1" time="0.004">
+    <properties/>
+    <testcase name="totalOfEmptyCart" classname="com.example.shop.CartTest" time="0.001"/>
+    <testcase name="couponExpired" classname="com.example.shop.CartTest" time="0">
+      <skipped message="coupon service is not configured"/>
+    </testcase>
+    <system-out><![CDATA[]]></system-out>
+    <system-err><![CDATA[]]></system-err>
+  </testsuite>
+  <testsuite package="com.example.shop" id="1" name="OrderTest" timestamp="2026-10-14T12:00:01" hostname="localhost" tests="1" failures="0" errors="0" time="0.002">
+    <properties/>
+    <testsuite name="OrderTest.Export" tests="1" failures="0" errors="0" time="0.001">
+      <testcase name="exportsCsv" classname="com.example.shop.OrderTest$Export" time="0.001"/>
+    </testsuite>
+    <system-out><![CDATA[]]></system-out>
+    <system-err><![CDATA[]]></system-err>
+  </testsuite>
+</testsuites>

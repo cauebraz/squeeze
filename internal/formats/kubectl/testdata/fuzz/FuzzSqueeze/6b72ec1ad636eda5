@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"apiVersion\":\"v1\",\"kind\":\"List\",\"items\":[{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"meteadata\":{\"name\":\"s\",\"annotations\":{\"a\":\"s\"}},\"data\":{\"k\":\"s\"}},{\"apiVersion\":\"v1\",\"kind\":\"(0000\",\"0000\":\"0000000\",\"00000\":10}]}")

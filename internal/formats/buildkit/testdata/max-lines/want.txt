@@ -1,0 +1,10 @@
+buildkit: 7 steps, 1 cached, 1 failed
+fail [4/5] RUN for i in $(seq 1 25); do echo "compiling module $i"; done; echo "error: module 26 failed: undefined symbol shop_init" >&2; exit 1
+  ... 21 lines cut (--max-lines 0)
+  compiling module 22
+  compiling module 23
+  compiling module 24
+  compiling module 25
+  error: module 26 failed: undefined symbol shop_init
+error: Dockerfile:4: failed to build: failed to solve: process "/bin/sh -c for i in $(seq 1 25); do echo \"compiling module $i\"; done; echo \"error: module 26 failed: undefined symbol shop_init\" >&2; exit 1" did not complete successfully: exit code: 1
+... 6 other steps (--all)

@@ -1,0 +1,14 @@
+pre-commit: 8 hooks, 4 failed, 1 passed, 3 skipped; 3 hooks modified files
+fail trailing-whitespace (trim trailing whitespace): exit code 1, files modified
+  Fixing pre_commit_hooks/util.py
+  Fixing pre_commit_hooks/removed.py
+fail end-of-file-fixer (fix end of files): exit code 1, files modified
+  Fixing pre_commit_hooks/util.py
+  Fixing CHANGELOG.md
+fail expand-tabs (expand tabs in markdown): files modified
+fail no-todo (forbid TODO markers): exit code 1
+  73:# TODO: sort keys
+  pre_commit_hooks/check_yaml.py: TODO markers are not allowed
+  39:# TODO drop python 3.9 support
+  pre_commit_hooks/check_json.py: TODO markers are not allowed
+... 4 passed or skipped hooks (--all)

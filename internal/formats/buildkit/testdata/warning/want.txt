@@ -1,0 +1,6 @@
+buildkit: 6 steps, 1 cached; 4 warnings
+warning: FromAsCasing: 'as' and 'FROM' keywords' casing do not match (line 1)
+warning: MaintainerDeprecated: Maintainer instruction is deprecated in favor of using label (line 3)
+warning: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "SHOP_SECRET") (line 2)
+warning: JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 5)
+... 6 other steps (--all)

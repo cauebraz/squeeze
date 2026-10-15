@@ -1,0 +1,14 @@
+tsc: 9 errors in 3 files
+error: Type 'string' is not assignable to type 'number'. (src/cart.ts:10:7, TS2322)
+error: Type 'string' is not assignable to type 'number'. (src/cart.ts:14:3, TS2322)
+error: Type 'string' is not assignable to type 'number'. (src/cart.ts:17:64, TS2322)
+error: Type 'string' is not assignable to type 'number'. (src/cart.ts:18:33, TS2322)
+error: Property 'missing' does not exist on type 'string'. (src/lib/format.ts:6:16, TS2339)
+error: Cannot find module './missing' or its corresponding type declarations. (src/order.ts:2:25, TS2307)
+error: Type '(event: { id: string; payload: { items: string[]; }; }) => void' is not assignable to type 'Handler'. (src/order.ts:6:7, TS2322)
+  Types of parameters 'event' and 'event' are incompatible. Type '{ id: number; payload: { items:
+  Item[]; }; }' is not assignable to type '{ id: string; payload: { items: string[]; }; }'. Types of
+  property 'id' are incompatible. Type 'number' is not assignable to type 'string'.
+error: Type 'number' is not assignable to type 'string'. (src/order.ts:11:9, TS2322)
+error: Parameter 'x' implicitly has an 'any' type. (src/order.ts:15:24, TS7006)
+... 4 other lines (--all)

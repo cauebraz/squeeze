@@ -58,6 +58,10 @@ func TestDetect(t *testing.T) {
 		"plan":            {`{"format_version":"1.2","planned_values":{},"output_changes":{}}`, false},
 		"validate":        {`{"format_version":"1.0","valid":true,"diagnostics":[]}`, false},
 		"array of object": {`[{"a":{"sensitive":false,"type":"string","value":"x"}}]`, false},
+		"state show":      {`{"format_version":"1.0","resource":{"address":"a.b","values":{},"sensitive_values":{}},"diagnostics":[]}`, true},
+		"show error":      {"{\n  \"format_version\": \"1.0\",\n  \"resource\": {\n    \"provider_name\": \"\"\n  },\n  \"diagnostics\": []\n}", true},
+		"show array":      {`{"format_version":"1.0","resource":[]}`, false},
+		"show second key": {`{"format_version":"1.0","valid":true,"resource":{}}`, false},
 	}
 	for name, tt := range tests {
 		if got := (Format{}).Detect([]byte(tt.input)); got != tt.want {
@@ -103,6 +107,10 @@ func TestParseErrors(t *testing.T) {
 		"state major 2":     {`{"format_version":"2.0","values":{"root_module":{}}}`, nil, "unsupported format_version"},
 		"state output":      {`{"format_version":"1.0","values":{"outputs":{"a":{"value":"x"}},"root_module":{}}}`, ErrMissingSensitive, `output "a"`},
 		"state values":      {`{"format_version":"1.0","values":[]}`, nil, "decode"},
+		"show major 2":      {`{"format_version":"2.0","resource":{}}`, nil, "unsupported format_version"},
+		"show no mask":      {`{"format_version":"1.0","resource":{"address":"a.b","values":{"x":"s"}}}`, ErrMissingSensitive, `resource "a.b"`},
+		"show values array": {`{"format_version":"1.0","resource":{"address":"a.b","values":[],"sensitive_values":{}}}`, nil, "decode values"},
+		"show not object":   {`{"format_version":"1.0","resource":[]}`, nil, "decode"},
 	}
 	for name, tt := range tests {
 		_, err := Parse([]byte(tt.input))
@@ -262,6 +270,165 @@ func TestStateValuesNeverPrinted(t *testing.T) {
 	}
 }
 
+func TestStateShowSensitiveNeverPrinted(t *testing.T) {
+	t.Parallel()
+	want := map[string][]string{
+		"state-show":        {"BCRYPT-SECRET-$2a$10$abcdef", "KEEPER-SECRET-77x", "RESULT-SECRET-k3j9"},
+		"state-show-nested": {"LIST-SECRET-9f2", "NESTED-SECRET-4kq"},
+	}
+	for name, known := range want {
+		input := fixture(t, name)
+		var doc struct {
+			Resource struct {
+				Values          json.RawMessage `json:"values"`
+				SensitiveValues json.RawMessage `json:"sensitive_values"`
+			} `json:"resource"`
+		}
+		if err := json.Unmarshal(input, &doc); err != nil {
+			t.Fatal(err)
+		}
+		var values, mask any
+		if err := json.Unmarshal(doc.Resource.Values, &values); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(doc.Resource.SensitiveValues, &mask); err != nil {
+			t.Fatal(err)
+		}
+		shown := map[string]bool{}
+		var hidden []string
+		var walk func(v, m any, sensitive bool)
+		walk = func(v, m any, sensitive bool) {
+			if m == true {
+				sensitive = true
+			}
+			switch v := v.(type) {
+			case map[string]any:
+				mm, _ := m.(map[string]any)
+				for k, e := range v {
+					walk(e, mm[k], sensitive)
+				}
+			case []any:
+				ma, _ := m.([]any)
+				for i, e := range v {
+					var em any
+					if i < len(ma) {
+						em = ma[i]
+					}
+					walk(e, em, sensitive)
+				}
+			case string:
+				if sensitive {
+					hidden = append(hidden, v)
+				} else {
+					shown[v] = true
+				}
+			}
+		}
+		walk(values, mask, false)
+		var secrets []string
+		for _, h := range hidden {
+			if !shown[h] {
+				secrets = append(secrets, h)
+			}
+		}
+		for _, k := range known {
+			if !slices.Contains(secrets, k) {
+				t.Fatalf("%s: sensitive values %q lack %q", name, secrets, k)
+			}
+		}
+		r, err := Squeeze(input, DefaultOptions())
+		if err != nil {
+			t.Fatal(err)
+		}
+		envelope, err := core.Envelope("tfstate", len(input), r, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, s := range secrets {
+			if strings.Contains(r.Text, s) || strings.Contains(string(envelope), s) {
+				t.Errorf("%s: sensitive value %q reached the output", name, s)
+			}
+		}
+	}
+}
+
+func TestStateShowRedact(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		values, mask string
+		want         []Attribute
+	}{
+		"whole resource": {`{"a":"x","b":1}`, `true`, []Attribute{
+			{Name: "a", Sensitive: true, Text: sensitiveText},
+			{Name: "b", Sensitive: true, Text: sensitiveText},
+		}},
+		"empty array mask":   {`{"a":"x"}`, `[]`, []Attribute{{Name: "a", Value: json.RawMessage(`"x"`), Text: `"x"`}}},
+		"mask type mismatch": {`{"a":["x"]}`, `{"a":{"0":true}}`, []Attribute{{Name: "a", Sensitive: true, Text: sensitiveText}}},
+		"length mismatch":    {`{"a":["x","y"]}`, `{"a":[true]}`, []Attribute{{Name: "a", Sensitive: true, Text: sensitiveText}}},
+		"unknown mask value": {`{"a":"x","b":"y"}`, `{"a":"yes","b":1}`, []Attribute{
+			{Name: "a", Sensitive: true, Text: sensitiveText},
+			{Name: "b", Sensitive: true, Text: sensitiveText},
+		}},
+		"false leaves": {`{"a":{"k":[1,2]}}`, `{"a":{"k":[false,false]}}`, []Attribute{{Name: "a", Value: json.RawMessage(`{"k":[1,2]}`), Text: `{"k":[1,2]}`}}},
+		"nested": {`{"a":{"k":"s","l":"v"}}`, `{"a":{"k":true}}`, []Attribute{
+			{Name: "a", Value: json.RawMessage(`{"k":null,"l":"v"}`), SensitiveValues: json.RawMessage(`{"k":true}`), Text: `{"k":(sensitive),"l":"v"}`},
+		}},
+	}
+	for name, tt := range tests {
+		got := attributes(json.RawMessage(tt.values), json.RawMessage(tt.mask))
+		if diff := cmp.Diff(tt.want, got); diff != "" {
+			t.Errorf("%s: attributes() (-want +got):\n%s", name, diff)
+		}
+	}
+}
+
+func TestStateShowBuild(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		header     string
+		conditions []string
+		nulls      int
+	}{
+		"state-show":         {"terraform state show random_password.db: 15 attributes, 3 sensitive", []string{}, 1},
+		"state-show-nested":  {"terraform state show terraform_data.app (tainted): 5 attributes, 2 sensitive", []string{}, 2},
+		"state-show-error":   {"terraform state show: 1 error", []string{"error", "fail"}, -1},
+		"state-show-warning": {"terraform state show random_pet.name[0]: 5 attributes, 1 warning", []string{"warning"}, 2},
+	}
+	for name, tt := range tests {
+		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		if err != nil {
+			t.Fatal(err)
+		}
+		header, _, _ := strings.Cut(r.Text, "\n")
+		if header != tt.header {
+			t.Errorf("%s: header = %q, want %q", name, header, tt.header)
+		}
+		if diff := cmp.Diff(tt.conditions, r.Conditions); diff != "" {
+			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
+		}
+		report := r.Data.(Report)
+		if report.Source != "resource" || report.State != nil || len(report.Outputs) != 0 {
+			t.Errorf("%s: report = %+v", name, report)
+		}
+		if got := -1; report.Resource != nil {
+			got = report.Resource.Null
+			if got != tt.nulls {
+				t.Errorf("%s: null = %d, want %d", name, got, tt.nulls)
+			}
+		} else if tt.nulls != -1 {
+			t.Errorf("%s: no resource", name)
+		}
+	}
+	empty, err := Squeeze([]byte(`{"format_version":"1.0","resource":{"address":"a.b"},"diagnostics":[]}`), DefaultOptions())
+	if err != nil || empty.Text != "terraform state show a.b: 0 attributes\n" {
+		t.Errorf("Squeeze(no values) = %q, %v", empty.Text, err)
+	}
+	none, err := Squeeze([]byte(`{"format_version":"1.0","resource":null}`), DefaultOptions())
+	if err != nil || none.Text != "terraform state show: no resource\n" {
+		t.Errorf("Squeeze(null resource) = %q, %v", none.Text, err)
+	}
+}
+
 func TestStateBuild(t *testing.T) {
 	t.Parallel()
 	in, err := Parse(fixture(t, "state"))
@@ -404,6 +571,7 @@ func FuzzSqueeze(f *testing.F) {
 		f.Add(data)
 	}
 	f.Add([]byte(`{"a\n":{"sensitive":true,"type":"string","value":"secret-value"},"b":{"sensitive":false,"type":"string","value":"\u001b[31m"}}`))
+	f.Add([]byte(`{"format_version":"1.0","resource":{"address":"a.b","values":{"p":"secret-value","l":["x","secret-value"]},"sensitive_values":{"p":true,"l":[false,true]}},"diagnostics":[{"severity":"warning","summary":"w"}]}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
 		for _, o := range []Options{DefaultOptions(), {MaxOutputs: 1, MaxResources: 1}} {
 			r, err := Squeeze(input, o)
@@ -418,6 +586,24 @@ func FuzzSqueeze(f *testing.F) {
 			report := r.Data.(Report)
 			if o.MaxOutputs > 0 && len(report.Outputs) > o.MaxOutputs {
 				t.Fatalf("%d outputs over the limit %d", len(report.Outputs), o.MaxOutputs)
+			}
+			if report.Source == "resource" {
+				attrs := []Attribute{}
+				if report.Resource != nil {
+					attrs = report.Resource.Attributes
+				}
+				for _, a := range attrs {
+					if a.Sensitive && a.Value != nil {
+						t.Fatalf("sensitive attribute %q keeps its value in data: %s", a.Name, envelope)
+					}
+					if a.Sensitive && strings.Contains(r.Text, a.Name+" = ") && !strings.Contains(r.Text, a.Name+" = "+sensitiveText+"\n") {
+						t.Fatalf("sensitive attribute %q prints a value:\n%s", a.Name, r.Text)
+					}
+				}
+				if got, max := strings.Count(r.Text, "\n"), 2+len(attrs)+12*len(report.Diagnostics); got > max {
+					t.Fatalf("text has %d lines, over %d", got, max)
+				}
+				continue
 			}
 			for _, out := range report.Outputs {
 				if out.Sensitive && out.Value != nil {

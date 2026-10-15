@@ -1,0 +1,3 @@
+buildkit: 10 steps, 4 cached; 1 warning
+warning: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "APP_TOKEN") (line 5)
+... 10 other steps (--all)

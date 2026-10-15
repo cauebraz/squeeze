@@ -1,0 +1,14 @@
+{
+  "format_version": "1.0",
+  "resource": {
+    "provider_name": "",
+    "schema_version": 0
+  },
+  "diagnostics": [
+    {
+      "severity": "error",
+      "summary": "No instance found for the given address!\n\nThis command requires that the address references one specific instance.\nTo view the available instances, use \"terraform state list\". Please modify\nthe address to reference a specific instance.",
+      "detail": ""
+    }
+  ]
+}

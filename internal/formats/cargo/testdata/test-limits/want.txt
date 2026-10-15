@@ -1,0 +1,16 @@
+cargo: fail; build ok; 0 errors, 1 warning; 11 tests: 5 passed, 5 failed, 1 ignored in 5 targets, 3 failed
+warning: unused variable: `unused` (shop/src/lib.rs:34:13, unused_variables)
+  help: if this is intentional, prefix it with an underscore: `_unused`
+  > let unused = 1;
+failed target unittests src/lib.rs (shop): 2 passed, 3 failed, 1 ignored; rerun: cargo test -p shop --lib
+  fail tests::discount_ten_percent (shop/src/lib.rs:40:9)
+    assertion `left == right` failed
+      left: 181
+    ... 1 more line (--max-output 0)
+  fail tests::labels_match (shop/src/lib.rs:51:9)
+    assertion `left == right` failed: labels differ for cart 7
+      left: ["pen", "ink"]
+    ... 1 more line (--max-output 0)
+failed target tests/checkout.rs: 1 passed, 1 failed, 0 ignored; rerun: cargo test -p shop --test checkout
+failed target doc-tests shop: 1 passed, 1 failed, 0 ignored; rerun: cargo test -p shop --doc
+... 3 more failed tests (--max-failures 0)

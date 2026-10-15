@@ -1,0 +1,13 @@
+id name region status cpu mem
+0 svc-0 us-east-1 ok 18 9425
+1 svc-1 us-east-2 degraded 98 1133
+2 svc-2 us-east-1 ok 33 2031
+3 svc-3 us-east-2 ok 64 7464
+4 svc-4 us-east-1 degraded 61 6319
+panic: assignment to entry in nil map
+
+goroutine 7 [running]:
+example.com/shop.TestPanic(0x14000102a80)
+ /home/dev/shop/cart_test.go:17 +0x30
+testing.tRunner(0x14000102a80, 0x1003a1d28)
+ /usr/local/go/src/testing/testing.go:2193 +0xc4

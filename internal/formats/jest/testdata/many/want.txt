@@ -1,0 +1,331 @@
+jest: fail; 57 tests: 0 passed, 57 failed; 3 files: 3 failed
+test/price1.test.js
+  fail prices batch 1 > discount 0
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 80
+    Received: 90
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 1
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 81
+    Received: 91
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 2
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 82
+    Received: 92
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 3
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 83
+    Received: 93
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 4
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 84
+    Received: 94
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 5
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 85
+    Received: 95
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 6
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 86
+    Received: 96
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 7
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 87
+    Received: 97
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 8
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 88
+    Received: 98
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 9
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 89
+    Received: 99
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 10
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 90
+    Received: 100
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 11
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 91
+    Received: 101
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 12
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 92
+    Received: 102
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 13
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 93
+    Received: 103
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 14
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 94
+    Received: 104
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 15
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 95
+    Received: 105
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 16
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 96
+    Received: 106
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 17
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 97
+    Received: 107
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > summary of a big cart
+    Error: expect(received).toEqual(expected) // deep equality
+    - Expected  - 1
+    + Received  + 1
+    @@ -7,11 +7,11 @@
+          "t2",
+          "t3",
+          "t4",
+          "t5",
+          "t6",
+    -     "x",
+    +     "t7",
+          "t8",
+          "t9",
+          "t10",
+          "t11",
+          "t12",
+        at Object.toEqual (test/price1.test.js:9:28)
+    ... 15 node_modules, node internal and code frame lines (--full)
+test/price2.test.js
+  fail prices batch 2 > discount 0
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 80
+    Received: 90
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 1
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 81
+    Received: 91
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 2
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 82
+    Received: 92
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 3
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 83
+    Received: 93
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 4
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 84
+    Received: 94
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 5
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 85
+    Received: 95
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 6
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 86
+    Received: 96
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 7
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 87
+    Received: 97
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 8
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 88
+    Received: 98
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 9
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 89
+    Received: 99
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 10
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 90
+    Received: 100
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 11
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 91
+    Received: 101
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 12
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 92
+    Received: 102
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 13
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 93
+    Received: 103
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 14
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 94
+    Received: 104
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 15
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 95
+    Received: 105
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 16
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 96
+    Received: 106
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > discount 17
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 97
+    Received: 107
+        at toBe (test/price2.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 2 > summary of a big cart
+    Error: expect(received).toEqual(expected) // deep equality
+    - Expected  - 1
+    + Received  + 1
+    @@ -7,11 +7,11 @@
+          "t2",
+          "t3",
+          "t4",
+          "t5",
+          "t6",
+    -     "x",
+    +     "t7",
+          "t8",
+          "t9",
+          "t10",
+          "t11",
+          "t12",
+        at Object.toEqual (test/price2.test.js:9:28)
+    ... 15 node_modules, node internal and code frame lines (--full)
+test/price3.test.js
+  fail prices batch 3 > discount 0
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 80
+    Received: 90
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 1
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 81
+    Received: 91
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 2
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 82
+    Received: 92
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 3
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 83
+    Received: 93
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 4
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 84
+    Received: 94
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 5
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 85
+    Received: 95
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 6
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 86
+    Received: 96
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 7
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 87
+    Received: 97
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 8
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 88
+    Received: 98
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 9
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 89
+    Received: 99
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 10
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 90
+    Received: 100
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+  fail prices batch 3 > discount 11
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 91
+    Received: 101
+        at toBe (test/price3.test.js:5:43)
+    ... 17 node_modules, node internal and code frame lines (--full)
+... 7 more failed tests (--max-tests 0)

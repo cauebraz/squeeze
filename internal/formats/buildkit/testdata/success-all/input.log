@@ -1,0 +1,49 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 188B done
+#1 WARN: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "APP_TOKEN") (line 5)
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/alpine:3.21
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/5] FROM docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507
+#4 resolve docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507 0.0s done
+#4 DONE 0.0s
+
+#5 [2/5] WORKDIR /app
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 30B done
+#6 DONE 0.0s
+
+#7 [3/5] COPY hello.txt .
+#7 DONE 0.0s
+
+#8 [4/5] RUN echo "building shop" && cat hello.txt
+#8 0.077 building shop
+#8 0.077 hello
+#8 DONE 0.1s
+
+#9 [5/5] RUN echo "token length ${#APP_TOKEN}"
+#9 0.092 token length 14
+#9 DONE 0.1s
+
+#10 exporting to image
+#10 exporting layers 0.0s done
+#10 exporting manifest sha256:61ce69fad159e491c0d936e98deb12ae8f84aeab6dd3c8df91327091e0921a5e done
+#10 exporting config sha256:03c98c08ef86b4552a515187f0f57f52842936add8db045fb207e4b0cfd561e9 done
+#10 exporting attestation manifest sha256:0c0578894a558c4aac89ab14121f75f2601a6633c5807c745293a3818526f50a done
+#10 exporting manifest list sha256:1bb180a429c96bfad77c81b1fd5e8d0143c358552db0170ebe46c3f062086c08 0.0s done
+#10 naming to docker.io/library/shop-ok:dev done
+#10 unpacking to docker.io/library/shop-ok:dev 0.0s done
+#10 DONE 0.1s
+
+ [33m1 warning found (use docker --debug to expand):
+[0m - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "APP_TOKEN") (line 5)

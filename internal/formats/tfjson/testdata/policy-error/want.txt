@@ -1,0 +1,6 @@
+terraform 1.17.0-rc2 plan: 1 to add, 0 to change, 0 to destroy; 1 error
++ aws_s3_bucket.logs
+policy: resource_policy.no_public_acl PolicyErrorResult for aws_s3_bucket.logs (mandatory)
+error: Unsupported attribute (main.tf:1:1, aws_s3_bucket.logs)
+  This object does not have an attribute named "acls".
+  > resource "aws_s3_bucket" "logs" {

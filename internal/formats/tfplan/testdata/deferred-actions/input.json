@@ -1,0 +1,170 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.17.0-rc2",
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.main",
+          "mode": "managed",
+          "type": "aws_vpc",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "cidr_block": "10.0.0.0/16"
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_vpc.main",
+      "mode": "managed",
+      "type": "aws_vpc",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "cidr_block": "10.0.0.0/16"
+        },
+        "after_unknown": {
+          "id": true,
+          "arn": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "deferred_changes": [
+    {
+      "reason": "provider_config_unknown",
+      "resource_change": {
+        "address": "kubernetes_namespace.app",
+        "mode": "managed",
+        "type": "kubernetes_namespace",
+        "name": "app",
+        "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+        "change": {
+          "actions": [
+            "create"
+          ],
+          "before": null,
+          "after": {
+            "metadata": [
+              {
+                "name": "app"
+              }
+            ]
+          },
+          "after_unknown": {
+            "id": true
+          },
+          "before_sensitive": false,
+          "after_sensitive": {}
+        }
+      }
+    }
+  ],
+  "deferred_action_invocations": [
+    {
+      "reason": "deferred_prereq",
+      "action_invocation": {
+        "address": "action.aws_lambda_invoke.notify",
+        "type": "aws_lambda_invoke",
+        "name": "notify",
+        "config_values": {
+          "function_name": "notify"
+        },
+        "config_sensitive": {},
+        "config_unknown": {},
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "lifecycle_action_trigger": {
+          "triggering_resource_address": "kubernetes_namespace.app",
+          "action_trigger_event": "AfterCreate",
+          "action_trigger_block_index": 0,
+          "actions_list_index": 0,
+          "on_failure": "fail"
+        }
+      }
+    },
+    {
+      "reason": "provider_config_unknown",
+      "action_invocation": {
+        "address": "action.aws_lambda_invoke.audit",
+        "type": "aws_lambda_invoke",
+        "name": "audit",
+        "config_values": {
+          "function_name": "audit"
+        },
+        "config_sensitive": {},
+        "config_unknown": {},
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "invoke_action_trigger": {}
+      }
+    }
+  ],
+  "action_invocations": [
+    {
+      "address": "action.aws_lambda_invoke.tag",
+      "type": "aws_lambda_invoke",
+      "name": "tag",
+      "config_values": {
+        "function_name": "tag"
+      },
+      "config_sensitive": {},
+      "config_unknown": {},
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "lifecycle_action_trigger": {
+        "triggering_resource_address": "aws_vpc.main",
+        "action_trigger_event": "AfterCreate",
+        "action_trigger_block_index": 0,
+        "actions_list_index": 0,
+        "on_failure": "fail"
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.17.0-rc2",
+    "values": {
+      "root_module": {
+        "resources": []
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 6.0"
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.main",
+          "mode": "managed",
+          "type": "aws_vpc",
+          "name": "main",
+          "provider_config_key": "aws",
+          "expressions": {},
+          "schema_version": 0
+        }
+      ]
+    }
+  },
+  "timestamp": "2026-10-14T12:00:00Z",
+  "applyable": true,
+  "complete": false,
+  "errored": false
+}

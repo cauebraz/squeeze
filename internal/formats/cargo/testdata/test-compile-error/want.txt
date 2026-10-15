@@ -1,0 +1,7 @@
+cargo: fail; build failed: shop (test "checkout"); 1 error, 1 warning
+error: mismatched types (shop/tests/checkout.rs:15:18, E0308)
+  expected `u32`, found `&str`
+  > let n: u32 = "7";
+warning: unused variable: `unused` (shop/src/lib.rs:34:13, unused_variables)
+  help: if this is intentional, prefix it with an underscore: `_unused`
+  > let unused = 1;

@@ -1,0 +1,1 @@
+{"schema_version":1,"format":"generic","input_bytes":422,"text_bytes":422,"ratio":1,"conditions":["error"],"failed_on":[],"data":{"tool":"text","lines":13,"printed":13,"blank_dropped":0,"folded":0,"lines_omitted":0,"flagged_lines_omitted":0,"long_lines":0,"error_lines":1,"warning_lines":0,"json_indented":false}}

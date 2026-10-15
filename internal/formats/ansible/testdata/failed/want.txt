@@ -1,0 +1,8 @@
+ansible-playbook: 2 plays, 2 hosts, 1 failed, 1 unreachable
+  localhost: ok=10 changed=7 unreachable=0 failed=1 skipped=1 rescued=1 ignored=3
+  web1: ok=0 changed=0 unreachable=1 failed=0 skipped=0 rescued=0 ignored=0
+unreachable web1: Check the app directory /home/dev/shop/site.yml:31:7
+  msg: Task failed: Failed to connect to the host via ssh: ssh: connect to host 10.255.255.1 port 22: Connection refused
+failed localhost: Assert the release is current /home/dev/shop/site.yml:74:7
+  msg: release 43 is not deployed
+... 5 changed tasks, 3 ignored failures, 1 rescued failure (--all)

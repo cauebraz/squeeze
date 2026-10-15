@@ -1,0 +1,33 @@
+kubectl: 32 objects (Pod 17, Deployment 4, ReplicaSet 4, Service 3, DaemonSet 2, 1 other kind), 8 unhealthy
+unhealthy Pod shop/api-badimage: ImagePullBackOff, 0/1 ready; api waiting ImagePullBackOff
+unhealthy Pod shop/batch-pending: Pending, 0/1 ready, Unschedulable; 0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+unhealthy Pod shop/migrate-dvl69: Error, 0/1 ready; migrate terminated Error exit 3
+unhealthy Pod shop/migrate-gtc4v: Error, 0/1 ready; migrate terminated Error exit 3
+unhealthy Pod shop/worker-56bff96fc9-c8xj6: CrashLoopBackOff, 0/1 ready, 3 restarts; worker waiting CrashLoopBackOff, last Error exit 1
+unhealthy Deployment shop/worker: 0/1 ready, 1 updated, 0 available
+unhealthy ReplicaSet shop/worker-56bff96fc9: 0/1 ready, 1 current
+unhealthy Job shop/migrate: Failed, 0/1 succeeded, 2 failed, BackoffLimitExceeded; Job has reached the specified backoff limit
+Pod kube-system/coredns-674b8bbfcf-75g95: Running, 1/1 ready
+Pod kube-system/coredns-674b8bbfcf-kv8v9: Running, 1/1 ready
+Pod kube-system/etcd-squeeze-kubectl-control-plane: Running, 1/1 ready
+Pod kube-system/kindnet-qbn4p: Running, 1/1 ready
+Pod kube-system/kube-apiserver-squeeze-kubectl-control-plane: Running, 1/1 ready
+Pod kube-system/kube-controller-manager-squeeze-kubectl-control-plane: Running, 1/1 ready
+Pod kube-system/kube-proxy-5xgc7: Running, 1/1 ready
+Pod kube-system/kube-scheduler-squeeze-kubectl-control-plane: Running, 1/1 ready
+Pod local-path-storage/local-path-provisioner-7dc846544d-z4dln: Running, 1/1 ready
+Pod shop/seed-lxmkd: Completed, 0/1 ready
+Pod shop/web-779764b4b6-8xzkd: Running, 1/1 ready
+Pod shop/web-779764b4b6-slwnx: Running, 1/1 ready
+Service default/kubernetes: ClusterIP, 10.96.0.1, 443->6443/TCP
+Service kube-system/kube-dns: ClusterIP, 10.96.0.10, 53/UDP 53/TCP 9153/TCP
+Service shop/web: ClusterIP, 10.96.114.207, 80->8080/TCP
+DaemonSet kube-system/kindnet: 1/1 ready, 1 updated, 1 available
+DaemonSet kube-system/kube-proxy: 1/1 ready, 1 updated, 1 available
+Deployment kube-system/coredns: 2/2 ready, 2 updated, 2 available
+Deployment local-path-storage/local-path-provisioner: 1/1 ready, 1 updated, 1 available
+Deployment shop/web: 2/2 ready, 2 updated, 2 available
+ReplicaSet kube-system/coredns-674b8bbfcf: 2/2 ready, 2 current
+ReplicaSet local-path-storage/local-path-provisioner-7dc846544d: 1/1 ready, 1 current
+ReplicaSet shop/web-779764b4b6: 2/2 ready, 2 current
+Job shop/seed: Complete, 1/1 succeeded

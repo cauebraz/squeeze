@@ -1,0 +1,24 @@
+ansible-playbook: 2 plays, 2 hosts, 1 failed, 1 unreachable
+  localhost: ok=10 changed=7 unreachable=0 failed=1 skipped=1 rescued=1 ignored=3
+  web1: ok=0 changed=0 unreachable=1 failed=0 skipped=0 rescued=0 ignored=0
+unreachable web1: Check the app directory /home/dev/shop/site.yml:31
+  msg: Task failed: Failed to connect to the host via ssh: ssh: connect to host 10.255.255.1 port 22: Operation timed out
+failed localhost: Assert the release is current /home/dev/shop/site.yml:74
+  msg: release 43 is not deployed
+changed localhost: Install the config /home/dev/shop/site.yml:5
+recovered localhost: Fetch the cached build /home/dev/shop/site.yml:14
+  msg: The command exited with a non-zero return code.
+  rc: 1
+  stderr: ls: /nonexistent/shop-cache: No such file or directory
+changed localhost: Reload shop /home/dev/shop/site.yml:22
+changed localhost: Write the release file /home/dev/shop/site.yml:36
+changed localhost: Run migrations /home/dev/shop/site.yml:43
+changed localhost: Set the database password /home/dev/shop/site.yml:47
+recovered localhost: Rotate the API token /home/dev/shop/site.yml:51
+  censored: the output has been hidden due to the fact that 'no_log: true' was specified for this result
+recovered localhost: Optional cleanup /home/dev/shop/site.yml:56
+  msg: The command exited with a non-zero return code.
+  rc: 1
+recovered localhost: Check each service port (item=9090) /home/dev/shop/site.yml:65
+  msg: The command exited with a non-zero return code.
+  rc: 1

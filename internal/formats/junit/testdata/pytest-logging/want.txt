@@ -1,0 +1,42 @@
+junit: 9 tests in 1 suite: 2 passed, 4 failures, 2 errors, 2 skipped
+fail test_cart test_total_two_items: assert 10 == 11  +  where 10 = total([(3, 2), (4, 1)])
+  def test_total_two_items():
+          print("computing total for 2 items")
+          sys.stderr.write("warning: price list is stale\n")
+  >       assert total([(3, 2), (4, 1)]) == 11
+  E       assert 10 == 11
+  E        +  where 10 = total([(3, 2), (4, 1)])
+  test_cart.py:21: AssertionError
+  stdout:
+    computing total for 2 items
+  stderr:
+    warning: price list is stale
+fail test_cart test_strict_xpass: [XPASS(strict)] should fail
+fail test_cart.TestDiscount test_negative: Failed: DID NOT RAISE <class 'ValueError'>
+  self = <test_cart.TestDiscount object at 0x107a0e350>
+      def test_negative(self):
+  >       with pytest.raises(ValueError):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  E       Failed: DID NOT RAISE <class 'ValueError'>
+  test_cart.py:48: Failed
+fail test_cart test_order_export: AssertionError: assert False  +  where False = <built-in method endswith of str object at 0x107a5fef0>('.json')  +    where <built-in method endswith of str object at 0x107a5fef0> = 'orders.csv'.endswith
+  order_file = 'orders.csv'
+      def test_order_export(order_file):
+  >       assert order_file.endswith(".json")
+  E       AssertionError: assert False
+  E        +  where False = <built-in method endswith of str object at 0x107a5fef0>('.json')
+  E        +    where <built-in method endswith of str object at 0x107a5fef0> = 'orders.csv'.endswith
+  test_cart.py:59: AssertionError
+error test_cart test_checkout_uses_db: failed on setup with "ConnectionError: database at localhost:5432 refused the connection"
+  @pytest.fixture
+      def db():
+  >       raise ConnectionError("database at localhost:5432 refused the connection")
+  E       ConnectionError: database at localhost:5432 refused the connection
+  test_cart.py:11: ConnectionError
+error test_cart test_order_export: failed on teardown with "RuntimeError: could not remove orders.csv"
+  @pytest.fixture
+      def order_file():
+          yield "orders.csv"
+  >       raise RuntimeError("could not remove orders.csv")
+  E       RuntimeError: could not remove orders.csv
+  test_cart.py:55: RuntimeError

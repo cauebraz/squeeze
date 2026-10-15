@@ -1,0 +1,1 @@
+{"schema_version":1,"format":"precommit","input_bytes":640,"text_bytes":79,"ratio":0.1234,"conditions":[],"failed_on":[],"data":{"tool":"pre-commit","tool_version":"","hooks_total":8,"passed":6,"failed":0,"skipped":2,"unfinished":0,"modified":0,"errors":[],"warnings":[],"hooks":[],"hooks_omitted":8,"other":[],"other_omitted":0,"changed_files":[],"diff":[],"diff_omitted":0}}

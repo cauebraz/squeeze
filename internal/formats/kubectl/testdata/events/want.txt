@@ -1,0 +1,7 @@
+kubectl: 48 events, 6 warnings
+warning Pod shop/worker-56bff96fc9-c8xj6 BackOff: Back-off restarting failed container worker in pod worker-56bff96fc9-c8xj6_shop(d39d6608-c90e-4a54-9e04-1b09136cbb47) (x7)
+warning Pod shop/api-badimage Failed: Error: ImagePullBackOff (x4)
+warning Pod shop/api-badimage Failed: Failed to pull image "registry.example.invalid/shop/api:9.9.9": failed to pull and unpack image "registry.example.invalid/shop/api:9.9.9": failed to resolve reference "registry.example.invalid/shop... (x3)
+warning Pod shop/api-badimage Failed: Error: ErrImagePull (x3)
+warning Job shop/migrate BackoffLimitExceeded: Job has reached the specified backoff limit
+warning Pod shop/batch-pending FailedScheduling: 0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.

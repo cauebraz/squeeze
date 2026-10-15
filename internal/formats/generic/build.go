@@ -87,7 +87,7 @@ func splitLines(s string) []string {
 	for i, l := range raw {
 		frames := strings.Split(strings.TrimSuffix(l, "\r"), "\r")
 		for j := len(frames) - 1; j >= 0; j-- {
-			if out[i] = core.Line(frames[j]); strings.TrimSpace(out[i]) != "" {
+			if out[i] = core.NarrowLine(frames[j]); strings.TrimSpace(out[i]) != "" {
 				break
 			}
 		}

@@ -1,0 +1,1557 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "api-badimage",
+                "namespace": "shop",
+                "resourceVersion": "506",
+                "uid": "cfa1df9e-4efa-4a5a-9de6-f1c08d082cf3"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Successfully assigned shop/api-badimage to squeeze-kubectl-control-plane",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "api-badimage.18de8e3a568bb826",
+                "namespace": "shop",
+                "resourceVersion": "518",
+                "uid": "991990d9-c7d9-491e-af6b-a12169ed4788"
+            },
+            "reason": "Scheduled",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 3,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:23Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{api}",
+                "kind": "Pod",
+                "name": "api-badimage",
+                "namespace": "shop",
+                "resourceVersion": "512",
+                "uid": "cfa1df9e-4efa-4a5a-9de6-f1c08d082cf3"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:05Z",
+            "message": "Pulling image \"registry.example.invalid/shop/api:9.9.9\"",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:23Z",
+                "name": "api-badimage.18de8e3a6cfe73b9",
+                "namespace": "shop",
+                "resourceVersion": "693",
+                "uid": "9ed8d0a5-5928-4d42-b00f-5afdd258d783"
+            },
+            "reason": "Pulling",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 3,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:28Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{api}",
+                "kind": "Pod",
+                "name": "api-badimage",
+                "namespace": "shop",
+                "resourceVersion": "512",
+                "uid": "cfa1df9e-4efa-4a5a-9de6-f1c08d082cf3"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:05Z",
+            "message": "Failed to pull image \"registry.example.invalid/shop/api:9.9.9\": failed to pull and unpack image \"registry.example.invalid/shop/api:9.9.9\": failed to resolve reference \"registry.example.invalid/shop/api:9.9.9\": failed to do request: Head \"https://registry.example.invalid/v2/shop/api/manifests/9.9.9\": dial tcp: lookup registry.example.invalid on 192.168.65.254:53: no such host",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:28Z",
+                "name": "api-badimage.18de8e3b9c43d01f",
+                "namespace": "shop",
+                "resourceVersion": "695",
+                "uid": "7722d646-4850-4099-b113-606b1e778181"
+            },
+            "reason": "Failed",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 3,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:28Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{api}",
+                "kind": "Pod",
+                "name": "api-badimage",
+                "namespace": "shop",
+                "resourceVersion": "512",
+                "uid": "cfa1df9e-4efa-4a5a-9de6-f1c08d082cf3"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:05Z",
+            "message": "Error: ErrImagePull",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:28Z",
+                "name": "api-badimage.18de8e3b9c440fc2",
+                "namespace": "shop",
+                "resourceVersion": "696",
+                "uid": "98f03787-933e-4629-8b1d-17855a67751f"
+            },
+            "reason": "Failed",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 4,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:29Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{api}",
+                "kind": "Pod",
+                "name": "api-badimage",
+                "namespace": "shop",
+                "resourceVersion": "512",
+                "uid": "cfa1df9e-4efa-4a5a-9de6-f1c08d082cf3"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:30Z",
+            "message": "Back-off pulling image \"registry.example.invalid/shop/api:9.9.9\"",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:29Z",
+                "name": "api-badimage.18de8e3bd47d503b",
+                "namespace": "shop",
+                "resourceVersion": "744",
+                "uid": "516d26b0-2d62-4ca1-8f7e-a2fe1ce56b68"
+            },
+            "reason": "BackOff",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 4,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:29Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{api}",
+                "kind": "Pod",
+                "name": "api-badimage",
+                "namespace": "shop",
+                "resourceVersion": "512",
+                "uid": "cfa1df9e-4efa-4a5a-9de6-f1c08d082cf3"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:30Z",
+            "message": "Error: ImagePullBackOff",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:29Z",
+                "name": "api-badimage.18de8e3bd47d6688",
+                "namespace": "shop",
+                "resourceVersion": "746",
+                "uid": "f5955469-46a4-4653-92ea-f369a49e5aa1"
+            },
+            "reason": "Failed",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "batch-pending",
+                "namespace": "shop",
+                "resourceVersion": "519",
+                "uid": "2452aeb8-adc4-4a0a-b2cc-5d5b2145f0b9"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "batch-pending.18de8e3a56cfe187",
+                "namespace": "shop",
+                "resourceVersion": "521",
+                "uid": "9c18731a-a020-4f5f-b24e-c8a208820128"
+            },
+            "reason": "FailedScheduling",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "migrate-dvl69",
+                "namespace": "shop",
+                "resourceVersion": "528",
+                "uid": "4aafa2f0-a5fd-4a84-b373-fb046443a39b"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Successfully assigned shop/migrate-dvl69 to squeeze-kubectl-control-plane",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "migrate-dvl69.18de8e3a577f5ea9",
+                "namespace": "shop",
+                "resourceVersion": "536",
+                "uid": "fb9dbc61-8d4f-4aa1-ac3b-39423ee13605"
+            },
+            "reason": "Scheduled",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:23Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{migrate}",
+                "kind": "Pod",
+                "name": "migrate-dvl69",
+                "namespace": "shop",
+                "resourceVersion": "532",
+                "uid": "4aafa2f0-a5fd-4a84-b373-fb046443a39b"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:23Z",
+            "message": "Pulling image \"alpine:3.21\"",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:23Z",
+                "name": "migrate-dvl69.18de8e3a6d58c5f5",
+                "namespace": "shop",
+                "resourceVersion": "550",
+                "uid": "5015e2d5-e120-4966-a69e-40dacc03104d"
+            },
+            "reason": "Pulling",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:29Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{migrate}",
+                "kind": "Pod",
+                "name": "migrate-dvl69",
+                "namespace": "shop",
+                "resourceVersion": "532",
+                "uid": "4aafa2f0-a5fd-4a84-b373-fb046443a39b"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:29Z",
+            "message": "Successfully pulled image \"alpine:3.21\" in 928ms (6.01s including waiting). Image size: 3985371 bytes.",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:29Z",
+                "name": "migrate-dvl69.18de8e3bd39a3418",
+                "namespace": "shop",
+                "resourceVersion": "586",
+                "uid": "55ed7f54-797d-4e7f-98c8-925a0a2648a3"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:29Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{migrate}",
+                "kind": "Pod",
+                "name": "migrate-dvl69",
+                "namespace": "shop",
+                "resourceVersion": "532",
+                "uid": "4aafa2f0-a5fd-4a84-b373-fb046443a39b"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:29Z",
+            "message": "Created container: migrate",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:29Z",
+                "name": "migrate-dvl69.18de8e3bd40f17ec",
+                "namespace": "shop",
+                "resourceVersion": "587",
+                "uid": "f102a44e-d2a3-468e-9ac2-8805eedb1099"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:29Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{migrate}",
+                "kind": "Pod",
+                "name": "migrate-dvl69",
+                "namespace": "shop",
+                "resourceVersion": "532",
+                "uid": "4aafa2f0-a5fd-4a84-b373-fb046443a39b"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:29Z",
+            "message": "Started container migrate",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:29Z",
+                "name": "migrate-dvl69.18de8e3bd6bbf37e",
+                "namespace": "shop",
+                "resourceVersion": "596",
+                "uid": "ae6630a4-8c76-44ad-85ed-b763add4d21e"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:39Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "migrate-gtc4v",
+                "namespace": "shop",
+                "resourceVersion": "630",
+                "uid": "bbd24d63-6601-4199-8732-a0280d2ca909"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:39Z",
+            "message": "Successfully assigned shop/migrate-gtc4v to squeeze-kubectl-control-plane",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:39Z",
+                "name": "migrate-gtc4v.18de8e3e1372f8a9",
+                "namespace": "shop",
+                "resourceVersion": "634",
+                "uid": "82f14507-01ae-4873-afb7-a090a187ba3c"
+            },
+            "reason": "Scheduled",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:39Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{migrate}",
+                "kind": "Pod",
+                "name": "migrate-gtc4v",
+                "namespace": "shop",
+                "resourceVersion": "632",
+                "uid": "bbd24d63-6601-4199-8732-a0280d2ca909"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:39Z",
+            "message": "Container image \"alpine:3.21\" already present on machine",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:39Z",
+                "name": "migrate-gtc4v.18de8e3e2853d01e",
+                "namespace": "shop",
+                "resourceVersion": "636",
+                "uid": "54a2096c-52fd-4d6f-bd09-1d1913a00ed7"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:39Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{migrate}",
+                "kind": "Pod",
+                "name": "migrate-gtc4v",
+                "namespace": "shop",
+                "resourceVersion": "632",
+                "uid": "bbd24d63-6601-4199-8732-a0280d2ca909"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:39Z",
+            "message": "Created container: migrate",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:39Z",
+                "name": "migrate-gtc4v.18de8e3e28c68b8a",
+                "namespace": "shop",
+                "resourceVersion": "637",
+                "uid": "4d0ff66e-5a52-413c-b092-2479b52b331d"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:39Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{migrate}",
+                "kind": "Pod",
+                "name": "migrate-gtc4v",
+                "namespace": "shop",
+                "resourceVersion": "632",
+                "uid": "bbd24d63-6601-4199-8732-a0280d2ca909"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:39Z",
+            "message": "Started container migrate",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:39Z",
+                "name": "migrate-gtc4v.18de8e3e2b4746e2",
+                "namespace": "shop",
+                "resourceVersion": "638",
+                "uid": "30f1517a-5001-4677-b536-9af6a99aefd1"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "batch/v1",
+                "kind": "Job",
+                "name": "migrate",
+                "namespace": "shop",
+                "resourceVersion": "526",
+                "uid": "32a5e26a-4fa2-4fd3-9131-efbbb30a1f5e"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Created pod: migrate-dvl69",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "migrate.18de8e3a575f71f9",
+                "namespace": "shop",
+                "resourceVersion": "530",
+                "uid": "287f9150-5aca-45a5-8beb-70f6070a48af"
+            },
+            "reason": "SuccessfulCreate",
+            "reportingComponent": "job-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "job-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:39Z",
+            "involvedObject": {
+                "apiVersion": "batch/v1",
+                "kind": "Job",
+                "name": "migrate",
+                "namespace": "shop",
+                "resourceVersion": "619",
+                "uid": "32a5e26a-4fa2-4fd3-9131-efbbb30a1f5e"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:39Z",
+            "message": "Created pod: migrate-gtc4v",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:39Z",
+                "name": "migrate.18de8e3e134d7e42",
+                "namespace": "shop",
+                "resourceVersion": "633",
+                "uid": "82310e78-a7a8-4e29-91c3-aa5304128e3a"
+            },
+            "reason": "SuccessfulCreate",
+            "reportingComponent": "job-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "job-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:42Z",
+            "involvedObject": {
+                "apiVersion": "batch/v1",
+                "kind": "Job",
+                "name": "migrate",
+                "namespace": "shop",
+                "resourceVersion": "649",
+                "uid": "32a5e26a-4fa2-4fd3-9131-efbbb30a1f5e"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:42Z",
+            "message": "Job has reached the specified backoff limit",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:42Z",
+                "name": "migrate.18de8e3ee0182cbb",
+                "namespace": "shop",
+                "resourceVersion": "652",
+                "uid": "63c0f1dd-67d3-4eb1-8a98-385e6ebe69e2"
+            },
+            "reason": "BackoffLimitExceeded",
+            "reportingComponent": "job-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "job-controller"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "seed-lxmkd",
+                "namespace": "shop",
+                "resourceVersion": "529",
+                "uid": "f7ac4c2b-c500-4aad-82f1-316f4367c7c8"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Successfully assigned shop/seed-lxmkd to squeeze-kubectl-control-plane",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "seed-lxmkd.18de8e3a57951323",
+                "namespace": "shop",
+                "resourceVersion": "537",
+                "uid": "6ca082ca-544c-43ec-9b84-445b4d7cef48"
+            },
+            "reason": "Scheduled",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:23Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{seed}",
+                "kind": "Pod",
+                "name": "seed-lxmkd",
+                "namespace": "shop",
+                "resourceVersion": "534",
+                "uid": "f7ac4c2b-c500-4aad-82f1-316f4367c7c8"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:23Z",
+            "message": "Pulling image \"alpine:3.21\"",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:23Z",
+                "name": "seed-lxmkd.18de8e3a6d5ae1d5",
+                "namespace": "shop",
+                "resourceVersion": "551",
+                "uid": "21ee88e8-c4d0-4154-8cce-2c8189765fe9"
+            },
+            "reason": "Pulling",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:30Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{seed}",
+                "kind": "Pod",
+                "name": "seed-lxmkd",
+                "namespace": "shop",
+                "resourceVersion": "534",
+                "uid": "f7ac4c2b-c500-4aad-82f1-316f4367c7c8"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:30Z",
+            "message": "Successfully pulled image \"alpine:3.21\" in 877ms (6.887s including waiting). Image size: 3985371 bytes.",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:30Z",
+                "name": "seed-lxmkd.18de8e3c07e35cd8",
+                "namespace": "shop",
+                "resourceVersion": "600",
+                "uid": "75b92b98-0f56-46fc-924a-4b9bf606c54b"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:30Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{seed}",
+                "kind": "Pod",
+                "name": "seed-lxmkd",
+                "namespace": "shop",
+                "resourceVersion": "534",
+                "uid": "f7ac4c2b-c500-4aad-82f1-316f4367c7c8"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:30Z",
+            "message": "Created container: seed",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:30Z",
+                "name": "seed-lxmkd.18de8e3c08735b7a",
+                "namespace": "shop",
+                "resourceVersion": "601",
+                "uid": "8c992578-db94-4806-b4eb-4c076dae3271"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:30Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{seed}",
+                "kind": "Pod",
+                "name": "seed-lxmkd",
+                "namespace": "shop",
+                "resourceVersion": "534",
+                "uid": "f7ac4c2b-c500-4aad-82f1-316f4367c7c8"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:30Z",
+            "message": "Started container seed",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:30Z",
+                "name": "seed-lxmkd.18de8e3c0b259a9a",
+                "namespace": "shop",
+                "resourceVersion": "602",
+                "uid": "db7b6cce-6767-40e9-9f5c-20cab8e64a6f"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "batch/v1",
+                "kind": "Job",
+                "name": "seed",
+                "namespace": "shop",
+                "resourceVersion": "527",
+                "uid": "80d4bf72-098d-46da-a973-3ed8b505e6e6"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Created pod: seed-lxmkd",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "seed.18de8e3a57765f46",
+                "namespace": "shop",
+                "resourceVersion": "535",
+                "uid": "0d0db6d2-1d76-4565-88b8-a0f79705917c"
+            },
+            "reason": "SuccessfulCreate",
+            "reportingComponent": "job-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "job-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:32Z",
+            "involvedObject": {
+                "apiVersion": "batch/v1",
+                "kind": "Job",
+                "name": "seed",
+                "namespace": "shop",
+                "resourceVersion": "613",
+                "uid": "80d4bf72-098d-46da-a973-3ed8b505e6e6"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:32Z",
+            "message": "Job completed",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:32Z",
+                "name": "seed.18de8e3c8aae576d",
+                "namespace": "shop",
+                "resourceVersion": "616",
+                "uid": "e367db37-6038-4853-bc54-dd3d1194a3bc"
+            },
+            "reason": "Completed",
+            "reportingComponent": "job-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "job-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "web-779764b4b6-8xzkd",
+                "namespace": "shop",
+                "resourceVersion": "496",
+                "uid": "39116c22-578e-4d11-8501-e20ca30963ad"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Successfully assigned shop/web-779764b4b6-8xzkd to squeeze-kubectl-control-plane",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "web-779764b4b6-8xzkd.18de8e3a56406f86",
+                "namespace": "shop",
+                "resourceVersion": "508",
+                "uid": "b0a029cc-b55b-4875-90b2-191c4806ac3e"
+            },
+            "reason": "Scheduled",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:23Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-8xzkd",
+                "namespace": "shop",
+                "resourceVersion": "502",
+                "uid": "39116c22-578e-4d11-8501-e20ca30963ad"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:23Z",
+            "message": "Pulling image \"alpine:3.21\"",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:23Z",
+                "name": "web-779764b4b6-8xzkd.18de8e3a6c954068",
+                "namespace": "shop",
+                "resourceVersion": "547",
+                "uid": "73fb3178-0273-4d5a-b0cd-a71435bc2a94"
+            },
+            "reason": "Pulling",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:27Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-8xzkd",
+                "namespace": "shop",
+                "resourceVersion": "502",
+                "uid": "39116c22-578e-4d11-8501-e20ca30963ad"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:27Z",
+            "message": "Successfully pulled image \"alpine:3.21\" in 872ms (4.072s including waiting). Image size: 3985371 bytes.",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:27Z",
+                "name": "web-779764b4b6-8xzkd.18de8e3b5f534ea0",
+                "namespace": "shop",
+                "resourceVersion": "568",
+                "uid": "19ff4154-3f5e-4307-bc4c-fc98bbc39354"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:27Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-8xzkd",
+                "namespace": "shop",
+                "resourceVersion": "502",
+                "uid": "39116c22-578e-4d11-8501-e20ca30963ad"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:27Z",
+            "message": "Created container: web",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:27Z",
+                "name": "web-779764b4b6-8xzkd.18de8e3b5fe208b6",
+                "namespace": "shop",
+                "resourceVersion": "569",
+                "uid": "83acda2b-493a-401a-ba78-8dad1bffcb47"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:27Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-8xzkd",
+                "namespace": "shop",
+                "resourceVersion": "502",
+                "uid": "39116c22-578e-4d11-8501-e20ca30963ad"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:27Z",
+            "message": "Started container web",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:27Z",
+                "name": "web-779764b4b6-8xzkd.18de8e3b6311746f",
+                "namespace": "shop",
+                "resourceVersion": "570",
+                "uid": "88106d53-c3f7-4b59-8d77-abc3f3f9520d"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "web-779764b4b6-slwnx",
+                "namespace": "shop",
+                "resourceVersion": "493",
+                "uid": "e8802821-8164-48ec-9df3-db8e91d8076f"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Successfully assigned shop/web-779764b4b6-slwnx to squeeze-kubectl-control-plane",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "web-779764b4b6-slwnx.18de8e3a5619a04d",
+                "namespace": "shop",
+                "resourceVersion": "503",
+                "uid": "1d7dd95b-737a-4175-9c6d-edb7995f130a"
+            },
+            "reason": "Scheduled",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:23Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-slwnx",
+                "namespace": "shop",
+                "resourceVersion": "497",
+                "uid": "e8802821-8164-48ec-9df3-db8e91d8076f"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:23Z",
+            "message": "Pulling image \"alpine:3.21\"",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:23Z",
+                "name": "web-779764b4b6-slwnx.18de8e3a6c4f0c14",
+                "namespace": "shop",
+                "resourceVersion": "546",
+                "uid": "04dcd838-e1ca-467a-bbb2-47af594deae7"
+            },
+            "reason": "Pulling",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:26Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-slwnx",
+                "namespace": "shop",
+                "resourceVersion": "497",
+                "uid": "e8802821-8164-48ec-9df3-db8e91d8076f"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:26Z",
+            "message": "Successfully pulled image \"alpine:3.21\" in 3.204s (3.204s including waiting). Image size: 3985371 bytes.",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:26Z",
+                "name": "web-779764b4b6-slwnx.18de8e3b2b56de80",
+                "namespace": "shop",
+                "resourceVersion": "558",
+                "uid": "a78495b3-5132-4ccb-a86b-a7ccda6763f3"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:26Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-slwnx",
+                "namespace": "shop",
+                "resourceVersion": "497",
+                "uid": "e8802821-8164-48ec-9df3-db8e91d8076f"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:26Z",
+            "message": "Created container: web",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:26Z",
+                "name": "web-779764b4b6-slwnx.18de8e3b2c0d6c10",
+                "namespace": "shop",
+                "resourceVersion": "559",
+                "uid": "9f99aeee-cd8c-4326-a49d-e5313f39ae37"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:26Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{web}",
+                "kind": "Pod",
+                "name": "web-779764b4b6-slwnx",
+                "namespace": "shop",
+                "resourceVersion": "497",
+                "uid": "e8802821-8164-48ec-9df3-db8e91d8076f"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:26Z",
+            "message": "Started container web",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:26Z",
+                "name": "web-779764b4b6-slwnx.18de8e3b2f24415a",
+                "namespace": "shop",
+                "resourceVersion": "560",
+                "uid": "62c90b65-daaf-47c5-ba43-a51c8e03018d"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "apps/v1",
+                "kind": "ReplicaSet",
+                "name": "web-779764b4b6",
+                "namespace": "shop",
+                "resourceVersion": "489",
+                "uid": "af33538a-4341-43fc-94aa-acc86c981901"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Created pod: web-779764b4b6-slwnx",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "web-779764b4b6.18de8e3a55fe55a6",
+                "namespace": "shop",
+                "resourceVersion": "495",
+                "uid": "fbb71769-8c22-4a78-bdb6-ac4ef57df69b"
+            },
+            "reason": "SuccessfulCreate",
+            "reportingComponent": "replicaset-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "replicaset-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "apps/v1",
+                "kind": "ReplicaSet",
+                "name": "web-779764b4b6",
+                "namespace": "shop",
+                "resourceVersion": "489",
+                "uid": "af33538a-4341-43fc-94aa-acc86c981901"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Created pod: web-779764b4b6-8xzkd",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "web-779764b4b6.18de8e3a561b0566",
+                "namespace": "shop",
+                "resourceVersion": "504",
+                "uid": "a56e1bf8-a74f-48e8-bdc0-bf749a4224bf"
+            },
+            "reason": "SuccessfulCreate",
+            "reportingComponent": "replicaset-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "replicaset-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "apps/v1",
+                "kind": "Deployment",
+                "name": "web",
+                "namespace": "shop",
+                "resourceVersion": "488",
+                "uid": "f2df0338-7e5c-4fcd-8d74-714bba3b3f27"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Scaled up replica set web-779764b4b6 from 0 to 2",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "web.18de8e3a55c60960",
+                "namespace": "shop",
+                "resourceVersion": "490",
+                "uid": "eed8bec9-9783-46a8-9c36-a8dfcd495896"
+            },
+            "reason": "ScalingReplicaSet",
+            "reportingComponent": "deployment-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "deployment-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": "worker-56bff96fc9-c8xj6",
+                "namespace": "shop",
+                "resourceVersion": "500",
+                "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Successfully assigned shop/worker-56bff96fc9-c8xj6 to squeeze-kubectl-control-plane",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "worker-56bff96fc9-c8xj6.18de8e3a566b605d",
+                "namespace": "shop",
+                "resourceVersion": "515",
+                "uid": "5c539a43-8b99-4260-8ecc-f58ab985325e"
+            },
+            "reason": "Scheduled",
+            "reportingComponent": "default-scheduler",
+            "reportingInstance": "",
+            "source": {
+                "component": "default-scheduler"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:23Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{worker}",
+                "kind": "Pod",
+                "name": "worker-56bff96fc9-c8xj6",
+                "namespace": "shop",
+                "resourceVersion": "507",
+                "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:23Z",
+            "message": "Pulling image \"alpine:3.21\"",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:23Z",
+                "name": "worker-56bff96fc9-c8xj6.18de8e3a6cfdd438",
+                "namespace": "shop",
+                "resourceVersion": "548",
+                "uid": "55550dfe-7018-4bff-9888-ba93292255c1"
+            },
+            "reason": "Pulling",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:28Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{worker}",
+                "kind": "Pod",
+                "name": "worker-56bff96fc9-c8xj6",
+                "namespace": "shop",
+                "resourceVersion": "507",
+                "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:28Z",
+            "message": "Successfully pulled image \"alpine:3.21\" in 884ms (4.95s including waiting). Image size: 3985371 bytes.",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:28Z",
+                "name": "worker-56bff96fc9-c8xj6.18de8e3b940d9b68",
+                "namespace": "shop",
+                "resourceVersion": "573",
+                "uid": "b983b192-ed2d-4761-9e94-a889032f9713"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 4,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:28Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{worker}",
+                "kind": "Pod",
+                "name": "worker-56bff96fc9-c8xj6",
+                "namespace": "shop",
+                "resourceVersion": "507",
+                "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:13Z",
+            "message": "Created container: worker",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:28Z",
+                "name": "worker-56bff96fc9-c8xj6.18de8e3b9486f6ca",
+                "namespace": "shop",
+                "resourceVersion": "709",
+                "uid": "f18f5a52-3f28-47e6-ba39-5a8baa1dadd1"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 4,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:28Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{worker}",
+                "kind": "Pod",
+                "name": "worker-56bff96fc9-c8xj6",
+                "namespace": "shop",
+                "resourceVersion": "507",
+                "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:13Z",
+            "message": "Started container worker",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:28Z",
+                "name": "worker-56bff96fc9-c8xj6.18de8e3b9725fbb7",
+                "namespace": "shop",
+                "resourceVersion": "710",
+                "uid": "29b8499b-8b86-48b6-93db-9ec780e55d01"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 3,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:29Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{worker}",
+                "kind": "Pod",
+                "name": "worker-56bff96fc9-c8xj6",
+                "namespace": "shop",
+                "resourceVersion": "507",
+                "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:13Z",
+            "message": "Container image \"alpine:3.21\" already present on machine",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:29Z",
+                "name": "worker-56bff96fc9-c8xj6.18de8e3bd475b286",
+                "namespace": "shop",
+                "resourceVersion": "708",
+                "uid": "98543fc5-c0a0-4f01-8d3f-1d11c50e0559"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 7,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:30Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{worker}",
+                "kind": "Pod",
+                "name": "worker-56bff96fc9-c8xj6",
+                "namespace": "shop",
+                "resourceVersion": "507",
+                "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:02:39Z",
+            "message": "Back-off restarting failed container worker in pod worker-56bff96fc9-c8xj6_shop(d39d6608-c90e-4a54-9e04-1b09136cbb47)",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:30Z",
+                "name": "worker-56bff96fc9-c8xj6.18de8e3c10384901",
+                "namespace": "shop",
+                "resourceVersion": "759",
+                "uid": "1a71c4a3-94a7-4a30-b815-45dffbf13275"
+            },
+            "reason": "BackOff",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "squeeze-kubectl-control-plane",
+            "source": {
+                "component": "kubelet",
+                "host": "squeeze-kubectl-control-plane"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "apps/v1",
+                "kind": "ReplicaSet",
+                "name": "worker-56bff96fc9",
+                "namespace": "shop",
+                "resourceVersion": "494",
+                "uid": "85dd1acc-5c2c-447a-b007-29a87a146296"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Created pod: worker-56bff96fc9-c8xj6",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "worker-56bff96fc9.18de8e3a56412142",
+                "namespace": "shop",
+                "resourceVersion": "509",
+                "uid": "5b7c1363-2bca-40f7-833e-667af023d272"
+            },
+            "reason": "SuccessfulCreate",
+            "reportingComponent": "replicaset-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "replicaset-controller"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-10-15T01:01:22Z",
+            "involvedObject": {
+                "apiVersion": "apps/v1",
+                "kind": "Deployment",
+                "name": "worker",
+                "namespace": "shop",
+                "resourceVersion": "492",
+                "uid": "3c3015e1-1c9b-4181-9265-94de6fbb1c8d"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-10-15T01:01:22Z",
+            "message": "Scaled up replica set worker-56bff96fc9 from 0 to 1",
+            "metadata": {
+                "creationTimestamp": "2026-10-15T01:01:22Z",
+                "name": "worker.18de8e3a560c6954",
+                "namespace": "shop",
+                "resourceVersion": "501",
+                "uid": "01957d9f-5244-433e-a02d-68bf93d409a8"
+            },
+            "reason": "ScalingReplicaSet",
+            "reportingComponent": "deployment-controller",
+            "reportingInstance": "",
+            "source": {
+                "component": "deployment-controller"
+            },
+            "type": "Normal"
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

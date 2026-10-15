@@ -1,0 +1,2 @@
+buildkit: 10 steps, 1 cached
+... 10 other steps (--all)

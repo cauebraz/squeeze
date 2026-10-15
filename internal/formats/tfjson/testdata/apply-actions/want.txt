@@ -1,0 +1,7 @@
+terraform 1.17.0-rc2 apply: 1 added, 0 changed, 1 destroyed, 2 actions invoked
+- local_file.old
++ local_file.report
+actions: action.local_command.archive (BeforeDestroy local_file.old), action.local_command.notify (AfterCreate local_file.report)
+applied: 2 resources
+actions completed: 2
+... 5 other messages: action_start 2, apply_start 2, action_progress 1 (--all)

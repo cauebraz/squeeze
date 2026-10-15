@@ -1,0 +1,6 @@
+terraform 1.17.0-rc2 plan: 1 to add, 0 to change, 0 to destroy; 1 deferred; 2 deferred actions; 1 action to invoke; incomplete
++ aws_vpc.main
+deferred:
++ kubernetes_namespace.app (provider_config_unknown)
+actions: action.aws_lambda_invoke.tag (AfterCreate aws_vpc.main)
+deferred actions: action.aws_lambda_invoke.notify (AfterCreate kubernetes_namespace.app; deferred_prereq), action.aws_lambda_invoke.audit (invoked; provider_config_unknown)

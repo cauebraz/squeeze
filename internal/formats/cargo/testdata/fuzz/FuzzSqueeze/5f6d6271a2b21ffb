@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("warning: 0\n= note: `#[warn(()]`\nerror: 0")

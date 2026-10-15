@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{   \"format_version\": \"1.0\",   \"resource\": {},\"diAgnostiCs\": [{\"detAil\": \"0\"}] }0")

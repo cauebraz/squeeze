@@ -1,0 +1,7 @@
+npm audit: 25 vulnerabilities (3 critical, 13 high, 4 moderate, 5 low) in 301 dependencies; 7 direct; fix: 1 with npm audit fix, 19 with npm audit fix --force (1 breaking), 5 without one
+critical form-data <=2.5.5: no fix; GHSA-fjxv-7rqg-78g4, GHSA-hmw2-7cc7-3qxx; required by request
+critical minimist 1.0.0 - 1.2.5 direct: fix minimist@1.2.8 (--force); GHSA-xvch-5gv4-984h, GHSA-vh95-rmgr-6w4m
+critical request * direct: no fix; GHSA-p8p7-x288-28g6
+high body-parser <=1.20.5: fix express@4.22.3 (--force); GHSA-qwcr-r2fm-qrc7, GHSA-v422-hmwv-36x6
+high braces *: fix mocha@8.4.0 (--force); GHSA-vfj7-8cjw-p6xm
+... 20 more vulnerabilities, high 11, moderate 4, low 5 (--max-vulnerabilities 0)

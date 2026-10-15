@@ -1,0 +1,13 @@
+junit: 4 tests in 1 suite: 2 passed, 1 failure, 1 skipped; the report's attributes say 3 tests
+fail total applies quantity: Error: expect(received).toBe(expected) // Object.is equality
+  Expected: 4
+  Received: 2
+      at Object.toBe (/home/dev/shop/cart.test.js:6:43)
+      at Promise.finally.completed (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:1559:28)
+      at new Promise (<anonymous>)
+      at callAsyncCircusFn (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:1499:10)
+      at _callCircusTest (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:1009:40)
+      at processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at _runTest (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:949:3)
+      at _runTestsForDescribeBlock (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+  ... 6 more lines (--max-lines 0)

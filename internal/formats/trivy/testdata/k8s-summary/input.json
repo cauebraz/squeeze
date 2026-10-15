@@ -1,0 +1,2052 @@
+{
+  "ClusterName": "kind-squeeze-trivy",
+  "Findings": [
+    {
+      "Namespace": "shop",
+      "Kind": "Deployment",
+      "Name": "api",
+      "Metadata": [
+        {},
+        {
+          "Size": 7617536,
+          "OS": {
+            "Family": "alpine",
+            "Name": "3.18.0",
+            "EOSL": true
+          },
+          "ImageID": "sha256:5e2b554c1c45d22c9d1aa836828828e320a26011b76c08631ac896cbc3625e3e",
+          "DiffIDs": [
+            "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+          ],
+          "RepoTags": [
+            "alpine:3.18.0"
+          ],
+          "RepoDigests": [
+            "alpine@sha256:02bb6f428431fbc2809c5d1b41eab5a68350194fb508869a33cb1af4444c9b11"
+          ],
+          "Reference": "alpine:3.18.0",
+          "ImageConfig": {
+            "architecture": "amd64",
+            "container": "0aa41c99f485b1dbe59101f2bb8e6922d9bf7cc1745f1c768f988b1bd724f11a",
+            "created": "2023-05-09T23:11:10.132147526Z",
+            "docker_version": "20.10.23",
+            "history": [
+              {
+                "created": "2023-05-09T23:11:10.007217553Z",
+                "created_by": "/bin/sh -c #(nop) ADD file:7625ddfd589fb824ee39f1b1eb387b98f3676420ff52f26eb9d975151e889667 in / "
+              },
+              {
+                "created": "2023-05-09T23:11:10.132147526Z",
+                "created_by": "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
+                "empty_layer": true
+              }
+            ],
+            "os": "linux",
+            "rootfs": {
+              "type": "layers",
+              "diff_ids": [
+                "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              ]
+            },
+            "config": {
+              "Cmd": [
+                "/bin/sh"
+              ],
+              "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+              ],
+              "Image": "sha256:fa9de512065d701938f44d4776827d838440ed00f1f51b1fff5f97f7378acf08"
+            }
+          },
+          "Layers": [
+            {
+              "Size": 7617536,
+              "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+              "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+            }
+          ]
+        }
+      ],
+      "Results": [
+        {
+          "Target": "Deployment/api",
+          "Class": "config",
+          "Type": "kubernetes",
+          "MisconfSummary": {
+            "Successes": 27,
+            "Failures": 3
+          },
+          "Misconfigurations": [
+            {
+              "Type": "Kubernetes Security Check",
+              "ID": "KSV-0014",
+              "Title": "Root file system is not read-only",
+              "Description": "An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.",
+              "Message": "Container 'alpine' of Deployment 'api' should set 'securityContext.readOnlyRootFilesystem' to true",
+              "Namespace": "builtin.kubernetes.KSV014",
+              "Query": "data.builtin.kubernetes.KSV014.deny",
+              "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+              "Severity": "HIGH",
+              "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0014",
+              "References": [
+                "https://kubesec.io/basics/containers-securitycontext-readonlyrootfilesystem-true/",
+                "https://avd.aquasec.com/misconfig/ksv-0014"
+              ],
+              "Status": "FAIL",
+              "CauseMetadata": {
+                "Provider": "Kubernetes",
+                "Service": "general",
+                "StartLine": 33,
+                "EndLine": 41,
+                "Code": {
+                  "Lines": [
+                    {
+                      "Number": 33,
+                      "Content": "                - command:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                - \u001b[38;5;33mcommand\u001b[0m:",
+                      "FirstCause": true,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 34,
+                      "Content": "                    - sleep",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                    - sleep",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 35,
+                      "Content": "                    - \"3600\"",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                    - \u001b[38;5;37m\"3600\"",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 36,
+                      "Content": "                  image: alpine:3.18.0",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "\u001b[0m                  \u001b[38;5;33mimage\u001b[0m: alpine:3.18.0",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 37,
+                      "Content": "                  imagePullPolicy: IfNotPresent",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mimagePullPolicy\u001b[0m: IfNotPresent",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 38,
+                      "Content": "                  name: alpine",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mname\u001b[0m: alpine",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 39,
+                      "Content": "                  resources: {}",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mresources\u001b[0m: {}",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 40,
+                      "Content": "                  terminationMessagePath: /dev/termination-log",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePath\u001b[0m: /dev/termination-log",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 41,
+                      "Content": "                  terminationMessagePolicy: File",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePolicy\u001b[0m: File",
+                      "FirstCause": false,
+                      "LastCause": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "Type": "Kubernetes Security Check",
+              "ID": "KSV-0118",
+              "Title": "Default security context configured",
+              "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
+              "Message": "container api in shop namespace is using the default security context",
+              "Namespace": "builtin.kubernetes.KSV118",
+              "Query": "data.builtin.kubernetes.KSV118.deny",
+              "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
+              "Severity": "HIGH",
+              "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
+              "References": [
+                "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+                "https://avd.aquasec.com/misconfig/ksv-0118"
+              ],
+              "Status": "FAIL",
+              "CauseMetadata": {
+                "Provider": "Kubernetes",
+                "Service": "general",
+                "StartLine": 33,
+                "EndLine": 41,
+                "Code": {
+                  "Lines": [
+                    {
+                      "Number": 33,
+                      "Content": "                - command:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                - \u001b[38;5;33mcommand\u001b[0m:",
+                      "FirstCause": true,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 34,
+                      "Content": "                    - sleep",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                    - sleep",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 35,
+                      "Content": "                    - \"3600\"",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                    - \u001b[38;5;37m\"3600\"",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 36,
+                      "Content": "                  image: alpine:3.18.0",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "\u001b[0m                  \u001b[38;5;33mimage\u001b[0m: alpine:3.18.0",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 37,
+                      "Content": "                  imagePullPolicy: IfNotPresent",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mimagePullPolicy\u001b[0m: IfNotPresent",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 38,
+                      "Content": "                  name: alpine",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mname\u001b[0m: alpine",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 39,
+                      "Content": "                  resources: {}",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mresources\u001b[0m: {}",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 40,
+                      "Content": "                  terminationMessagePath: /dev/termination-log",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePath\u001b[0m: /dev/termination-log",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 41,
+                      "Content": "                  terminationMessagePolicy: File",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePolicy\u001b[0m: File",
+                      "FirstCause": false,
+                      "LastCause": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "Type": "Kubernetes Security Check",
+              "ID": "KSV-0118",
+              "Title": "Default security context configured",
+              "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
+              "Message": "deployment api in shop namespace is using the default security context, which allows root privileges",
+              "Namespace": "builtin.kubernetes.KSV118",
+              "Query": "data.builtin.kubernetes.KSV118.deny",
+              "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
+              "Severity": "HIGH",
+              "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
+              "References": [
+                "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+                "https://avd.aquasec.com/misconfig/ksv-0118"
+              ],
+              "Status": "FAIL",
+              "CauseMetadata": {
+                "Provider": "Kubernetes",
+                "Service": "general",
+                "StartLine": 31,
+                "EndLine": 46,
+                "Code": {
+                  "Lines": [
+                    {
+                      "Number": 31,
+                      "Content": "        spec:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "        \u001b[38;5;33mspec\u001b[0m:",
+                      "FirstCause": true,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 32,
+                      "Content": "            containers:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "            \u001b[38;5;33mcontainers\u001b[0m:",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 33,
+                      "Content": "                - command:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                - \u001b[38;5;33mcommand\u001b[0m:",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 34,
+                      "Content": "                    - sleep",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                    - sleep",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 35,
+                      "Content": "                    - \"3600\"",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                    - \u001b[38;5;37m\"3600\"",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 36,
+                      "Content": "                  image: alpine:3.18.0",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "\u001b[0m                  \u001b[38;5;33mimage\u001b[0m: alpine:3.18.0",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 37,
+                      "Content": "                  imagePullPolicy: IfNotPresent",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mimagePullPolicy\u001b[0m: IfNotPresent",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 38,
+                      "Content": "                  name: alpine",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mname\u001b[0m: alpine",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 39,
+                      "Content": "                  resources: {}",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mresources\u001b[0m: {}",
+                      "FirstCause": false,
+                      "LastCause": true
+                    },
+                    {
+                      "Number": 40,
+                      "Content": "",
+                      "IsCause": false,
+                      "Annotation": "",
+                      "Truncated": true,
+                      "FirstCause": false,
+                      "LastCause": false
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "Target": "alpine:3.18.0 (alpine 3.18.0)",
+          "Class": "os-pkgs",
+          "Type": "alpine",
+          "Packages": [
+            {
+              "ID": "alpine-baselayout@3.4.3-r1",
+              "Name": "alpine-baselayout",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/alpine-baselayout@3.4.3-r1?arch=x86_64\u0026distro=3.18.0",
+                "UID": "55d7f67ceeb702a5"
+              },
+              "Version": "3.4.3-r1",
+              "Arch": "x86_64",
+              "SrcName": "alpine-baselayout",
+              "SrcVersion": "3.4.3-r1",
+              "Licenses": [
+                "GPL-2.0-only"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "DependsOn": [
+                "alpine-baselayout-data@3.4.3-r1",
+                "busybox-binsh@1.36.0-r9"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:cf0bca32762cd5be9974f4c127467b0f93f78f20",
+              "InstalledFiles": [
+                "etc/motd",
+                "etc/crontabs/root",
+                "etc/modprobe.d/aliases.conf",
+                "etc/modprobe.d/blacklist.conf",
+                "etc/modprobe.d/i386.conf",
+                "etc/modprobe.d/kms.conf",
+                "etc/profile.d/20locale.sh",
+                "etc/profile.d/README",
+                "etc/profile.d/color_prompt.sh.disabled",
+                "lib/sysctl.d/00-alpine.conf",
+                "var/run",
+                "var/spool/mail",
+                "var/spool/cron/crontabs"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "alpine-baselayout-data@3.4.3-r1",
+              "Name": "alpine-baselayout-data",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/alpine-baselayout-data@3.4.3-r1?arch=x86_64\u0026distro=3.18.0",
+                "UID": "1e8895b73dc8ed99"
+              },
+              "Version": "3.4.3-r1",
+              "Arch": "x86_64",
+              "SrcName": "alpine-baselayout",
+              "SrcVersion": "3.4.3-r1",
+              "Licenses": [
+                "GPL-2.0-only"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:602007ee374ed96f35e9bf39b1487d67c6afe027",
+              "InstalledFiles": [
+                "etc/fstab",
+                "etc/group",
+                "etc/hostname",
+                "etc/hosts",
+                "etc/inittab",
+                "etc/modules",
+                "etc/mtab",
+                "etc/nsswitch.conf",
+                "etc/passwd",
+                "etc/profile",
+                "etc/protocols",
+                "etc/services",
+                "etc/shadow",
+                "etc/shells",
+                "etc/sysctl.conf"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "alpine-keys@2.4-r1",
+              "Name": "alpine-keys",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/alpine-keys@2.4-r1?arch=x86_64\u0026distro=3.18.0",
+                "UID": "58cde6a7a797ed69"
+              },
+              "Version": "2.4-r1",
+              "Arch": "x86_64",
+              "SrcName": "alpine-keys",
+              "SrcVersion": "2.4-r1",
+              "Licenses": [
+                "MIT"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:ec3a3d5ef4c7a168d09516097bb3219ca77c1534",
+              "InstalledFiles": [
+                "etc/apk/keys/alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub",
+                "etc/apk/keys/alpine-devel@lists.alpinelinux.org-5243ef4b.rsa.pub",
+                "etc/apk/keys/alpine-devel@lists.alpinelinux.org-5261cecb.rsa.pub",
+                "etc/apk/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub",
+                "etc/apk/keys/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-5243ef4b.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-5261cecb.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-58cbb476.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-58e4f17d.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-5e69ca50.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-60ac2099.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616a9724.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616abc23.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616ac3bc.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616adfeb.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+                "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616db30d.rsa.pub",
+                "usr/share/apk/keys/aarch64/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+                "usr/share/apk/keys/aarch64/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+                "usr/share/apk/keys/armhf/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+                "usr/share/apk/keys/armhf/alpine-devel@lists.alpinelinux.org-616a9724.rsa.pub",
+                "usr/share/apk/keys/armv7/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+                "usr/share/apk/keys/armv7/alpine-devel@lists.alpinelinux.org-616adfeb.rsa.pub",
+                "usr/share/apk/keys/mips64/alpine-devel@lists.alpinelinux.org-5e69ca50.rsa.pub",
+                "usr/share/apk/keys/ppc64le/alpine-devel@lists.alpinelinux.org-58cbb476.rsa.pub",
+                "usr/share/apk/keys/ppc64le/alpine-devel@lists.alpinelinux.org-616abc23.rsa.pub",
+                "usr/share/apk/keys/riscv64/alpine-devel@lists.alpinelinux.org-60ac2099.rsa.pub",
+                "usr/share/apk/keys/riscv64/alpine-devel@lists.alpinelinux.org-616db30d.rsa.pub",
+                "usr/share/apk/keys/s390x/alpine-devel@lists.alpinelinux.org-58e4f17d.rsa.pub",
+                "usr/share/apk/keys/s390x/alpine-devel@lists.alpinelinux.org-616ac3bc.rsa.pub",
+                "usr/share/apk/keys/x86/alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub",
+                "usr/share/apk/keys/x86/alpine-devel@lists.alpinelinux.org-5243ef4b.rsa.pub",
+                "usr/share/apk/keys/x86/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub",
+                "usr/share/apk/keys/x86_64/alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub",
+                "usr/share/apk/keys/x86_64/alpine-devel@lists.alpinelinux.org-5261cecb.rsa.pub",
+                "usr/share/apk/keys/x86_64/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "apk-tools@2.14.0-r0",
+              "Name": "apk-tools",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/apk-tools@2.14.0-r0?arch=x86_64\u0026distro=3.18.0",
+                "UID": "8a5183743c6e9da3"
+              },
+              "Version": "2.14.0-r0",
+              "Arch": "x86_64",
+              "SrcName": "apk-tools",
+              "SrcVersion": "2.14.0-r0",
+              "Licenses": [
+                "GPL-2.0-only"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "DependsOn": [
+                "ca-certificates-bundle@20230506-r0",
+                "libcrypto3@3.1.0-r4",
+                "libssl3@3.1.0-r4",
+                "musl@1.2.4-r0",
+                "zlib@1.2.13-r1"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:36937dbefd36d5b998cc7429dbadb6df75505deb",
+              "InstalledFiles": [
+                "lib/libapk.so.2.14.0",
+                "sbin/apk"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "busybox@1.36.0-r9",
+              "Name": "busybox",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/busybox@1.36.0-r9?arch=x86_64\u0026distro=3.18.0",
+                "UID": "c6a7fc203e459ec4"
+              },
+              "Version": "1.36.0-r9",
+              "Arch": "x86_64",
+              "SrcName": "busybox",
+              "SrcVersion": "1.36.0-r9",
+              "Licenses": [
+                "GPL-2.0-only"
+              ],
+              "Maintainer": "Sören Tempel \u003csoeren+alpine@soeren-tempel.net\u003e",
+              "DependsOn": [
+                "musl@1.2.4-r0"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:dd81c265d18514966f8172c236966abe7220fcf4",
+              "InstalledFiles": [
+                "bin/busybox",
+                "etc/securetty",
+                "etc/udhcpd.conf",
+                "etc/busybox-paths.d/busybox",
+                "etc/logrotate.d/acpid",
+                "etc/network/if-up.d/dad",
+                "usr/share/udhcpc/default.script"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "busybox-binsh@1.36.0-r9",
+              "Name": "busybox-binsh",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/busybox-binsh@1.36.0-r9?arch=x86_64\u0026distro=3.18.0",
+                "UID": "cbd0d922e932223f"
+              },
+              "Version": "1.36.0-r9",
+              "Arch": "x86_64",
+              "SrcName": "busybox",
+              "SrcVersion": "1.36.0-r9",
+              "Licenses": [
+                "GPL-2.0-only"
+              ],
+              "Maintainer": "Sören Tempel \u003csoeren+alpine@soeren-tempel.net\u003e",
+              "DependsOn": [
+                "busybox@1.36.0-r9"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:b97557260a886b4ae0d9816177127f0927b8cdab",
+              "InstalledFiles": [
+                "bin/sh"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "ca-certificates-bundle@20230506-r0",
+              "Name": "ca-certificates-bundle",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/ca-certificates-bundle@20230506-r0?arch=x86_64\u0026distro=3.18.0",
+                "UID": "3d9ea4a2b739554"
+              },
+              "Version": "20230506-r0",
+              "Arch": "x86_64",
+              "SrcName": "ca-certificates",
+              "SrcVersion": "20230506-r0",
+              "Licenses": [
+                "MPL-2.0",
+                "MIT"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:47f485d08670a9eb21ebf10e70ae65dc43ab6c3d",
+              "InstalledFiles": [
+                "etc/ssl/cert.pem",
+                "etc/ssl/certs/ca-certificates.crt",
+                "etc/ssl1.1/cert.pem",
+                "etc/ssl1.1/certs"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "libc-utils@0.7.2-r5",
+              "Name": "libc-utils",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/libc-utils@0.7.2-r5?arch=x86_64\u0026distro=3.18.0",
+                "UID": "bd9496f372232ede"
+              },
+              "Version": "0.7.2-r5",
+              "Arch": "x86_64",
+              "SrcName": "libc-dev",
+              "SrcVersion": "0.7.2-r5",
+              "Licenses": [
+                "BSD-2-Clause",
+                "BSD-3-Clause"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "DependsOn": [
+                "musl-utils@1.2.4-r0"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:2e59dafeb8bca0786540846c686f121ae8348a42",
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "libcrypto3@3.1.0-r4",
+              "Name": "libcrypto3",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/libcrypto3@3.1.0-r4?arch=x86_64\u0026distro=3.18.0",
+                "UID": "bcf70568a65b7560"
+              },
+              "Version": "3.1.0-r4",
+              "Arch": "x86_64",
+              "SrcName": "openssl",
+              "SrcVersion": "3.1.0-r4",
+              "Licenses": [
+                "Apache-2.0"
+              ],
+              "Maintainer": "Ariadne Conill \u003cariadne@dereferenced.org\u003e",
+              "DependsOn": [
+                "musl@1.2.4-r0"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:a54da35f435bf5bcefd012e043fd4511e96b49b8",
+              "InstalledFiles": [
+                "etc/ssl/ct_log_list.cnf",
+                "etc/ssl/ct_log_list.cnf.dist",
+                "etc/ssl/openssl.cnf",
+                "etc/ssl/openssl.cnf.dist",
+                "etc/ssl/misc/CA.pl",
+                "etc/ssl/misc/tsget",
+                "etc/ssl/misc/tsget.pl",
+                "lib/libcrypto.so.3",
+                "usr/lib/libcrypto.so.3",
+                "usr/lib/engines-3/afalg.so",
+                "usr/lib/engines-3/capi.so",
+                "usr/lib/engines-3/loader_attic.so",
+                "usr/lib/engines-3/padlock.so",
+                "usr/lib/ossl-modules/legacy.so"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "libssl3@3.1.0-r4",
+              "Name": "libssl3",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/libssl3@3.1.0-r4?arch=x86_64\u0026distro=3.18.0",
+                "UID": "f5a4f218b8dd33a9"
+              },
+              "Version": "3.1.0-r4",
+              "Arch": "x86_64",
+              "SrcName": "openssl",
+              "SrcVersion": "3.1.0-r4",
+              "Licenses": [
+                "Apache-2.0"
+              ],
+              "Maintainer": "Ariadne Conill \u003cariadne@dereferenced.org\u003e",
+              "DependsOn": [
+                "libcrypto3@3.1.0-r4",
+                "musl@1.2.4-r0"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:5e39da0392eb1a91e3a3258e475eb1637da85b7f",
+              "InstalledFiles": [
+                "lib/libssl.so.3",
+                "usr/lib/libssl.so.3"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "musl@1.2.4-r0",
+              "Name": "musl",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/musl@1.2.4-r0?arch=x86_64\u0026distro=3.18.0",
+                "UID": "38fa8f5101ce83d1"
+              },
+              "Version": "1.2.4-r0",
+              "Arch": "x86_64",
+              "SrcName": "musl",
+              "SrcVersion": "1.2.4-r0",
+              "Licenses": [
+                "MIT"
+              ],
+              "Maintainer": "Timo Teräs \u003ctimo.teras@iki.fi\u003e",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:e779b680e85539adb9dc4c6c48e6f7dd75e1df6b",
+              "InstalledFiles": [
+                "lib/ld-musl-x86_64.so.1",
+                "lib/libc.musl-x86_64.so.1"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "musl-utils@1.2.4-r0",
+              "Name": "musl-utils",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/musl-utils@1.2.4-r0?arch=x86_64\u0026distro=3.18.0",
+                "UID": "d3bfccb8db18fb53"
+              },
+              "Version": "1.2.4-r0",
+              "Arch": "x86_64",
+              "SrcName": "musl",
+              "SrcVersion": "1.2.4-r0",
+              "Licenses": [
+                "MIT",
+                "BSD-2-Clause",
+                "GPL-2.0-or-later"
+              ],
+              "Maintainer": "Timo Teräs \u003ctimo.teras@iki.fi\u003e",
+              "DependsOn": [
+                "musl@1.2.4-r0",
+                "scanelf@1.3.7-r1"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:e96f86ad77fb1d0c3e93b26e63b6402235ab8189",
+              "InstalledFiles": [
+                "sbin/ldconfig",
+                "usr/bin/getconf",
+                "usr/bin/getent",
+                "usr/bin/iconv",
+                "usr/bin/ldd"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "scanelf@1.3.7-r1",
+              "Name": "scanelf",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/scanelf@1.3.7-r1?arch=x86_64\u0026distro=3.18.0",
+                "UID": "acb4d526ef1915d0"
+              },
+              "Version": "1.3.7-r1",
+              "Arch": "x86_64",
+              "SrcName": "pax-utils",
+              "SrcVersion": "1.3.7-r1",
+              "Licenses": [
+                "GPL-2.0-only"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "DependsOn": [
+                "musl@1.2.4-r0"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:e27abda38faea3635a2db4d50d007751ea280b43",
+              "InstalledFiles": [
+                "usr/bin/scanelf"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "ssl_client@1.36.0-r9",
+              "Name": "ssl_client",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/ssl_client@1.36.0-r9?arch=x86_64\u0026distro=3.18.0",
+                "UID": "4e806eb13ba69355"
+              },
+              "Version": "1.36.0-r9",
+              "Arch": "x86_64",
+              "SrcName": "busybox",
+              "SrcVersion": "1.36.0-r9",
+              "Licenses": [
+                "GPL-2.0-only"
+              ],
+              "Maintainer": "Sören Tempel \u003csoeren+alpine@soeren-tempel.net\u003e",
+              "DependsOn": [
+                "libcrypto3@3.1.0-r4",
+                "libssl3@3.1.0-r4",
+                "musl@1.2.4-r0"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:d53499f5bddefad71428bca3874f15e2f9162585",
+              "InstalledFiles": [
+                "usr/bin/ssl_client"
+              ],
+              "AnalyzedBy": "apk"
+            },
+            {
+              "ID": "zlib@1.2.13-r1",
+              "Name": "zlib",
+              "Identifier": {
+                "PURL": "pkg:apk/alpine/zlib@1.2.13-r1?arch=x86_64\u0026distro=3.18.0",
+                "UID": "c439f49ea61043b4"
+              },
+              "Version": "1.2.13-r1",
+              "Arch": "x86_64",
+              "SrcName": "zlib",
+              "SrcVersion": "1.2.13-r1",
+              "Licenses": [
+                "Zlib"
+              ],
+              "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
+              "DependsOn": [
+                "musl@1.2.4-r0"
+              ],
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "Digest": "sha1:2656e848992b378aa40dca24af8cde9e97161174",
+              "InstalledFiles": [
+                "lib/libz.so.1",
+                "lib/libz.so.1.2.13"
+              ],
+              "AnalyzedBy": "apk"
+            }
+          ],
+          "Vulnerabilities": [
+            {
+              "VulnerabilityID": "CVE-2022-48174",
+              "PkgID": "busybox@1.36.0-r9",
+              "PkgName": "busybox",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/busybox@1.36.0-r9?arch=x86_64\u0026distro=3.18.0",
+                "UID": "c6a7fc203e459ec4"
+              },
+              "InstalledVersion": "1.36.0-r9",
+              "FixedVersion": "1.36.1-r1",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-48174",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:3cf3164d070c6b83a49a6898f4cb7ea59d616e146ff2d21256e80891da34720f",
+              "Title": "busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution",
+              "Description": "There is a stack overflow vulnerability in ash.c:6030 in busybox before 1.35. In the environment of Internet of Vehicles, this vulnerability can be executed from command to arbitrary code execution.",
+              "Severity": "CRITICAL",
+              "CweIDs": [
+                "CWE-787"
+              ],
+              "VendorSeverity": {
+                "amazon": 2,
+                "azure": 4,
+                "cbl-mariner": 4,
+                "nvd": 4,
+                "oracle-oval": 3,
+                "redhat": 3,
+                "ubuntu": 1
+              },
+              "CVSS": {
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 9.8
+                },
+                "redhat": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 9.8
+                }
+              },
+              "References": [
+                "https://access.redhat.com/security/cve/CVE-2022-48174",
+                "https://bugs.busybox.net/show_bug.cgi?id=15216",
+                "https://cert-portal.siemens.com/productcert/html/ssa-089022.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-585531.html",
+                "https://linux.oracle.com/cve/CVE-2022-48174.html",
+                "https://linux.oracle.com/errata/ELSA-2023-5178.html",
+                "https://lists.debian.org/debian-lts-announce/2025/01/msg00012.html",
+                "https://nvd.nist.gov/vuln/detail/CVE-2022-48174",
+                "https://security.netapp.com/advisory/ntap-20241129-0001/",
+                "https://ubuntu.com/security/notices/USN-6335-1",
+                "https://ubuntu.com/security/notices/USN-6961-1",
+                "https://www.cve.org/CVERecord?id=CVE-2022-48174"
+              ],
+              "PublishedDate": "2023-08-22T19:16:31.08Z",
+              "LastModifiedDate": "2026-07-14T12:16:48.24Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2022-48174",
+              "PkgID": "busybox-binsh@1.36.0-r9",
+              "PkgName": "busybox-binsh",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/busybox-binsh@1.36.0-r9?arch=x86_64\u0026distro=3.18.0",
+                "UID": "cbd0d922e932223f"
+              },
+              "InstalledVersion": "1.36.0-r9",
+              "FixedVersion": "1.36.1-r1",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-48174",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:317c5239a9a85a256924a12e9cc5e69a6f9fd706e3eb40da44d7a04d3cd4cc4f",
+              "Title": "busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution",
+              "Description": "There is a stack overflow vulnerability in ash.c:6030 in busybox before 1.35. In the environment of Internet of Vehicles, this vulnerability can be executed from command to arbitrary code execution.",
+              "Severity": "CRITICAL",
+              "CweIDs": [
+                "CWE-787"
+              ],
+              "VendorSeverity": {
+                "amazon": 2,
+                "azure": 4,
+                "cbl-mariner": 4,
+                "nvd": 4,
+                "oracle-oval": 3,
+                "redhat": 3,
+                "ubuntu": 1
+              },
+              "CVSS": {
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 9.8
+                },
+                "redhat": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 9.8
+                }
+              },
+              "References": [
+                "https://access.redhat.com/security/cve/CVE-2022-48174",
+                "https://bugs.busybox.net/show_bug.cgi?id=15216",
+                "https://cert-portal.siemens.com/productcert/html/ssa-089022.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-585531.html",
+                "https://linux.oracle.com/cve/CVE-2022-48174.html",
+                "https://linux.oracle.com/errata/ELSA-2023-5178.html",
+                "https://lists.debian.org/debian-lts-announce/2025/01/msg00012.html",
+                "https://nvd.nist.gov/vuln/detail/CVE-2022-48174",
+                "https://security.netapp.com/advisory/ntap-20241129-0001/",
+                "https://ubuntu.com/security/notices/USN-6335-1",
+                "https://ubuntu.com/security/notices/USN-6961-1",
+                "https://www.cve.org/CVERecord?id=CVE-2022-48174"
+              ],
+              "PublishedDate": "2023-08-22T19:16:31.08Z",
+              "LastModifiedDate": "2026-07-14T12:16:48.24Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2023-5363",
+              "PkgID": "libcrypto3@3.1.0-r4",
+              "PkgName": "libcrypto3",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/libcrypto3@3.1.0-r4?arch=x86_64\u0026distro=3.18.0",
+                "UID": "bcf70568a65b7560"
+              },
+              "InstalledVersion": "3.1.0-r4",
+              "FixedVersion": "3.1.4-r0",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2023-5363",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:9107be29b7bbd10942da375f99055e3cb622f9cbbbae4bca7298469fdc3526bc",
+              "Title": "openssl: Incorrect cipher key and IV length processing",
+              "Description": "Issue summary: A bug has been identified in the processing of key and\ninitialisation vector (IV) lengths.  This can lead to potential truncation\nor overruns during the initialisation of some symmetric ciphers.\n\nImpact summary: A truncation in the IV can result in non-uniqueness,\nwhich could result in loss of confidentiality for some cipher modes.\n\nWhen calling EVP_EncryptInit_ex2(), EVP_DecryptInit_ex2() or\nEVP_CipherInit_ex2() the provided OSSL_PARAM array is processed after\nthe key and IV have been established.  Any alterations to the key length,\nvia the \"keylen\" parameter or the IV length, via the \"ivlen\" parameter,\nwithin the OSSL_PARAM array will not take effect as intended, potentially\ncausing truncation or overreading of these values.  The following ciphers\nand cipher modes are impacted: RC2, RC4, RC5, CCM, GCM and OCB.\n\nFor the CCM, GCM and OCB cipher modes, truncation of the IV can result in\nloss of confidentiality.  For example, when following NIST's SP 800-38D\nsection 8.2.1 guidance for constructing a deterministic IV for AES in\nGCM mode, truncation of the counter portion could lead to IV reuse.\n\nBoth truncations and overruns of the key and overruns of the IV will\nproduce incorrect results and could, in some cases, trigger a memory\nexception.  However, these issues are not currently assessed as security\ncritical.\n\nChanging the key and/or IV lengths is not considered to be a common operation\nand the vulnerable API was recently introduced. Furthermore it is likely that\napplication developers will have spotted this problem during testing since\ndecryption would fail unless both peers in the communication were similarly\nvulnerable. For these reasons we expect the probability of an application being\nvulnerable to this to be quite low. However if an application is vulnerable then\nthis issue is considered very serious. For these reasons we have assessed this\nissue as Moderate severity overall.\n\nThe OpenSSL SSL/TLS implementation is not affected by this issue.\n\nThe OpenSSL 3.0 and 3.1 FIPS providers are not affected by this because\nthe issue lies outside of the FIPS provider boundary.\n\nOpenSSL 3.1 and 3.0 are vulnerable to this issue.",
+              "Severity": "HIGH",
+              "CweIDs": [
+                "CWE-684"
+              ],
+              "VendorSeverity": {
+                "alma": 2,
+                "amazon": 3,
+                "azure": 3,
+                "cbl-mariner": 3,
+                "julia": 3,
+                "nvd": 3,
+                "oracle-oval": 3,
+                "photon": 3,
+                "redhat": 2,
+                "ubuntu": 2
+              },
+              "CVSS": {
+                "julia": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                  "V3Score": 7.5
+                },
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                  "V3Score": 7.5
+                },
+                "redhat": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                  "V3Score": 7.5
+                }
+              },
+              "References": [
+                "http://www.openwall.com/lists/oss-security/2023/10/24/1",
+                "https://access.redhat.com/errata/RHSA-2024:0310",
+                "https://access.redhat.com/security/cve/CVE-2023-5363",
+                "https://bugzilla.redhat.com/2243839",
+                "https://cert-portal.siemens.com/productcert/html/ssa-082556.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-093430.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-277137.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-331112.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-769027.html",
+                "https://errata.almalinux.org/9/ALSA-2024-0310.html",
+                "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=0df40630850fb2740e6be6890bb905d3fc623b2d",
+                "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=5f69f5c65e483928c4b28ed16af6e5742929f1ee",
+                "https://github.com/advisories/GHSA-xw78-pcr6-wrg8",
+                "https://linux.oracle.com/cve/CVE-2023-5363.html",
+                "https://linux.oracle.com/errata/ELSA-2024-12093.html",
+                "https://nvd.nist.gov/vuln/detail/CVE-2023-5363",
+                "https://security.netapp.com/advisory/ntap-20231027-0010",
+                "https://security.netapp.com/advisory/ntap-20231027-0010/",
+                "https://security.netapp.com/advisory/ntap-20240201-0003",
+                "https://security.netapp.com/advisory/ntap-20240201-0003/",
+                "https://security.netapp.com/advisory/ntap-20240201-0004",
+                "https://security.netapp.com/advisory/ntap-20240201-0004/",
+                "https://security.netapp.com/advisory/ntap-20241108-0002",
+                "https://security.netapp.com/advisory/ntap-20241108-0002/",
+                "https://ubuntu.com/security/notices/USN-6450-1",
+                "https://www.cve.org/CVERecord?id=CVE-2023-5363",
+                "https://www.debian.org/security/2023/dsa-5532",
+                "https://www.openssl.org/news/secadv/20231024.txt"
+              ],
+              "PublishedDate": "2023-10-25T18:17:43.613Z",
+              "LastModifiedDate": "2026-06-17T06:48:25.703Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2024-6119",
+              "PkgID": "libcrypto3@3.1.0-r4",
+              "PkgName": "libcrypto3",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/libcrypto3@3.1.0-r4?arch=x86_64\u0026distro=3.18.0",
+                "UID": "bcf70568a65b7560"
+              },
+              "InstalledVersion": "3.1.0-r4",
+              "FixedVersion": "3.1.7-r0",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-6119",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:8fa0e99c3e9e17d3ccbe4da583f9e01cf1cd1a84d0539ab0916073f15a1fbf4b",
+              "Title": "openssl: Possible denial of service in X.509 name checks",
+              "Description": "Issue summary: Applications performing certificate name checks (e.g., TLS\nclients checking server certificates) may attempt to read an invalid memory\naddress resulting in abnormal termination of the application process.\n\nImpact summary: Abnormal termination of an application can a cause a denial of\nservice.\n\nApplications performing certificate name checks (e.g., TLS clients checking\nserver certificates) may attempt to read an invalid memory address when\ncomparing the expected name with an `otherName` subject alternative name of an\nX.509 certificate. This may result in an exception that terminates the\napplication program.\n\nNote that basic certificate chain validation (signatures, dates, ...) is not\naffected, the denial of service can occur only when the application also\nspecifies an expected DNS name, Email address or IP address.\n\nTLS servers rarely solicit client certificates, and even when they do, they\ngenerally don't perform a name check against a reference identifier (expected\nidentity), but rather extract the presented identity after checking the\ncertificate chain.  So TLS servers are generally not affected and the severity\nof the issue is Moderate.\n\nThe FIPS modules in 3.3, 3.2, 3.1 and 3.0 are not affected by this issue.",
+              "Severity": "HIGH",
+              "CweIDs": [
+                "CWE-843"
+              ],
+              "VendorSeverity": {
+                "alma": 2,
+                "amazon": 2,
+                "azure": 3,
+                "cbl-mariner": 3,
+                "julia": 3,
+                "nvd": 3,
+                "oracle-oval": 2,
+                "photon": 3,
+                "redhat": 2,
+                "rocky": 2,
+                "ubuntu": 2
+              },
+              "CVSS": {
+                "julia": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                  "V3Score": 7.5
+                },
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                  "V3Score": 7.5
+                },
+                "redhat": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                  "V3Score": 5.9
+                }
+              },
+              "References": [
+                "http://www.openwall.com/lists/oss-security/2024/09/03/4",
+                "https://access.redhat.com/errata/RHSA-2024:6783",
+                "https://access.redhat.com/errata/RHSA-2024:8935",
+                "https://access.redhat.com/security/cve/CVE-2024-6119",
+                "https://bugzilla.redhat.com/2306158",
+                "https://bugzilla.redhat.com/show_bug.cgi?id=2306158",
+                "https://cert-portal.siemens.com/productcert/html/ssa-082556.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-613116.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-769027.html",
+                "https://creativecommons.org/licenses/by/4.0/",
+                "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-6119",
+                "https://errata.almalinux.org/9/ALSA-2024-8935.html",
+                "https://errata.rockylinux.org/RLSA-2024:6783",
+                "https://github.com/advisories/GHSA-7m4m-pwhv-49c5",
+                "https://github.com/openssl/openssl/commit/05f360d9e849a1b277db628f1f13083a7f8dd04f",
+                "https://github.com/openssl/openssl/commit/06d1dc3fa96a2ba5a3e22735a033012aadc9f0d6",
+                "https://github.com/openssl/openssl/commit/621f3729831b05ee828a3203eddb621d014ff2b2",
+                "https://github.com/openssl/openssl/commit/7dfcee2cd2a63b2c64b9b4b0850be64cb695b0a0",
+                "https://github.com/openssl/openssl/security/advisories/GHSA-5qrj-vq78-58fj",
+                "https://linux.oracle.com/cve/CVE-2024-6119.html",
+                "https://linux.oracle.com/errata/ELSA-2024-8935.html",
+                "https://lists.freebsd.org/archives/freebsd-security/2024-September/000303.html",
+                "https://nvd.nist.gov/vuln/detail/CVE-2024-6119",
+                "https://openssl-library.org/news/secadv/20240903.txt",
+                "https://security.netapp.com/advisory/ntap-20240912-0001",
+                "https://security.netapp.com/advisory/ntap-20240912-0001/",
+                "https://ubuntu.com/security/notices/USN-6986-1",
+                "https://ubuntu.com/security/notices/USN-7894-1",
+                "https://www.cve.org/CVERecord?id=CVE-2024-6119"
+              ],
+              "PublishedDate": "2024-09-03T16:15:07.177Z",
+              "LastModifiedDate": "2026-06-17T08:17:19.693Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2023-5363",
+              "PkgID": "libssl3@3.1.0-r4",
+              "PkgName": "libssl3",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/libssl3@3.1.0-r4?arch=x86_64\u0026distro=3.18.0",
+                "UID": "f5a4f218b8dd33a9"
+              },
+              "InstalledVersion": "3.1.0-r4",
+              "FixedVersion": "3.1.4-r0",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2023-5363",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:7faad09e1435f13ec3d8ce43b762fd271f5ac57ba751b501192ce7e94c3fec27",
+              "Title": "openssl: Incorrect cipher key and IV length processing",
+              "Description": "Issue summary: A bug has been identified in the processing of key and\ninitialisation vector (IV) lengths.  This can lead to potential truncation\nor overruns during the initialisation of some symmetric ciphers.\n\nImpact summary: A truncation in the IV can result in non-uniqueness,\nwhich could result in loss of confidentiality for some cipher modes.\n\nWhen calling EVP_EncryptInit_ex2(), EVP_DecryptInit_ex2() or\nEVP_CipherInit_ex2() the provided OSSL_PARAM array is processed after\nthe key and IV have been established.  Any alterations to the key length,\nvia the \"keylen\" parameter or the IV length, via the \"ivlen\" parameter,\nwithin the OSSL_PARAM array will not take effect as intended, potentially\ncausing truncation or overreading of these values.  The following ciphers\nand cipher modes are impacted: RC2, RC4, RC5, CCM, GCM and OCB.\n\nFor the CCM, GCM and OCB cipher modes, truncation of the IV can result in\nloss of confidentiality.  For example, when following NIST's SP 800-38D\nsection 8.2.1 guidance for constructing a deterministic IV for AES in\nGCM mode, truncation of the counter portion could lead to IV reuse.\n\nBoth truncations and overruns of the key and overruns of the IV will\nproduce incorrect results and could, in some cases, trigger a memory\nexception.  However, these issues are not currently assessed as security\ncritical.\n\nChanging the key and/or IV lengths is not considered to be a common operation\nand the vulnerable API was recently introduced. Furthermore it is likely that\napplication developers will have spotted this problem during testing since\ndecryption would fail unless both peers in the communication were similarly\nvulnerable. For these reasons we expect the probability of an application being\nvulnerable to this to be quite low. However if an application is vulnerable then\nthis issue is considered very serious. For these reasons we have assessed this\nissue as Moderate severity overall.\n\nThe OpenSSL SSL/TLS implementation is not affected by this issue.\n\nThe OpenSSL 3.0 and 3.1 FIPS providers are not affected by this because\nthe issue lies outside of the FIPS provider boundary.\n\nOpenSSL 3.1 and 3.0 are vulnerable to this issue.",
+              "Severity": "HIGH",
+              "CweIDs": [
+                "CWE-684"
+              ],
+              "VendorSeverity": {
+                "alma": 2,
+                "amazon": 3,
+                "azure": 3,
+                "cbl-mariner": 3,
+                "julia": 3,
+                "nvd": 3,
+                "oracle-oval": 3,
+                "photon": 3,
+                "redhat": 2,
+                "ubuntu": 2
+              },
+              "CVSS": {
+                "julia": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                  "V3Score": 7.5
+                },
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                  "V3Score": 7.5
+                },
+                "redhat": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                  "V3Score": 7.5
+                }
+              },
+              "References": [
+                "http://www.openwall.com/lists/oss-security/2023/10/24/1",
+                "https://access.redhat.com/errata/RHSA-2024:0310",
+                "https://access.redhat.com/security/cve/CVE-2023-5363",
+                "https://bugzilla.redhat.com/2243839",
+                "https://cert-portal.siemens.com/productcert/html/ssa-082556.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-093430.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-277137.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-331112.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-769027.html",
+                "https://errata.almalinux.org/9/ALSA-2024-0310.html",
+                "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=0df40630850fb2740e6be6890bb905d3fc623b2d",
+                "https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=5f69f5c65e483928c4b28ed16af6e5742929f1ee",
+                "https://github.com/advisories/GHSA-xw78-pcr6-wrg8",
+                "https://linux.oracle.com/cve/CVE-2023-5363.html",
+                "https://linux.oracle.com/errata/ELSA-2024-12093.html",
+                "https://nvd.nist.gov/vuln/detail/CVE-2023-5363",
+                "https://security.netapp.com/advisory/ntap-20231027-0010",
+                "https://security.netapp.com/advisory/ntap-20231027-0010/",
+                "https://security.netapp.com/advisory/ntap-20240201-0003",
+                "https://security.netapp.com/advisory/ntap-20240201-0003/",
+                "https://security.netapp.com/advisory/ntap-20240201-0004",
+                "https://security.netapp.com/advisory/ntap-20240201-0004/",
+                "https://security.netapp.com/advisory/ntap-20241108-0002",
+                "https://security.netapp.com/advisory/ntap-20241108-0002/",
+                "https://ubuntu.com/security/notices/USN-6450-1",
+                "https://www.cve.org/CVERecord?id=CVE-2023-5363",
+                "https://www.debian.org/security/2023/dsa-5532",
+                "https://www.openssl.org/news/secadv/20231024.txt"
+              ],
+              "PublishedDate": "2023-10-25T18:17:43.613Z",
+              "LastModifiedDate": "2026-06-17T06:48:25.703Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2024-6119",
+              "PkgID": "libssl3@3.1.0-r4",
+              "PkgName": "libssl3",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/libssl3@3.1.0-r4?arch=x86_64\u0026distro=3.18.0",
+                "UID": "f5a4f218b8dd33a9"
+              },
+              "InstalledVersion": "3.1.0-r4",
+              "FixedVersion": "3.1.7-r0",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-6119",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:2117b6bc9c3f78543d78d0c70c5adc4e174afc78f149ea8bb372563a2416323f",
+              "Title": "openssl: Possible denial of service in X.509 name checks",
+              "Description": "Issue summary: Applications performing certificate name checks (e.g., TLS\nclients checking server certificates) may attempt to read an invalid memory\naddress resulting in abnormal termination of the application process.\n\nImpact summary: Abnormal termination of an application can a cause a denial of\nservice.\n\nApplications performing certificate name checks (e.g., TLS clients checking\nserver certificates) may attempt to read an invalid memory address when\ncomparing the expected name with an `otherName` subject alternative name of an\nX.509 certificate. This may result in an exception that terminates the\napplication program.\n\nNote that basic certificate chain validation (signatures, dates, ...) is not\naffected, the denial of service can occur only when the application also\nspecifies an expected DNS name, Email address or IP address.\n\nTLS servers rarely solicit client certificates, and even when they do, they\ngenerally don't perform a name check against a reference identifier (expected\nidentity), but rather extract the presented identity after checking the\ncertificate chain.  So TLS servers are generally not affected and the severity\nof the issue is Moderate.\n\nThe FIPS modules in 3.3, 3.2, 3.1 and 3.0 are not affected by this issue.",
+              "Severity": "HIGH",
+              "CweIDs": [
+                "CWE-843"
+              ],
+              "VendorSeverity": {
+                "alma": 2,
+                "amazon": 2,
+                "azure": 3,
+                "cbl-mariner": 3,
+                "julia": 3,
+                "nvd": 3,
+                "oracle-oval": 2,
+                "photon": 3,
+                "redhat": 2,
+                "rocky": 2,
+                "ubuntu": 2
+              },
+              "CVSS": {
+                "julia": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                  "V3Score": 7.5
+                },
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                  "V3Score": 7.5
+                },
+                "redhat": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+                  "V3Score": 5.9
+                }
+              },
+              "References": [
+                "http://www.openwall.com/lists/oss-security/2024/09/03/4",
+                "https://access.redhat.com/errata/RHSA-2024:6783",
+                "https://access.redhat.com/errata/RHSA-2024:8935",
+                "https://access.redhat.com/security/cve/CVE-2024-6119",
+                "https://bugzilla.redhat.com/2306158",
+                "https://bugzilla.redhat.com/show_bug.cgi?id=2306158",
+                "https://cert-portal.siemens.com/productcert/html/ssa-082556.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-613116.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-769027.html",
+                "https://creativecommons.org/licenses/by/4.0/",
+                "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-6119",
+                "https://errata.almalinux.org/9/ALSA-2024-8935.html",
+                "https://errata.rockylinux.org/RLSA-2024:6783",
+                "https://github.com/advisories/GHSA-7m4m-pwhv-49c5",
+                "https://github.com/openssl/openssl/commit/05f360d9e849a1b277db628f1f13083a7f8dd04f",
+                "https://github.com/openssl/openssl/commit/06d1dc3fa96a2ba5a3e22735a033012aadc9f0d6",
+                "https://github.com/openssl/openssl/commit/621f3729831b05ee828a3203eddb621d014ff2b2",
+                "https://github.com/openssl/openssl/commit/7dfcee2cd2a63b2c64b9b4b0850be64cb695b0a0",
+                "https://github.com/openssl/openssl/security/advisories/GHSA-5qrj-vq78-58fj",
+                "https://linux.oracle.com/cve/CVE-2024-6119.html",
+                "https://linux.oracle.com/errata/ELSA-2024-8935.html",
+                "https://lists.freebsd.org/archives/freebsd-security/2024-September/000303.html",
+                "https://nvd.nist.gov/vuln/detail/CVE-2024-6119",
+                "https://openssl-library.org/news/secadv/20240903.txt",
+                "https://security.netapp.com/advisory/ntap-20240912-0001",
+                "https://security.netapp.com/advisory/ntap-20240912-0001/",
+                "https://ubuntu.com/security/notices/USN-6986-1",
+                "https://ubuntu.com/security/notices/USN-7894-1",
+                "https://www.cve.org/CVERecord?id=CVE-2024-6119"
+              ],
+              "PublishedDate": "2024-09-03T16:15:07.177Z",
+              "LastModifiedDate": "2026-06-17T08:17:19.693Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2025-26519",
+              "PkgID": "musl@1.2.4-r0",
+              "PkgName": "musl",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/musl@1.2.4-r0?arch=x86_64\u0026distro=3.18.0",
+                "UID": "38fa8f5101ce83d1"
+              },
+              "InstalledVersion": "1.2.4-r0",
+              "FixedVersion": "1.2.4-r3",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-26519",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:a2117ae239dd6dc1152cdd332da0279700aa264395bc5c5e49f5f11903dab04a",
+              "Title": "musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write ...",
+              "Description": "musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write vulnerability when an attacker can trigger iconv conversion of untrusted EUC-KR text to UTF-8.",
+              "Severity": "HIGH",
+              "CweIDs": [
+                "CWE-787"
+              ],
+              "VendorSeverity": {
+                "nvd": 3
+              },
+              "CVSS": {
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 7
+                }
+              },
+              "References": [
+                "http://www.openwall.com/lists/oss-security/2025/02/13/2",
+                "http://www.openwall.com/lists/oss-security/2025/02/13/3",
+                "http://www.openwall.com/lists/oss-security/2025/02/13/4",
+                "http://www.openwall.com/lists/oss-security/2025/02/13/5",
+                "http://www.openwall.com/lists/oss-security/2025/02/14/5",
+                "http://www.openwall.com/lists/oss-security/2025/02/14/6",
+                "https://git.musl-libc.org/cgit/musl/commit/?id=c47ad25ea3b484e10326f933e927c0bc8cded3da",
+                "https://git.musl-libc.org/cgit/musl/commit/?id=e5adcd97b5196e29991b524237381a0202a60659",
+                "https://www.openwall.com/lists/oss-security/2025/02/13/2"
+              ],
+              "PublishedDate": "2025-02-14T04:15:09.05Z",
+              "LastModifiedDate": "2026-06-17T09:01:57.26Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2025-26519",
+              "PkgID": "musl-utils@1.2.4-r0",
+              "PkgName": "musl-utils",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/musl-utils@1.2.4-r0?arch=x86_64\u0026distro=3.18.0",
+                "UID": "d3bfccb8db18fb53"
+              },
+              "InstalledVersion": "1.2.4-r0",
+              "FixedVersion": "1.2.4-r3",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-26519",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:bbda725c320b82a7f20d676b27428afeb0e23594fef77ceddbc5567d8b0f4466",
+              "Title": "musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write ...",
+              "Description": "musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write vulnerability when an attacker can trigger iconv conversion of untrusted EUC-KR text to UTF-8.",
+              "Severity": "HIGH",
+              "CweIDs": [
+                "CWE-787"
+              ],
+              "VendorSeverity": {
+                "nvd": 3
+              },
+              "CVSS": {
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 7
+                }
+              },
+              "References": [
+                "http://www.openwall.com/lists/oss-security/2025/02/13/2",
+                "http://www.openwall.com/lists/oss-security/2025/02/13/3",
+                "http://www.openwall.com/lists/oss-security/2025/02/13/4",
+                "http://www.openwall.com/lists/oss-security/2025/02/13/5",
+                "http://www.openwall.com/lists/oss-security/2025/02/14/5",
+                "http://www.openwall.com/lists/oss-security/2025/02/14/6",
+                "https://git.musl-libc.org/cgit/musl/commit/?id=c47ad25ea3b484e10326f933e927c0bc8cded3da",
+                "https://git.musl-libc.org/cgit/musl/commit/?id=e5adcd97b5196e29991b524237381a0202a60659",
+                "https://www.openwall.com/lists/oss-security/2025/02/13/2"
+              ],
+              "PublishedDate": "2025-02-14T04:15:09.05Z",
+              "LastModifiedDate": "2026-06-17T09:01:57.26Z"
+            },
+            {
+              "VulnerabilityID": "CVE-2022-48174",
+              "PkgID": "ssl_client@1.36.0-r9",
+              "PkgName": "ssl_client",
+              "PkgIdentifier": {
+                "PURL": "pkg:apk/alpine/ssl_client@1.36.0-r9?arch=x86_64\u0026distro=3.18.0",
+                "UID": "4e806eb13ba69355"
+              },
+              "InstalledVersion": "1.36.0-r9",
+              "FixedVersion": "1.36.1-r1",
+              "Status": "fixed",
+              "Layer": {
+                "Digest": "sha256:8a49fdb3b6a5ff2bd8ec6a86c05b2922a0f7454579ecc07637e94dfd1d0639b6",
+                "DiffID": "sha256:bb01bd7e32b58b6694c8c3622c230171f1cec24001a82068a8d30d338f420d6c"
+              },
+              "SeveritySource": "nvd",
+              "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2022-48174",
+              "DataSource": {
+                "ID": "alpine",
+                "Name": "Alpine Secdb",
+                "URL": "https://secdb.alpinelinux.org/"
+              },
+              "Fingerprint": "sha256:651f3d84cb10d4e9a6e4b5e8762b2b1da4ae980a2c48312d9710883472e92a72",
+              "Title": "busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution",
+              "Description": "There is a stack overflow vulnerability in ash.c:6030 in busybox before 1.35. In the environment of Internet of Vehicles, this vulnerability can be executed from command to arbitrary code execution.",
+              "Severity": "CRITICAL",
+              "CweIDs": [
+                "CWE-787"
+              ],
+              "VendorSeverity": {
+                "amazon": 2,
+                "azure": 4,
+                "cbl-mariner": 4,
+                "nvd": 4,
+                "oracle-oval": 3,
+                "redhat": 3,
+                "ubuntu": 1
+              },
+              "CVSS": {
+                "nvd": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 9.8
+                },
+                "redhat": {
+                  "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+                  "V3Score": 9.8
+                }
+              },
+              "References": [
+                "https://access.redhat.com/security/cve/CVE-2022-48174",
+                "https://bugs.busybox.net/show_bug.cgi?id=15216",
+                "https://cert-portal.siemens.com/productcert/html/ssa-089022.html",
+                "https://cert-portal.siemens.com/productcert/html/ssa-585531.html",
+                "https://linux.oracle.com/cve/CVE-2022-48174.html",
+                "https://linux.oracle.com/errata/ELSA-2023-5178.html",
+                "https://lists.debian.org/debian-lts-announce/2025/01/msg00012.html",
+                "https://nvd.nist.gov/vuln/detail/CVE-2022-48174",
+                "https://security.netapp.com/advisory/ntap-20241129-0001/",
+                "https://ubuntu.com/security/notices/USN-6335-1",
+                "https://ubuntu.com/security/notices/USN-6961-1",
+                "https://www.cve.org/CVERecord?id=CVE-2022-48174"
+              ],
+              "PublishedDate": "2023-08-22T19:16:31.08Z",
+              "LastModifiedDate": "2026-07-14T12:16:48.24Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Namespace": "shop",
+      "Kind": "Deployment",
+      "Name": "worker",
+      "Metadata": [
+        {}
+      ],
+      "Results": [
+        {
+          "Target": "Deployment/worker",
+          "Class": "config",
+          "Type": "kubernetes",
+          "MisconfSummary": {
+            "Successes": 27,
+            "Failures": 3
+          },
+          "Misconfigurations": [
+            {
+              "Type": "Kubernetes Security Check",
+              "ID": "KSV-0014",
+              "Title": "Root file system is not read-only",
+              "Description": "An immutable root file system prevents applications from writing to their local disk. This can limit intrusions, as attackers will not be able to tamper with the file system or write foreign executables to disk.",
+              "Message": "Container 'worker' of Deployment 'worker' should set 'securityContext.readOnlyRootFilesystem' to true",
+              "Namespace": "builtin.kubernetes.KSV014",
+              "Query": "data.builtin.kubernetes.KSV014.deny",
+              "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+              "Severity": "HIGH",
+              "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0014",
+              "References": [
+                "https://kubesec.io/basics/containers-securitycontext-readonlyrootfilesystem-true/",
+                "https://avd.aquasec.com/misconfig/ksv-0014"
+              ],
+              "Status": "FAIL",
+              "CauseMetadata": {
+                "Provider": "Kubernetes",
+                "Service": "general",
+                "StartLine": 33,
+                "EndLine": 38,
+                "Code": {
+                  "Lines": [
+                    {
+                      "Number": 33,
+                      "Content": "                - image: registry.invalid/shop/worker:1.0.0",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                - \u001b[38;5;33mimage\u001b[0m: registry.invalid/shop/worker:1.0.0",
+                      "FirstCause": true,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 34,
+                      "Content": "                  imagePullPolicy: IfNotPresent",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mimagePullPolicy\u001b[0m: IfNotPresent",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 35,
+                      "Content": "                  name: worker",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mname\u001b[0m: worker",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 36,
+                      "Content": "                  resources: {}",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mresources\u001b[0m: {}",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 37,
+                      "Content": "                  terminationMessagePath: /dev/termination-log",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePath\u001b[0m: /dev/termination-log",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 38,
+                      "Content": "                  terminationMessagePolicy: File",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePolicy\u001b[0m: File",
+                      "FirstCause": false,
+                      "LastCause": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "Type": "Kubernetes Security Check",
+              "ID": "KSV-0118",
+              "Title": "Default security context configured",
+              "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
+              "Message": "container worker in shop namespace is using the default security context",
+              "Namespace": "builtin.kubernetes.KSV118",
+              "Query": "data.builtin.kubernetes.KSV118.deny",
+              "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
+              "Severity": "HIGH",
+              "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
+              "References": [
+                "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+                "https://avd.aquasec.com/misconfig/ksv-0118"
+              ],
+              "Status": "FAIL",
+              "CauseMetadata": {
+                "Provider": "Kubernetes",
+                "Service": "general",
+                "StartLine": 33,
+                "EndLine": 38,
+                "Code": {
+                  "Lines": [
+                    {
+                      "Number": 33,
+                      "Content": "                - image: registry.invalid/shop/worker:1.0.0",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                - \u001b[38;5;33mimage\u001b[0m: registry.invalid/shop/worker:1.0.0",
+                      "FirstCause": true,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 34,
+                      "Content": "                  imagePullPolicy: IfNotPresent",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mimagePullPolicy\u001b[0m: IfNotPresent",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 35,
+                      "Content": "                  name: worker",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mname\u001b[0m: worker",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 36,
+                      "Content": "                  resources: {}",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mresources\u001b[0m: {}",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 37,
+                      "Content": "                  terminationMessagePath: /dev/termination-log",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePath\u001b[0m: /dev/termination-log",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 38,
+                      "Content": "                  terminationMessagePolicy: File",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePolicy\u001b[0m: File",
+                      "FirstCause": false,
+                      "LastCause": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "Type": "Kubernetes Security Check",
+              "ID": "KSV-0118",
+              "Title": "Default security context configured",
+              "Description": "Security context controls the allocation of security parameters for the pod/container/volume, ensuring the appropriate level of protection. Relying on default security context may expose vulnerabilities to potential attacks that rely on privileged access.",
+              "Message": "deployment worker in shop namespace is using the default security context, which allows root privileges",
+              "Namespace": "builtin.kubernetes.KSV118",
+              "Query": "data.builtin.kubernetes.KSV118.deny",
+              "Resolution": "To enhance security, it is strongly recommended not to rely on the default security context. Instead, it is advisable to explicitly define the required security parameters (such as runAsNonRoot, capabilities, readOnlyRootFilesystem, etc.) within the security context.",
+              "Severity": "HIGH",
+              "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0118",
+              "References": [
+                "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+                "https://avd.aquasec.com/misconfig/ksv-0118"
+              ],
+              "Status": "FAIL",
+              "CauseMetadata": {
+                "Provider": "Kubernetes",
+                "Service": "general",
+                "StartLine": 31,
+                "EndLine": 43,
+                "Code": {
+                  "Lines": [
+                    {
+                      "Number": 31,
+                      "Content": "        spec:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "        \u001b[38;5;33mspec\u001b[0m:",
+                      "FirstCause": true,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 32,
+                      "Content": "            containers:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "            \u001b[38;5;33mcontainers\u001b[0m:",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 33,
+                      "Content": "                - image: registry.invalid/shop/worker:1.0.0",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                - \u001b[38;5;33mimage\u001b[0m: registry.invalid/shop/worker:1.0.0",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 34,
+                      "Content": "                  imagePullPolicy: IfNotPresent",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mimagePullPolicy\u001b[0m: IfNotPresent",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 35,
+                      "Content": "                  name: worker",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mname\u001b[0m: worker",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 36,
+                      "Content": "                  resources: {}",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mresources\u001b[0m: {}",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 37,
+                      "Content": "                  terminationMessagePath: /dev/termination-log",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePath\u001b[0m: /dev/termination-log",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 38,
+                      "Content": "                  terminationMessagePolicy: File",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "                  \u001b[38;5;33mterminationMessagePolicy\u001b[0m: File",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 39,
+                      "Content": "            dnsPolicy: ClusterFirst",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "            \u001b[38;5;33mdnsPolicy\u001b[0m: ClusterFirst",
+                      "FirstCause": false,
+                      "LastCause": true
+                    },
+                    {
+                      "Number": 40,
+                      "Content": "",
+                      "IsCause": false,
+                      "Annotation": "",
+                      "Truncated": true,
+                      "FirstCause": false,
+                      "LastCause": false
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Namespace": "shop",
+      "Kind": "Role",
+      "Name": "admin",
+      "Metadata": [
+        {}
+      ],
+      "Results": [
+        {
+          "Target": "Role/admin",
+          "Class": "config",
+          "Type": "kubernetes",
+          "MisconfSummary": {
+            "Successes": 28,
+            "Failures": 1
+          },
+          "Misconfigurations": [
+            {
+              "Type": "Kubernetes Security Check",
+              "ID": "KSV-0112",
+              "Title": "Manage all resources at the namespace",
+              "Description": "Full control of the resources within a namespace.  In some cluster configurations, this is excessive. In others, this is normal (a gitops deployment operator like flux)",
+              "Message": "Role 'admin' shouldn't manage all resources at the namespace 'shop'",
+              "Namespace": "builtin.kubernetes.KSV112",
+              "Query": "data.builtin.kubernetes.KSV112.deny",
+              "Resolution": "Remove '*' from 'rules.resources'. Provide specific list of resources to be managed by role in namespace",
+              "Severity": "CRITICAL",
+              "PrimaryURL": "https://avd.aquasec.com/misconfig/ksv-0112",
+              "References": [
+                "https://kubernetes.io/docs/concepts/security/rbac-good-practices/",
+                "https://avd.aquasec.com/misconfig/ksv-0112"
+              ],
+              "Status": "FAIL",
+              "CauseMetadata": {
+                "Provider": "Kubernetes",
+                "Service": "general",
+                "StartLine": 10,
+                "EndLine": 15,
+                "Code": {
+                  "Lines": [
+                    {
+                      "Number": 10,
+                      "Content": "    - apiGroups:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "    - \u001b[38;5;33mapiGroups\u001b[0m:",
+                      "FirstCause": true,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 11,
+                      "Content": "        - \"\"",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "        - \u001b[38;5;37m\"\"",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 12,
+                      "Content": "      resources:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "\u001b[0m      \u001b[38;5;33mresources\u001b[0m:",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 13,
+                      "Content": "        - '*'",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "        - \u001b[38;5;37m'*'",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 14,
+                      "Content": "      verbs:",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "\u001b[0m      \u001b[38;5;33mverbs\u001b[0m:",
+                      "FirstCause": false,
+                      "LastCause": false
+                    },
+                    {
+                      "Number": 15,
+                      "Content": "        - '*'",
+                      "IsCause": true,
+                      "Annotation": "",
+                      "Truncated": false,
+                      "Highlighted": "        - \u001b[38;5;37m'*'\u001b[0m",
+                      "FirstCause": false,
+                      "LastCause": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+junit: 3 tests in 3 suites: 2 passed, 1 skipped

@@ -1,0 +1,4 @@
+kubectl: 48 events, 6 warnings
+warning Pod shop/worker-56bff96fc9-c8xj6 BackOff: Back-off restarting failed container worker in pod worker-56bff96fc9-c8xj6_shop(d39d6608-c90e-4a54-9e04-1b09136cbb47) (x7)
+warning Pod shop/api-badimage Failed: Error: ImagePullBackOff (x4)
+... 4 more warning events: Failed 2, BackoffLimitExceeded 1, FailedScheduling 1 (--max-events 0)

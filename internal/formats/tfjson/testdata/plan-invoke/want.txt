@@ -1,0 +1,2 @@
+terraform 1.17.0-rc2 plan: 0 to add, 0 to change, 0 to destroy, 1 action to invoke
+actions: action.local_command.rotate (invoked)

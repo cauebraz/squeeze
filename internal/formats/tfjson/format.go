@@ -26,7 +26,7 @@ type Format struct{}
 func (Format) Name() string { return "tfjson" }
 
 func (Format) Description() string {
-	return "Terraform machine-readable UI stream from plan, apply, destroy, init or test with -json"
+	return "Terraform machine-readable UI stream from plan, apply, destroy, init, test or query with -json"
 }
 
 var conditionNames = []string{"apply_errored", "change", "deferred", "destroy", "drift", "error", "fail", "forget", "policy_failed", "replace", "test_failed", "warning"}
@@ -39,7 +39,7 @@ func (Format) Detect(head []byte) bool {
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 	o := DefaultOptions()
-	core.CountFlag(fs, &o.MaxResources, "max-resources", "planned changes listed, 0 for all")
+	core.CountFlag(fs, &o.MaxResources, "max-resources", "planned changes and found resources listed, 0 for all")
 	core.CountFlag(fs, &o.MaxDiagnostics, "max-diagnostics", "diagnostics listed, 0 for all")
 	fs.BoolVar(&o.All, "all", false, "include no-op resources, passing tests and every other message")
 	fs.BoolVar(&o.ListDrift, "drift", false, "list drifted resources instead of counting them")
@@ -63,8 +63,8 @@ func conditions(r Report, lines []Line) []string {
 		"apply_errored": len(r.Failures) > 0,
 		"deferred":      len(r.Deferred) > 0,
 		"drift":         len(r.Drift) > 0,
-		"error":         r.Errors > 0 || len(r.Failures) > 0,
-		"policy_failed": len(r.Policies) > 0,
+		"error":         r.Errors > 0 || len(r.Failures) > 0 || hasPolicyOutcome(r, "error"),
+		"policy_failed": hasPolicyOutcome(r, "fail"),
 		"warning":       r.Warnings > 0,
 	}
 	if s := r.Summary; s != nil {
@@ -101,4 +101,13 @@ func conditions(r Report, lines []Line) []string {
 	}
 	present["fail"] = present["error"] || present["apply_errored"] || present["policy_failed"] || present["test_failed"]
 	return core.Conditions(present)
+}
+
+func hasPolicyOutcome(r Report, outcome string) bool {
+	for _, p := range r.Policies {
+		if p.Outcome == outcome {
+			return true
+		}
+	}
+	return false
 }

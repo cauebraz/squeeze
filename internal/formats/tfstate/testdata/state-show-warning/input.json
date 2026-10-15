@@ -1,0 +1,27 @@
+{
+  "format_version": "1.0",
+  "resource": {
+    "address": "random_pet.name[0]",
+    "mode": "managed",
+    "type": "random_pet",
+    "name": "name",
+    "index": 0,
+    "provider_name": "registry.terraform.io/hashicorp/random",
+    "schema_version": 0,
+    "values": {
+      "id": "happy-otter",
+      "keepers": null,
+      "length": 2,
+      "prefix": null,
+      "separator": "-"
+    },
+    "sensitive_values": {}
+  },
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "summary": "Provider schema warning",
+      "detail": "The provider registry.terraform.io/hashicorp/random returned a warning while loading its schema."
+    }
+  ]
+}

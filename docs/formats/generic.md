@@ -7,7 +7,7 @@ npm test 2>&1 | squeeze
 docker build . 2>&1 | squeeze generic --max-lines 400
 ```
 
-The format knows nothing about the tool, so it keeps the text and removes what a terminal would hide or repeat. On the fixtures with color codes, repeats or cuts the text is 17 to 53 percent of the input; text with none of those passes through unchanged, and input with nothing printable gets a 20-byte notice.
+The format knows nothing about the tool, so it keeps the text and removes what a terminal would hide or repeat. On the fixtures with color codes, repeats or cuts the text is 17 to 52 percent of the input; text with none of those passes through at the same size or smaller, and input with nothing printable gets a 20-byte notice.
 
 ## Output
 
@@ -37,7 +37,7 @@ tango november handled by hotel worker
 exit status 2
 ```
 
-- Terminal escape sequences are removed: color codes, cursor movement, terminal titles, hyperlinks (the link text stays), device control and application strings, in their 7-bit and 8-bit forms. A string sequence without its terminator runs to the end of the line. Other control characters, the byte order mark, bidirectional controls and Unicode line separators are dropped, and a tab becomes four spaces. Indentation is kept; trailing spaces are not.
+- Terminal escape sequences are removed: color codes, cursor movement, terminal titles, hyperlinks (the link text stays), device control and application strings, in their 7-bit and 8-bit forms. A string sequence without its terminator runs to the end of the line. Other control characters, the byte order mark, bidirectional controls and Unicode line separators are dropped, and a tab becomes one space, so a tab-separated table or a tab-indented stack trace prints no wider than the input. Indentation is kept, one space per tab; trailing spaces are not.
 - A line rewritten with carriage returns, such as a progress bar, keeps only its last frame with printable text.
 - Leading and trailing blank lines are dropped and a run of blank lines becomes one.
 - Three or more identical lines in a row print once, followed by `... N more identical lines (--no-fold)`.

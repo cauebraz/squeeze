@@ -1,0 +1,5 @@
+tsc: 9 errors in 3 files
+error: Type 'string' is not assignable to type 'number'. (src/cart.ts:10:7, TS2322)
+error: Type 'string' is not assignable to type 'number'. (src/cart.ts:14:3, TS2322)
+error: Type 'string' is not assignable to type 'number'. (src/cart.ts:17:64, TS2322)
+... 6 more errors, TS2322 3, TS2307 1, TS2339 1, TS7006 1 (--max-errors 0)

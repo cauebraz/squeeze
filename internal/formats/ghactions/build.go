@@ -1,7 +1,6 @@
 package ghactions
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -67,43 +66,6 @@ func sections(lines []Line) ([]Step, string) {
 	return steps, version
 }
 
-func cut(lines []string, max int) ([]string, int) {
-	out := []string{}
-	if max <= 0 || len(lines) <= max {
-		return append(out, lines...), 0
-	}
-	keep := make([]bool, len(lines))
-	for i, l := range lines {
-		if i >= len(lines)-max {
-			keep[i] = true
-		}
-		if core.ErrorLine(l) || core.WarningLine(l) {
-			keep[i] = true
-			if i+1 < len(lines) {
-				keep[i+1] = true
-			}
-		}
-	}
-	omitted, gap := 0, 0
-	for i, l := range lines {
-		if !keep[i] {
-			gap++
-			omitted++
-			continue
-		}
-		if gap > 0 {
-			out = append(out, gapLine(gap))
-			gap = 0
-		}
-		out = append(out, l)
-	}
-	return out, omitted
-}
-
-func gapLine(n int) string {
-	return fmt.Sprintf("... %d %s cut (--max-lines 0)", n, core.Plural(n, "line", "lines"))
-}
-
 func Build(jobs []Job, o Options) Report {
 	r := Report{Tool: "github-actions", Jobs: []JobReport{}}
 	for _, j := range jobs {
@@ -127,7 +89,7 @@ func Build(jobs []Job, o Options) Report {
 				}
 				continue
 			}
-			s.Output, s.LinesOmitted = cut(s.lines, o.MaxLines)
+			s.Output, s.LinesOmitted = core.TailLines(s.lines, o.MaxLines, "--max-lines")
 			jr.Steps = append(jr.Steps, s)
 		}
 		r.Jobs = append(r.Jobs, jr)

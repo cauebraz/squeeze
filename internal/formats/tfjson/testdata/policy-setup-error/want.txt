@@ -1,0 +1,4 @@
+terraform 1.17.0-rc2: 1 error
+policy: resource_policy.no_public_acl SetupErrorResult for aws_s3_bucket.logs (mandatory)
+error: Failed to connect to policy engine
+  Failed to connect to policy engine: plugin exited before we could connect.

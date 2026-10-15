@@ -1,0 +1,4 @@
+error TS6053: File '/home/dev/shop/src/gone.ts' not found.
+src/legacy.ts(1,1): warning TS80001: File is a CommonJS module; it may be converted to an ES module.
+src/legacy.ts(4,10): error TS2304: Cannot find name 'require'.
+src/legacy.ts(9,3): message TS6133: 'helper' is declared but its value is never read.

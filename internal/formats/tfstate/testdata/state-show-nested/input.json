@@ -1,0 +1,60 @@
+{
+  "format_version": "1.0",
+  "resource": {
+    "address": "terraform_data.app",
+    "mode": "managed",
+    "type": "terraform_data",
+    "name": "app",
+    "provider_name": "terraform.io/builtin/terraform",
+    "schema_version": 0,
+    "values": {
+      "id": "8c1f7a52-3b9e-4d1c-a0f2-6e7d5c4b3a21",
+      "input": {
+        "db": [
+          {
+            "host": "db.internal",
+            "password": "NESTED-SECRET-4kq"
+          }
+        ],
+        "name": "api",
+        "note": "line one\nline two\u001b[31m red",
+        "tokens": [
+          "public-token",
+          "LIST-SECRET-9f2"
+        ]
+      },
+      "output": {
+        "db": [
+          {
+            "host": "db.internal",
+            "password": "NESTED-SECRET-4kq"
+          }
+        ],
+        "name": "api",
+        "note": "line one\nline two\u001b[31m red",
+        "tokens": [
+          "public-token",
+          "LIST-SECRET-9f2"
+        ]
+      },
+      "store": null,
+      "triggers_replace": null
+    },
+    "sensitive_values": {
+      "input": {
+        "db": [
+          {
+            "password": true
+          }
+        ],
+        "tokens": [
+          false,
+          true
+        ]
+      },
+      "output": true
+    },
+    "tainted": true
+  },
+  "diagnostics": []
+}

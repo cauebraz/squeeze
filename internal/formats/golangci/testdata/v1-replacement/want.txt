@@ -1,0 +1,3 @@
+golangci-lint: 2 issues (1 error, 1 warning) from gofmt 1, gosimple 1; 2 linters enabled; 1 fixable
+error: File is not `gofmt`-ed with `-s` (clean.go:3, gofmt, fixable)
+warning: S1008: should use 'return x == x' instead of 'if x == x { return true }; return false' (store/store.go:23:2, gosimple)
