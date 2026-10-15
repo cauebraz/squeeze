@@ -32,7 +32,7 @@ impl Account {
     }
 
     pub fn entry_count(&self) -> u32 {
-        self.entries.len()
+        self.entries.len() as u32
     }
 
     fn largest_mut(&mut self) -> Option<&mut Entry> {
@@ -40,8 +40,8 @@ impl Account {
     }
 
     pub fn rename_largest(&mut self, label: &str) {
-        let largest = self.largest_mut();
         self.log.push(format!("rename largest to {}", label));
+        let largest = self.largest_mut();
         if let Some(entry) = largest {
             entry.label = label.to_string();
         }
