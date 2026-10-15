@@ -1,0 +1,3 @@
+db_host: db1.internal
+app_port: 8081
+log_level: verbose

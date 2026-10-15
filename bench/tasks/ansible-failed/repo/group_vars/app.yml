@@ -1,0 +1,19 @@
+app_name: shop
+app_version: 4.2.1
+app_user: shop
+app_port: 8080
+log_level: info
+cache_ttl: 600
+db_name: shop
+common_scripts:
+  - src: scripts/start.sh
+    dest: start.sh
+  - src: scripts/stop.sh
+    dest: stop.sh
+extra_scripts: []
+app_dirs:
+  - etc
+  - log
+  - run
+  - data
+  - bin

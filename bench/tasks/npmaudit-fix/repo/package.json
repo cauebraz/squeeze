@@ -1,0 +1,20 @@
+{
+  "name": "inventory-report",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Builds a stock report from a JSON feed",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cookie": "0.6.0",
+    "follow-redirects": "1.15.5",
+    "lodash": "4.17.15",
+    "minimist": "1.2.0",
+    "mkdirp": "0.5.1",
+    "ms": "2.1.3",
+    "nanoid": "3.1.20",
+    "node-fetch": "2.6.0"
+  }
+}

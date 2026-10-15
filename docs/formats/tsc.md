@@ -56,7 +56,7 @@ error: Type '(event: { id: string; payload: { items: string[]; }; }) => void' is
 
 ## Limitations
 
-- The message chain prints on at most 3 lines of 100 characters, ending with `...` when longer; `--output json` keeps it whole in `detail`. The related information prints on one line of at most 200 characters.
+- The message chain prints on at most 3 lines of 100 characters, ending with `...` when longer. Its deepest level, the one that names the mismatch (such as `Type 'string' is not assignable to type 'number'.`), prints first, then the outer levels in tsc's order, so a long inferred type cannot push it out; `--output json` keeps the chain whole and in tsc's order in `detail`. The related information prints on one line of at most 200 characters.
 - tsc 5.9.3 defines no diagnostic of category `warning`; the `categories` fixture, with a warning and a message, is written from `formatDiagnostic`, not captured.
 - The code frame of `--pretty` is dropped. A related-information message that starts with a number and a space reads as a code frame line and is dropped too.
 - `tsc --watch` is read line by line like any other log: every cycle's diagnostics add up, and the last summary wins.

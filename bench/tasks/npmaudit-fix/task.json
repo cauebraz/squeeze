@@ -1,0 +1,9 @@
+{
+  "prompt": "npm audit --audit-level=high fails in this Node project. Update the vulnerable dependencies so it exits 0, keeping package.json and package-lock.json in sync. Do not remove a dependency the code under src/ uses, do not edit the tests or src/, and do not take a breaking major upgrade: node --test must still pass. Vulnerabilities below high may stay. Finish when npm audit --audit-level=high exits 0 and node --test passes.",
+  "setup": "npm ci --silent --no-audit --no-fund",
+  "verify": "npm audit --audit-level=high --registry=https://registry.npmjs.org/ >/dev/null 2>&1 && node --test >/dev/null 2>&1 && [ ! -e .npmrc ] && [ \"$(grep -c '^test(' test/report.test.js)\" = 6 ] && ! grep -q 'skip\\|todo' test/report.test.js && grep -q \"require('node-fetch')\" src/feed.js && grep -q \"require('follow-redirects')\" src/feed.js && grep -q \"require('minimist')\" src/cli.js && grep -q \"require('lodash')\" src/report.js && grep -q \"require('mkdirp')\" src/report.js && grep -q \"require('nanoid')\" src/report.js && grep -q \"require('cookie')\" src/report.js && node -e \"const d=require('./package.json').dependencies||{};const v=(n)=>require('./node_modules/'+n+'/package.json').version.split('.')[0];const want={lodash:'4',minimist:'1',mkdirp:'0',ms:'2',nanoid:'3','node-fetch':'2',cookie:'0','follow-redirects':'1'};for(const n in want){if(!d[n]||v(n)!==want[n])process.exit(1)}\"",
+  "solution": "npm install --silent --save-exact --no-audit --no-fund lodash@4.18.1 minimist@1.2.8 mkdirp@0.5.6 nanoid@3.3.20 node-fetch@2.7.0",
+  "tool": "npmaudit",
+  "control": "- Run the audit with `npm audit --audit-level=high` and read its output.",
+  "squeeze": "- Run the audit with `npm audit --json | squeeze` and read squeeze's output instead of npm's."
+}

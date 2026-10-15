@@ -1,0 +1,5 @@
+{
+  "max_items_per_order": 50,
+  "max_open_reservations": 200,
+  "reservation_ttl_seconds": 900
+}

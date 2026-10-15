@@ -1,0 +1,9 @@
+{
+  "prompt": "npx tsc --noEmit fails in this TypeScript project. Fix every type error in the code under src/ so the type check passes. Do not change tsconfig.json or src/types.ts, do not turn off strict checks, and do not use any, type assertions to unknown, @ts-ignore, @ts-expect-error or @ts-nocheck. Finish when npx tsc --noEmit exits 0.",
+  "setup": "npm ci --silent --no-audit --no-fund",
+  "verify": "./node_modules/.bin/tsc --noEmit >/dev/null 2>&1 && grep -q '\"strict\": true' tsconfig.json && [ \"$(shasum -a 256 < tsconfig.json | cut -d' ' -f1)\" = 07b07715e104522a1ce265549c3827c363c32b7805955f4d6b13292651580771 ] && [ \"$(shasum -a 256 < src/types.ts | cut -d' ' -f1)\" = ddb7fce16ca316b2b1df006dc40dcfac9510fe91bb3f67ada49b29ce61a24033 ] && ! grep -rnwE 'any|@ts-ignore|@ts-expect-error|@ts-nocheck' src && ! grep -rn 'as unknown' src && [ \"$(cat src/*.ts | grep -c 'export function')\" = 16 ] && grep -q 'export const loadConfig: (region: string) => StoreConfig' src/config.ts",
+  "solution": "sed -i.bak 's/item\\.qty/item.quantity/g' src/cart.ts && sed -i.bak 's/return findProduct(\\([a-z]*\\))\\./return getProduct(\\1)./' src/catalog.ts && sed -i.bak 's/rate: \"0.08\"/rate: 0.08/' src/config.ts && sed -i.bak 's/formatAddress(\\([a-z]*\\)\\.shipping)/formatAddress(\\1.shipping.address)/g' src/shipping.ts && rm src/*.bak",
+  "tool": "tsc",
+  "control": "- Run the type check with `npx tsc --noEmit --pretty` and read its output.",
+  "squeeze": "- Run the type check with `npx tsc --noEmit --pretty | squeeze` and read squeeze's output instead of tsc's."
+}

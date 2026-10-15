@@ -1,0 +1,9 @@
+{
+  "prompt": "The Jest test suite in this repository fails. Find the defects in the application code under src/ and fix them there, not in the tests or the Jest configuration. Finish when every test passes with `npx jest --ci`.",
+  "setup": "npm ci --silent --no-audit --no-fund",
+  "verify": "./node_modules/.bin/jest --ci >/dev/null 2>&1 && [ \"$(grep -c 'test(' test/money.test.js)\" = 8 ] && [ \"$(grep -c 'test(' test/sku.test.js)\" = 9 ] && [ \"$(grep -c 'test(' test/cart.test.js)\" = 12 ] && [ \"$(grep -c 'test(' test/inventory.test.js)\" = 10 ] && ! grep -qE '\\.(skip|only|todo)\\b|\\b(xit|xtest|xdescribe|fit|fdescribe)\\b' test/*.test.js && grep -q 'toThrow(\"invalid sku: TEA-00421\")' test/sku.test.js && grep -q 'toThrow(\"invalid sku: TEA-0042-B\")' test/sku.test.js && grep -q 'tax: 680,' test/cart.test.js && grep -q 'toEqual({ TEA: 15, MUG: 13, POT: 2 })' test/inventory.test.js && grep -q 'testMatch: \\[\"<rootDir>/test/\\*\\*/\\*.test.js\"\\]' jest.config.js && [ \"$(ls test | wc -l | tr -d ' ')\" = 4 ]",
+  "solution": "/usr/bin/python3 -I -c \"def fix(p, a, b):\n    s = open(p).read(); assert a in s, p; open(p, 'w').write(s.replace(a, b))\nfix('src/sku.js', '\\\\d{4}/;', '\\\\d{4}$/;')\nfix('src/cart.js', 'Math.round((sub * taxPercent)', 'Math.round(((sub - discount) * taxPercent)')\nfix('src/inventory.js', 'groups[family] = quantity;', 'groups[family] = (groups[family] || 0) + quantity;')\n\"",
+  "tool": "jest",
+  "control": "- Run the tests with `npx jest --ci` and read the output.",
+  "squeeze": "- Run the tests with `npx jest --ci --json 2>/dev/null | squeeze` and read squeeze's output instead of Jest's."
+}
