@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 774" width="880" height="774" role="img" aria-labelledby="t d">
 <title id="t">squeeze bench: tokens per task with and without squeeze</title>
-<desc id="d">lint-log: 48,177 tokens without squeeze, 4,630 with squeeze; npmaudit-fix: 14,948 tokens without squeeze, 8,337 with squeeze; junit-report: 25,749 tokens without squeeze, 16,572 with squeeze; gotest-race: 10,815 tokens without squeeze, 7,469 with squeeze; pytest-failures: 12,681 tokens without squeeze, 9,324 with squeeze; jest-failures: 12,843 tokens without squeeze, 9,913 with squeeze; precommit-hooks: 24,392 tokens without squeeze, 19,901 with squeeze; tflint-high: 11,309 tokens without squeeze, 10,979 with squeeze</desc>
+<desc id="d">lint-log: 48,264 tokens without squeeze, 5,127 with squeeze; npmaudit-fix: 14,027 tokens without squeeze, 6,464 with squeeze; tflint-high: 13,101 tokens without squeeze, 8,721 with squeeze; junit-report: 25,722 tokens without squeeze, 17,613 with squeeze; precommit-hooks: 21,554 tokens without squeeze, 16,667 with squeeze; gotest-race: 10,169 tokens without squeeze, 7,927 with squeeze; jest-failures: 12,365 tokens without squeeze, 10,793 with squeeze; pytest-failures: 11,102 tokens without squeeze, 9,700 with squeeze</desc>
 <style>
 text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
 .kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; }
@@ -22,8 +22,8 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans
 <text class="kicker" x="32" y="40">SQUEEZE BENCH</text>
 <text class="title" x="32" y="70">Tokens an agent spends to fix a defect</text>
 <text class="sub" x="32" y="94">claude-opus-5.5 - 5 runs per task and arm - 80/80 runs fixed the defect</text>
-<text class="hero" x="848" y="76" text-anchor="end">46%</text>
-<text class="herol" x="848" y="98" text-anchor="end">fewer tokens: 160,913 -&gt; 87,123</text>
+<text class="hero" x="848" y="76" text-anchor="end">47%</text>
+<text class="herol" x="848" y="98" text-anchor="end">fewer tokens: 156,304 -&gt; 83,013</text>
 <rect class="squeeze" x="182" y="122" width="12" height="12" rx="3"/>
 <text class="leg" x="200" y="132">with squeeze</text>
 <rect class="control" x="304" y="122" width="12" height="12" rx="3"/>
@@ -35,99 +35,96 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans
 <text class="tick" x="182.0" y="708" text-anchor="middle">0k</text>
 <line class="grid" x1="287.6" x2="287.6" y1="160" y2="690"/>
 <text class="tick" x="287.6" y="708" text-anchor="middle">10k</text>
-<line class="grid" x1="393.2" x2="393.2" y1="160" y2="690"/>
-<text class="tick" x="393.2" y="708" text-anchor="middle">20k</text>
-<line class="grid" x1="498.9" x2="498.9" y1="160" y2="690"/>
-<text class="tick" x="498.9" y="708" text-anchor="middle">30k</text>
-<line class="grid" x1="604.5" x2="604.5" y1="160" y2="690"/>
-<text class="tick" x="604.5" y="708" text-anchor="middle">40k</text>
+<line class="grid" x1="393.1" x2="393.1" y1="160" y2="690"/>
+<text class="tick" x="393.1" y="708" text-anchor="middle">20k</text>
+<line class="grid" x1="498.7" x2="498.7" y1="160" y2="690"/>
+<text class="tick" x="498.7" y="708" text-anchor="middle">30k</text>
+<line class="grid" x1="604.3" x2="604.3" y1="160" y2="690"/>
+<text class="tick" x="604.3" y="708" text-anchor="middle">40k</text>
 <line class="base" x1="182" x2="182" y1="160" y2="690"/>
 <text class="task" x="32" y="192.0">lint-log</text>
-<path class="squeeze" d="M182,168 h44.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-44.9 z"><title>lint-log with squeeze: mean 4,630, min 4,618, max 4,654 tokens</title></path>
-<text class="val" x="239.2" y="181.0">4,630</text>
-<path class="control" d="M182,188 h504.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-504.9 z"><title>lint-log without squeeze: mean 48,177, min 48,045, max 48,266 tokens</title></path>
-<line class="wh" x1="689.5" x2="691.8" y1="197.0" y2="197.0"/>
-<line class="wh" x1="689.5" x2="689.5" y1="193.0" y2="201.0"/>
-<line class="wh" x1="691.8" x2="691.8" y1="193.0" y2="201.0"/>
-<text class="val" x="699.8" y="201.0">48,177</text>
-<text class="saved" x="848" y="193.0" text-anchor="end">-90%</text>
+<path class="squeeze" d="M182,168 h50.1 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-50.1 z"><title>lint-log with squeeze: mean 5,127, min 5,081, max 5,154 tokens</title></path>
+<text class="val" x="244.4" y="181.0">5,127</text>
+<path class="control" d="M182,188 h505.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-505.5 z"><title>lint-log without squeeze: mean 48,264, min 48,177, max 48,292 tokens</title></path>
+<text class="val" x="699.8" y="201.0">48,264</text>
+<text class="saved" x="848" y="193.0" text-anchor="end">-89%</text>
 <text class="task" x="32" y="260.0">npmaudit-fix</text>
-<path class="squeeze" d="M182,236 h84.1 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-84.1 z"><title>npmaudit-fix with squeeze: mean 8,337, min 8,073, max 9,064 tokens</title></path>
-<line class="wh" x1="267.3" x2="277.7" y1="245.0" y2="245.0"/>
-<line class="wh" x1="267.3" x2="267.3" y1="241.0" y2="249.0"/>
-<line class="wh" x1="277.7" x2="277.7" y1="241.0" y2="249.0"/>
-<text class="val" x="285.7" y="249.0">8,337</text>
-<path class="control" d="M182,256 h153.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-153.9 z"><title>npmaudit-fix without squeeze: mean 14,948, min 13,939, max 17,168 tokens</title></path>
-<line class="wh" x1="329.2" x2="363.3" y1="265.0" y2="265.0"/>
-<line class="wh" x1="329.2" x2="329.2" y1="261.0" y2="269.0"/>
-<line class="wh" x1="363.3" x2="363.3" y1="261.0" y2="269.0"/>
-<text class="val" x="371.3" y="269.0">14,948</text>
-<text class="saved" x="848" y="261.0" text-anchor="end">-44%</text>
-<text class="task" x="32" y="328.0">junit-report</text>
-<path class="squeeze" d="M182,304 h171.0 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-171.0 z"><title>junit-report with squeeze: mean 16,572, min 16,341, max 16,657 tokens</title></path>
-<line class="wh" x1="354.6" x2="357.9" y1="313.0" y2="313.0"/>
-<line class="wh" x1="354.6" x2="354.6" y1="309.0" y2="317.0"/>
-<line class="wh" x1="357.9" x2="357.9" y1="309.0" y2="317.0"/>
-<text class="val" x="365.9" y="317.0">16,572</text>
-<path class="control" d="M182,324 h268.0 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-268.0 z"><title>junit-report without squeeze: mean 25,749, min 20,675, max 27,102 tokens</title></path>
-<line class="wh" x1="400.4" x2="468.3" y1="333.0" y2="333.0"/>
-<line class="wh" x1="400.4" x2="400.4" y1="329.0" y2="337.0"/>
-<line class="wh" x1="468.3" x2="468.3" y1="329.0" y2="337.0"/>
-<text class="val" x="476.3" y="337.0">25,749</text>
-<text class="saved" x="848" y="329.0" text-anchor="end">-36%</text>
-<text class="task" x="32" y="396.0">gotest-race</text>
-<path class="squeeze" d="M182,372 h74.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-74.9 z"><title>gotest-race with squeeze: mean 7,469, min 7,456, max 7,490 tokens</title></path>
-<text class="val" x="269.1" y="385.0">7,469</text>
-<path class="control" d="M182,392 h110.2 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-110.2 z"><title>gotest-race without squeeze: mean 10,815, min 9,375, max 11,815 tokens</title></path>
-<line class="wh" x1="281.0" x2="306.8" y1="401.0" y2="401.0"/>
-<line class="wh" x1="281.0" x2="281.0" y1="397.0" y2="405.0"/>
-<line class="wh" x1="306.8" x2="306.8" y1="397.0" y2="405.0"/>
-<text class="val" x="314.8" y="405.0">10,815</text>
-<text class="saved" x="848" y="397.0" text-anchor="end">-31%</text>
-<text class="task" x="32" y="464.0">pytest-failures</text>
-<path class="squeeze" d="M182,440 h94.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-94.5 z"><title>pytest-failures with squeeze: mean 9,324, min 9,252, max 9,440 tokens</title></path>
-<text class="val" x="289.7" y="453.0">9,324</text>
-<path class="control" d="M182,460 h129.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-129.9 z"><title>pytest-failures without squeeze: mean 12,681, min 9,656, max 13,487 tokens</title></path>
-<line class="wh" x1="284.0" x2="324.5" y1="469.0" y2="469.0"/>
-<line class="wh" x1="284.0" x2="284.0" y1="465.0" y2="473.0"/>
-<line class="wh" x1="324.5" x2="324.5" y1="465.0" y2="473.0"/>
-<text class="val" x="332.5" y="473.0">12,681</text>
-<text class="saved" x="848" y="465.0" text-anchor="end">-26%</text>
-<text class="task" x="32" y="532.0">jest-failures</text>
-<path class="squeeze" d="M182,508 h100.7 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-100.7 z"><title>jest-failures with squeeze: mean 9,913, min 9,731, max 10,089 tokens</title></path>
-<line class="wh" x1="284.8" x2="288.6" y1="517.0" y2="517.0"/>
-<line class="wh" x1="284.8" x2="284.8" y1="513.0" y2="521.0"/>
-<line class="wh" x1="288.6" x2="288.6" y1="513.0" y2="521.0"/>
-<text class="val" x="296.6" y="521.0">9,913</text>
-<path class="control" d="M182,528 h131.6 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-131.6 z"><title>jest-failures without squeeze: mean 12,843, min 12,478, max 13,309 tokens</title></path>
-<line class="wh" x1="313.8" x2="322.6" y1="537.0" y2="537.0"/>
-<line class="wh" x1="313.8" x2="313.8" y1="533.0" y2="541.0"/>
-<line class="wh" x1="322.6" x2="322.6" y1="533.0" y2="541.0"/>
-<text class="val" x="330.6" y="541.0">12,843</text>
-<text class="saved" x="848" y="533.0" text-anchor="end">-23%</text>
-<text class="task" x="32" y="600.0">precommit-hooks</text>
-<path class="squeeze" d="M182,576 h206.2 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-206.2 z"><title>precommit-hooks with squeeze: mean 19,901, min 15,904, max 22,853 tokens</title></path>
-<line class="wh" x1="350.0" x2="423.4" y1="585.0" y2="585.0"/>
-<line class="wh" x1="350.0" x2="350.0" y1="581.0" y2="589.0"/>
-<line class="wh" x1="423.4" x2="423.4" y1="581.0" y2="589.0"/>
-<text class="val" x="431.4" y="589.0">19,901</text>
-<path class="control" d="M182,596 h253.6 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-253.6 z"><title>precommit-hooks without squeeze: mean 24,392, min 19,241, max 26,421 tokens</title></path>
-<line class="wh" x1="385.2" x2="461.1" y1="605.0" y2="605.0"/>
-<line class="wh" x1="385.2" x2="385.2" y1="601.0" y2="609.0"/>
-<line class="wh" x1="461.1" x2="461.1" y1="601.0" y2="609.0"/>
-<text class="val" x="469.1" y="609.0">24,392</text>
-<text class="saved" x="848" y="601.0" text-anchor="end">-18%</text>
-<text class="task" x="32" y="668.0">tflint-high</text>
-<path class="squeeze" d="M182,644 h112.0 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-112.0 z"><title>tflint-high with squeeze: mean 10,979, min 10,242, max 11,611 tokens</title></path>
-<line class="wh" x1="290.2" x2="304.6" y1="653.0" y2="653.0"/>
-<line class="wh" x1="290.2" x2="290.2" y1="649.0" y2="657.0"/>
-<line class="wh" x1="304.6" x2="304.6" y1="649.0" y2="657.0"/>
-<text class="val" x="312.6" y="657.0">10,979</text>
-<path class="control" d="M182,664 h115.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-115.5 z"><title>tflint-high without squeeze: mean 11,309, min 9,536, max 13,478 tokens</title></path>
-<line class="wh" x1="282.7" x2="324.4" y1="673.0" y2="673.0"/>
-<line class="wh" x1="282.7" x2="282.7" y1="669.0" y2="677.0"/>
-<line class="wh" x1="324.4" x2="324.4" y1="669.0" y2="677.0"/>
-<text class="val" x="332.4" y="677.0">11,309</text>
-<text class="saved" x="848" y="669.0" text-anchor="end">-3%</text>
-<text class="foot" x="32" y="752">Mean prompt + completion tokens per run, from 20261015T102533Z-8tasks.jsonl.</text>
+<path class="squeeze" d="M182,236 h64.2 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-64.2 z"><title>npmaudit-fix with squeeze: mean 6,464, min 5,689, max 8,652 tokens</title></path>
+<line class="wh" x1="242.1" x2="273.3" y1="245.0" y2="245.0"/>
+<line class="wh" x1="242.1" x2="242.1" y1="241.0" y2="249.0"/>
+<line class="wh" x1="273.3" x2="273.3" y1="241.0" y2="249.0"/>
+<text class="val" x="281.3" y="249.0">6,464</text>
+<path class="control" d="M182,256 h144.1 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-144.1 z"><title>npmaudit-fix without squeeze: mean 14,027, min 13,580, max 14,654 tokens</title></path>
+<line class="wh" x1="325.4" x2="336.7" y1="265.0" y2="265.0"/>
+<line class="wh" x1="325.4" x2="325.4" y1="261.0" y2="269.0"/>
+<line class="wh" x1="336.7" x2="336.7" y1="261.0" y2="269.0"/>
+<text class="val" x="344.7" y="269.0">14,027</text>
+<text class="saved" x="848" y="261.0" text-anchor="end">-54%</text>
+<text class="task" x="32" y="328.0">tflint-high</text>
+<path class="squeeze" d="M182,304 h88.1 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-88.1 z"><title>tflint-high with squeeze: mean 8,721, min 7,930, max 10,877 tokens</title></path>
+<line class="wh" x1="265.7" x2="296.8" y1="313.0" y2="313.0"/>
+<line class="wh" x1="265.7" x2="265.7" y1="309.0" y2="317.0"/>
+<line class="wh" x1="296.8" x2="296.8" y1="309.0" y2="317.0"/>
+<text class="val" x="304.8" y="317.0">8,721</text>
+<path class="control" d="M182,324 h134.3 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-134.3 z"><title>tflint-high without squeeze: mean 13,101, min 9,555, max 16,262 tokens</title></path>
+<line class="wh" x1="282.9" x2="353.7" y1="333.0" y2="333.0"/>
+<line class="wh" x1="282.9" x2="282.9" y1="329.0" y2="337.0"/>
+<line class="wh" x1="353.7" x2="353.7" y1="329.0" y2="337.0"/>
+<text class="val" x="361.7" y="337.0">13,101</text>
+<text class="saved" x="848" y="329.0" text-anchor="end">-33%</text>
+<text class="task" x="32" y="396.0">junit-report</text>
+<path class="squeeze" d="M182,372 h181.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-181.9 z"><title>junit-report with squeeze: mean 17,613, min 16,721, max 18,302 tokens</title></path>
+<line class="wh" x1="358.5" x2="375.2" y1="381.0" y2="381.0"/>
+<line class="wh" x1="358.5" x2="358.5" y1="377.0" y2="385.0"/>
+<line class="wh" x1="375.2" x2="375.2" y1="377.0" y2="385.0"/>
+<text class="val" x="383.2" y="385.0">17,613</text>
+<path class="control" d="M182,392 h267.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-267.5 z"><title>junit-report without squeeze: mean 25,722, min 21,167, max 27,099 tokens</title></path>
+<line class="wh" x1="405.5" x2="468.1" y1="401.0" y2="401.0"/>
+<line class="wh" x1="405.5" x2="405.5" y1="397.0" y2="405.0"/>
+<line class="wh" x1="468.1" x2="468.1" y1="397.0" y2="405.0"/>
+<text class="val" x="476.1" y="405.0">25,722</text>
+<text class="saved" x="848" y="397.0" text-anchor="end">-32%</text>
+<text class="task" x="32" y="464.0">precommit-hooks</text>
+<path class="squeeze" d="M182,440 h171.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-171.9 z"><title>precommit-hooks with squeeze: mean 16,667, min 11,517, max 24,049 tokens</title></path>
+<line class="wh" x1="303.6" x2="435.9" y1="449.0" y2="449.0"/>
+<line class="wh" x1="303.6" x2="303.6" y1="445.0" y2="453.0"/>
+<line class="wh" x1="435.9" x2="435.9" y1="445.0" y2="453.0"/>
+<text class="val" x="443.9" y="453.0">16,667</text>
+<path class="control" d="M182,460 h223.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-223.5 z"><title>precommit-hooks without squeeze: mean 21,554, min 14,784, max 29,319 tokens</title></path>
+<line class="wh" x1="338.1" x2="491.5" y1="469.0" y2="469.0"/>
+<line class="wh" x1="338.1" x2="338.1" y1="465.0" y2="473.0"/>
+<line class="wh" x1="491.5" x2="491.5" y1="465.0" y2="473.0"/>
+<text class="val" x="499.5" y="473.0">21,554</text>
+<text class="saved" x="848" y="465.0" text-anchor="end">-23%</text>
+<text class="task" x="32" y="532.0">gotest-race</text>
+<path class="squeeze" d="M182,508 h79.7 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-79.7 z"><title>gotest-race with squeeze: mean 7,927, min 7,863, max 8,025 tokens</title></path>
+<text class="val" x="274.7" y="521.0">7,927</text>
+<path class="control" d="M182,528 h103.4 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-103.4 z"><title>gotest-race without squeeze: mean 10,169, min 9,326, max 10,659 tokens</title></path>
+<line class="wh" x1="280.5" x2="294.5" y1="537.0" y2="537.0"/>
+<line class="wh" x1="280.5" x2="280.5" y1="533.0" y2="541.0"/>
+<line class="wh" x1="294.5" x2="294.5" y1="533.0" y2="541.0"/>
+<text class="val" x="302.5" y="541.0">10,169</text>
+<text class="saved" x="848" y="533.0" text-anchor="end">-22%</text>
+<text class="task" x="32" y="600.0">jest-failures</text>
+<path class="squeeze" d="M182,576 h109.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-109.9 z"><title>jest-failures with squeeze: mean 10,793, min 10,364, max 10,998 tokens</title></path>
+<line class="wh" x1="291.4" x2="298.1" y1="585.0" y2="585.0"/>
+<line class="wh" x1="291.4" x2="291.4" y1="581.0" y2="589.0"/>
+<line class="wh" x1="298.1" x2="298.1" y1="581.0" y2="589.0"/>
+<text class="val" x="306.1" y="589.0">10,793</text>
+<path class="control" d="M182,596 h126.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-126.5 z"><title>jest-failures without squeeze: mean 12,365, min 9,625, max 15,581 tokens</title></path>
+<line class="wh" x1="283.6" x2="346.5" y1="605.0" y2="605.0"/>
+<line class="wh" x1="283.6" x2="283.6" y1="601.0" y2="609.0"/>
+<line class="wh" x1="346.5" x2="346.5" y1="601.0" y2="609.0"/>
+<text class="val" x="354.5" y="609.0">12,365</text>
+<text class="saved" x="848" y="601.0" text-anchor="end">-13%</text>
+<text class="task" x="32" y="668.0">pytest-failures</text>
+<path class="squeeze" d="M182,644 h98.4 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-98.4 z"><title>pytest-failures with squeeze: mean 9,700, min 9,585, max 9,773 tokens</title></path>
+<text class="val" x="293.2" y="657.0">9,700</text>
+<path class="control" d="M182,664 h113.2 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-113.2 z"><title>pytest-failures without squeeze: mean 11,102, min 9,606, max 13,347 tokens</title></path>
+<line class="wh" x1="283.4" x2="322.9" y1="673.0" y2="673.0"/>
+<line class="wh" x1="283.4" x2="283.4" y1="669.0" y2="677.0"/>
+<line class="wh" x1="322.9" x2="322.9" y1="669.0" y2="677.0"/>
+<text class="val" x="330.9" y="677.0">11,102</text>
+<text class="saved" x="848" y="669.0" text-anchor="end">-13%</text>
+<text class="foot" x="32" y="752">Mean prompt + completion tokens per run, from 20261015T110129Z.jsonl.</text>
 </svg>
