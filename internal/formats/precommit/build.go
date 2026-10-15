@@ -39,38 +39,33 @@ func cut(lines []string, max int) ([]string, int) {
 	}
 	keep := make([]bool, len(lines))
 	seen := map[string]bool{}
+	flagged := false
 	for i, l := range lines {
-		if i < max {
-			keep[i] = true
-			seen[l] = true
+		if seen[l] || !(core.ErrorLine(l) || core.WarningLine(l)) {
 			continue
 		}
-		if !seen[l] && (core.ErrorLine(l) || core.WarningLine(l)) {
+		flagged = true
+		keep[i], seen[l] = true, true
+		if i+1 < len(lines) && !seen[lines[i+1]] {
+			keep[i+1], seen[lines[i+1]] = true, true
+		}
+	}
+	if !flagged {
+		for i := range lines[:max] {
 			keep[i] = true
-			seen[l] = true
-			if i+1 < len(lines) && !seen[lines[i+1]] {
-				keep[i+1] = true
-				seen[lines[i+1]] = true
-			}
 		}
 	}
-	omitted, gap := 0, 0
-	flush := func() {
-		if gap > 0 {
-			out = append(out, gapLine(gap))
-			gap = 0
-		}
-	}
+	omitted := 0
 	for i, l := range lines {
-		if !keep[i] {
-			gap++
+		if keep[i] {
+			out = append(out, l)
+		} else {
 			omitted++
-			continue
 		}
-		flush()
-		out = append(out, l)
 	}
-	flush()
+	if omitted > 0 {
+		out = append(out, gapLine(omitted))
+	}
 	return out, omitted
 }
 

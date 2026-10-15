@@ -73,9 +73,14 @@ only what you need.
 
 """
 
+MACOS_NOTE = """The shell runs on macOS: `sed -i` takes a backup suffix argument, so write
+`sed -i '' 's/a/b/' file`, or use `perl -pi -e` or a heredoc.
+
+"""
+
 SQUEEZE_BLOCK = """- squeeze is installed. Pipe tool output through it as the lines below say and
   read squeeze's output instead of the tool's. When squeeze reports cut lines,
-  rerun with the flag it names.
+  rerun with the flag it names only if what you need is not in the output.
 """
 
 
@@ -122,6 +127,8 @@ def workdir(name, task, arm, squeeze_bin):
             sys.exit("setup of %s failed (%d):\n%s%s" % (name, code, out, err))
     with open(os.path.join(work, "AGENTS.md"), "w") as f:
         f.write(AGENTS_HEADER)
+        if sys.platform == "darwin":
+            f.write(MACOS_NOTE)
         if arm == "squeeze":
             f.write(SQUEEZE_BLOCK)
         f.write(task[arm] + "\n")
@@ -270,6 +277,11 @@ def self_test(tasks, squeeze_bin):
     return ok
 
 
+def change(saved):
+    pct = round(-saved * 100)
+    return "0%" if pct == 0 else "%+d%%" % pct
+
+
 def report(path):
     rows = [json.loads(l) for l in open(path) if l.strip()]
     if not rows:
@@ -397,7 +409,7 @@ def chart(path, out_path):
           '<text class="leg" x="%d" y="%d">without squeeze</text>' % (x0 + 140, ly),
           '<line class="wh" x1="%d" x2="%d" y1="%d" y2="%d"/>' % (x0 + 266, x0 + 286, ly - 4, ly - 4),
           '<text class="leg" x="%d" y="%d">min-max of %d runs</text>' % (x0 + 292, ly, runs),
-          '<text class="savedl" x="%d" y="%d" text-anchor="end">saved</text>' % (right, ly)]
+          '<text class="savedl" x="%d" y="%d" text-anchor="end">tokens</text>' % (right, ly)]
     for v in range(0, int(xmax) + 1, step):
         label = "%gk" % (v / 1000) if step >= 1000 else str(v)
         o += ['<line class="grid" x1="%.1f" x2="%.1f" y1="%d" y2="%d"/>' % (sx(v), sx(v), top - 8, plot_bottom + 8),
@@ -420,7 +432,7 @@ def chart(path, out_path):
                       '<line class="wh" x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f"/>' % (lo, lo, cy - 4, cy + 4),
                       '<line class="wh" x1="%.1f" x2="%.1f" y1="%.1f" y2="%.1f"/>' % (hi, hi, cy - 4, cy + 4)]
             o.append('<text class="val" x="%.1f" y="%.1f">%s</text>' % (max(sx(mean), hi) + 8, cy + 4, num(mean)))
-        o.append('<text class="saved" x="%d" y="%.1f" text-anchor="end">-%.0f%%</text>' % (right, y + group_h / 2 + 6, d["saved"] * 100))
+        o.append('<text class="saved" x="%d" y="%.1f" text-anchor="end">%s</text>' % (right, y + group_h / 2 + 6, change(d["saved"])))
         y += group_h + group_gap
     o += ['<text class="foot" x="%d" y="%d">Mean prompt + completion tokens per run, from %s.</text>'
           % (left, height - 22, esc(os.path.basename(path))), "</svg>"]
