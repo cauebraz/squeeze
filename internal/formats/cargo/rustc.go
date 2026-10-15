@@ -133,7 +133,7 @@ var (
 	arrowRe = regexp.MustCompile(`^\s*--> (.+):(\d+):(\d+)$`)
 	noteRe  = regexp.MustCompile(`^\s*= (note|help): (.*)$`)
 	childRe = regexp.MustCompile(`^(note|help): (.*)$`)
-	codeRe  = regexp.MustCompile(`^\d+\s+\|(.*)$`)
+	codeRe  = regexp.MustCompile(`^(\d+)\s+\|(.*)$`)
 	labelRe = regexp.MustCompile(`^\s*\|[\s|\-]*\^+ (.+)$`)
 	lintRe  = regexp.MustCompile("^`#\\[(?:warn|deny|forbid)\\(([\\w:]+)\\)\\]`")
 	exitRe  = regexp.MustCompile("^process didn't exit successfully: `[^`]*` ")
@@ -144,13 +144,17 @@ func (p *parser) human(i int) int {
 	d := Diagnostic{Diagnostic: tfdiag.Diagnostic{Severity: m[1], Summary: core.Clean(m[3])}, ID: core.Clean(m[2])}
 	var label string
 	var parts []string
+	exact := false
 	j := i + 1
 	for ; j < len(p.lines) && strings.TrimSpace(p.lines[j]) != "" && !headerRe.MatchString(p.lines[j]); j++ {
 		l := p.lines[j]
 		if a := arrowRe.FindStringSubmatch(l); a != nil && d.File == "" {
 			d.File, d.Line, d.Column = core.Clean(a[1]), atoi(a[2]), atoi(a[3])
-		} else if c := codeRe.FindStringSubmatch(l); c != nil && d.Code == "" {
-			d.Code = core.Clean(c[1])
+		} else if c := codeRe.FindStringSubmatch(l); c != nil && !exact {
+			if d.Code == "" || atoi(c[1]) == d.Line {
+				d.Code = core.Clean(c[2])
+				exact = atoi(c[1]) == d.Line
+			}
 		} else if lb := labelRe.FindStringSubmatch(l); lb != nil && label == "" {
 			label = core.Clean(lb[1])
 		} else if n := noteRe.FindStringSubmatch(l); n != nil {

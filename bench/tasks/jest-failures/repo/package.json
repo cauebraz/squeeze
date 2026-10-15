@@ -1,0 +1,13 @@
+{
+  "name": "orders",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Order handling for a small shop.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest --ci"
+  },
+  "devDependencies": {
+    "jest": "30.5.2"
+  }
+}

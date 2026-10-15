@@ -1,0 +1,9 @@
+{
+  "prompt": "ansible-playbook -i inventory site.yml fails in this repository. The playbook runs only on this machine (connection: local) and writes under out/. Find every failure, fix the inventory variables, templates or files it points to, and finish when the playbook exits 0. Do not change the tasks or the asserts in site.yml, and do not add ignore_errors, failed_when or when conditions.",
+  "setup": "uv venv .venv -q && uv pip install -q --python .venv/bin/python ansible-core==2.21.4",
+  "verify": "rm -rf out && .venv/bin/ansible-playbook -i inventory site.yml >/dev/null 2>&1 && [ \"$(grep -c 'ansible.builtin.assert' site.yml)\" = 3 ] && [ \"$(grep -c '^    - name:' site.yml)\" = 20 ] && grep -q \"log_level in \\['debug', 'info', 'warning', 'error'\\]\" site.yml && grep -q 'app_port | int >= 1024' site.yml && ! grep -Eq 'ignore_errors|failed_when|when:|ignore_unreachable' site.yml && grep -qx 'db_host = {{ db_host }}' templates/app.conf.j2 && grep -Eqx 'log_level = (debug|info|warning|error)' out/app1/etc/app.conf && grep -qx 'db_host = db2.internal' out/app2/etc/app.conf && grep -qx 'echo shop healthy' out/app3/bin/healthcheck.sh && grep -qx 'echo backing up shop' out/app3/bin/backup.sh && grep -qx 'ready with 4 scripts' out/app3/run/ready && for h in app1 app2 app4; do grep -qx 'ready with 2 scripts' out/$h/run/ready || exit 1; done",
+  "solution": "sed -i.bak 's/^log_level: verbose$/log_level: info/' host_vars/app1.yml && sed -i.bak 's/^db_hots:/db_host:/' host_vars/app2.yml && sed -i.bak 's#scripts/helthcheck.sh#scripts/healthcheck.sh#' host_vars/app3.yml && rm host_vars/*.bak",
+  "tool": "ansible",
+  "control": "- Run the playbook with `.venv/bin/ansible-playbook -i inventory site.yml` and read its output.",
+  "squeeze": "- Run the playbook with `.venv/bin/ansible-playbook -i inventory site.yml 2>&1 | squeeze` and read squeeze's output instead of Ansible's."
+}

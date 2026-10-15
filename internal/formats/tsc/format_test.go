@@ -135,6 +135,24 @@ func TestPrettyReadsTheSameDiagnostics(t *testing.T) {
 	}
 }
 
+func TestDeepestChainLevelPrintsFirst(t *testing.T) {
+	t.Parallel()
+	input := "src/config.ts(17,14): error TS2322: Type 'A' is not assignable to type 'B'.\n" +
+		"  Call signature return types 'A' and 'B' are incompatible.\n" +
+		"    The types of 'region.tax.rate' are incompatible between these types.\n" +
+		"      Type 'string' is not assignable to type 'number'.\n"
+	r, err := Squeeze([]byte(input), DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(r.Text, "  Type 'string' is not assignable to type 'number'. Call signature") {
+		t.Errorf("deepest level not first:\n%s", r.Text)
+	}
+	if d := r.Data.(Report).Diagnostics[0].Detail; !strings.HasPrefix(d, "Call signature") || !strings.HasSuffix(d, "type 'number'.") {
+		t.Errorf("json detail lost tsc's order: %q", d)
+	}
+}
+
 func TestRelatedInformation(t *testing.T) {
 	t.Parallel()
 	want := map[int][]string{

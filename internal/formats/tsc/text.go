@@ -13,6 +13,7 @@ func Text(r Report) string {
 	b.WriteString(header(r))
 	b.WriteByte('\n')
 	for _, d := range r.Diagnostics {
+		d.Detail = deepestFirst(d.Detail)
 		tfdiag.Write(&b, d, tfdiag.WriteOptions{})
 	}
 	if r.ErrorsOmitted > 0 {
@@ -44,4 +45,13 @@ func header(r Report) string {
 		line += "; tsc's summary differs: " + r.Summary
 	}
 	return line
+}
+
+func deepestFirst(chain string) string {
+	levels := strings.Split(chain, "\n")
+	if len(levels) < 2 {
+		return chain
+	}
+	last := len(levels) - 1
+	return strings.Join(append([]string{levels[last]}, levels[:last]...), "\n")
 }

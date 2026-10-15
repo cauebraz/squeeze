@@ -73,8 +73,12 @@ func writeFailure(b *strings.Builder, f Failure, o Options) {
 func writeLines(b *strings.Builder, indent string, lines []string, limit int) {
 	kept, omitted := core.Limit(lines, limit)
 	for _, l := range kept {
+		line := core.Ellipsis(strings.TrimRight(core.Line(l), " "), maxLineBytes)
+		if strings.HasPrefix(strings.TrimSpace(line), "... ") {
+			line = "| " + line
+		}
 		b.WriteString(indent)
-		b.WriteString(core.Ellipsis(strings.TrimRight(core.Line(l), " "), maxLineBytes))
+		b.WriteString(line)
 		b.WriteByte('\n')
 	}
 	if omitted > 0 {

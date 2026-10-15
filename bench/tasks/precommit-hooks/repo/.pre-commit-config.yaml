@@ -1,0 +1,33 @@
+repos:
+  - repo: local
+    hooks:
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+        entry: python3 hooks/trailing_whitespace.py
+        language: system
+        types: [text]
+      - id: check-json
+        name: check json syntax
+        entry: python3 hooks/check_json.py
+        language: system
+        files: \.json$
+      - id: check-service-ports
+        name: check service ports are sorted and unique
+        entry: python3 hooks/check_ports.py
+        language: system
+        files: ^config/services\.yaml$
+      - id: no-todo
+        name: forbid TODO markers in source
+        entry: sh hooks/no_todo.sh
+        language: system
+        files: ^src/.*\.py$
+      - id: check-sql
+        name: check sql migrations
+        entry: sh hooks/no_todo.sh
+        language: system
+        files: \.sql$
+      - id: python-syntax
+        name: check python syntax
+        entry: python3 hooks/check_syntax.py
+        language: system
+        files: \.py$

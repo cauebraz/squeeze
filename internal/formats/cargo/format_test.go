@@ -115,6 +115,23 @@ func TestConditions(t *testing.T) {
 	}
 }
 
+func TestHumanCodeLineIsTheErrorLine(t *testing.T) {
+	t.Parallel()
+	input := "error[E0308]: mismatched types\n" +
+		"  --> src/account.rs:35:9\n" +
+		"   |\n" +
+		"34 |     pub fn entry_count(&self) -> u32 {\n" +
+		"   |                                  --- expected `u32` because of return type\n" +
+		"35 |         self.entries.len()\n" +
+		"   |         ^^^^^^^^^^^^^^^^^^ expected `u32`, found `usize`\n" +
+		"\n" +
+		"error: could not compile `ledger` (lib) due to 1 previous error\n"
+	r := report(t, input, DefaultOptions())
+	if len(r.Diagnostics) == 0 || r.Diagnostics[0].Code != "self.entries.len()" {
+		t.Errorf("diagnostics = %+v", r.Diagnostics)
+	}
+}
+
 func TestFixableFollowsMachineApplicable(t *testing.T) {
 	t.Parallel()
 	r := report(t, string(fixture(t, "clippy")), DefaultOptions())

@@ -78,6 +78,7 @@ Fixed limits, kept whole in `--output json`: a source line is cut at 120 bytes, 
 
 ## Limitations
 
+- A line of a test's output that starts with `... ` prints with a `| ` prefix, so it cannot be read as one of squeeze's cut notices.
 - libtest's JSON output (`cargo test -- -Z unstable-options --format json`) is not read: on stable Rust 1.99.0 it fails with "the option `Z` is only accepted on the nightly compiler".
 - The libtest text is not a documented format; the parser follows the output of Rust 1.99.0 and also reads the `panicked at '<message>', <file>` line of Rust before 1.73.
 - From rustc's human output, squeeze reads no suggestion, so no diagnostic is `fixable`, and the lint name only from the `#[warn(...)]` note, which rustc prints only with the first warning of each lint. Use `--message-format=json` for both.
