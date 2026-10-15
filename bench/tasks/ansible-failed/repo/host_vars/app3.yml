@@ -1,7 +1,0 @@
-db_host: db3.internal
-app_port: 8083
-extra_scripts:
-  - src: scripts/backup.sh
-    dest: backup.sh
-  - src: scripts/helthcheck.sh
-    dest: healthcheck.sh

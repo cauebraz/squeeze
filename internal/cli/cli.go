@@ -14,14 +14,11 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
-	"github.com/cauebraz/squeeze/internal/formats/ansible"
 	"github.com/cauebraz/squeeze/internal/formats/buildkit"
-	"github.com/cauebraz/squeeze/internal/formats/cargo"
 	"github.com/cauebraz/squeeze/internal/formats/checkov"
 	"github.com/cauebraz/squeeze/internal/formats/eslint"
 	"github.com/cauebraz/squeeze/internal/formats/generic"
 	"github.com/cauebraz/squeeze/internal/formats/ghactions"
-	"github.com/cauebraz/squeeze/internal/formats/golangci"
 	"github.com/cauebraz/squeeze/internal/formats/gotest"
 	"github.com/cauebraz/squeeze/internal/formats/jest"
 	"github.com/cauebraz/squeeze/internal/formats/junit"
@@ -36,7 +33,6 @@ import (
 	"github.com/cauebraz/squeeze/internal/formats/tfstate"
 	"github.com/cauebraz/squeeze/internal/formats/tfvalidate"
 	"github.com/cauebraz/squeeze/internal/formats/trivy"
-	"github.com/cauebraz/squeeze/internal/formats/tsc"
 )
 
 var Version = "dev"
@@ -50,7 +46,7 @@ const (
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{}, tfstate.Format{}, tfvalidate.Format{}, tflint.Format{}, eslint.Format{}, sarif.Format{}, ghactions.Format{}, ansible.Format{}, buildkit.Format{}, cargo.Format{}, golangci.Format{}, jest.Format{}, junit.Format{}, kubectl.Format{}, npmaudit.Format{}, precommit.Format{}, tsc.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
+	return core.NewRegistry(tfplan.Format{}, tfstate.Format{}, tfvalidate.Format{}, tflint.Format{}, eslint.Format{}, sarif.Format{}, ghactions.Format{}, buildkit.Format{}, jest.Format{}, junit.Format{}, kubectl.Format{}, npmaudit.Format{}, precommit.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
 }
 
 type invocation struct {

@@ -1,7 +1,0 @@
-[[90m10:02:05 pm[0m] Projects in this build: 
-    * tsconfig.json
-
-[[90m10:02:05 pm[0m] Project 'tsconfig.json' is out of date because output file 'tsconfig.tsbuildinfo' does not exist
-
-[[90m10:02:05 pm[0m] Building project '/home/dev/shop/tsconfig.json'...
-

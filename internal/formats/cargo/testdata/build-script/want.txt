@@ -1,3 +1,0 @@
-cargo: fail; build failed; 1 error, 0 warnings
-error: failed to run custom build command for `gen v0.1.0 (/home/dev/shop/gen)` (gen/build.rs:4:9)
-  process didn't exit successfully (exit status: 101); SHOP_CODEGEN is not set: run codegen first

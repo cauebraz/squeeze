@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 1046" width="880" height="1046" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 774" width="880" height="774" role="img" aria-labelledby="t d">
 <title id="t">squeeze bench: tokens per task with and without squeeze</title>
-<desc id="d">lint-log: 48,177 tokens without squeeze, 4,630 with squeeze; npmaudit-fix: 14,948 tokens without squeeze, 8,337 with squeeze; junit-report: 25,749 tokens without squeeze, 16,572 with squeeze; gotest-race: 10,815 tokens without squeeze, 7,469 with squeeze; pytest-failures: 12,681 tokens without squeeze, 9,324 with squeeze; jest-failures: 12,843 tokens without squeeze, 9,913 with squeeze; precommit-hooks: 24,392 tokens without squeeze, 19,901 with squeeze; golangci-issues: 18,498 tokens without squeeze, 15,699 with squeeze; tflint-high: 11,309 tokens without squeeze, 10,979 with squeeze; ansible-failed: 16,628 tokens without squeeze, 16,292 with squeeze; tsc-errors: 10,985 tokens without squeeze, 14,820 with squeeze; cargo-errors: 15,359 tokens without squeeze, 21,573 with squeeze</desc>
+<desc id="d">lint-log: 48,177 tokens without squeeze, 4,630 with squeeze; npmaudit-fix: 14,948 tokens without squeeze, 8,337 with squeeze; junit-report: 25,749 tokens without squeeze, 16,572 with squeeze; gotest-race: 10,815 tokens without squeeze, 7,469 with squeeze; pytest-failures: 12,681 tokens without squeeze, 9,324 with squeeze; jest-failures: 12,843 tokens without squeeze, 9,913 with squeeze; precommit-hooks: 24,392 tokens without squeeze, 19,901 with squeeze; tflint-high: 11,309 tokens without squeeze, 10,979 with squeeze</desc>
 <style>
 text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
 .kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; }
@@ -18,12 +18,12 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans
 .bg{fill:#fcfcfb;stroke:rgba(11,11,11,0.10)} text{fill:#0b0b0b} .kicker{fill:#2a78d6} .sub,.herol,.val,.leg{fill:#52514e} .savedl,.tick,.foot{fill:#898781} .grid{stroke:#e1e0d9} .base{stroke:#c3c2b7} .squeeze{fill:#2a78d6} .control{fill:#eb6834} .wh{stroke:#0b0b0b}
 @media (prefers-color-scheme: dark) { .bg{fill:#1a1a19;stroke:rgba(255,255,255,0.10)} text{fill:#ffffff} .kicker{fill:#3987e5} .sub,.herol,.val,.leg{fill:#c3c2b7} .savedl,.tick,.foot{fill:#898781} .grid{stroke:#2c2c2a} .base{stroke:#383835} .squeeze{fill:#3987e5} .control{fill:#d95926} .wh{stroke:#ffffff} }
 </style>
-<rect class="bg" x="0.5" y="0.5" width="879" height="1045" rx="12"/>
+<rect class="bg" x="0.5" y="0.5" width="879" height="773" rx="12"/>
 <text class="kicker" x="32" y="40">SQUEEZE BENCH</text>
 <text class="title" x="32" y="70">Tokens an agent spends to fix a defect</text>
-<text class="sub" x="32" y="94">claude-opus-5.5 - 5 runs per task and arm - 120/120 runs fixed the defect</text>
-<text class="hero" x="848" y="76" text-anchor="end">30%</text>
-<text class="herol" x="848" y="98" text-anchor="end">fewer tokens: 222,383 -&gt; 155,507</text>
+<text class="sub" x="32" y="94">claude-opus-5.5 - 5 runs per task and arm - 80/80 runs fixed the defect</text>
+<text class="hero" x="848" y="76" text-anchor="end">46%</text>
+<text class="herol" x="848" y="98" text-anchor="end">fewer tokens: 160,913 -&gt; 87,123</text>
 <rect class="squeeze" x="182" y="122" width="12" height="12" rx="3"/>
 <text class="leg" x="200" y="132">with squeeze</text>
 <rect class="control" x="304" y="122" width="12" height="12" rx="3"/>
@@ -31,17 +31,17 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans
 <line class="wh" x1="448" x2="468" y1="128" y2="128"/>
 <text class="leg" x="474" y="132">min-max of 5 runs</text>
 <text class="savedl" x="848" y="132" text-anchor="end">tokens</text>
-<line class="grid" x1="182.0" x2="182.0" y1="160" y2="962"/>
-<text class="tick" x="182.0" y="980" text-anchor="middle">0k</text>
-<line class="grid" x1="287.6" x2="287.6" y1="160" y2="962"/>
-<text class="tick" x="287.6" y="980" text-anchor="middle">10k</text>
-<line class="grid" x1="393.2" x2="393.2" y1="160" y2="962"/>
-<text class="tick" x="393.2" y="980" text-anchor="middle">20k</text>
-<line class="grid" x1="498.9" x2="498.9" y1="160" y2="962"/>
-<text class="tick" x="498.9" y="980" text-anchor="middle">30k</text>
-<line class="grid" x1="604.5" x2="604.5" y1="160" y2="962"/>
-<text class="tick" x="604.5" y="980" text-anchor="middle">40k</text>
-<line class="base" x1="182" x2="182" y1="160" y2="962"/>
+<line class="grid" x1="182.0" x2="182.0" y1="160" y2="690"/>
+<text class="tick" x="182.0" y="708" text-anchor="middle">0k</text>
+<line class="grid" x1="287.6" x2="287.6" y1="160" y2="690"/>
+<text class="tick" x="287.6" y="708" text-anchor="middle">10k</text>
+<line class="grid" x1="393.2" x2="393.2" y1="160" y2="690"/>
+<text class="tick" x="393.2" y="708" text-anchor="middle">20k</text>
+<line class="grid" x1="498.9" x2="498.9" y1="160" y2="690"/>
+<text class="tick" x="498.9" y="708" text-anchor="middle">30k</text>
+<line class="grid" x1="604.5" x2="604.5" y1="160" y2="690"/>
+<text class="tick" x="604.5" y="708" text-anchor="middle">40k</text>
+<line class="base" x1="182" x2="182" y1="160" y2="690"/>
 <text class="task" x="32" y="192.0">lint-log</text>
 <path class="squeeze" d="M182,168 h44.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-44.9 z"><title>lint-log with squeeze: mean 4,630, min 4,618, max 4,654 tokens</title></path>
 <text class="val" x="239.2" y="181.0">4,630</text>
@@ -117,65 +117,17 @@ text { font-family: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans
 <line class="wh" x1="461.1" x2="461.1" y1="601.0" y2="609.0"/>
 <text class="val" x="469.1" y="609.0">24,392</text>
 <text class="saved" x="848" y="601.0" text-anchor="end">-18%</text>
-<text class="task" x="32" y="668.0">golangci-issues</text>
-<path class="squeeze" d="M182,644 h161.8 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-161.8 z"><title>golangci-issues with squeeze: mean 15,699, min 14,249, max 19,852 tokens</title></path>
-<line class="wh" x1="332.5" x2="391.7" y1="653.0" y2="653.0"/>
-<line class="wh" x1="332.5" x2="332.5" y1="649.0" y2="657.0"/>
-<line class="wh" x1="391.7" x2="391.7" y1="649.0" y2="657.0"/>
-<text class="val" x="399.7" y="657.0">15,699</text>
-<path class="control" d="M182,664 h191.4 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-191.4 z"><title>golangci-issues without squeeze: mean 18,498, min 15,953, max 22,360 tokens</title></path>
-<line class="wh" x1="350.5" x2="418.2" y1="673.0" y2="673.0"/>
-<line class="wh" x1="350.5" x2="350.5" y1="669.0" y2="677.0"/>
-<line class="wh" x1="418.2" x2="418.2" y1="669.0" y2="677.0"/>
-<text class="val" x="426.2" y="677.0">18,498</text>
-<text class="saved" x="848" y="669.0" text-anchor="end">-15%</text>
-<text class="task" x="32" y="736.0">tflint-high</text>
-<path class="squeeze" d="M182,712 h112.0 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-112.0 z"><title>tflint-high with squeeze: mean 10,979, min 10,242, max 11,611 tokens</title></path>
-<line class="wh" x1="290.2" x2="304.6" y1="721.0" y2="721.0"/>
-<line class="wh" x1="290.2" x2="290.2" y1="717.0" y2="725.0"/>
-<line class="wh" x1="304.6" x2="304.6" y1="717.0" y2="725.0"/>
-<text class="val" x="312.6" y="725.0">10,979</text>
-<path class="control" d="M182,732 h115.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-115.5 z"><title>tflint-high without squeeze: mean 11,309, min 9,536, max 13,478 tokens</title></path>
-<line class="wh" x1="282.7" x2="324.4" y1="741.0" y2="741.0"/>
-<line class="wh" x1="282.7" x2="282.7" y1="737.0" y2="745.0"/>
-<line class="wh" x1="324.4" x2="324.4" y1="737.0" y2="745.0"/>
-<text class="val" x="332.4" y="745.0">11,309</text>
-<text class="saved" x="848" y="737.0" text-anchor="end">-3%</text>
-<text class="task" x="32" y="804.0">ansible-failed</text>
-<path class="squeeze" d="M182,780 h168.1 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-168.1 z"><title>ansible-failed with squeeze: mean 16,292, min 16,000, max 16,442 tokens</title></path>
-<line class="wh" x1="351.0" x2="355.7" y1="789.0" y2="789.0"/>
-<line class="wh" x1="351.0" x2="351.0" y1="785.0" y2="793.0"/>
-<line class="wh" x1="355.7" x2="355.7" y1="785.0" y2="793.0"/>
-<text class="val" x="363.7" y="793.0">16,292</text>
-<path class="control" d="M182,800 h171.6 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-171.6 z"><title>ansible-failed without squeeze: mean 16,628, min 16,232, max 17,069 tokens</title></path>
-<line class="wh" x1="353.4" x2="362.3" y1="809.0" y2="809.0"/>
-<line class="wh" x1="353.4" x2="353.4" y1="805.0" y2="813.0"/>
-<line class="wh" x1="362.3" x2="362.3" y1="805.0" y2="813.0"/>
-<text class="val" x="370.3" y="813.0">16,628</text>
-<text class="saved" x="848" y="805.0" text-anchor="end">-2%</text>
-<text class="task" x="32" y="872.0">tsc-errors</text>
-<path class="squeeze" d="M182,848 h152.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-152.5 z"><title>tsc-errors with squeeze: mean 14,820, min 14,578, max 15,118 tokens</title></path>
-<line class="wh" x1="336.0" x2="341.7" y1="857.0" y2="857.0"/>
-<line class="wh" x1="336.0" x2="336.0" y1="853.0" y2="861.0"/>
-<line class="wh" x1="341.7" x2="341.7" y1="853.0" y2="861.0"/>
-<text class="val" x="349.7" y="861.0">14,820</text>
-<path class="control" d="M182,868 h112.0 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-112.0 z"><title>tsc-errors without squeeze: mean 10,985, min 10,442, max 11,564 tokens</title></path>
-<line class="wh" x1="292.3" x2="304.1" y1="877.0" y2="877.0"/>
-<line class="wh" x1="292.3" x2="292.3" y1="873.0" y2="881.0"/>
-<line class="wh" x1="304.1" x2="304.1" y1="873.0" y2="881.0"/>
-<text class="val" x="312.1" y="881.0">10,985</text>
-<text class="saved" x="848" y="873.0" text-anchor="end">+35%</text>
-<text class="task" x="32" y="940.0">cargo-errors</text>
-<path class="squeeze" d="M182,916 h223.9 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-223.9 z"><title>cargo-errors with squeeze: mean 21,573, min 19,368, max 24,529 tokens</title></path>
-<line class="wh" x1="386.6" x2="441.1" y1="925.0" y2="925.0"/>
-<line class="wh" x1="386.6" x2="386.6" y1="921.0" y2="929.0"/>
-<line class="wh" x1="441.1" x2="441.1" y1="921.0" y2="929.0"/>
-<text class="val" x="449.1" y="929.0">21,573</text>
-<path class="control" d="M182,936 h158.2 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-158.2 z"><title>cargo-errors without squeeze: mean 15,359, min 12,346, max 20,062 tokens</title></path>
-<line class="wh" x1="312.4" x2="393.9" y1="945.0" y2="945.0"/>
-<line class="wh" x1="312.4" x2="312.4" y1="941.0" y2="949.0"/>
-<line class="wh" x1="393.9" x2="393.9" y1="941.0" y2="949.0"/>
-<text class="val" x="401.9" y="949.0">15,359</text>
-<text class="saved" x="848" y="941.0" text-anchor="end">+40%</text>
-<text class="foot" x="32" y="1024">Mean prompt + completion tokens per run, from 20261015T102533Z.jsonl.</text>
+<text class="task" x="32" y="668.0">tflint-high</text>
+<path class="squeeze" d="M182,644 h112.0 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-112.0 z"><title>tflint-high with squeeze: mean 10,979, min 10,242, max 11,611 tokens</title></path>
+<line class="wh" x1="290.2" x2="304.6" y1="653.0" y2="653.0"/>
+<line class="wh" x1="290.2" x2="290.2" y1="649.0" y2="657.0"/>
+<line class="wh" x1="304.6" x2="304.6" y1="649.0" y2="657.0"/>
+<text class="val" x="312.6" y="657.0">10,979</text>
+<path class="control" d="M182,664 h115.5 a4.0,4.0 0 0 1 4.0,4.0 v10.0 a4.0,4.0 0 0 1 -4.0,4.0 h-115.5 z"><title>tflint-high without squeeze: mean 11,309, min 9,536, max 13,478 tokens</title></path>
+<line class="wh" x1="282.7" x2="324.4" y1="673.0" y2="673.0"/>
+<line class="wh" x1="282.7" x2="282.7" y1="669.0" y2="677.0"/>
+<line class="wh" x1="324.4" x2="324.4" y1="669.0" y2="677.0"/>
+<text class="val" x="332.4" y="677.0">11,309</text>
+<text class="saved" x="848" y="669.0" text-anchor="end">-3%</text>
+<text class="foot" x="32" y="752">Mean prompt + completion tokens per run, from 20261015T102533Z-8tasks.jsonl.</text>
 </svg>

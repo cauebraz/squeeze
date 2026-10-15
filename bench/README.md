@@ -1,6 +1,6 @@
 # Bench results
 
-Model: `claude-opus-5-5`. Each task was solved 5 times without squeeze (control) and 5 times with squeeze. All 120 runs fixed the defect. Tokens are the mean per run.
+Model: `claude-opus-5-5`. Each task was solved 5 times without squeeze (control) and 5 times with squeeze. All 80 runs fixed the defect. Tokens are the mean per run.
 
 ![Tokens an agent spends per task with and without squeeze](results.svg)
 
