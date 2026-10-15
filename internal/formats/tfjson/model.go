@@ -20,6 +20,26 @@ type Deferred struct {
 	Reason  string `json:"reason"`
 }
 
+type ActionInvocation struct {
+	Address  string `json:"address"`
+	Event    string `json:"event,omitempty"`
+	Resource string `json:"resource,omitempty"`
+	Invoked  bool   `json:"invoked,omitempty"`
+}
+
+type ListBlock struct {
+	Address      string `json:"address"`
+	ResourceType string `json:"resource_type,omitempty"`
+	Total        int    `json:"total"`
+	Complete     bool   `json:"complete"`
+}
+
+type FoundResource struct {
+	Address     string                     `json:"address"`
+	DisplayName string                     `json:"display_name"`
+	Identity    map[string]json.RawMessage `json:"identity,omitempty"`
+}
+
 type Failure struct {
 	Type    string `json:"type"`
 	Address string `json:"address,omitempty"`
@@ -30,6 +50,7 @@ type PolicyResult struct {
 	Policy      string `json:"policy"`
 	Target      string `json:"target,omitempty"`
 	Result      string `json:"result"`
+	Outcome     string `json:"outcome"`
 	Enforcement string `json:"enforcement,omitempty"`
 }
 
@@ -106,9 +127,14 @@ type Report struct {
 	Changes            []Change            `json:"changes"`
 	Omitted            int                 `json:"resources_omitted"`
 	NoopHidden         int                 `json:"noop_hidden"`
+	Lists              []ListBlock         `json:"lists"`
+	Found              []FoundResource     `json:"found"`
+	FoundOmitted       int                 `json:"found_omitted"`
 	Drift              []Change            `json:"drift"`
 	Deferred           []Deferred          `json:"deferred"`
+	Actions            []ActionInvocation  `json:"actions"`
 	Applied            Applied             `json:"applied"`
+	ActionsCompleted   int                 `json:"actions_completed"`
 	Failures           []Failure           `json:"failures"`
 	Policies           []PolicyResult      `json:"policies"`
 	Errors             int                 `json:"errors"`

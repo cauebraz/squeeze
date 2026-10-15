@@ -28,16 +28,68 @@ type linePayload struct {
 	TestSummary *streamTestSummary      `json:"test_summary"`
 	Cleanup     *streamTestCleanup      `json:"test_cleanup"`
 	Interrupt   *streamTestInterrupt    `json:"test_interrupt"`
+	Invocation  *streamInvocation       `json:"invocation"`
+	ListStart   *streamList             `json:"list_start"`
+	ListFound   *streamListFound        `json:"list_resource_found"`
+	ListDone    *streamList             `json:"list_complete"`
 	Result      string                  `json:"result"`
 	Policy      string                  `json:"policy_address"`
 	Target      string                  `json:"target_address"`
-	PolicyMeta  *struct {
-		EnforcementLevel string `json:"enforcement_level"`
-	} `json:"policy_metadata"`
+	PolicyMeta  *streamPolicyMeta       `json:"policy_metadata"`
+	PolicyDiag  *tfdiag.Raw             `json:"policy_diagnostic"`
+	PolicyInfo  *streamPolicyInfo       `json:"policy_info"`
+	ListBlock   string                  `json:"list_block_address"`
+	Query       []streamQueryResult     `json:"results"`
+}
+
+type streamPolicyMeta struct {
+	PolicyName       string `json:"policy_name"`
+	EnforcementLevel string `json:"enforcement_level"`
+}
+
+type streamPolicyInfo struct {
+	Message string `json:"message"`
+}
+
+type streamQueryResult struct {
+	Target   string              `json:"target_address"`
+	Result   string              `json:"result"`
+	Policies []streamQueryPolicy `json:"policies"`
+}
+
+type streamQueryPolicy struct {
+	Meta        streamPolicyMeta `json:"policy_metadata"`
+	Diagnostics []tfdiag.Raw     `json:"diagnostics"`
+	Result      string           `json:"result"`
 }
 
 type streamResource struct {
 	Addr string `json:"addr"`
+}
+
+type streamActionAddr struct {
+	Addr string `json:"addr"`
+}
+
+type streamList struct {
+	Address      string `json:"address"`
+	ResourceType string `json:"resource_type"`
+	Total        int    `json:"total"`
+}
+
+type streamListFound struct {
+	Address     string                     `json:"address"`
+	DisplayName string                     `json:"display_name"`
+	Identity    map[string]json.RawMessage `json:"identity"`
+}
+
+type streamInvocation struct {
+	Action    streamActionAddr `json:"action_addr"`
+	Lifecycle *struct {
+		Resource streamResource `json:"triggering_resource"`
+		Event    string         `json:"triggering_event"`
+	} `json:"lifecycle_trigger"`
+	Invoke *struct{} `json:"action_trigger"`
 }
 
 type streamChange struct {

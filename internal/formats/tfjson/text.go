@@ -50,20 +50,19 @@ func Text(r Report, o Options) string {
 	if r.NoopHidden > 0 {
 		fmt.Fprintf(&b, "... %d no-op %s (--all)\n", r.NoopHidden, core.Plural(r.NoopHidden, "change", "changes"))
 	}
+	writeLists(&b, r)
+	writeActions(&b, r.Actions)
 	writeApplied(&b, r.Applied)
+	if r.ActionsCompleted > 0 {
+		fmt.Fprintf(&b, "actions completed: %d\n", r.ActionsCompleted)
+	}
 	for _, f := range r.Failures {
 		b.WriteString("error: ")
 		b.WriteString(f.Message)
 		b.WriteByte('\n')
 	}
 	for _, p := range r.Policies {
-		fmt.Fprintf(&b, "policy: %s %s", p.Policy, p.Result)
-		if p.Target != "" {
-			b.WriteString(" for " + p.Target)
-		}
-		if p.Enforcement != "" {
-			b.WriteString(" (" + p.Enforcement + ")")
-		}
+		b.WriteString(policyLine(p))
 		b.WriteByte('\n')
 	}
 	for _, d := range r.Diagnostics {
@@ -83,6 +82,21 @@ func Text(r Report, o Options) string {
 	writeTests(&b, r.Tests, o)
 	writeOther(&b, r, o.All)
 	return b.String()
+}
+
+func policyLine(p PolicyResult) string {
+	line := "policy:"
+	if p.Policy != "" {
+		line += " " + p.Policy
+	}
+	line += " " + p.Result
+	if p.Target != "" {
+		line += " for " + p.Target
+	}
+	if p.Enforcement != "" {
+		line += " (" + p.Enforcement + ")"
+	}
+	return line
 }
 
 func header(r Report) string {
@@ -148,6 +162,13 @@ func summaryWords(r Report) string {
 	if t := r.Tests; t != nil && t.Status != "" {
 		return fmt.Sprintf("%s, %d passed, %d failed, %d errored, %d skipped", t.Status, t.Passed, t.Failed, t.Errored, t.Skipped)
 	}
+	if n := len(r.Lists); n > 0 {
+		total := 0
+		for _, l := range r.Lists {
+			total += l.Total
+		}
+		return fmt.Sprintf("%d found in %d %s", total, n, core.Plural(n, "list block", "list blocks"))
+	}
 	if r.Providers > 0 {
 		return fmt.Sprintf("%d %s installed", r.Providers, core.Plural(r.Providers, "provider", "providers"))
 	}
@@ -189,6 +210,52 @@ func writeChange(b *strings.Builder, c Change) {
 		b.WriteString(strings.Join(notes, "; "))
 		b.WriteByte(')')
 	}
+	b.WriteByte('\n')
+}
+
+func writeLists(b *strings.Builder, r Report) {
+	found := map[string][]FoundResource{}
+	for _, f := range r.Found {
+		found[f.Address] = append(found[f.Address], f)
+	}
+	for _, l := range r.Lists {
+		fmt.Fprintf(b, "%s: %d found", l.Address, l.Total)
+		if !l.Complete {
+			b.WriteString(", incomplete")
+		}
+		b.WriteByte('\n')
+		for _, f := range found[l.Address] {
+			name := f.DisplayName
+			if name == "" {
+				name = "(no display name)"
+			}
+			b.WriteString("  " + name + "\n")
+		}
+	}
+	if r.FoundOmitted > 0 {
+		fmt.Fprintf(b, "... %d more found %s (--max-resources 0)\n", r.FoundOmitted, core.Plural(r.FoundOmitted, "resource", "resources"))
+	}
+}
+
+func writeActions(b *strings.Builder, actions []ActionInvocation) {
+	if len(actions) == 0 {
+		return
+	}
+	items := make([]string, 0, len(actions))
+	for _, a := range actions {
+		item := a.Address
+		switch {
+		case a.Event != "" && a.Resource != "":
+			item += " (" + a.Event + " " + a.Resource + ")"
+		case a.Event != "":
+			item += " (" + a.Event + ")"
+		case a.Invoked:
+			item += " (invoked)"
+		}
+		items = append(items, item)
+	}
+	b.WriteString("actions: ")
+	b.WriteString(strings.Join(items, ", "))
 	b.WriteByte('\n')
 }
 

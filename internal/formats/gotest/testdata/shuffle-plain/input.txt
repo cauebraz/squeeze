@@ -1,0 +1,8 @@
+-test.shuffle 2
+--- FAIL: TestSecond (0.00s)
+    calc_test.go:13: total = 0, want 1: TestFirst must run before TestSecond
+FAIL
+FAIL	example.com/shop/calc	0.077s
+?   	example.com/shop/docs	[no test files]
+ok  	example.com/shop/text	0.077s
+FAIL

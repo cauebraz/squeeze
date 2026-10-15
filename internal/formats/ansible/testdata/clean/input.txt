@@ -1,0 +1,24 @@
+
+PLAY [Configure the shop] ******************************************************
+
+TASK [Check the app directory] *************************************************
+ok: [localhost]
+
+TASK [Write the release file] **************************************************
+changed: [localhost]
+
+TASK [Show the release] ********************************************************
+ok: [localhost] => {
+    "msg": "release 42 is deployed"
+}
+
+RUNNING HANDLER [Restart shop] *************************************************
+[WARNING]: Could not match supplied host pattern, ignoring: dbservers
+changed: [localhost]
+
+PLAY [Migrate the database] ****************************************************
+skipping: no hosts matched
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=4    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+

@@ -1,0 +1,7 @@
+terraform state show random_pet.name[0]: 5 attributes, 1 warning
+id = "happy-otter"
+length = 2
+separator = "-"
+... 2 null attributes (--output json)
+warning: Provider schema warning
+  The provider registry.terraform.io/hashicorp/random returned a warning while loading its schema.

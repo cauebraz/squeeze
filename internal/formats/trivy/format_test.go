@@ -53,6 +53,9 @@ func TestDetect(t *testing.T) {
 		"checkov":      {`{"check_type":"terraform","results":{}}`, false},
 		"tflint":       {`{"issues":[],"errors":[]}`, false},
 		"array":        {`[{"SchemaVersion":2,"Results":[]}]`, false},
+		"k8s all":      {"{\n  \"ClusterName\": \"kind\",\n  \"Resources\": []}", true},
+		"k8s summary":  {`{"ClusterName":"kind","Findings":[]}`, true},
+		"msk cluster":  {`{"ClusterInfo":{"ClusterName":"kafka","State":"ACTIVE"}}`, false},
 	}
 	for name, tt := range tests {
 		if got := (Format{}).Detect([]byte(tt.input)); got != tt.want {
@@ -67,6 +70,7 @@ func TestParseErrors(t *testing.T) {
 		"truncated": `{"SchemaVersion":2,"Results":[`,
 		"no schema": `{"Results":[]}`,
 		"schema 3":  `{"SchemaVersion":3,"Results":[]}`,
+		"k8s":       `{"Resources":[{"Kind":"Pod","Name":"a"}]}`,
 	} {
 		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
 			t.Errorf("%s: Squeeze() returned no error", name)
@@ -81,6 +85,7 @@ func TestConditions(t *testing.T) {
 		"config": {"fail", "high", "misconfiguration"},
 		"clean":  {},
 		"image":  {"critical", "fail", "fixable", "high", "misconfiguration", "vulnerability"},
+		"k8s":    {"critical", "error", "fail", "fixable", "high", "misconfiguration", "vulnerability"},
 	}
 	for name, want := range tests {
 		r, err := Squeeze(fixture(t, name), DefaultOptions())
@@ -203,6 +208,56 @@ func TestResultsWithTheSameTargetStayApart(t *testing.T) {
 	}
 }
 
+func TestK8sResultsGroupByResource(t *testing.T) {
+	t.Parallel()
+	input := []byte(`{"ClusterName":"prod","Resources":[` +
+		`{"Namespace":"shop","Kind":"Deployment","Name":"api","Results":[{"Target":"Deployment/api","Class":"config","Type":"kubernetes",` +
+		`"MisconfSummary":{"Successes":9,"Failures":1},"Misconfigurations":[{"ID":"KSV-0014","Title":"Root file system is not read-only","Severity":"HIGH","Status":"FAIL","CauseMetadata":{"StartLine":3,"EndLine":8}}]}]},` +
+		`{"Kind":"ClusterRole","Name":"admin","Results":[{"Target":"ClusterRole/admin","Class":"config","Type":"kubernetes",` +
+		`"Misconfigurations":[{"ID":"KSV-0046","Title":"Manage all resources","Severity":"CRITICAL","Status":"FAIL"}]}]},` +
+		`{"Namespace":"shop","Kind":"Deployment","Name":"api","Results":[{"Target":"nginx:1.25.0 (debian 11.7)","Class":"os-pkgs","Type":"debian",` +
+		`"Vulnerabilities":[{"VulnerabilityID":"CVE-1","PkgName":"libc6","InstalledVersion":"2.31","Severity":"LOW","Status":"affected"}]}],"Error":"scan error:\n\t* timeout"},` +
+		`{"Namespace":"shop","Kind":"Deployment","Name":"api","Error":"second"}]}`)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "trivy: cluster prod, 2 resources: 1 vulnerability, 2 misconfigurations; 1 CRITICAL, 1 HIGH, 1 LOW; 9 misconfiguration checks passed\n" +
+		"error: shop/Deployment/api: scan error: * timeout; second\n" +
+		"shop/Deployment/api:\n  Deployment/api (kubernetes):\n    HIGH KSV-0014 lines 3-8: Root file system is not read-only\n" +
+		"  nginx:1.25.0 (debian 11.7) (debian):\n    LOW CVE-1 libc6 2.31 (affected)\n" +
+		"ClusterRole/admin:\n  ClusterRole/admin (kubernetes):\n    CRITICAL KSV-0046: Manage all resources\n"
+	if diff := cmp.Diff(want, r.Text); diff != "" {
+		t.Errorf("text (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"critical", "error", "fail", "high", "misconfiguration", "vulnerability"}, r.Conditions); diff != "" {
+		t.Errorf("conditions (-want +got):\n%s", diff)
+	}
+	data := r.Data.(Report)
+	wantResources := []Resource{{Name: "shop/Deployment/api", Findings: 2, Error: "scan error: * timeout; second"}, {Name: "ClusterRole/admin", Findings: 1}}
+	if diff := cmp.Diff(wantResources, data.Resources); diff != "" {
+		t.Errorf("resources (-want +got):\n%s", diff)
+	}
+	var owners []string
+	for _, tg := range data.Targets {
+		owners = append(owners, tg.Resource)
+	}
+	if diff := cmp.Diff([]string{"shop/Deployment/api", "shop/Deployment/api", "ClusterRole/admin"}, owners); diff != "" {
+		t.Errorf("target resources (-want +got):\n%s", diff)
+	}
+}
+
+func TestK8sEmptyCluster(t *testing.T) {
+	t.Parallel()
+	r, err := Squeeze([]byte(`{"ClusterName":""}`), DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff("trivy: cluster, 0 resources: no findings\n", r.Text); diff != "" {
+		t.Errorf("text (-want +got):\n%s", diff)
+	}
+}
+
 func TestLimitKeepsTheMostSevere(t *testing.T) {
 	t.Parallel()
 	r, err := Squeeze(fixture(t, "fs"), Options{MaxFindings: 5})
@@ -251,8 +306,13 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`"Vulnerabilities":[{"VulnerabilityID":"C\nX","PkgName":"p\nX","InstalledVersion":"1\nX","Status":"s\nX","Severity":"HIGH\nX","Title":"t\u001b[31m\nX"}],` +
 		`"Misconfigurations":[{"ID":"M\nX","Title":"m\nX","Severity":"LOW","Status":"FAIL","CauseMetadata":{"Resource":"r\nX"}}],` +
 		`"Licenses":[{"Severity":"LOW","Name":"L\nX","PkgName":"p\nX","Category":"c\nX"}]}]}`)
-	for _, o := range []Options{DefaultOptions(), {All: true}} {
-		r, err := Squeeze(input, o)
+	k8s := []byte(`{"ClusterName":"c\nX","Resources":[{"Namespace":"n\nX","Kind":"Pod","Name":"p\nX","Error":"e\nX",` +
+		`"Results":[{"Target":"t\nX","Secrets":[{"RuleID":"r\nX","Severity":"HIGH"}]}]}]}`)
+	for _, tt := range []struct {
+		input []byte
+		o     Options
+	}{{input, DefaultOptions()}, {input, Options{All: true}}, {k8s, DefaultOptions()}} {
+		r, err := Squeeze(tt.input, tt.o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -269,6 +329,7 @@ func FuzzSqueeze(f *testing.F) {
 	for _, data := range formattest.Inputs(f, fixtureDir) {
 		f.Add(data)
 	}
+	f.Add([]byte(`{"ClusterName":"c","Findings":[{"Kind":"Pod","Name":"a","Error":"x","Results":[{"Vulnerabilities":[{}]}]},{"Kind":"Pod","Name":"a"}]}`))
 	f.Add([]byte(`{"SchemaVersion":2,"Results":[{"Misconfigurations":[{"Status":"EXCEPTION"},{"Status":"PASS"},{}],"Licenses":[{"Severity":"x"}],"Secrets":[{}]}]}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
 		raw, err := Parse(input)
@@ -282,6 +343,11 @@ func FuzzSqueeze(f *testing.F) {
 			listed := r.Vulnerabilities + r.Misconfigurations + r.Secrets + r.SevereLicenses
 			if got := len(r.Findings) + r.FindingsOmitted; got != listed {
 				t.Fatalf("%d findings kept or omitted, %d counted", got, listed)
+			}
+			for _, rs := range r.Resources {
+				if rs.Error != "" && !strings.Contains(res.Text, "error: "+rs.Name+": "+rs.Error+"\n") {
+					t.Fatalf("scan error of %q dropped:\n%s", rs.Name, res.Text)
+				}
 			}
 			if r.FindingsOmitted > 0 && !strings.Contains(res.Text, "(--max-findings 0)") {
 				t.Fatalf("findings cut without a notice:\n%s", res.Text)

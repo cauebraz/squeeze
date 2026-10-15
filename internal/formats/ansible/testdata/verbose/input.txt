@@ -1,0 +1,688 @@
+ansible-playbook [core 2.21.4]
+  config file = None
+  configured module search path = ['/home/dev/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /home/dev/.venv/lib/python3.14/site-packages/ansible
+  ansible collection location = /home/dev/.ansible/collections
+  executable location = /home/dev/.venv/bin/ansible-playbook
+  python version = 3.14.8 (main, Oct  9 2026, 15:11:09) [Clang 22.1.3 ] (/home/dev/.venv/bin/python)
+  jinja version = 3.1.6
+  pyyaml version = 6.0.3 (with libyaml v0.2.5)
+No config file found; using defaults
+host_list declined parsing /home/dev/shop/inventory.ini as it did not pass its verify_file() method
+script declined parsing /home/dev/shop/inventory.ini as it did not pass its verify_file() method
+auto declined parsing /home/dev/shop/inventory.ini as it did not pass its verify_file() method
+yaml declined parsing /home/dev/shop/inventory.ini as it did not pass its verify_file() method
+Parsed /home/dev/shop/inventory.ini inventory source with ini plugin
+Skipping callback 'minimal', as we already have a stdout callback.
+Skipping callback 'oneline', as we already have a stdout callback.
+
+PLAYBOOK: site.yml *************************************************************
+2 plays in site.yml
+
+PLAY [Reload the shop] *********************************************************
+
+TASK [Install the config] ******************************************************
+task path: /home/dev/shop/site.yml:5
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449 `" && echo ansible-tmp-1792026271.815315-82833-47204687087449="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/stat.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmpd4n_xe08 TO /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/AnsiballZ_stat.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/ /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/AnsiballZ_stat.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/AnsiballZ_stat.py'
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/.0ldk76d3 TO /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/.source.yml
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/ /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/.source.yml'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/copy.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp3d73jfny TO /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/AnsiballZ_copy.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/ /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/AnsiballZ_copy.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/AnsiballZ_copy.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/ > /dev/null 2>&1'
+Notification for handler Reload shop has been saved.
+changed: [localhost] => {
+    "changed": true,
+    "checksum": "5157928364c48e6432e9d24de14cc819eead34d2",
+    "dest": "/tmp/squeeze-ansible-config.yml",
+    "diff": [],
+    "gid": 1000,
+    "group": "staff",
+    "invocation": {
+        "module_args": {
+            "_original_basename": ".0ldk76d3",
+            "attributes": null,
+            "backup": false,
+            "checksum": "5157928364c48e6432e9d24de14cc819eead34d2",
+            "content": null,
+            "dest": "/tmp/squeeze-ansible-config.yml",
+            "directory_mode": null,
+            "follow": false,
+            "force": true,
+            "group": null,
+            "local_follow": null,
+            "mode": "0644",
+            "owner": null,
+            "remote_src": false,
+            "selevel": null,
+            "serole": null,
+            "setype": null,
+            "seuser": null,
+            "src": "/home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/.source.yml",
+            "unsafe_writes": false,
+            "validate": null
+        }
+    },
+    "md5sum": "d65b7670e0133039c838352e0fc0159e",
+    "mode": "0644",
+    "owner": "dev",
+    "size": 11,
+    "src": "/home/dev/.ansible/tmp/ansible-tmp-1792026271.815315-82833-47204687087449/.source.yml",
+    "state": "file",
+    "uid": 1000
+}
+
+TASK [Fetch the cached build] **************************************************
+task path: /home/dev/shop/site.yml:14
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.189096-82849-78182544123667 `" && echo ansible-tmp-1792026272.189096-82849-78182544123667="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.189096-82849-78182544123667 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp4gmkwxfy TO /home/dev/.ansible/tmp/ansible-tmp-1792026272.189096-82849-78182544123667/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026272.189096-82849-78182544123667/ /home/dev/.ansible/tmp/ansible-tmp-1792026272.189096-82849-78182544123667/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026272.189096-82849-78182544123667/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026272.189096-82849-78182544123667/ > /dev/null 2>&1'
+[ERROR]: Task failed: Module failed: The command exited with a non-zero return code.
+Origin: /home/dev/shop/site.yml:14:11
+
+12     - name: Try the fast path
+13       block:
+14         - name: Fetch the cached build
+             ^ column 11
+
+fatal: [localhost]: FAILED! => {
+    "changed": true,
+    "cmd": [
+        "ls",
+        "/nonexistent/shop-cache"
+    ],
+    "delta": "0:00:00.003542",
+    "end": "2026-10-14 22:04:32.348807",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "ls /nonexistent/shop-cache",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "msg": "The command exited with a non-zero return code.",
+    "rc": 1,
+    "start": "2026-10-14 22:04:32.345265",
+    "stderr": "ls: /nonexistent/shop-cache: No such file or directory",
+    "stderr_lines": [
+        "ls: /nonexistent/shop-cache: No such file or directory"
+    ],
+    "stdout": "",
+    "stdout_lines": []
+}
+
+TASK [Build from source] *******************************************************
+task path: /home/dev/shop/site.yml:17
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.3805382-82863-113054688648525 `" && echo ansible-tmp-1792026272.3805382-82863-113054688648525="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.3805382-82863-113054688648525 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp02nyxn78 TO /home/dev/.ansible/tmp/ansible-tmp-1792026272.3805382-82863-113054688648525/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026272.3805382-82863-113054688648525/ /home/dev/.ansible/tmp/ansible-tmp-1792026272.3805382-82863-113054688648525/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026272.3805382-82863-113054688648525/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026272.3805382-82863-113054688648525/ > /dev/null 2>&1'
+ok: [localhost] => {
+    "changed": false,
+    "changed_when_result": false,
+    "cmd": [
+        "echo",
+        "building"
+    ],
+    "delta": "0:00:00.003385",
+    "end": "2026-10-14 22:04:32.506373",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "echo building",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "msg": "",
+    "rc": 0,
+    "start": "2026-10-14 22:04:32.502988",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "building",
+    "stdout_lines": [
+        "building"
+    ]
+}
+NOTIFIED HANDLER Reload shop for localhost
+
+RUNNING HANDLER [Reload shop] **************************************************
+task path: /home/dev/shop/site.yml:22
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.539283-82894-172569025077557 `" && echo ansible-tmp-1792026272.539283-82894-172569025077557="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.539283-82894-172569025077557 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmpblfppkrk TO /home/dev/.ansible/tmp/ansible-tmp-1792026272.539283-82894-172569025077557/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026272.539283-82894-172569025077557/ /home/dev/.ansible/tmp/ansible-tmp-1792026272.539283-82894-172569025077557/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026272.539283-82894-172569025077557/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026272.539283-82894-172569025077557/ > /dev/null 2>&1'
+changed: [localhost] => {
+    "changed": true,
+    "cmd": [
+        "echo",
+        "reloading"
+    ],
+    "delta": "0:00:00.003273",
+    "end": "2026-10-14 22:04:32.660000",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "echo reloading",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "msg": "",
+    "rc": 0,
+    "start": "2026-10-14 22:04:32.656727",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "reloading",
+    "stdout_lines": [
+        "reloading"
+    ]
+}
+
+PLAY [Configure the shop] ******************************************************
+
+TASK [Check the app directory] *************************************************
+task path: /home/dev/shop/site.yml:31
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<10.255.255.1> ESTABLISH SSH CONNECTION FOR USER: None
+<10.255.255.1> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyChecking=no -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=2 -o ConnectTimeout=2 -o BatchMode=yes -o 'ControlPath="/home/dev/.ansible/cp/26ec22b96c"' -o NumberOfPasswordPrompts=1 10.255.255.1 '/bin/sh -c '"'"'echo ~'"'"''
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.692893-82909-207289288210787 `" && echo ansible-tmp-1792026272.692893-82909-207289288210787="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026272.692893-82909-207289288210787 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/stat.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp20getw0m TO /home/dev/.ansible/tmp/ansible-tmp-1792026272.692893-82909-207289288210787/AnsiballZ_stat.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026272.692893-82909-207289288210787/ /home/dev/.ansible/tmp/ansible-tmp-1792026272.692893-82909-207289288210787/AnsiballZ_stat.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026272.692893-82909-207289288210787/AnsiballZ_stat.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026272.692893-82909-207289288210787/ > /dev/null 2>&1'
+ok: [localhost] => {
+    "changed": false,
+    "invocation": {
+        "module_args": {
+            "checksum_algorithm": "sha1",
+            "follow": false,
+            "get_attributes": true,
+            "get_checksum": true,
+            "get_mime": true,
+            "get_selinux_context": false,
+            "path": "/tmp"
+        }
+    },
+    "stat": {
+        "atime": 1790233837.0,
+        "attr_flags": "",
+        "attributes": [],
+        "birthtime": 1790233837.0,
+        "block_size": 4096,
+        "blocks": 0,
+        "charset": "binary",
+        "ctime": 1790233837.0,
+        "dev": 16777231,
+        "device_type": 0,
+        "disk_usage_bytes": 0,
+        "executable": true,
+        "exists": true,
+        "flags": 557056,
+        "generation": 0,
+        "gid": 0,
+        "gr_name": "dev",
+        "inode": 1152921500312607500,
+        "isblk": false,
+        "ischr": false,
+        "isdir": false,
+        "isfifo": false,
+        "isgid": false,
+        "islnk": true,
+        "isreg": false,
+        "issock": false,
+        "isuid": false,
+        "lnk_source": "/tmp",
+        "lnk_target": "private/tmp",
+        "mimetype": "inode/directory",
+        "mode": "0755",
+        "mtime": 1790233837.0,
+        "nlink": 1,
+        "path": "/tmp",
+        "pw_name": "root",
+        "readable": true,
+        "rgrp": true,
+        "roth": true,
+        "rusr": true,
+        "size": 11,
+        "uid": 0,
+        "version": null,
+        "wgrp": false,
+        "woth": false,
+        "writeable": true,
+        "wusr": true,
+        "xgrp": true,
+        "xoth": true,
+        "xusr": true
+    }
+}
+<10.255.255.1> (255, b'', b'ssh: connect to host 10.255.255.1 port 22: Operation timed out\r\n')
+[ERROR]: Task failed: Failed to connect to the host via ssh: ssh: connect to host 10.255.255.1 port 22: Operation timed out
+Origin: /home/dev/shop/site.yml:31:7
+
+29     db_password: hunter2-module-arg-secret
+30   tasks:
+31     - name: Check the app directory
+         ^ column 7
+
+fatal: [web1]: UNREACHABLE! => {
+    "changed": false,
+    "msg": "Task failed: Failed to connect to the host via ssh: ssh: connect to host 10.255.255.1 port 22: Operation timed out",
+    "unreachable": true
+}
+
+TASK [Write the release file] **************************************************
+task path: /home/dev/shop/site.yml:36
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384 `" && echo ansible-tmp-1792026274.7218812-83138-32724742548384="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/stat.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmpzw5s6sta TO /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/AnsiballZ_stat.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/ /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/AnsiballZ_stat.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/AnsiballZ_stat.py'
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/.xqtillxu TO /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/.source.txt
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/ /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/.source.txt'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/copy.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmpogl7bhpn TO /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/AnsiballZ_copy.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/ /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/AnsiballZ_copy.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/AnsiballZ_copy.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/ > /dev/null 2>&1'
+Notification for handler Restart shop has been saved.
+changed: [localhost] => {
+    "changed": true,
+    "checksum": "64433f29ade4dc16db32e361680e24b53317fb8d",
+    "dest": "/tmp/squeeze-ansible-release.txt",
+    "diff": [],
+    "gid": 1000,
+    "group": "staff",
+    "invocation": {
+        "module_args": {
+            "_original_basename": ".xqtillxu",
+            "attributes": null,
+            "backup": false,
+            "checksum": "64433f29ade4dc16db32e361680e24b53317fb8d",
+            "content": null,
+            "dest": "/tmp/squeeze-ansible-release.txt",
+            "directory_mode": null,
+            "follow": false,
+            "force": true,
+            "group": null,
+            "local_follow": null,
+            "mode": "0644",
+            "owner": null,
+            "remote_src": false,
+            "selevel": null,
+            "serole": null,
+            "setype": null,
+            "seuser": null,
+            "src": "/home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/.source.txt",
+            "unsafe_writes": false,
+            "validate": null
+        }
+    },
+    "md5sum": "2551d657a2e6b9f09950a015977242a3",
+    "mode": "0644",
+    "owner": "dev",
+    "size": 11,
+    "src": "/home/dev/.ansible/tmp/ansible-tmp-1792026274.7218812-83138-32724742548384/.source.txt",
+    "state": "file",
+    "uid": 1000
+}
+
+TASK [Run migrations] **********************************************************
+task path: /home/dev/shop/site.yml:43
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.038901-83159-271279388050865 `" && echo ansible-tmp-1792026275.038901-83159-271279388050865="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.038901-83159-271279388050865 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp_bje1uza TO /home/dev/.ansible/tmp/ansible-tmp-1792026275.038901-83159-271279388050865/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026275.038901-83159-271279388050865/ /home/dev/.ansible/tmp/ansible-tmp-1792026275.038901-83159-271279388050865/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026275.038901-83159-271279388050865/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026275.038901-83159-271279388050865/ > /dev/null 2>&1'
+changed: [localhost] => {
+    "changed": true,
+    "changed_when_result": true,
+    "cmd": [
+        "echo",
+        "migrate",
+        "--password",
+        "hunter2-module-arg-secret"
+    ],
+    "delta": "0:00:00.003829",
+    "end": "2026-10-14 22:04:35.172849",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "echo migrate --password hunter2-module-arg-secret",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "msg": "",
+    "rc": 0,
+    "start": "2026-10-14 22:04:35.169020",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "migrate --password hunter2-module-arg-secret",
+    "stdout_lines": [
+        "migrate --password hunter2-module-arg-secret"
+    ]
+}
+
+TASK [Set the database password] ***********************************************
+task path: /home/dev/shop/site.yml:47
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.2094169-83173-250731067455527 `" && echo ansible-tmp-1792026275.2094169-83173-250731067455527="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.2094169-83173-250731067455527 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmpulk7yx7v TO /home/dev/.ansible/tmp/ansible-tmp-1792026275.2094169-83173-250731067455527/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026275.2094169-83173-250731067455527/ /home/dev/.ansible/tmp/ansible-tmp-1792026275.2094169-83173-250731067455527/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026275.2094169-83173-250731067455527/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026275.2094169-83173-250731067455527/ > /dev/null 2>&1'
+changed: [localhost] => {
+    "censored": "the output has been hidden due to the fact that 'no_log: true' was specified for this result",
+    "changed": true
+}
+
+TASK [Rotate the API token] ****************************************************
+task path: /home/dev/shop/site.yml:51
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.384995-83187-187422268695358 `" && echo ansible-tmp-1792026275.384995-83187-187422268695358="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.384995-83187-187422268695358 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmpjgjcresl TO /home/dev/.ansible/tmp/ansible-tmp-1792026275.384995-83187-187422268695358/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026275.384995-83187-187422268695358/ /home/dev/.ansible/tmp/ansible-tmp-1792026275.384995-83187-187422268695358/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026275.384995-83187-187422268695358/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026275.384995-83187-187422268695358/ > /dev/null 2>&1'
+[ERROR]: Task failed: Module failed: The command exited with a non-zero return code.
+Origin: /home/dev/shop/site.yml:51:7
+
+49       no_log: true
+50
+51     - name: Rotate the API token
+         ^ column 7
+
+fatal: [localhost]: FAILED! => {
+    "censored": "the output has been hidden due to the fact that 'no_log: true' was specified for this result",
+    "changed": true
+}
+...ignoring
+
+TASK [Optional cleanup] ********************************************************
+task path: /home/dev/shop/site.yml:56
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.556607-83201-128960873169789 `" && echo ansible-tmp-1792026275.556607-83201-128960873169789="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.556607-83201-128960873169789 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp4swos1uj TO /home/dev/.ansible/tmp/ansible-tmp-1792026275.556607-83201-128960873169789/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026275.556607-83201-128960873169789/ /home/dev/.ansible/tmp/ansible-tmp-1792026275.556607-83201-128960873169789/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026275.556607-83201-128960873169789/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026275.556607-83201-128960873169789/ > /dev/null 2>&1'
+[ERROR]: Task failed: Module failed: The command exited with a non-zero return code.
+Origin: /home/dev/shop/site.yml:56:7
+
+54       ignore_errors: true
+55
+56     - name: Optional cleanup
+         ^ column 7
+
+fatal: [localhost]: FAILED! => {
+    "changed": true,
+    "cmd": [
+        "false"
+    ],
+    "delta": "0:00:00.003283",
+    "end": "2026-10-14 22:04:35.696290",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "false",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "msg": "The command exited with a non-zero return code.",
+    "rc": 1,
+    "start": "2026-10-14 22:04:35.693007",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "",
+    "stdout_lines": []
+}
+...ignoring
+
+TASK [Only on Windows] *********************************************************
+task path: /home/dev/shop/site.yml:60
+skipping: [localhost] => {
+    "false_condition": "ansible_facts.os_family | default('') == 'Windows'"
+}
+
+TASK [Check each service port] *************************************************
+task path: /home/dev/shop/site.yml:65
+<localhost> ESTABLISH LOCAL CONNECTION FOR USER: dev
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.746439-83264-27873458622668 `" && echo ansible-tmp-1792026275.746439-83264-27873458622668="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.746439-83264-27873458622668 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp_at9hbis TO /home/dev/.ansible/tmp/ansible-tmp-1792026275.746439-83264-27873458622668/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026275.746439-83264-27873458622668/ /home/dev/.ansible/tmp/ansible-tmp-1792026275.746439-83264-27873458622668/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026275.746439-83264-27873458622668/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026275.746439-83264-27873458622668/ > /dev/null 2>&1'
+ok: [localhost] => (item=8080) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "changed_when_result": false,
+    "cmd": [
+        "test",
+        "8080",
+        "-lt",
+        "9000"
+    ],
+    "delta": "0:00:00.003904",
+    "end": "2026-10-14 22:04:35.887264",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "test 8080 -lt 9000",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "item": 8080,
+    "msg": "",
+    "rc": 0,
+    "start": "2026-10-14 22:04:35.883360",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "",
+    "stdout_lines": []
+}
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.916147-83264-223804459712484 `" && echo ansible-tmp-1792026275.916147-83264-223804459712484="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026275.916147-83264-223804459712484 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmp05xyyd3a TO /home/dev/.ansible/tmp/ansible-tmp-1792026275.916147-83264-223804459712484/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026275.916147-83264-223804459712484/ /home/dev/.ansible/tmp/ansible-tmp-1792026275.916147-83264-223804459712484/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026275.916147-83264-223804459712484/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026275.916147-83264-223804459712484/ > /dev/null 2>&1'
+[ERROR]: Task failed: Module failed: The command exited with a non-zero return code.
+Origin: /home/dev/shop/site.yml:65:7
+
+63       when: ansible_facts.os_family | default('') == 'Windows'
+64
+65     - name: Check each service port
+         ^ column 7
+
+failed: [localhost] (item=9090) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "changed_when_result": false,
+    "cmd": [
+        "test",
+        "9090",
+        "-lt",
+        "9000"
+    ],
+    "delta": "0:00:00.003279",
+    "end": "2026-10-14 22:04:36.042037",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "test 9090 -lt 9000",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "item": 9090,
+    "msg": "The command exited with a non-zero return code.",
+    "rc": 1,
+    "start": "2026-10-14 22:04:36.038758",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "",
+    "stdout_lines": []
+}
+<localhost> EXEC /bin/sh -c 'echo ~dev'
+<localhost> EXEC /bin/sh -c '( umask 77 && mkdir -p "` echo /home/dev/.ansible/tmp `"&& mkdir "` echo /home/dev/.ansible/tmp/ansible-tmp-1792026276.0693278-83264-249711214054369 `" && echo ansible-tmp-1792026276.0693278-83264-249711214054369="` echo /home/dev/.ansible/tmp/ansible-tmp-1792026276.0693278-83264-249711214054369 `" )'
+Using module file /home/dev/.venv/lib/python3.14/site-packages/ansible/modules/command.py
+<localhost> PUT /home/dev/.ansible/tmp/ansible-local-82831tjh6wij7/tmpnjc6zmcg TO /home/dev/.ansible/tmp/ansible-tmp-1792026276.0693278-83264-249711214054369/AnsiballZ_command.py
+<localhost> EXEC /bin/sh -c 'chmod u+rwx /home/dev/.ansible/tmp/ansible-tmp-1792026276.0693278-83264-249711214054369/ /home/dev/.ansible/tmp/ansible-tmp-1792026276.0693278-83264-249711214054369/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c '/usr/bin/python3 /home/dev/.ansible/tmp/ansible-tmp-1792026276.0693278-83264-249711214054369/AnsiballZ_command.py'
+<localhost> EXEC /bin/sh -c 'rm -f -r /home/dev/.ansible/tmp/ansible-tmp-1792026276.0693278-83264-249711214054369/ > /dev/null 2>&1'
+ok: [localhost] => (item=8443) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "changed_when_result": false,
+    "cmd": [
+        "test",
+        "8443",
+        "-lt",
+        "9000"
+    ],
+    "delta": "0:00:00.003726",
+    "end": "2026-10-14 22:04:36.195794",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "test 8443 -lt 9000",
+            "_uses_shell": false,
+            "argv": null,
+            "chdir": null,
+            "cmd": null,
+            "creates": null,
+            "executable": null,
+            "expand_argument_vars": true,
+            "removes": null,
+            "stdin": null,
+            "stdin_add_newline": true,
+            "strip_empty_ends": true
+        }
+    },
+    "item": 8443,
+    "msg": "",
+    "rc": 0,
+    "start": "2026-10-14 22:04:36.192068",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "",
+    "stdout_lines": []
+}
+...ignoring
+
+TASK [Assert the release is current] *******************************************
+task path: /home/dev/shop/site.yml:74
+[ERROR]: Task failed: Action failed: release 43 is not deployed
+Origin: /home/dev/shop/site.yml:74:7
+
+72       ignore_errors: true
+73
+74     - name: Assert the release is current
+         ^ column 7
+
+fatal: [localhost]: FAILED! => {
+    "assertion": "'43' in 'release 42'",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "release 43 is not deployed"
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=10   changed=7    unreachable=0    failed=1    skipped=1    rescued=1    ignored=3   
+web1                       : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   
+

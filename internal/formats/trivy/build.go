@@ -48,15 +48,24 @@ type Finding struct {
 
 type Target struct {
 	Name     string `json:"name"`
+	Resource string `json:"resource,omitempty"`
 	Class    string `json:"class,omitempty"`
 	Type     string `json:"type,omitempty"`
 	Findings int    `json:"findings"`
 	Passed   int    `json:"misconfig_checks_passed,omitempty"`
 }
 
+type Resource struct {
+	Name     string `json:"name"`
+	Findings int    `json:"findings"`
+	Error    string `json:"error,omitempty"`
+}
+
 type Report struct {
 	Tool              string         `json:"tool"`
 	ToolVersion       string         `json:"tool_version"`
+	Cluster           *string        `json:"cluster,omitempty"`
+	Resources         []Resource     `json:"resources,omitempty"`
 	Artifact          string         `json:"artifact"`
 	ArtifactType      string         `json:"artifact_type"`
 	OS                string         `json:"os,omitempty"`
@@ -91,9 +100,18 @@ func Build(raw *RawReport, o Options) Report {
 	if os := raw.Metadata.OS; os != nil {
 		r.OS = strings.TrimSpace(core.Clean(os.Family) + " " + core.Clean(os.Name))
 	}
+	results, owners := raw.Results, make([]int, len(raw.Results))
+	if raw.ClusterName != nil {
+		cluster := core.Clean(*raw.ClusterName)
+		r.Cluster = &cluster
+		r.Resources, results, owners = resources(raw)
+	}
 	var findings []Finding
-	for ti, res := range raw.Results {
+	for ti, res := range results {
 		t := Target{Name: core.Clean(res.Target), Class: core.Clean(res.Class), Type: core.Clean(res.Type)}
+		if r.Cluster != nil {
+			t.Resource = r.Resources[owners[ti]].Name
+		}
 		add := func(f Finding) {
 			f.Target, f.TargetIdx, f.order = t.Name, ti, ti
 			findings = append(findings, f)
@@ -149,6 +167,9 @@ func Build(raw *RawReport, o Options) Report {
 			}
 			hide(f)
 		}
+		if r.Cluster != nil {
+			r.Resources[owners[ti]].Findings += t.Findings
+		}
 		r.Targets = append(r.Targets, t)
 	}
 	sort.SliceStable(findings, func(i, j int) bool { return less(findings[i], findings[j], true) })
@@ -161,6 +182,44 @@ func Build(raw *RawReport, o Options) Report {
 	r.Findings = append(r.Findings, kept...)
 	sort.SliceStable(r.Hidden, func(i, j int) bool { return less(r.Hidden[i], r.Hidden[j], false) })
 	return r
+}
+
+func resources(raw *RawReport) ([]Resource, []Result, []int) {
+	var groups []Resource
+	var members [][]Result
+	index := map[string]int{}
+	for _, k := range append(append([]K8sResource(nil), raw.Resources...), raw.Findings...) {
+		var parts []string
+		for _, p := range []string{k.Namespace, k.Kind, k.Name} {
+			if p = core.Clean(p); p != "" {
+				parts = append(parts, p)
+			}
+		}
+		name := strings.Join(parts, "/")
+		i, ok := index[name]
+		if !ok {
+			i = len(groups)
+			index[name] = i
+			groups = append(groups, Resource{Name: name})
+			members = append(members, nil)
+		}
+		if e := strings.Join(strings.Fields(core.Clean(k.Error)), " "); e != "" {
+			if groups[i].Error != "" {
+				e = groups[i].Error + "; " + e
+			}
+			groups[i].Error = e
+		}
+		members[i] = append(members[i], k.Results...)
+	}
+	var results []Result
+	var owners []int
+	for i, m := range members {
+		results = append(results, m...)
+		for range m {
+			owners = append(owners, i)
+		}
+	}
+	return groups, results, owners
 }
 
 func less(a, b Finding, severityFirst bool) bool {

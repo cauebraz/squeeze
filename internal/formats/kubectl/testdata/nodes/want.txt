@@ -1,0 +1,2 @@
+kubectl: 1 object (Node 1), 0 unhealthy
+Node squeeze-kubectl-control-plane: Ready, kubelet v1.33.1

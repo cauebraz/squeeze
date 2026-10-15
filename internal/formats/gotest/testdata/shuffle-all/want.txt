@@ -1,0 +1,7 @@
+go test: fail; 5 tests: 4 passed, 1 failed, 0 skipped; 3 packages: 1 ok, 1 failed, 1 without tests
+fail example.com/shop/calc TestSecond
+  calc_test.go:13: total = 0, want 1: TestFirst must run before TestSecond
+shuffle example.com/shop/calc: -test.shuffle 1792025410586059000
+shuffle example.com/shop/text: -test.shuffle 1792025410586078000
+ok example.com/shop/text 0.076s
+no tests example.com/shop/docs

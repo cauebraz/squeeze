@@ -1,0 +1,2 @@
+kubectl: 1 object (Secret 1), 0 unhealthy
+Secret shop/db-credentials: Opaque, keys password username

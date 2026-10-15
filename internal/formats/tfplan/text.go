@@ -30,6 +30,7 @@ func Text(r Report, o Options) string {
 	writeDrift(&b, r, o.ListDrift)
 	writeDeferred(&b, r.Deferred)
 	writeActions(&b, r.Actions)
+	writeDeferredActions(&b, r.DeferredActions)
 	writeOutputs(&b, r.Outputs)
 	return b.String()
 }
@@ -70,6 +71,9 @@ func header(r Report) string {
 	}
 	if s.Deferred > 0 {
 		line += fmt.Sprintf("; %d deferred", s.Deferred)
+	}
+	if s.DeferredActions > 0 {
+		line += fmt.Sprintf("; %d deferred %s", s.DeferredActions, core.Plural(s.DeferredActions, "action", "actions"))
 	}
 	if s.Actions > 0 {
 		line += fmt.Sprintf("; %d %s to invoke", s.Actions, core.Plural(s.Actions, "action", "actions"))
@@ -133,6 +137,13 @@ func notes(c ResourceChange) []string {
 	}
 	if c.Importing && c.Action != Import {
 		n = append(n, "import")
+	}
+	if c.GeneratedLines > 0 {
+		g := fmt.Sprintf("%d %s of generated config", c.GeneratedLines, core.Plural(c.GeneratedLines, "line", "lines"))
+		if c.GeneratedConfig != "" {
+			g += " in --output json"
+		}
+		n = append(n, g)
 	}
 	switch c.Action {
 	case Forget:
@@ -237,20 +248,43 @@ func writeActions(b *strings.Builder, actions []ActionInvocation) {
 	}
 	items := make([]string, 0, len(actions))
 	for _, a := range actions {
-		item := a.Address
-		switch {
-		case a.Event != "" && a.Resource != "":
-			item += " (" + a.Event + " " + a.Resource + ")"
-		case a.Event != "":
-			item += " (" + a.Event + ")"
-		case a.Invoked:
-			item += " (invoked)"
-		}
-		items = append(items, item)
+		items = append(items, actionItem(a, ""))
 	}
 	b.WriteString("actions: ")
 	b.WriteString(strings.Join(items, ", "))
 	b.WriteByte('\n')
+}
+
+func writeDeferredActions(b *strings.Builder, deferred []DeferredAction) {
+	if len(deferred) == 0 {
+		return
+	}
+	items := make([]string, 0, len(deferred))
+	for _, d := range deferred {
+		items = append(items, actionItem(d.ActionInvocation, d.Reason))
+	}
+	b.WriteString("deferred actions: ")
+	b.WriteString(strings.Join(items, ", "))
+	b.WriteByte('\n')
+}
+
+func actionItem(a ActionInvocation, reason string) string {
+	var n []string
+	switch {
+	case a.Event != "" && a.Resource != "":
+		n = append(n, a.Event+" "+a.Resource)
+	case a.Event != "":
+		n = append(n, a.Event)
+	case a.Invoked:
+		n = append(n, "invoked")
+	}
+	if reason != "" {
+		n = append(n, reason)
+	}
+	if len(n) == 0 {
+		return a.Address
+	}
+	return a.Address + " (" + strings.Join(n, "; ") + ")"
 }
 
 func writeOutputs(b *strings.Builder, outputs []OutputChange) {

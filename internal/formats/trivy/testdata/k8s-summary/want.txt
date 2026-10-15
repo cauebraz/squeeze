@@ -1,0 +1,28 @@
+trivy: cluster kind-squeeze-trivy, 3 resources: 9 vulnerabilities, 7 misconfigurations; 4 CRITICAL, 12 HIGH; 9 fixable; 82 misconfiguration checks passed
+shop/Deployment/api:
+  Deployment/api (kubernetes):
+    HIGH KSV-0118 lines 31-46: Default security context configured
+    HIGH KSV-0014 lines 33-41: Root file system is not read-only
+    HIGH KSV-0118 lines 33-41: Default security context configured
+  alpine:3.18.0 (alpine 3.18.0) (alpine):
+    CRITICAL CVE-2022-48174 busybox 1.36.0-r9 -> 1.36.1-r1: busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution
+    CRITICAL CVE-2022-48174 busybox-binsh 1.36.0-r9 -> 1.36.1-r1: busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution
+    CRITICAL CVE-2022-48174 ssl_client 1.36.0-r9 -> 1.36.1-r1: busybox: stack overflow vulnerability in ash.c leads to arbitrary code execution
+    HIGH CVE-2023-5363 libcrypto3 3.1.0-r4 -> 3.1.4-r0: openssl: Incorrect cipher key and IV length processing
+    HIGH CVE-2024-6119 libcrypto3 3.1.0-r4 -> 3.1.7-r0: openssl: Possible denial of service in X.509 name checks
+    HIGH CVE-2023-5363 libssl3 3.1.0-r4 -> 3.1.4-r0: openssl: Incorrect cipher key and IV length processing
+    HIGH CVE-2024-6119 libssl3 3.1.0-r4 -> 3.1.7-r0: openssl: Possible denial of service in X.509 name checks
+    HIGH CVE-2025-26519 musl 1.2.4-r0 -> 1.2.4-r3: musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write ...
+    HIGH CVE-2025-26519 musl-utils 1.2.4-r0 -> 1.2.4-r3: musl libc 0.9.13 through 1.2.5 before 1.2.6 has an out-of-bounds write ...
+shop/Deployment/worker:
+  Deployment/worker (kubernetes):
+    HIGH KSV-0118 lines 31-43: Default security context configured
+    HIGH KSV-0014 lines 33-38: Root file system is not read-only
+    HIGH KSV-0118 lines 33-38: Default security context configured
+shop/Role/admin:
+  Role/admin (kubernetes):
+    CRITICAL KSV-0112 lines 10-15: Manage all resources at the namespace
+fixes:
+  KSV-0118: To enhance security, it is strongly recommended not to rely on the default security context. Inst...
+  KSV-0014: Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.
+  KSV-0112: Remove '*' from 'rules.resources'. Provide specific list of resources to be managed by role in na...

@@ -1,0 +1,5 @@
+golangci-lint: 1 issue (1 error) from errcheck 1; 5 linters enabled; 1 run error; 2 run warnings
+error: typechecking error: pattern ./...: directory prefix . does not contain main module or its selected dependencies
+warning: Can't run linter goanalysis_metalinter: buildir: failed to load package store: could not load export data (runner)
+warning: Failed to discover go env: exit status 1
+error: Error return value of `os.Remove` is not checked (store/store.go:15:11, errcheck)

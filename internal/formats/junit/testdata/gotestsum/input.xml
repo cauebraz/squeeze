@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="7" failures="5" errors="0" time="0.202414">
+	<testsuite tests="7" failures="5" skipped="1" time="0.202000" name="example.com/shop" timestamp="2026-10-14T21:58:48-03:00">
+		<properties>
+			<property name="go.version" value="go1.27.2 darwin/arm64"></property>
+		</properties>
+		<testcase classname="example.com/shop" name="TestTotal" time="0.000000">
+			<failure message="Failed" type="">=== RUN   TestTotal&#xA;    cart_test.go:15: checking two prices&#xA;    cart_test.go:17: Total([3 4]) = 4, want 7&#xA;--- FAIL: TestTotal (0.00s)&#xA;</failure>
+		</testcase>
+		<testcase classname="example.com/shop" name="TestTotalTable/one" time="0.000000">
+			<failure message="Failed" type="">=== RUN   TestTotalTable/one&#xA;    cart_test.go:29: Total([5]) = 0, want 5&#xA;--- FAIL: TestTotalTable/one (0.00s)&#xA;</failure>
+		</testcase>
+		<testcase classname="example.com/shop" name="TestTotalTable/three" time="0.000000">
+			<failure message="Failed" type="">=== RUN   TestTotalTable/three&#xA;    cart_test.go:29: Total([1 2 3]) = 5, want 6&#xA;--- FAIL: TestTotalTable/three (0.00s)&#xA;</failure>
+		</testcase>
+		<testcase classname="example.com/shop" name="TestTotalTable" time="0.000000">
+			<failure message="Failed" type="">=== RUN   TestTotalTable&#xA;--- FAIL: TestTotalTable (0.00s)&#xA;</failure>
+		</testcase>
+		<testcase classname="example.com/shop" name="TestNil" time="0.000000">
+			<failure message="Failed" type="">=== RUN   TestNil&#xA;--- FAIL: TestNil (0.00s)&#xA;panic: runtime error: slice bounds out of range [1:0] [recovered, repanicked]&#xA;&#xA;goroutine 25 [running]:&#xA;testing.tRunner.func1.2({0x100b984c0, 0x5fcaafe2a180})&#xA;&#x9;/usr/local/go/src/testing/testing.go:2125 +0x1a0&#xA;testing.tRunner.func1()&#xA;&#x9;/usr/local/go/src/testing/testing.go:2128 +0x2c8&#xA;panic({0x100b984c0?, 0x5fcaafe2a180?})&#xA;&#x9;/usr/local/go/src/runtime/panic.go:859 +0x120&#xA;example.com/shop.Total(...)&#xA;&#x9;/home/dev/shop/cart.go:5&#xA;example.com/shop.TestNil(0x5fcaafe58fc8?)&#xA;&#x9;/home/dev/shop/cart_test.go:42 +0x20&#xA;testing.tRunner(0x5fcaafe58fc8, 0x100ba3950)&#xA;&#x9;/usr/local/go/src/testing/testing.go:2195 +0xc4&#xA;created by testing.(*T).Run in goroutine 1&#xA;&#x9;/usr/local/go/src/testing/testing.go:2260 +0x3b8&#xA;</failure>
+		</testcase>
+		<testcase classname="example.com/shop" name="TestPaymentGateway" time="0.000000">
+			<skipped message="=== RUN   TestPaymentGateway&#xA;    cart_test.go:37: GATEWAY_URL is not set&#xA;--- SKIP: TestPaymentGateway (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="example.com/shop" name="TestTotalEmpty" time="0.000000"></testcase>
+	</testsuite>
+</testsuites>

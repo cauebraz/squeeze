@@ -22,15 +22,19 @@ type Format struct{}
 func (Format) Name() string { return "tfstate" }
 
 func (Format) Description() string {
-	return "Terraform state JSON from terraform show -json without a plan, and terraform output -json"
+	return "Terraform state JSON from terraform show -json without a plan, terraform state show -json and terraform output -json"
 }
 
-func (Format) Conditions() []string { return []string{} }
+var conditionNames = []string{"error", "fail", "warning"}
+
+func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+
+var showStart = regexp.MustCompile(`^[ \t\r\n]*\{[ \t\r\n]*"format_version"[ \t\r\n]*:[ \t\r\n]*"(?:[^"\\]|\\.)*"[ \t\r\n]*,[ \t\r\n]*"resource"[ \t\r\n]*:[ \t\r\n]*\{`)
 
 var outputsStart = regexp.MustCompile(`^[ \t\r\n]*\{[ \t\r\n]*"(?:[^"\\]|\\.)*"[ \t\r\n]*:[ \t\r\n]*\{[ \t\r\n]*"sensitive"[ \t\r\n]*:[ \t\r\n]*(?:true|false)[ \t\r\n]*,[ \t\r\n]*"type"[ \t\r\n]*:`)
 
 func (Format) Detect(head []byte) bool {
-	if outputsStart.Match(head) {
+	if outputsStart.Match(head) || showStart.Match(head) {
 		return true
 	}
 	trimmed := bytes.TrimLeft(head, " \t\r\n")
@@ -60,5 +64,9 @@ func Squeeze(input []byte, o Options) (core.Result, error) {
 		return core.Result{}, err
 	}
 	r := Build(in, o)
-	return core.Result{Text: Text(r), Data: r, Conditions: core.Conditions(nil)}, nil
+	return core.Result{Text: Text(r), Data: r, Conditions: core.Conditions(map[string]bool{
+		"error":   r.Errors > 0,
+		"fail":    r.Errors > 0,
+		"warning": r.Warnings > 0,
+	})}, nil
 }

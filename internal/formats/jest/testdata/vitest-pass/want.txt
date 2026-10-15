@@ -1,0 +1,2 @@
+vitest: pass; 3 tests: 3 passed, 0 failed; 1 file: 1 passed
+... 1 passing file (--all)

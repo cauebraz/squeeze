@@ -2,6 +2,7 @@ package tfplan
 
 import (
 	"sort"
+	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
@@ -19,7 +20,7 @@ func conditions(r Report) []string {
 	return core.Conditions(map[string]bool{
 		"change":     s.Changed(),
 		"check":      len(r.Checks) > 0,
-		"deferred":   s.Deferred > 0,
+		"deferred":   s.Deferred+s.DeferredActions > 0,
 		"destroy":    s.Destroy > 0,
 		"drift":      s.Drift > 0,
 		"error":      s.Errored,
@@ -41,11 +42,12 @@ func Build(p *Plan, o Options) (Report, error) {
 			Errored:  p.Errored,
 			Complete: p.Complete == nil || *p.Complete,
 		},
-		Changes:  []ResourceChange{},
-		Drift:    []ResourceChange{},
-		Deferred: []DeferredChange{},
-		Actions:  []ActionInvocation{},
-		Outputs:  []OutputChange{},
+		Changes:         []ResourceChange{},
+		Drift:           []ResourceChange{},
+		Deferred:        []DeferredChange{},
+		DeferredActions: []DeferredAction{},
+		Actions:         []ActionInvocation{},
+		Outputs:         []OutputChange{},
 	}
 	for _, pr := range p.ResourceChanges {
 		c, err := convert(pr, o, nil)
@@ -69,6 +71,10 @@ func Build(p *Plan, o Options) (Report, error) {
 	}
 	r.Actions = convertActions(p.ActionInvocations)
 	r.Summary.Actions = len(r.Actions)
+	for _, d := range p.DeferredActions {
+		r.DeferredActions = append(r.DeferredActions, DeferredAction{ActionInvocation: convertAction(d.ActionInvocation), Reason: core.Clean(d.Reason)})
+	}
+	r.Summary.DeferredActions = len(r.DeferredActions)
 	outputs, err := convertOutputs(p.OutputChanges, o.IncludeNoop)
 	if err != nil {
 		return Report{}, err
@@ -209,17 +215,21 @@ func buildDeferred(r *Report, p *Plan) error {
 func convertActions(actions []PlanAction) []ActionInvocation {
 	out := make([]ActionInvocation, 0, len(actions))
 	for _, a := range actions {
-		inv := ActionInvocation{Address: core.Clean(a.Address)}
-		switch {
-		case a.LifecycleActionTrigger != nil:
-			inv.Event = core.Clean(a.LifecycleActionTrigger.ActionTriggerEvent)
-			inv.Resource = core.Clean(a.LifecycleActionTrigger.TriggeringResourceAddress)
-		case a.InvokeActionTrigger != nil:
-			inv.Invoked = true
-		}
-		out = append(out, inv)
+		out = append(out, convertAction(a))
 	}
 	return out
+}
+
+func convertAction(a PlanAction) ActionInvocation {
+	inv := ActionInvocation{Address: core.Clean(a.Address)}
+	switch {
+	case a.LifecycleActionTrigger != nil:
+		inv.Event = core.Clean(a.LifecycleActionTrigger.ActionTriggerEvent)
+		inv.Resource = core.Clean(a.LifecycleActionTrigger.TriggeringResourceAddress)
+	case a.InvokeActionTrigger != nil:
+		inv.Invoked = true
+	}
+	return inv
 }
 
 func hasAttrDiff(a Action) bool {
@@ -240,6 +250,12 @@ func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, 
 		Importing:       importing,
 		Reason:          core.Clean(pr.ActionReason),
 	}
+	if hcl := generatedConfig(pr.Change.GeneratedConfig); hcl != "" {
+		c.GeneratedLines = strings.Count(hcl, "\n") + 1
+		if !o.NoValues {
+			c.GeneratedConfig = hcl
+		}
+	}
 	if hasAttrDiff(action) {
 		c.Attrs, c.ReplacedBy = diffAttrs(pr.Change, !o.NoValues)
 	}
@@ -254,6 +270,14 @@ func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, 
 	}
 	c.Attrs, c.AttrsOmitted = core.Limit(c.Attrs, o.MaxAttrs)
 	return c, nil
+}
+
+func generatedConfig(s string) string {
+	lines := strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n")
+	for i, l := range lines {
+		lines[i] = core.Line(l)
+	}
+	return strings.Trim(strings.Join(lines, "\n"), "\n")
 }
 
 func count(s *Summary, c ResourceChange) {

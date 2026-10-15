@@ -323,6 +323,72 @@ func TestBuildActions(t *testing.T) {
 	}
 }
 
+func TestBuildDeferredActions(t *testing.T) {
+	t.Parallel()
+	r := mustBuild(t, "deferred-actions", defaults)
+	want := []DeferredAction{
+		{ActionInvocation{Address: "action.aws_lambda_invoke.notify", Event: "AfterCreate", Resource: "kubernetes_namespace.app"}, "deferred_prereq"},
+		{ActionInvocation{Address: "action.aws_lambda_invoke.audit", Invoked: true}, "provider_config_unknown"},
+	}
+	if diff := cmp.Diff(want, r.DeferredActions); diff != "" {
+		t.Errorf("deferred actions (-want +got):\n%s", diff)
+	}
+	if r.Summary.DeferredActions != 2 || r.Summary.Deferred != 1 || r.Summary.Actions != 1 {
+		t.Errorf("summary = %+v", r.Summary)
+	}
+	only := &Plan{FormatVersion: "1.2", DeferredActions: []PlanDeferredAction{{Reason: "absent_prereq", ActionInvocation: PlanAction{Address: "action.a.b"}}}}
+	got, err := Build(only, defaults)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c := conditions(got); strings.Join(c, ",") != "deferred" {
+		t.Errorf("conditions with only a deferred action = %v, want [deferred]", c)
+	}
+}
+
+func TestBuildGeneratedConfig(t *testing.T) {
+	t.Parallel()
+	r := mustBuild(t, "generated-config", defaults)
+	want := []ResourceChange{
+		{Address: "aws_db_instance.legacy", Action: Import, Importing: true, GeneratedLines: 9},
+		{Address: "aws_s3_bucket.legacy", Action: Import, Importing: true, GeneratedLines: 8},
+	}
+	if diff := cmp.Diff(want, r.Changes, cmpopts.IgnoreFields(ResourceChange{}, "GeneratedConfig")); diff != "" {
+		t.Errorf("changes (-want +got):\n%s", diff)
+	}
+	if !strings.Contains(r.Changes[0].GeneratedConfig, "password            = null # sensitive\n") {
+		t.Errorf("generated config = %q", r.Changes[0].GeneratedConfig)
+	}
+	hidden := mustBuild(t, "generated-config", Options{NoValues: true})
+	if hidden.Changes[0].GeneratedConfig != "" || hidden.Changes[0].GeneratedLines != 9 {
+		t.Errorf("--no-values change = %+v", hidden.Changes[0])
+	}
+}
+
+func TestGeneratedConfigCleaning(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		in   string
+		want string
+	}{
+		"empty":             {"", ""},
+		"only newlines":     {"\n\n", ""},
+		"trailing newline":  {"resource \"a\" \"b\" {\n}\n", "resource \"a\" \"b\" {\n}"},
+		"crlf":              {"a\r\nb", "a\nb"},
+		"escapes and tabs":  {"\x1b[31ma\x1b[0m\n\tb = 1\r", "a\n    b = 1"},
+		"trailing spaces":   {"a   \nb", "a\nb"},
+		"inner blank lines": {"a\n\nb", "a\n\nb"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			if got := generatedConfig(tt.in); got != tt.want {
+				t.Errorf("generatedConfig(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestBuildForgetReplace(t *testing.T) {
 	t.Parallel()
 	r := mustBuild(t, "forget-replace", defaults)

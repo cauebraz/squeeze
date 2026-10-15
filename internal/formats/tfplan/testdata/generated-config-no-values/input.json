@@ -1,0 +1,155 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.17.0-rc2",
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_db_instance.legacy",
+          "mode": "managed",
+          "type": "aws_db_instance",
+          "name": "legacy",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "allocated_storage": 20,
+            "engine": "postgres",
+            "identifier": "legacy-db",
+            "instance_class": "db.t3.micro",
+            "password": "Hunter2-Legacy",
+            "skip_final_snapshot": false,
+            "username": "app",
+            "id": "db-ABC123"
+          },
+          "sensitive_values": {
+            "password": true
+          }
+        },
+        {
+          "address": "aws_s3_bucket.legacy",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "legacy",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "legacy-bucket",
+            "bucket_prefix": "",
+            "force_destroy": false,
+            "object_lock_enabled": false,
+            "id": "legacy-bucket",
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.legacy",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "legacy",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "allocated_storage": 20,
+          "engine": "postgres",
+          "identifier": "legacy-db",
+          "instance_class": "db.t3.micro",
+          "password": "Hunter2-Legacy",
+          "skip_final_snapshot": false,
+          "username": "app",
+          "id": "db-ABC123"
+        },
+        "after": {
+          "allocated_storage": 20,
+          "engine": "postgres",
+          "identifier": "legacy-db",
+          "instance_class": "db.t3.micro",
+          "password": "Hunter2-Legacy",
+          "skip_final_snapshot": false,
+          "username": "app",
+          "id": "db-ABC123"
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "password": true
+        },
+        "after_sensitive": {
+          "password": true
+        },
+        "importing": {
+          "id": "legacy-db"
+        },
+        "generated_config": "resource \"aws_db_instance\" \"legacy\" {\n  allocated_storage   = 20\n  engine              = \"postgres\"\n  identifier          = \"legacy-db\"\n  instance_class      = \"db.t3.micro\"\n  password            = null # sensitive\n  skip_final_snapshot = false\n  username            = \"app\"\n}"
+      }
+    },
+    {
+      "address": "aws_s3_bucket.legacy",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "legacy",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "bucket": "legacy-bucket",
+          "bucket_prefix": "",
+          "force_destroy": false,
+          "object_lock_enabled": false,
+          "id": "legacy-bucket",
+          "tags": {},
+          "tags_all": {}
+        },
+        "after": {
+          "bucket": "legacy-bucket",
+          "bucket_prefix": "",
+          "force_destroy": false,
+          "object_lock_enabled": false,
+          "id": "legacy-bucket",
+          "tags": {},
+          "tags_all": {}
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {},
+        "importing": {
+          "id": "legacy-bucket"
+        },
+        "generated_config": "resource \"aws_s3_bucket\" \"legacy\" {\n  bucket              = \"legacy-bucket\"\n  bucket_prefix       = null\n  force_destroy       = false\n  object_lock_enabled = false\n  tags                = {}\n  tags_all            = {}\n}"
+      }
+    }
+  ],
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.17.0-rc2",
+    "values": {
+      "root_module": {
+        "resources": []
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 6.0"
+      }
+    },
+    "root_module": {}
+  },
+  "timestamp": "2026-10-14T12:00:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}

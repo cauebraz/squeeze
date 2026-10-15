@@ -1,0 +1,4 @@
+ansible-playbook: 2 plays, 1 host; 1 warning
+  localhost: ok=4 changed=2 unreachable=0 failed=0 skipped=0 rescued=0 ignored=0
+warning: Could not match supplied host pattern, ignoring: dbservers
+... 2 changed tasks (--all)

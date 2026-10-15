@@ -1,9 +1,11 @@
 package tfjson
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -118,6 +120,25 @@ func TestBuildApplyErrored(t *testing.T) {
 	}
 	if r.Errors != 1 || r.Diagnostics[0].Address != "aws_instance.web" {
 		t.Errorf("errors = %d, diagnostics = %+v", r.Errors, r.Diagnostics)
+	}
+}
+
+func TestBuildActionErroredAddress(t *testing.T) {
+	t.Parallel()
+	lines, err := Parse(stream(
+		`{"@level":"info","@message":"aws_instance.web (0): Action errored: action.local_command.notify - exit status 1","hook":{"action":{"addr":"action.local_command.notify","action_type":"local_command"},"error":"exit status 1","lifecycle":{"resource":{"addr":"aws_instance.web"},"trigger_index":0,"actions_index":0,"trigger_event":"AfterCreate","on_failure":"Fail"}},"type":"action_errored"}`,
+		`{"@level":"info","@message":"Action errored: action.local_command.manual - exit status 2","hook":{"action":{"addr":"action.local_command.manual"},"error":"exit status 2","invoke":{}},"type":"action_errored"}`,
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := Build(lines, DefaultOptions())
+	want := []Failure{
+		{Type: "action_errored", Address: "action.local_command.notify", Message: "aws_instance.web (0): Action errored: action.local_command.notify - exit status 1"},
+		{Type: "action_errored", Address: "action.local_command.manual", Message: "Action errored: action.local_command.manual - exit status 2"},
+	}
+	if diff := cmp.Diff(want, r.Failures); diff != "" {
+		t.Errorf("failures (-want +got):\n%s", diff)
 	}
 }
 
@@ -272,12 +293,107 @@ func TestBuildLeftInState(t *testing.T) {
 func TestBuildPolicy(t *testing.T) {
 	t.Parallel()
 	r := build(t, "policy-deny", DefaultOptions())
-	want := []PolicyResult{{Policy: "policy.no_public_buckets", Target: "aws_s3_bucket.public", Result: "DenyResult", Enforcement: "mandatory"}}
+	want := []PolicyResult{{Policy: "policy.no_public_buckets", Target: "aws_s3_bucket.public", Result: "DenyResult", Outcome: "fail", Enforcement: "mandatory"}}
 	if diff := cmp.Diff(want, r.Policies); diff != "" {
 		t.Errorf("policies (-want +got):\n%s", diff)
 	}
 	if r.Other["policy_result"] != 1 {
 		t.Errorf("allowed policy result not counted: %v", r.Other)
+	}
+}
+
+func TestPolicyOutcome(t *testing.T) {
+	t.Parallel()
+	tests := map[string]string{
+		"AllowResult": "pass", "DenyResult": "fail", "UnknownResult": "unknown",
+		"InvalidResult": "error", "PolicyErrorResult": "error", "SetupErrorResult": "error",
+		"pass": "pass", "n/a": "pass", "fail": "fail", "unknown": "unknown", "error": "error",
+		"EvaluateResult(6)": "error",
+	}
+	for result, want := range tests {
+		if got := policyOutcome(result); got != want {
+			t.Errorf("policyOutcome(%q) = %q, want %q", result, got, want)
+		}
+	}
+}
+
+func TestBuildPolicyResults(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		policies         []PolicyResult
+		errors, warnings int
+		other            map[string]int
+	}{
+		"policy-unknown": {
+			policies: []PolicyResult{{Policy: "resource_policy.no_public_acl", Target: "aws_s3_bucket.logs", Result: "UnknownResult", Outcome: "unknown", Enforcement: "mandatory"}},
+			warnings: 1, other: map[string]int{},
+		},
+		"policy-error": {
+			policies: []PolicyResult{{Policy: "resource_policy.no_public_acl", Target: "aws_s3_bucket.logs", Result: "PolicyErrorResult", Outcome: "error", Enforcement: "mandatory"}},
+			errors:   1, other: map[string]int{},
+		},
+		"policy-setup-error": {
+			policies: []PolicyResult{{Policy: "resource_policy.no_public_acl", Target: "aws_s3_bucket.logs", Result: "SetupErrorResult", Outcome: "error", Enforcement: "mandatory"}},
+			errors:   1, other: map[string]int{},
+		},
+		"policy-invalid": {
+			policies: []PolicyResult{{Policy: "resource_policy.no_public_acl", Target: "aws_s3_bucket.logs", Result: "InvalidResult", Outcome: "error", Enforcement: "advisory"}},
+			other:    map[string]int{},
+		},
+		"policy-info": {
+			policies: []PolicyResult{{Policy: "resource_policy.no_public_acl", Target: "aws_s3_bucket.logs", Result: "DenyResult", Outcome: "fail", Enforcement: "mandatory"}},
+			errors:   1, other: map[string]int{"policy_info": 1, "policy_result": 1},
+		},
+		"query-policy": {
+			policies: []PolicyResult{
+				{Policy: "resource_policy.no_public_acl", Target: "list.aws_s3_bucket.all[1]", Result: "fail", Outcome: "fail", Enforcement: "mandatory"},
+				{Policy: "resource_policy.no_public_acl", Target: "list.aws_s3_bucket.all[2]", Result: "unknown", Outcome: "unknown", Enforcement: "mandatory"},
+				{Target: "list.aws_s3_bucket.all[3]", Result: "error", Outcome: "error"},
+			},
+			errors: 2, warnings: 1, other: map[string]int{},
+		},
+	}
+	for name, tt := range tests {
+		r := build(t, name, DefaultOptions())
+		if diff := cmp.Diff(tt.policies, r.Policies); diff != "" {
+			t.Errorf("%s: policies (-want +got):\n%s", name, diff)
+		}
+		if r.Errors != tt.errors || r.Warnings != tt.warnings {
+			t.Errorf("%s: errors, warnings = %d, %d, want %d, %d", name, r.Errors, r.Warnings, tt.errors, tt.warnings)
+		}
+		if diff := cmp.Diff(tt.other, r.Other); diff != "" {
+			t.Errorf("%s: other (-want +got):\n%s", name, diff)
+		}
+	}
+}
+
+func TestPolicyDiagnosticKeepsDetail(t *testing.T) {
+	t.Parallel()
+	r := build(t, "policy-error", DefaultOptions())
+	want := []tfdiag.Diagnostic{{
+		Severity: "error", Summary: "Unsupported attribute", Detail: `This object does not have an attribute named "acls".`,
+		Address: "aws_s3_bucket.logs", File: "main.tf", Line: 1, Column: 1, Code: `resource "aws_s3_bucket" "logs" {`,
+	}}
+	if diff := cmp.Diff(want, r.Diagnostics); diff != "" {
+		t.Errorf("diagnostics (-want +got):\n%s", diff)
+	}
+}
+
+func TestQuerySummaryIdentityError(t *testing.T) {
+	t.Parallel()
+	lines, err := Parse(stream(
+		`{"@level":"info","@message":"Policy query summary","type":"policy_query_summary","list_block_address":"list.a.b","overall_result":"error","results":[{"target_address":"list.a.b[0]","result":"error","policies":[{"policy_metadata":{"policy_name":"p"},"diagnostics":null,"result":"pass"}]},{"target_address":"list.a.b[1]","result":"pass","policies":[{"policy_metadata":{"policy_name":"p"},"diagnostics":[{"severity":"warning","summary":"w"}],"result":"pass"}]}],"passed_policies":[]}`,
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := Build(lines, DefaultOptions())
+	want := []PolicyResult{{Target: "list.a.b[0]", Result: "error", Outcome: "error"}}
+	if diff := cmp.Diff(want, r.Policies); diff != "" {
+		t.Errorf("policies (-want +got):\n%s", diff)
+	}
+	if r.Warnings != 1 || r.Diagnostics[0].Address != "list.a.b[1]" {
+		t.Errorf("warning from a passing policy dropped: %+v", r.Diagnostics)
 	}
 }
 
@@ -302,5 +418,88 @@ func TestOtherMessagesKeepOrder(t *testing.T) {
 	r := build(t, "apply", DefaultOptions())
 	if len(r.otherMessages) != 6 || !strings.HasPrefix(r.otherMessages[0], "aws_db_instance.main: Creating") {
 		t.Errorf("other messages = %q", r.otherMessages)
+	}
+}
+
+func TestBuildPlannedActions(t *testing.T) {
+	t.Parallel()
+	lifecycle := `{"@level":"info","type":"planned_action_invocation","invocation":{"action_addr":{"addr":"action.a.n"},"lifecycle_trigger":{"triggering_resource":{"addr":"aws_instance.web"},"triggering_event":"AfterCreate"}}}`
+	lines, err := Parse(stream(
+		lifecycle,
+		`{"@level":"info","type":"planned_action_invocation","invocation":{"action_addr":{"addr":"action.a.m"},"action_trigger":{}}}`,
+		`{"@level":"info","type":"planned_action_invocation","invocation":{"action_addr":{"addr":"action.a.o"},"lifecycle_trigger":{"triggering_event":"BeforeDestroy"}}}`,
+		`{"@level":"info","type":"planned_action_invocation","invocation":{"action_addr":{"addr":"action.a.p"}}}`,
+		lifecycle,
+		`{"@level":"info","type":"action_complete","hook":{"action":{"addr":"action.a.n"}}}`,
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := Build(lines, DefaultOptions())
+	want := []ActionInvocation{
+		{Address: "action.a.n", Event: "AfterCreate", Resource: "aws_instance.web"},
+		{Address: "action.a.m", Invoked: true},
+		{Address: "action.a.o", Event: "BeforeDestroy"},
+		{Address: "action.a.p"},
+	}
+	if diff := cmp.Diff(want, r.Actions); diff != "" {
+		t.Errorf("actions (-want +got):\n%s", diff)
+	}
+	if r.ActionsCompleted != 1 || r.Operation != "plan" || len(r.Other) != 0 {
+		t.Errorf("completed = %d, operation = %q, other = %v", r.ActionsCompleted, r.Operation, r.Other)
+	}
+	text := Text(r, DefaultOptions())
+	wantText := "terraform plan\nactions: action.a.n (AfterCreate aws_instance.web), action.a.m (invoked), action.a.o (BeforeDestroy), action.a.p\nactions completed: 1\n"
+	if diff := cmp.Diff(wantText, text); diff != "" {
+		t.Errorf("text (-want +got):\n%s", diff)
+	}
+}
+
+func TestBuildQueryIncomplete(t *testing.T) {
+	t.Parallel()
+	lines, err := Parse(stream(
+		`{"@level":"info","type":"list_resource_found","list_resource_found":{"address":"list.b.x","display_name":"","identity":{"id":"1"}}}`,
+		`{"@level":"info","type":"list_start","list_start":{"address":"list.a.y","resource_type":"a"}}`,
+		`{"@level":"info","type":"list_resource_found","list_resource_found":{"address":"list.a.y","display_name":"y-1"}}`,
+		`{"@level":"info","type":"list_complete","list_complete":{"address":"list.a.y","resource_type":"a","total":1}}`,
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := Build(lines, DefaultOptions())
+	wantLists := []ListBlock{
+		{Address: "list.a.y", ResourceType: "a", Total: 1, Complete: true},
+		{Address: "list.b.x", Total: 1},
+	}
+	if diff := cmp.Diff(wantLists, r.Lists); diff != "" {
+		t.Errorf("lists (-want +got):\n%s", diff)
+	}
+	if r.Operation != "query" || len(r.Found) != 2 || r.Found[0].DisplayName != "y-1" || string(r.Found[1].Identity["id"]) != `"1"` {
+		t.Errorf("operation = %q, found = %+v", r.Operation, r.Found)
+	}
+	text := Text(r, DefaultOptions())
+	want := "terraform query: 2 found in 2 list blocks\nlist.a.y: 1 found\n  y-1\nlist.b.x: 1 found, incomplete\n  (no display name)\n"
+	if diff := cmp.Diff(want, text); diff != "" {
+		t.Errorf("text (-want +got):\n%s", diff)
+	}
+}
+
+func TestBuildQueryKeepsInputAndStateOut(t *testing.T) {
+	t.Parallel()
+	r, err := Squeeze(fixture(t, "query"), DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(r.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, secret := range []string{"fixture-sensitive-input-value", "fixture-sensitive-state-value", "import {"} {
+		if !strings.Contains(string(fixture(t, "query")), secret) {
+			t.Fatalf("fixture lacks %q", secret)
+		}
+		if strings.Contains(r.Text, secret) || strings.Contains(string(data), secret) {
+			t.Errorf("%q reached the output", secret)
+		}
 	}
 }

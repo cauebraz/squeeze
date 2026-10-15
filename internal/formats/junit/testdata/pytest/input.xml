@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="shop" errors="2" failures="4" skipped="2" tests="9" time="0.014" timestamp="2026-10-14T21:59:33.904859-03:00" hostname="dev"><testcase classname="test_cart" name="test_total_empty" time="0.000" /><testcase classname="test_cart" name="test_total_two_items" time="0.000"><failure message="assert 10 == 11&#10; +  where 10 = total([(3, 2), (4, 1)])">def test_total_two_items():
+        print("computing total for 2 items")
+        sys.stderr.write("warning: price list is stale\n")
+&gt;       assert total([(3, 2), (4, 1)]) == 11
+E       assert 10 == 11
+E        +  where 10 = total([(3, 2), (4, 1)])
+
+test_cart.py:21: AssertionError</failure></testcase><testcase classname="test_cart" name="test_checkout_uses_db" time="0.000"><error message="failed on setup with &quot;ConnectionError: database at localhost:5432 refused the connection&quot;">@pytest.fixture
+    def db():
+&gt;       raise ConnectionError("database at localhost:5432 refused the connection")
+E       ConnectionError: database at localhost:5432 refused the connection
+
+test_cart.py:11: ConnectionError</error></testcase><testcase classname="test_cart" name="test_payment" time="0.000"><skipped type="pytest.skip" message="payment gateway sandbox is down">/home/dev/shop/test_cart.py:28: payment gateway sandbox is down</skipped></testcase><testcase classname="test_cart" name="test_rounding" time="0.000"><skipped type="pytest.xfail" message="rounding bug #12" /></testcase><testcase classname="test_cart" name="test_strict_xpass" time="0.000"><failure message="[XPASS(strict)] should fail">[XPASS(strict)] should fail</failure></testcase><testcase classname="test_cart.TestDiscount" name="test_ten_percent" time="0.000" /><testcase classname="test_cart.TestDiscount" name="test_negative" time="0.000"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">self = &lt;test_cart.TestDiscount object at 0x10af62490&gt;
+
+    def test_negative(self):
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+test_cart.py:48: Failed</failure></testcase><testcase classname="test_cart" name="test_order_export" time="0.000"><failure message="AssertionError: assert False&#10; +  where False = &lt;built-in method endswith of str object at 0x10afc3270&gt;('.json')&#10; +    where &lt;built-in method endswith of str object at 0x10afc3270&gt; = 'orders.csv'.endswith">order_file = 'orders.csv'
+
+    def test_order_export(order_file):
+&gt;       assert order_file.endswith(".json")
+E       AssertionError: assert False
+E        +  where False = &lt;built-in method endswith of str object at 0x10afc3270&gt;('.json')
+E        +    where &lt;built-in method endswith of str object at 0x10afc3270&gt; = 'orders.csv'.endswith
+
+test_cart.py:59: AssertionError</failure></testcase><testcase classname="test_cart" name="test_order_export" time="0.000"><error message="failed on teardown with &quot;RuntimeError: could not remove orders.csv&quot;">@pytest.fixture
+    def order_file():
+        yield "orders.csv"
+&gt;       raise RuntimeError("could not remove orders.csv")
+E       RuntimeError: could not remove orders.csv
+
+test_cart.py:55: RuntimeError</error></testcase></testsuite></testsuites>

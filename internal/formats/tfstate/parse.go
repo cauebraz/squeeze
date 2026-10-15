@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 var (
@@ -45,6 +46,7 @@ type RawResource struct {
 
 type Input struct {
 	State   *RawState
+	Show    *RawShow
 	Outputs map[string]RawOutput
 }
 
@@ -63,14 +65,18 @@ type Resource struct {
 }
 
 type Report struct {
-	Tool        string   `json:"tool"`
-	ToolVersion string   `json:"tool_version"`
-	Source      string   `json:"source"`
-	Total       int      `json:"total"`
-	Sensitive   int      `json:"sensitive"`
-	Omitted     int      `json:"outputs_omitted"`
-	Outputs     []Output `json:"outputs"`
-	State       *State   `json:"state,omitempty"`
+	Tool        string              `json:"tool"`
+	ToolVersion string              `json:"tool_version"`
+	Source      string              `json:"source"`
+	Total       int                 `json:"total"`
+	Sensitive   int                 `json:"sensitive"`
+	Omitted     int                 `json:"outputs_omitted"`
+	Outputs     []Output            `json:"outputs"`
+	State       *State              `json:"state,omitempty"`
+	Resource    *Instance           `json:"resource,omitempty"`
+	Errors      int                 `json:"errors,omitempty"`
+	Warnings    int                 `json:"warnings,omitempty"`
+	Diagnostics []tfdiag.Diagnostic `json:"diagnostics,omitempty"`
 }
 
 type State struct {
@@ -91,6 +97,9 @@ func Parse(input []byte) (Input, error) {
 		return Input{}, ErrNotObject
 	}
 	if v, ok := top["format_version"]; ok && bytes.HasPrefix(v, []byte(`"`)) {
+		if _, ok := top["resource"]; ok {
+			return parseShow(input)
+		}
 		return parseState(input)
 	}
 	var outputs map[string]RawOutput
@@ -130,6 +139,11 @@ func checkOutputs(outputs map[string]RawOutput) error {
 
 func Build(in Input, o Options) Report {
 	r := Report{Tool: "terraform", Source: "output"}
+	if in.Show != nil {
+		buildShow(&r, in.Show)
+		r.Outputs = []Output{}
+		return r
+	}
 	outputs := in.Outputs
 	if in.State != nil {
 		r.Source = "state"

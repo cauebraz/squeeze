@@ -1,0 +1,6 @@
+terraform 1.17.0-rc2 query: 3 found in 2 list blocks
+list.aws_instance.web: 3 found
+  web-1 (i-0a1b2c3d4e5f60718)
+  web-2 (i-0b2c3d4e5f6071829)
+list.aws_s3_bucket.logs: 0 found
+... 1 more found resource (--max-resources 0)

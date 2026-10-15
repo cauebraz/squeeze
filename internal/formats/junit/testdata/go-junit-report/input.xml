@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="7" failures="5" skipped="1">
+	<testsuite name="example.com/shop" tests="7" failures="5" errors="0" id="0" hostname="dev" skipped="1" time="0.075" timestamp="2026-10-14T21:58:49-03:00">
+		<testcase name="TestTotalEmpty" classname="example.com/shop" time="0.000"></testcase>
+		<testcase name="TestTotal" classname="example.com/shop" time="0.000">
+			<failure message="Failed"><![CDATA[    cart_test.go:15: checking two prices
+    cart_test.go:17: Total([3 4]) = 4, want 7]]></failure>
+		</testcase>
+		<testcase name="TestTotalTable" classname="example.com/shop" time="0.000">
+			<failure message="Failed"></failure>
+		</testcase>
+		<testcase name="TestTotalTable/one" classname="example.com/shop" time="0.000">
+			<failure message="Failed"><![CDATA[    cart_test.go:29: Total([5]) = 0, want 5]]></failure>
+		</testcase>
+		<testcase name="TestTotalTable/three" classname="example.com/shop" time="0.000">
+			<failure message="Failed"><![CDATA[    cart_test.go:29: Total([1 2 3]) = 5, want 6]]></failure>
+		</testcase>
+		<testcase name="TestPaymentGateway" classname="example.com/shop" time="0.000">
+			<skipped message="Skipped"><![CDATA[    cart_test.go:37: GATEWAY_URL is not set]]></skipped>
+		</testcase>
+		<testcase name="TestNil" classname="example.com/shop" time="0.000">
+			<failure message="Failed"></failure>
+		</testcase>
+		<system-out><![CDATA[panic: runtime error: slice bounds out of range [1:0] [recovered, repanicked]
+
+goroutine 25 [running]:
+testing.tRunner.func1.2({0x1030184c0, 0x2120b76a8198})
+	/usr/local/go/src/testing/testing.go:2125 +0x1a0
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:2128 +0x2c8
+panic({0x1030184c0?, 0x2120b76a8198?})
+	/usr/local/go/src/runtime/panic.go:859 +0x120
+example.com/shop.Total(...)
+	/home/dev/shop/cart.go:5
+example.com/shop.TestNil(0x2120b76d8fc8?)
+	/home/dev/shop/cart_test.go:42 +0x20
+testing.tRunner(0x2120b76d8fc8, 0x103023950)
+	/usr/local/go/src/testing/testing.go:2195 +0xc4
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2260 +0x3b8]]></system-out>
+	</testsuite>
+</testsuites>

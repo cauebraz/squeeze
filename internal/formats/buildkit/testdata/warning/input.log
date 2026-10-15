@@ -1,0 +1,40 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 155B done
+#1 WARN: FromAsCasing: 'as' and 'FROM' keywords' casing do not match (line 1)
+#1 WARN: MaintainerDeprecated: Maintainer instruction is deprecated in favor of using label (line 3)
+#1 WARN: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "SHOP_SECRET") (line 2)
+#1 WARN: JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 5)
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/alpine:3.21
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/2] FROM docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507
+#4 resolve docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507 0.0s done
+#4 CACHED
+
+#5 [2/2] RUN echo "warn build"
+#5 0.071 warn build
+#5 DONE 0.1s
+
+#6 exporting to image
+#6 exporting layers 0.0s done
+#6 exporting manifest sha256:48c6e19af6c57b35bc2ea12ebe55adfcd6a5866e893993bd25d9f0b5e5193ade done
+#6 exporting config sha256:ad3a8aecade07e7fa9161235333d4c260690366898f0600d790c7e4feecb9bdf done
+#6 exporting attestation manifest sha256:bfda0e63cd053be98401af1524f5ec0e55f82faa2b524e3109fe3e3bb91021f6 done
+#6 exporting manifest list sha256:8140df5c696b303ff9693512adadc5214084c1c1c7e328e282c9ae88cf21b51c done
+#6 naming to docker.io/library/shop-warn:dev done
+#6 unpacking to docker.io/library/shop-warn:dev done
+#6 DONE 0.1s
+
+ [33m4 warnings found (use docker --debug to expand):
+[0m - FromAsCasing: 'as' and 'FROM' keywords' casing do not match (line 1)
+ - MaintainerDeprecated: Maintainer instruction is deprecated in favor of using label (line 3)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "SHOP_SECRET") (line 2)
+ - JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 5)

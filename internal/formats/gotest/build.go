@@ -14,6 +14,7 @@ var (
 	benchResult = regexp.MustCompile(`^Benchmark\S*\s+\d+\s+.*/op`)
 	spaces      = regexp.MustCompile(`\s+`)
 	coverLine   = regexp.MustCompile(`^(?:ok  \t.*\t)?coverage: (.+)$`)
+	shuffleLine = regexp.MustCompile(`^-test\.shuffle (-?[0-9]+)$`)
 )
 
 const maxCoverage = 20
@@ -51,6 +52,7 @@ type builder struct {
 	outputType bool
 	other      map[string]int
 	partial    map[[2]string]line
+	seeds      map[string]string
 }
 
 func Build(events []Event, o Options) Report {
@@ -63,6 +65,7 @@ func Build(events []Event, o Options) Report {
 		buildFail: map[string]bool{},
 		other:     map[string]int{},
 		partial:   map[[2]string]line{},
+		seeds:     map[string]string{},
 	}
 	for _, e := range events {
 		b.add(e)
@@ -105,6 +108,10 @@ func (b *builder) appendLine(pkg, test string, l line) {
 		return
 	}
 	p := b.pkg(pkg)
+	if m := shuffleLine.FindStringSubmatch(strings.TrimSpace(core.Line(l.text))); m != nil {
+		b.seeds[pkg] = m[1]
+		return
+	}
 	p.lines = append(p.lines, l)
 }
 
@@ -203,6 +210,7 @@ func (b *builder) finish() Report {
 		Passing:         []PackageRef{},
 		NoTests:         []string{},
 		Coverage:        []PackageCoverage{},
+		Shuffle:         []PackageSeed{},
 		Text:            Output{Lines: []string{}},
 		Warnings:        []string{},
 		Other:           b.other,
@@ -278,6 +286,9 @@ func (b *builder) finish() Report {
 			continue
 		}
 		r.PackageFailures = append(r.PackageFailures, PackageFailure{Package: name, Unfinished: p.status == "", Output: b.output(kept, name)})
+	}
+	for _, name := range sortedKeys(b.seeds) {
+		r.Shuffle = append(r.Shuffle, PackageSeed{Package: name, Seed: b.seeds[name], Failed: failedPkg[name]})
 	}
 	b.scan(&r, toLines(b.text))
 	r.Text = b.output(toLines(b.text), "")

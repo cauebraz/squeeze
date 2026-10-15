@@ -1,0 +1,5 @@
+tsc: 2 errors, 1 warning, 1 message in 1 file
+error: File '/home/dev/shop/src/gone.ts' not found. (TS6053)
+error: Cannot find name 'require'. (src/legacy.ts:4:10, TS2304)
+warning: File is a CommonJS module; it may be converted to an ES module. (src/legacy.ts:1:1, TS80001)
+message: 'helper' is declared but its value is never read. (src/legacy.ts:9:3, TS6133)

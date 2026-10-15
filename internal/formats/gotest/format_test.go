@@ -347,6 +347,51 @@ func TestCoverageIsKept(t *testing.T) {
 	}
 }
 
+func TestShuffleSeedIsKeptPerPackage(t *testing.T) {
+	t.Parallel()
+	input := stream(
+		`{"Action":"output","Package":"a","Output":"-test.shuffle -7\n"}`,
+		`{"Action":"run","Package":"a","Test":"TestA"}`,
+		`{"Action":"output","Package":"a","Test":"TestA","Output":"-test.shuffle 9\n"}`,
+		`{"Action":"fail","Package":"a","Test":"TestA"}`,
+		`{"Action":"fail","Package":"a"}`,
+		`{"Action":"output","Package":"b","Output":"-test.shuffle 1792025410586078000\n"}`,
+		`{"Action":"pass","Package":"b"}`,
+		`{"Action":"output","Package":"c","Output":"-test.shuffle 5\n"}`,
+		`{"Action":"output","Package":"c","Output":"panic: boom\n"}`,
+	)
+	r, err := Squeeze(input, DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep := r.Data.(Report)
+	want := []PackageSeed{{Package: "a", Seed: "-7", Failed: true}, {Package: "b", Seed: "1792025410586078000"}, {Package: "c", Seed: "5", Failed: true}}
+	if diff := cmp.Diff(want, rep.Shuffle); diff != "" {
+		t.Errorf("shuffle (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"-test.shuffle 9"}, rep.Failures[0].Output.Lines); diff != "" {
+		t.Errorf("test output (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"panic: boom"}, rep.PackageFailures[0].Output.Lines); diff != "" {
+		t.Errorf("package output (-want +got):\n%s", diff)
+	}
+	for _, line := range []string{"shuffle a: -test.shuffle -7\n", "shuffle c: -test.shuffle 5\n", ", 1 shuffle seed (--all)\n"} {
+		if !strings.Contains(r.Text, line) {
+			t.Errorf("text lacks %q:\n%s", line, r.Text)
+		}
+	}
+	if strings.Contains(r.Text, "shuffle b:") {
+		t.Errorf("seed of a passing package printed without --all:\n%s", r.Text)
+	}
+	r, err = Squeeze(input, Options{All: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(r.Text, "shuffle b: -test.shuffle 1792025410586078000\n") || strings.Contains(r.Text, "shuffle seed") {
+		t.Errorf("--all text:\n%s", r.Text)
+	}
+}
+
 func TestSplitOutputIsJoined(t *testing.T) {
 	t.Parallel()
 	long := strings.Repeat("x", 1500)
@@ -487,6 +532,13 @@ func FuzzSqueeze(f *testing.F) {
 			}
 			if got := len(r.Failures) + r.FailuresOmitted; got != r.Tests.Failed {
 				t.Fatalf("%d failures listed or omitted, %d counted", got, r.Tests.Failed)
+			}
+			for _, p := range r.PackageFailures {
+				for _, l := range p.Output.Lines {
+					if shuffleLine.MatchString(strings.TrimSpace(l)) {
+						t.Fatalf("shuffle seed %q left in the output of package %s", l, p.Package)
+					}
+				}
 			}
 			if o.MaxOutput > 0 {
 				for _, fl := range r.Failures {

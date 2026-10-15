@@ -1,0 +1,9 @@
+terraform 1.17.0-rc2 plan: 1 to add, 0 to change, 0 to destroy; 1 error
++ aws_s3_bucket.logs
+policy: resource_policy.no_public_acl DenyResult for aws_s3_bucket.logs (mandatory)
+error: Public ACL not allowed (main.tf:1:1, aws_s3_bucket.logs)
+  aws_s3_bucket.logs sets acl to public-read.
+  > resource "aws_s3_bucket" "logs" {
+other:
+  policy info: resource_policy.owner_tag for aws_s3_bucket.logs: Bucket aws_s3_bucket.logs has no owner tag.
+  policy: resource_policy.owner_tag AllowResult for aws_s3_bucket.logs

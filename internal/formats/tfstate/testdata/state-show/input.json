@@ -1,0 +1,39 @@
+{
+  "format_version": "1.0",
+  "resource": {
+    "address": "random_password.db",
+    "mode": "managed",
+    "type": "random_password",
+    "name": "db",
+    "provider_name": "registry.terraform.io/hashicorp/random",
+    "schema_version": 3,
+    "values": {
+      "bcrypt_hash": "BCRYPT-SECRET-$2a$10$abcdef",
+      "id": "none",
+      "keepers": {
+        "rotation": "KEEPER-SECRET-77x",
+        "team": "platform"
+      },
+      "length": 24,
+      "lower": true,
+      "min_lower": 0,
+      "min_numeric": 0,
+      "min_special": 0,
+      "min_upper": 0,
+      "number": true,
+      "numeric": true,
+      "override_special": null,
+      "result": "RESULT-SECRET-k3j9",
+      "special": true,
+      "upper": true
+    },
+    "sensitive_values": {
+      "bcrypt_hash": true,
+      "keepers": {
+        "rotation": true
+      },
+      "result": true
+    }
+  },
+  "diagnostics": []
+}

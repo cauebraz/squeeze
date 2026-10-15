@@ -1,0 +1,10 @@
+pre-commit: 2 hooks, 1 failed, 1 unfinished
+error: Interrupted (^C): KeyboardInterrupt:
+fail check-yaml (check yaml): exit code 1
+  while parsing a flow sequence
+    in ".pre-commit-hooks.yaml", line 214, column 11
+  expected ',' or ']', but got '<stream end>'
+    in ".pre-commit-hooks.yaml", line 215, column 1
+unfinished integration tests
+other output:
+  Check the log at /home/dev/.cache/pre-commit/pre-commit.log

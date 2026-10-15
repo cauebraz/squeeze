@@ -1,0 +1,22 @@
+junit: 7 tests in 1 suite: 1 passed, 5 failures, 1 skipped
+fail example.com/shop TestTotal: Failed
+      cart_test.go:15: checking two prices
+      cart_test.go:17: Total([3 4]) = 4, want 7
+fail example.com/shop TestTotalTable: Failed
+fail example.com/shop TestTotalTable/one: Failed
+      cart_test.go:29: Total([5]) = 0, want 5
+fail example.com/shop TestTotalTable/three: Failed
+      cart_test.go:29: Total([1 2 3]) = 5, want 6
+fail example.com/shop TestNil: Failed
+suite example.com/shop stdout:
+  panic: runtime error: slice bounds out of range [1:0] [recovered, repanicked]
+  goroutine 25 [running]:
+  testing.tRunner.func1.2({0x1030184c0, 0x2120b76a8198})
+      /usr/local/go/src/testing/testing.go:2125 +0x1a0
+  testing.tRunner.func1()
+      /usr/local/go/src/testing/testing.go:2128 +0x2c8
+  panic({0x1030184c0?, 0x2120b76a8198?})
+      /usr/local/go/src/runtime/panic.go:859 +0x120
+  example.com/shop.Total(...)
+      /home/dev/shop/cart.go:5
+  ... 6 more lines (--max-lines 0)

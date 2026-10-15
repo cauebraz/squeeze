@@ -1,0 +1,21 @@
+jest: fail; 57 tests: 0 passed, 57 failed; 3 files: 3 failed
+test/price1.test.js
+  fail prices batch 1 > discount 0
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 80
+    Received: 90
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 1
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 81
+    Received: 91
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail prices batch 1 > discount 2
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 82
+    Received: 92
+        at toBe (test/price1.test.js:5:43)
+    ... 16 node_modules, node internal and code frame lines (--full)
+... 54 more failed tests (--max-tests 0)

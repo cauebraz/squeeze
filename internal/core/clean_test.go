@@ -62,6 +62,22 @@ func TestLine(t *testing.T) {
 	}
 }
 
+func TestNarrowLine(t *testing.T) {
+	t.Parallel()
+	tests := map[string]string{
+		"  indented":                "  indented",
+		"\tcode\t ":                 " code",
+		"a\tb\t\tc":                 "a b  c",
+		"\x1b[32mPASS\x1b[0m\tok  ": "PASS ok",
+		"":                          "",
+	}
+	for in, want := range tests {
+		if got := NarrowLine(in); got != want {
+			t.Errorf("NarrowLine(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
 func TestCleanUnterminatedIsLinear(t *testing.T) {
 	t.Parallel()
 	input := strings.Repeat("\x1b]a", 200000)

@@ -1,0 +1,45 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 DONE 0.0s
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 188B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/alpine:3.21
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [build 1/4] FROM docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507
+#4 resolve docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507 0.0s done
+#4 DONE 0.0s
+
+#5 [build 2/4] WORKDIR /src
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 28B done
+#6 DONE 0.0s
+
+#7 [build 3/4] COPY main.sh .
+#7 DONE 0.0s
+
+#8 [build 4/4] RUN chmod +x main.sh && ./main.sh > /out.txt
+#8 DONE 0.1s
+
+#9 [stage-1 1/1] COPY --from=build /out.txt /out.txt
+#9 DONE 0.0s
+
+#10 exporting to image
+#10 exporting layers 0.0s done
+#10 exporting manifest sha256:d2d83710d0823fd1d39db4aab17a3dec67f4d7244b7c72f0fd0db502ab0d11a1 done
+#10 exporting config sha256:68999a74242c605ce031cffc9e058f4ae2c20e5029d9fe16a85306c7a4614dd3 done
+#10 exporting attestation manifest sha256:b8bbe7e08f2ac702cc75c6a6a03243f3dc5be3bf6e9357ca99e7c05ab76e7d9a done
+#10 exporting manifest list sha256:aa28187340592b2cd77649470144d9d65f145a2f5dc29821cbecdf81d42d4a18 done
+#10 naming to docker.io/library/shop-multi:dev done
+#10 unpacking to docker.io/library/shop-multi:dev done
+#10 DONE 0.0s

@@ -1,0 +1,14 @@
+kubectl: 13 objects (Pod 8, Deployment 2, Job 2, Service 1), 7 unhealthy
+unhealthy Pod shop/api-badimage: ImagePullBackOff, 0/1 ready; api waiting ImagePullBackOff
+unhealthy Pod shop/batch-pending: Pending, 0/1 ready, Unschedulable; 0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+unhealthy Pod shop/migrate-dvl69: Error, 0/1 ready; migrate terminated Error exit 3
+unhealthy Pod shop/migrate-gtc4v: Error, 0/1 ready; migrate terminated Error exit 3
+unhealthy Pod shop/worker-56bff96fc9-c8xj6: CrashLoopBackOff, 0/1 ready, 3 restarts; worker waiting CrashLoopBackOff, last Error exit 1
+unhealthy Deployment shop/worker: 0/1 ready, 1 updated, 0 available
+unhealthy Job shop/migrate: Failed, 0/1 succeeded, 2 failed, BackoffLimitExceeded; Job has reached the specified backoff limit
+Pod shop/seed-lxmkd: Completed, 0/1 ready
+Pod shop/web-779764b4b6-8xzkd: Running, 1/1 ready
+Pod shop/web-779764b4b6-slwnx: Running, 1/1 ready
+Deployment shop/web: 2/2 ready, 2 updated, 2 available
+Job shop/seed: Complete, 1/1 succeeded
+Service shop/web: ClusterIP, 10.96.114.207, 80->8080/TCP

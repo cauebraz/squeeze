@@ -10,6 +10,7 @@ type Plan struct {
 	ResourceDrift      []PlanResource        `json:"resource_drift"`
 	ResourceChanges    []PlanResource        `json:"resource_changes"`
 	DeferredChanges    []PlanDeferred        `json:"deferred_changes"`
+	DeferredActions    []PlanDeferredAction  `json:"deferred_action_invocations"`
 	OutputChanges      map[string]PlanChange `json:"output_changes"`
 	ActionInvocations  []PlanAction          `json:"action_invocations"`
 	RelevantAttributes []PlanRelevantAttr    `json:"relevant_attributes"`
@@ -56,6 +57,7 @@ type PlanChange struct {
 	AfterSensitive  any            `json:"after_sensitive"`
 	ReplacePaths    [][]any        `json:"replace_paths"`
 	Importing       *PlanImporting `json:"importing"`
+	GeneratedConfig string         `json:"generated_config"`
 }
 
 type PlanImporting struct {
@@ -66,6 +68,11 @@ type PlanImporting struct {
 type PlanDeferred struct {
 	Reason         string       `json:"reason"`
 	ResourceChange PlanResource `json:"resource_change"`
+}
+
+type PlanDeferredAction struct {
+	Reason           string     `json:"reason"`
+	ActionInvocation PlanAction `json:"action_invocation"`
 }
 
 type PlanAction struct {

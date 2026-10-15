@@ -1,0 +1,2 @@
+pre-commit: 8 hooks, 6 passed, 2 skipped
+... 8 passed or skipped hooks (--all)

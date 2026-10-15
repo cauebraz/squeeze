@@ -1,0 +1,20 @@
+pre-commit: 8 hooks, 5 failed, 1 passed, 2 skipped; 3 hooks modified files
+warning: Unexpected key(s) present at root: minimum_pre_commit_versoin
+fail trailing-whitespace (trim trailing whitespace): exit code 1, files modified
+  Fixing pre_commit_hooks/util.py
+  Fixing pre_commit_hooks/removed.py
+fail end-of-file-fixer (fix end of files): exit code 1, files modified
+  Fixing pre_commit_hooks/util.py
+  Fixing CHANGELOG.md
+fail check-yaml (check yaml): exit code 1
+  while parsing a flow sequence
+    in ".pre-commit-hooks.yaml", line 214, column 11
+  expected ',' or ']', but got '<stream end>'
+    in ".pre-commit-hooks.yaml", line 215, column 1
+fail expand-tabs (expand tabs in markdown): files modified
+fail no-todo (forbid TODO markers): exit code 1
+  73:# TODO: sort keys
+  pre_commit_hooks/check_yaml.py: TODO markers are not allowed
+  39:# TODO drop python 3.9 support
+  pre_commit_hooks/check_json.py: TODO markers are not allowed
+... 3 passed or skipped hooks (--all)

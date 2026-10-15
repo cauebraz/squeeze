@@ -18,6 +18,10 @@ func Line(s string) string {
 	return strings.TrimRight(scrub(s, "    "), " ")
 }
 
+func NarrowLine(s string) string {
+	return strings.TrimRight(scrub(s, " "), " ")
+}
+
 func scrub(s, tab string) string {
 	var b strings.Builder
 	b.Grow(len(s))

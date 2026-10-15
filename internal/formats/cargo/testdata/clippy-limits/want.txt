@@ -1,0 +1,7 @@
+cargo: fail; build failed: shop (lib); 1 error, 4 warnings, 1 fixable
+error: equal expressions as operands to `==` (shop/src/lib.rs:24:5, clippy::eq_op)
+  > a == a
+warning: the loop variable `i` is only used to index `prices` (shop/src/lib.rs:7:14, clippy::needless_range_loop)
+  help: consider using an iterator
+  > for i in 0..prices.len() {
+... 3 more diagnostics, clippy::needless_return 1, clippy::ptr_arg 1, dead_code 1 (--max-diagnostics 0)

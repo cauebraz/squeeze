@@ -60,6 +60,12 @@ func TestConditions(t *testing.T) {
 		"test-pass":           {},
 		"test-fail":           {"error", "fail", "test_failed"},
 		"policy-deny":         {"change", "fail", "policy_failed"},
+		"policy-unknown":      {"change", "warning"},
+		"policy-error":        {"change", "error", "fail"},
+		"policy-setup-error":  {"error", "fail"},
+		"policy-invalid":      {"change", "error", "fail"},
+		"policy-info":         {"change", "error", "fail", "policy_failed"},
+		"query-policy":        {"error", "fail", "policy_failed", "warning"},
 		"unknown-types":       {"error", "fail", "warning"},
 	}
 	seen := map[string]bool{}

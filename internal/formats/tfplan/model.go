@@ -140,23 +140,24 @@ func (s Scalar) MarshalJSON() ([]byte, error) {
 }
 
 type Summary struct {
-	Import       int  `json:"import"`
-	Add          int  `json:"add"`
-	Change       int  `json:"change"`
-	Destroy      int  `json:"destroy"`
-	Replace      int  `json:"replace"`
-	Forget       int  `json:"forget"`
-	Move         int  `json:"move"`
-	Read         int  `json:"read"`
-	Noop         int  `json:"noop"`
-	Drift        int  `json:"drift"`
-	DriftIgnored int  `json:"drift_ignored"`
-	Deferred     int  `json:"deferred"`
-	Actions      int  `json:"actions"`
-	Outputs      int  `json:"outputs"`
-	ChecksFailed int  `json:"checks_failed"`
-	Errored      bool `json:"errored"`
-	Complete     bool `json:"complete"`
+	Import          int  `json:"import"`
+	Add             int  `json:"add"`
+	Change          int  `json:"change"`
+	Destroy         int  `json:"destroy"`
+	Replace         int  `json:"replace"`
+	Forget          int  `json:"forget"`
+	Move            int  `json:"move"`
+	Read            int  `json:"read"`
+	Noop            int  `json:"noop"`
+	Drift           int  `json:"drift"`
+	DriftIgnored    int  `json:"drift_ignored"`
+	Deferred        int  `json:"deferred"`
+	DeferredActions int  `json:"deferred_actions"`
+	Actions         int  `json:"actions"`
+	Outputs         int  `json:"outputs"`
+	ChecksFailed    int  `json:"checks_failed"`
+	Errored         bool `json:"errored"`
+	Complete        bool `json:"complete"`
 }
 
 func (s Summary) Changed() bool {
@@ -184,6 +185,8 @@ type ResourceChange struct {
 	Importing       bool         `json:"importing,omitempty"`
 	Reason          string       `json:"reason,omitempty"`
 	Irrelevant      bool         `json:"irrelevant,omitempty"`
+	GeneratedLines  int          `json:"generated_config_lines,omitempty"`
+	GeneratedConfig string       `json:"generated_config,omitempty"`
 	ReplacedBy      []string     `json:"replaced_by,omitempty"`
 	Attrs           []AttrChange `json:"attrs,omitempty"`
 	AttrsOmitted    int          `json:"attrs_omitted,omitempty"`
@@ -202,6 +205,11 @@ type ActionInvocation struct {
 	Invoked  bool   `json:"invoked,omitempty"`
 }
 
+type DeferredAction struct {
+	ActionInvocation
+	Reason string `json:"reason"`
+}
+
 type OutputChange struct {
 	Name      string `json:"name"`
 	Action    Action `json:"action"`
@@ -217,16 +225,17 @@ type CheckResult struct {
 }
 
 type Report struct {
-	Tool         string             `json:"tool"`
-	ToolVersion  string             `json:"tool_version"`
-	Summary      Summary            `json:"summary"`
-	Changes      []ResourceChange   `json:"changes"`
-	Omitted      int                `json:"resources_omitted"`
-	NoopHidden   int                `json:"noop_hidden"`
-	Drift        []ResourceChange   `json:"drift"`
-	DriftOmitted int                `json:"drift_omitted"`
-	Deferred     []DeferredChange   `json:"deferred"`
-	Actions      []ActionInvocation `json:"actions"`
-	Outputs      []OutputChange     `json:"outputs"`
-	Checks       []CheckResult      `json:"checks"`
+	Tool            string             `json:"tool"`
+	ToolVersion     string             `json:"tool_version"`
+	Summary         Summary            `json:"summary"`
+	Changes         []ResourceChange   `json:"changes"`
+	Omitted         int                `json:"resources_omitted"`
+	NoopHidden      int                `json:"noop_hidden"`
+	Drift           []ResourceChange   `json:"drift"`
+	DriftOmitted    int                `json:"drift_omitted"`
+	Deferred        []DeferredChange   `json:"deferred"`
+	DeferredActions []DeferredAction   `json:"deferred_actions"`
+	Actions         []ActionInvocation `json:"actions"`
+	Outputs         []OutputChange     `json:"outputs"`
+	Checks          []CheckResult      `json:"checks"`
 }

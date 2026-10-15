@@ -1,0 +1,15 @@
+buildkit: 10 steps, 1 cached; 1 warning
+warning: SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "APP_TOKEN") (line 5)
+done [internal] load build definition from Dockerfile
+done [internal] load metadata for docker.io/library/alpine:3.21
+done [internal] load .dockerignore
+done [1/5] FROM docker.io/library/alpine:3.21@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507
+cached [2/5] WORKDIR /app
+done [internal] load build context
+done [3/5] COPY hello.txt .
+done [4/5] RUN echo "building shop" && cat hello.txt
+  building shop
+  hello
+done [5/5] RUN echo "token length ${#APP_TOKEN}"
+  token length 14
+done exporting to image

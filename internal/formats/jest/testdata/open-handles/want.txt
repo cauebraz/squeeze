@@ -1,0 +1,5 @@
+jest: pass; 1 test: 1 passed, 0 failed; 1 file: 1 passed; 1 open handle
+open handle: Timeout
+    at Object.setInterval (test/poll.test.js:2:3)
+    ... 19 node_modules, node internal and code frame lines (--full)
+... 1 passing file (--all)

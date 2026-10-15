@@ -1,0 +1,5 @@
+terraform state show terraform_data.app (tainted): 5 attributes, 2 sensitive
+id = "8c1f7a52-3b9e-4d1c-a0f2-6e7d5c4b3a21"
+input = {"db":[{"host":"db.internal","password":(sensitive)}],"name":"api","note":"line one\nline two\u001b[31m red","tokens":["public-token",(sensitive)]}
+output = (sensitive)
+... 2 null attributes (--output json)

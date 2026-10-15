@@ -1,0 +1,11 @@
+check yaml...............................................................Failed
+- hook id: check-yaml
+- exit code: 1
+
+while parsing a flow sequence
+  in ".pre-commit-hooks.yaml", line 214, column 11
+expected ',' or ']', but got '<stream end>'
+  in ".pre-commit-hooks.yaml", line 215, column 1
+
+integration tests........................................................Interrupted (^C): KeyboardInterrupt: 
+Check the log at /home/dev/.cache/pre-commit/pre-commit.log

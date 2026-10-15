@@ -1,0 +1,1 @@
+{"schema_version":1,"format":"junit","input_bytes":1194,"text_bytes":48,"ratio":0.0402,"conditions":["skipped"],"failed_on":[],"data":{"tool":"junit","tool_version":"","suites":3,"tests":3,"passed":2,"failures":0,"errors":0,"skipped":1,"flaky":0,"attributes":{"tests":3,"failures":0,"errors":0,"skipped":1},"mismatches":[],"cases":[],"cases_omitted":0,"suite_output":[]}}

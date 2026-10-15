@@ -1,0 +1,3 @@
+terraform 1.17.0-rc2 plan: 2 to import, 0 to add, 0 to change, 0 to destroy
+>> aws_db_instance.legacy (9 lines of generated config)
+>> aws_s3_bucket.legacy (8 lines of generated config)

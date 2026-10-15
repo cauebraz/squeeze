@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="3" failures="1" errors="0" time="0.11">
+  <testsuite name="total" errors="0" failures="1" skipped="1" timestamp="2026-10-15T00:59:54" time="0.092" tests="3">
+    <testcase classname="total sums prices" name="total sums prices" time="0.001">
+    </testcase>
+    <testcase classname="total applies quantity" name="total applies quantity" time="0.007">
+      <failure>Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 4
+Received: 2
+    at Object.toBe (/home/dev/shop/cart.test.js:6:43)
+    at Promise.finally.completed (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:1559:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:1499:10)
+    at _callCircusTest (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:1009:40)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at _runTest (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:949:3)
+    at _runTestsForDescribeBlock (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
+    at _runTestsForDescribeBlock (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:829:11)
+    at run (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:757:3)
+    at runAndTransformResultsToJestFormat (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:1920:21)
+    at jestAdapter (/home/dev/shop/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/home/dev/shop/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/home/dev/shop/node_modules/jest-runner/build/index.js:343:7)</failure>
+    </testcase>
+    <testcase classname="total applies coupon" name="total applies coupon" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="total rounds to cents" name="total rounds to cents" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>

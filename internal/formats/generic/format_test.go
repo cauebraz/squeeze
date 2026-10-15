@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
@@ -167,9 +168,9 @@ func TestText(t *testing.T) {
 			want:  "aaaa ... 3 more bytes (--max-line-bytes 0)\n",
 		},
 		"indentation and tabs": {
-			input: lines("  two", "\tTab"),
+			input: lines("  two", "\tTab", "id\tname\tcpu", "7\tsvc-a\t42", "\t\tat main.go:3", "x\t"),
 			o:     DefaultOptions(),
-			want:  "  two\n    Tab\n",
+			want:  "  two\n Tab\nid name cpu\n7 svc-a 42\n  at main.go:3\nx\n",
 		},
 		"an exception line and the line before it survive the cut": {
 			input: lines("start", "a", "b", "c", "d", "e", "    raise ValueError(\"bad\")", "ValueError: bad", "f", "g", "h", "i", "end 1", "end 2"),
@@ -270,6 +271,9 @@ func FuzzSqueeze(f *testing.F) {
 			}
 			if r.Folded > 0 && !strings.Contains(res.Text, "(--no-fold)") {
 				t.Fatalf("%d lines folded without a notice:\n%s", r.Folded, res.Text)
+			}
+			if utf8.Valid(input) && !r.JSONIndented && r.Printed > 0 && r.Folded == 0 && r.Cut == 0 && r.LongLines == 0 && len(res.Text) > len(input)+1 {
+				t.Fatalf("output %d bytes from %d input bytes with nothing folded or cut:\n%q", len(res.Text), len(input), res.Text)
 			}
 			if _, err := core.Envelope("generic", len(input), res, nil); err != nil {
 				t.Fatalf("Envelope() error: %v", err)

@@ -10,6 +10,9 @@ import (
 const maxValueBytes = 200
 
 func Text(r Report) string {
+	if r.Source == "resource" {
+		return showText(r)
+	}
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')

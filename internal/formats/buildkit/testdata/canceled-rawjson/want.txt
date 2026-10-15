@@ -1,0 +1,9 @@
+buildkit: 6 steps, 1 cached, 1 failed, 1 canceled
+canceled [assets 2/2] RUN echo "bundling assets" && sleep 5 && echo done
+  bundling assets
+fail [app 2/2] RUN echo "running tests" && echo "FAIL: TestCheckout (0.02s)" && echo "    cart_test.go:41: total 12, want 10" && exit 2
+  running tests
+  FAIL: TestCheckout (0.02s)
+      cart_test.go:41: total 12, want 10
+error: Dockerfile:5: failed to build: failed to solve: process "/bin/sh -c echo \"running tests\" && echo \"FAIL: TestCheckout (0.02s)\" && echo \"    cart_test.go:41: total 12, want 10\" && exit 2" did not complete successfully: exit code: 2
+... 4 other steps (--all)

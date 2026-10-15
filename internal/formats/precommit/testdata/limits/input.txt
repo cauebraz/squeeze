@@ -1,0 +1,130 @@
+unit checks..............................................................Failed
+- hook id: unit
+- exit code: 2
+
+PASS pre_commit_hooks/string_fixer.py
+PASS pre_commit_hooks/check_shebang_scripts_are_executable.py
+PASS tests/no_commit_to_branch_test.py
+PASS pre_commit_hooks/detect_private_key.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/__init__.py
+PASS tests/check_ast_test.py
+PASS tests/check_builtin_literals_test.py
+PASS tests/detect_aws_credentials_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/conftest.py
+PASS pre_commit_hooks/check_yaml.py
+PASS pre_commit_hooks/end_of_file_fixer.py
+PASS pre_commit_hooks/check_executables_have_shebangs.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/check_merge_conflict_test.py
+PASS pre_commit_hooks/no_commit_to_branch.py
+PASS tests/check_yaml_test.py
+PASS tests/requirements_txt_fixer_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/check_vcs_permalinks_test.py
+PASS pre_commit_hooks/check_symlinks.py
+PASS tests/debug_statement_hook_test.py
+PASS pre_commit_hooks/check_merge_conflict.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/sort_simple_yaml.py
+PASS tests/check_case_conflict_test.py
+PASS tests/check_toml_test.py
+PASS pre_commit_hooks/check_toml.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS setup.py
+PASS tests/check_illegal_windows_names_test.py
+PASS pre_commit_hooks/check_json.py
+PASS tests/util_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/__init__.py
+PASS tests/file_contents_sorter_test.py
+PASS tests/check_xml_test.py
+PASS tests/sort_simple_yaml_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/check_vcs_permalinks.py
+PASS pre_commit_hooks/util.py
+PASS tests/end_of_file_fixer_test.py
+PASS tests/check_docstring_first_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/check_added_large_files.py
+PASS tests/check_added_large_files_test.py
+PASS tests/removed_test.py
+PASS pre_commit_hooks/check_builtin_literals.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/check_shebang_scripts_are_executable_test.py
+PASS pre_commit_hooks/check_ast.py
+PASS pre_commit_hooks/forbid_new_submodules.py
+PASS pre_commit_hooks/debug_statement_hook.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/string_fixer_test.py
+PASS pre_commit_hooks/trailing_whitespace_fixer.py
+PASS tests/destroyed_symlinks_test.py
+PASS pre_commit_hooks/file_contents_sorter.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/detect_private_key_test.py
+PASS pre_commit_hooks/mixed_line_ending.py
+PASS pre_commit_hooks/check_case_conflict.py
+PASS pre_commit_hooks/fix_byte_order_marker.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/pretty_format_json.py
+PASS pre_commit_hooks/destroyed_symlinks.py
+PASS tests/fix_byte_order_marker_test.py
+PASS pre_commit_hooks/check_xml.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/requirements_txt_fixer.py
+PASS tests/forbid_new_submodules_test.py
+PASS pre_commit_hooks/check_docstring_first.py
+PASS tests/check_symlinks_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS tests/trailing_whitespace_fixer_test.py
+PASS tests/tests_should_end_in_test_test.py
+PASS tests/mixed_line_ending_test.py
+PASS pre_commit_hooks/detect_aws_credentials.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/tests_should_end_in_test.py
+PASS tests/readme_test.py
+PASS tests/check_json_test.py
+PASS tests/check_executables_have_shebangs_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+5 checks, 1 failed
+PASS pre_commit_hooks/removed.py
+PASS tests/pretty_format_json_test.py
+FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
+    assert main(['bad.json']) == 0
+3 checks, 1 failed
+
+shellcheck...........................................(no files to check)Skipped

@@ -1,0 +1,65 @@
+jest: fail; 14 tests: 8 passed, 4 failed, 1 skipped, 1 todo; 6 files: 1 passed, 2 failed, 3 failed to run; 1 snapshot: 1 failed
+test/broken.test.js: failed to run
+    SyntaxError: test/broken.test.js: Unexpected token, expected "," (4:26)
+    > 4 |   expect(total([]).toBe(0);
+        |                           ^
+    ... 81 node_modules, node internal and code frame lines (--full)
+test/cart.test.js
+  fail cart > applyDiscount > takes ten off with TEN
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 80
+    Received: 90
+        at Object.toBe (test/cart.test.js:17:41)
+    ... 18 node_modules, node internal and code frame lines (--full)
+  fail cart > summary lists tags
+    Error: expect(received).toEqual(expected) // deep equality
+    - Expected  - 2
+    + Received  + 2
+      Object {
+        "count": 2,
+    -   "currency": "EUR",
+    +   "currency": "USD",
+        "tags": Array [
+          "a",
+    -     "c",
+    +     "b",
+        ],
+        "total": 3,
+      }
+        at Object.toEqual (test/cart.test.js:25:87)
+    ... 16 node_modules, node internal and code frame lines (--full)
+  fail cart > parses a price
+    TypeError: price must be a string, got number
+        at parsePrice (src/cart.js:13:36)
+        at Object.parsePrice (test/cart.test.js:33:12)
+    ... 16 node_modules, node internal and code frame lines (--full)
+test/format.test.js
+  fail summary snapshot
+    Error: expect(received).toMatchSnapshot()
+    Snapshot name: `summary snapshot 1`
+    - Snapshot  - 1
+    + Received  + 1
+    @@ -2,7 +2,7 @@
+        "count": 1,
+        "currency": "USD",
+        "tags": [
+          "x",
+        ],
+    -   "total": 5,
+    +   "total": 6,
+      }
+        at Object.toMatchSnapshot (test/format.test.js:4:53)
+    ... 13 node_modules, node internal and code frame lines (--full)
+test/hooks.test.js: failed to run
+    could not close db: connection reset
+    > 3 |   throw new Error('could not close db: connection reset');
+        |         ^
+      at Object.<anonymous> (test/hooks.test.js:3:9)
+    ... 5 node_modules, node internal and code frame lines (--full)
+test/missing.test.js: failed to run
+    Cannot find module '../src/refund' from 'test/missing.test.js'
+    > 1 | const { refund } = require('../src/refund');
+        |                    ^
+      at Object.require (test/missing.test.js:1:20)
+    ... 4 node_modules, node internal and code frame lines (--full)
+... 1 skipped test, 1 todo test, 1 passing file (--all)

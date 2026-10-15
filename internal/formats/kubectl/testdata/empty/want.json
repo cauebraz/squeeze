@@ -1,0 +1,1 @@
+{"schema_version":1,"format":"kubectl","input_bytes":119,"text_bytes":19,"ratio":0.1597,"conditions":[],"failed_on":[],"data":{"tool":"kubectl","tool_version":"","objects_total":0,"unhealthy":0,"restarts":0,"kinds":[],"objects":[],"objects_omitted":0,"unhealthy_omitted":0,"omitted_by_kind":[],"events_total":0,"warnings":0,"events":[],"events_omitted":0,"omitted_by_reason":[]}}

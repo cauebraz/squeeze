@@ -1,0 +1,11 @@
+terraform 1.17.0-rc2: 2 errors, 1 warning
+policy: resource_policy.no_public_acl fail for list.aws_s3_bucket.all[1] (mandatory)
+policy: resource_policy.no_public_acl unknown for list.aws_s3_bucket.all[2] (mandatory)
+policy: error for list.aws_s3_bucket.all[3]
+error: Failed to evaluate Terraform Policy (list.aws_s3_bucket.all[3])
+  Terraform could not prepare policy evaluation for list.aws_s3_bucket.all because the configuration
+  is unavailable.
+error: Public ACL not allowed (list.aws_s3_bucket.all[1])
+  aws_s3_bucket.public sets acl to public-read.
+warning: Policy result unknown (list.aws_s3_bucket.all[2])
+  The value of attrs.acl is not known.

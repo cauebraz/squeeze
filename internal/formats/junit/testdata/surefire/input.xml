@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.example.shop.CartTest" time="0.412" tests="6" errors="1" skipped="1" failures="2" flakes="1">
+  <properties>
+    <property name="java.version" value="21.0.4"/>
+    <property name="surefire.rerunFailingTestsCount" value="1"/>
+  </properties>
+  <testcase name="totalOfEmptyCart" classname="com.example.shop.CartTest" time="0.002"/>
+  <testcase name="totalAppliesQuantity" classname="com.example.shop.CartTest" time="0.011">
+    <failure message="expected: &lt;4&gt; but was: &lt;2&gt;" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: expected: <4> but was: <2>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:531)
+	at com.example.shop.CartTest.totalAppliesQuantity(CartTest.java:27)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+]]></failure>
+    <rerunFailure message="expected: &lt;4&gt; but was: &lt;2&gt;" type="org.opentest4j.AssertionFailedError">
+      <stackTrace><![CDATA[org.opentest4j.AssertionFailedError: expected: <4> but was: <2>
+	at com.example.shop.CartTest.totalAppliesQuantity(CartTest.java:27)
+]]></stackTrace>
+    </rerunFailure>
+    <system-out><![CDATA[cart has 1 line
+price list loaded from /home/dev/shop/prices.csv
+]]></system-out>
+  </testcase>
+  <testcase name="checkoutTimesOut" classname="com.example.shop.CheckoutTest" time="5.003">
+    <failure message="execution timed out after 5 s" type="java.util.concurrent.TimeoutException"/>
+  </testcase>
+  <testcase name="paymentGateway" classname="com.example.shop.PaymentTest" time="0.001">
+    <error message="Connection refused: localhost/127.0.0.1:8089" type="java.net.ConnectException"><![CDATA[java.net.ConnectException: Connection refused: localhost/127.0.0.1:8089
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at com.example.shop.PaymentClient.charge(PaymentClient.java:42)
+	at com.example.shop.PaymentTest.paymentGateway(PaymentTest.java:19)
+]]></error>
+    <system-err><![CDATA[WARN retrying payment gateway in 100 ms
+]]></system-err>
+  </testcase>
+  <testcase name="couponExpired" classname="com.example.shop.CouponTest" time="0">
+    <skipped message="coupon service is not configured"/>
+  </testcase>
+  <testcase name="inventorySync" classname="com.example.shop.InventoryTest" time="0.230">
+    <flakyFailure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+      <stackTrace><![CDATA[org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+	at com.example.shop.InventoryTest.inventorySync(InventoryTest.java:33)
+]]></stackTrace>
+      <system-out><![CDATA[sync attempt 1 failed
+]]></system-out>
+    </flakyFailure>
+  </testcase>
+</testsuite>

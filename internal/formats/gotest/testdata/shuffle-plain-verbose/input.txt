@@ -1,0 +1,20 @@
+-test.shuffle 2
+=== RUN   TestSecond
+    calc_test.go:13: total = 0, want 1: TestFirst must run before TestSecond
+--- FAIL: TestSecond (0.00s)
+=== RUN   TestThird
+    calc_test.go:18: third ran
+--- PASS: TestThird (0.00s)
+=== RUN   TestFirst
+--- PASS: TestFirst (0.00s)
+FAIL
+FAIL	example.com/shop/calc	0.067s
+?   	example.com/shop/docs	[no test files]
+-test.shuffle 2
+=== RUN   TestEmpty
+--- PASS: TestEmpty (0.00s)
+=== RUN   TestUpper
+--- PASS: TestUpper (0.00s)
+PASS
+ok  	example.com/shop/text	0.067s
+FAIL

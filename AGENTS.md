@@ -28,7 +28,7 @@ A change is done when `just check` and `just cover` pass after the last edit.
 cmd/squeeze/            main: wires os.Args and stdio to internal/cli
 internal/cli/           subcommands, common flags, exit codes, --raw-dir
 internal/core/          Format interface, Registry, Result, conditions, JSON envelope: knows no tool
-internal/tfdiag/        Terraform diagnostics shared by tfvalidate, tfjson, tflint, eslint and sarif
+internal/tfdiag/        Terraform diagnostics shared by tfvalidate, tfjson, tflint, eslint, sarif, golangci, tsc and cargo
 internal/jsonl/         line-delimited JSON input shared by tfjson and gotest
 internal/formattest/    contract suite every format runs
 internal/formats/<name>/ one package per format; testdata/<case>/ holds input, args, want.txt, want.json

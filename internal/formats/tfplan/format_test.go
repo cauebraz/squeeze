@@ -101,7 +101,7 @@ func TestDataPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, key := range []string{`"changes":[]`, `"drift":[]`, `"deferred":[]`, `"actions":[]`, `"outputs":[]`, `"tool":"terraform"`} {
+	for _, key := range []string{`"changes":[]`, `"drift":[]`, `"deferred":[]`, `"deferred_actions":[]`, `"actions":[]`, `"outputs":[]`, `"tool":"terraform"`} {
 		if !strings.Contains(string(out), key) {
 			t.Errorf("data lacks %s: %s", key, out)
 		}
@@ -141,16 +141,17 @@ func TestDataPayloadInvalidEnums(t *testing.T) {
 func TestConditions(t *testing.T) {
 	t.Parallel()
 	tests := map[string][]string{
-		"noop-only":      {},
-		"create-only":    {"change"},
-		"replace-forced": {"change", "destroy", "replace"},
-		"drift":          {"change", "drift"},
-		"deferred":       {"change", "deferred", "fail", "incomplete"},
-		"errored":        {"change", "error", "fail", "incomplete"},
-		"forget-replace": {"change", "forget", "replace"},
-		"checks":         {"change", "check", "warning"},
-		"import":         {"change", "import"},
-		"moved":          {"change", "forget", "move"},
+		"noop-only":        {},
+		"create-only":      {"change"},
+		"replace-forced":   {"change", "destroy", "replace"},
+		"drift":            {"change", "drift"},
+		"deferred":         {"change", "deferred", "fail", "incomplete"},
+		"deferred-actions": {"change", "deferred", "fail", "incomplete"},
+		"errored":          {"change", "error", "fail", "incomplete"},
+		"forget-replace":   {"change", "forget", "replace"},
+		"checks":           {"change", "check", "warning"},
+		"import":           {"change", "import"},
+		"moved":            {"change", "forget", "move"},
 	}
 	for name, want := range tests {
 		r, err := Squeeze(fixture(t, name), DefaultOptions())

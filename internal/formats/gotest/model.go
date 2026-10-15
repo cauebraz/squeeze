@@ -63,6 +63,12 @@ type PackageCoverage struct {
 	Coverage string `json:"coverage"`
 }
 
+type PackageSeed struct {
+	Package string `json:"package"`
+	Seed    string `json:"seed"`
+	Failed  bool   `json:"failed,omitempty"`
+}
+
 type Report struct {
 	Tool            string            `json:"tool"`
 	ToolVersion     string            `json:"tool_version"`
@@ -79,6 +85,7 @@ type Report struct {
 	NoTests         []string          `json:"packages_without_tests"`
 	Coverage        []PackageCoverage `json:"coverage"`
 	CoverageOmitted int               `json:"coverage_omitted"`
+	Shuffle         []PackageSeed     `json:"shuffle"`
 	Text            Output            `json:"text"`
 	Warnings        []string          `json:"warning_messages"`
 	Panics          int               `json:"panics"`

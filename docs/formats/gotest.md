@@ -45,11 +45,12 @@ fail example.com/shop/calc TestTable/one
 - Build errors are listed per package from the `build-output` events, without the `# package` line. A stream from a Go version before build events reports the package as build failed from its `[build failed]` summary, and the compiler output is in the lines outside the test events.
 - Benchmark results print as `bench <package> <result>`, with the spaces collapsed.
 - With `-cover`, each package's coverage prints as `coverage <package>: <text>`, the text the go command prints after `coverage: `, such as `33.3% of statements` or `[no statements]`. The package's own `coverage:` line wins over the one on its `ok` line. Without `--all`, the first 20 packages are listed and the rest counted in `... N more packages with coverage (--all)`.
+- With `-shuffle`, each test binary prints `-test.shuffle <seed>` before its first test (`src/testing/testing.go` at go1.27.2, `M.Run`). squeeze prints it as `shuffle <package>: -test.shuffle <seed>` after the failures, one line per failed package, and drops it from the package's output. `go test -test.shuffle <seed> <package>` reruns the package in the same order; `go help testflag` accepts the `test.` prefix on every test flag. With `-shuffle=on` the seed comes from the clock, so each package has its own. Seeds of passing packages are counted in the `(--all)` line and listed with `--all`.
 - Attributes from `t.Attr` and the directory from `t.ArtifactDir` print under the failure they belong to.
 - A `testing: warning:` line, such as `no tests to run`, prints as `warning <package>: ...` and sets the `warning` condition.
 - Lines that are not JSON print under `output outside the test events:`.
 - An event with an action squeeze does not know is counted in `... N events with an unknown action: <action> <count> (--raw-dir)`; the raw input is the only place to read it.
-- Without `--all`, skipped tests, passing packages and packages without tests are counted in one `... N skipped tests, N passing packages, N packages without tests (--all)` line.
+- Without `--all`, skipped tests, passing packages, packages without tests and the shuffle seeds of passing packages are counted in one `... N skipped tests, N passing packages, N packages without tests, N shuffle seeds (--all)` line.
 - test2json splits a line longer than its 1024-byte output buffer across events; squeeze joins the parts of a test's output before it reads the lines.
 - Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed.
 
@@ -77,7 +78,7 @@ fail example.com/shop/calc TestTable/one
 
 ## JSON data
 
-`data` holds `tool`, `tool_version` (empty: the stream carries none), `status`, `tests` (`passed`, `failed`, `skipped`), `packages` (`ok`, `failed`, `build_failed`, `no_tests`), `build_failures`, `failures`, `tests_omitted`, `package_failures`, `benchmarks` (`package`, `result`), `skipped` (`package`, `test`), `passing_packages` (`package`, `elapsed` when set), `packages_without_tests`, `coverage` (`package`, `coverage`; every package with `--all`), `coverage_omitted`, `text`, `warning_messages` (one string per `testing: warning:` line), `panics`, `timeouts`, `races` (counts of matching lines) and `other` (unknown actions by count).
+`data` holds `tool`, `tool_version` (empty: the stream carries none), `status`, `tests` (`passed`, `failed`, `skipped`), `packages` (`ok`, `failed`, `build_failed`, `no_tests`), `build_failures`, `failures`, `tests_omitted`, `package_failures`, `benchmarks` (`package`, `result`), `skipped` (`package`, `test`), `passing_packages` (`package`, `elapsed` when set), `packages_without_tests`, `coverage` (`package`, `coverage`; every package with `--all`), `coverage_omitted`, `shuffle` (`package`, `seed` as a string, `failed` when the package failed; every package that printed a seed), `text`, `warning_messages` (one string per `testing: warning:` line), `panics`, `timeouts`, `races` (counts of matching lines) and `other` (unknown actions by count).
 
 - `failures`: `package`, `test`, `output` and, when set, `run` and `runs` (with `-count`), `elapsed`, `unfinished`, `attrs`, `artifacts`.
 - `build_failures`: `package`, `output`. `package_failures`: `package`, `output` and, when set, `unfinished`.
@@ -89,4 +90,5 @@ fail example.com/shop/calc TestTable/one
 - Failures are sorted by package and test name, not by the order they ran, so parallel runs print the same way every time.
 - Detection reads the first twenty non-blank lines after any `go:` and `#` lines; a stream that starts with more text than that needs `squeeze gotest`.
 - In text, a package's lines are those before its summary line, which is how `go test` prints several packages. Without `-v` the text has no line for a passing test, so the header counts only the failed and skipped tests the text names; with `-v` the counts match a `-json` run. Lines after the last summary, as when the run was killed, print under `output outside the test events:`.
+- In text without `-v`, the go command prints nothing of a passing package but its summary, so only failed packages have a seed.
 - In text, a test's output is the lines after its `=== RUN`, `=== CONT`, `=== NAME` or `--- FAIL:` line, up to the next such line or package summary.

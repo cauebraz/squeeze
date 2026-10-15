@@ -650,7 +650,7 @@ func TestSharedConditionsAreAcceptedEverywhere(t *testing.T) {
 		}
 	}
 	r := runCLI(t, nil, "trivy", "-h")
-	if !strings.Contains(r.stdout, "  error, warning: accepted, never present for this format\n") {
+	if !strings.Contains(r.stdout, "  critical, error, fail, fixable, high, misconfiguration, secret, vulnerability\n  warning: accepted, never present for this format\n") {
 		t.Errorf("trivy help:\n%s", r.stdout)
 	}
 }

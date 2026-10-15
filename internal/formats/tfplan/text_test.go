@@ -37,6 +37,10 @@ func TestHeader(t *testing.T) {
 			Report{Tool: "terraform", Summary: Summary{Drift: 2, Deferred: 3, Actions: 1, Outputs: 1}},
 			"terraform plan: no changes; 2 drifted; 3 deferred; 1 action to invoke; 1 output changed; incomplete",
 		},
+		"deferred actions": {
+			Report{Tool: "terraform", Summary: Summary{Deferred: 1, DeferredActions: 1, Actions: 1, Complete: true}},
+			"terraform plan: no changes; 1 deferred; 1 deferred action; 1 action to invoke",
+		},
 		"plurals": {
 			Report{Tool: "terraform", Summary: Summary{Actions: 2, Outputs: 2, Complete: true}},
 			"terraform plan: no changes; 2 actions to invoke; 2 outputs changed",
@@ -106,6 +110,8 @@ func TestNotes(t *testing.T) {
 			},
 			[]string{"deposed object d1", "moved from a", "import", "replacement forced by x, y", "replace_because_tainted", "does not affect this plan"},
 		},
+		"generated config":   {ResourceChange{Action: Create, Importing: true, GeneratedLines: 3, GeneratedConfig: "a\nb\nc"}, []string{"import", "3 lines of generated config in --output json"}},
+		"generated one line": {ResourceChange{Action: Import, Importing: true, GeneratedLines: 1}, []string{"1 line of generated config"}},
 		"forget":             {ResourceChange{Action: Forget}, []string{"removed from state, not destroyed"}},
 		"forget then create": {ResourceChange{Action: ForgetThenCreate}, []string{"existing object not destroyed"}},
 		"create then forget": {ResourceChange{Action: CreateThenForget}, []string{"existing object not destroyed"}},
@@ -125,7 +131,7 @@ func TestText(t *testing.T) {
 	r := Report{
 		Tool:        "terraform",
 		ToolVersion: "1.9.5",
-		Summary:     Summary{Add: 1, Destroy: 2, Replace: 1, Drift: 2, Deferred: 1, Actions: 1, Outputs: 2, Errored: true, Complete: false},
+		Summary:     Summary{Add: 1, Destroy: 2, Replace: 1, Drift: 2, Deferred: 1, DeferredActions: 2, Actions: 1, Outputs: 2, Errored: true, Complete: false},
 		Changes: []ResourceChange{
 			{Address: "aws_instance.old", Action: Delete},
 			{
@@ -145,6 +151,10 @@ func TestText(t *testing.T) {
 		DriftOmitted: 1,
 		Deferred:     []DeferredChange{{Address: "aws_subnet.x[\"*\"]", Action: Create, Reason: "instance_count_unknown"}},
 		Actions:      []ActionInvocation{{Address: "action.a.n", Event: "AfterCreate", Resource: "aws_instance.web"}, {Address: "action.a.m", Invoked: true}, {Address: "action.a.o", Event: "BeforeDestroy"}, {Address: "action.a.p"}},
+		DeferredActions: []DeferredAction{
+			{ActionInvocation{Address: "action.a.q", Event: "AfterUpdate", Resource: "aws_subnet.x"}, "deferred_prereq"},
+			{ActionInvocation{Address: "action.a.r"}, "absent_prereq"},
+		},
 		Outputs: []OutputChange{
 			{Name: "endpoint", Action: Create, Unknown: true},
 			{Name: "password", Action: Update, Sensitive: true, Unknown: true},
@@ -157,10 +167,11 @@ func TestText(t *testing.T) {
 deferred:
 + aws_subnet.x["*"] (instance_count_unknown)
 actions: action.a.n (AfterCreate aws_instance.web), action.a.m (invoked), action.a.o (BeforeDestroy), action.a.p
+deferred actions: action.a.q (AfterUpdate aws_subnet.x; deferred_prereq), action.a.r (absent_prereq)
 outputs: + endpoint (known after apply), ~ password (sensitive), - region
 `
 	head := `plan errored
-terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace; 2 drifted; 1 deferred; 1 action to invoke; 2 outputs changed; incomplete
+terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace; 2 drifted; 1 deferred; 2 deferred actions; 1 action to invoke; 2 outputs changed; incomplete
 - aws_instance.old
 -/+ aws_db_instance.main (replacement forced by engine_version)
   ! engine_version: "15" -> "16"

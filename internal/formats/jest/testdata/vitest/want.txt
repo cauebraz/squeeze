@@ -1,0 +1,27 @@
+vitest: fail; 14 tests: 8 passed, 4 failed, 1 skipped, 1 todo; 6 files: 1 passed, 2 failed, 3 failed to run; 1 snapshot: 1 failed
+test/broken.test.js: failed to run
+    Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+test/cart.test.js
+  fail cart > applyDiscount > takes ten off with TEN
+    AssertionError: expected 90 to be 80 // Object.is equality
+        at test/cart.test.js:18:41
+    ... 9 node_modules, node internal and code frame lines (--full)
+  fail cart > summary lists tags
+    AssertionError: expected { count: 2, total: 3, …(2) } to deeply equal { count: 2, total: 3, …(2) }
+        at test/cart.test.js:26:87
+    ... 9 node_modules, node internal and code frame lines (--full)
+  fail cart > parses a price
+    TypeError: price must be a string, got number
+        at parsePrice (src/cart.js:13:36)
+        at test/cart.test.js:34:12
+    ... 8 node_modules, node internal and code frame lines (--full)
+test/format.test.js
+  fail summary snapshot
+    Error: Snapshot `summary snapshot 1` mismatched
+        at test/format.test.js:5:53
+    ... 9 node_modules, node internal and code frame lines (--full)
+test/hooks.test.js: failed to run
+    could not close db: connection reset
+test/missing.test.js: failed to run
+    Cannot find module '../src/refund.js' imported from test/missing.test.js
+... 1 skipped test, 1 todo test, 1 passing file (--all)

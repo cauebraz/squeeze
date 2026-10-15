@@ -1,0 +1,12 @@
+junit: 9 tests in 1 suite: 2 passed, 4 failures, 2 errors, 2 skipped
+fail test_cart test_total_two_items: assert 10 == 11  +  where 10 = total([(3, 2), (4, 1)])
+  def test_total_two_items():
+          print("computing total for 2 items")
+          sys.stderr.write("warning: price list is stale\n")
+  ... 4 more lines (--max-lines 0)
+  stdout:
+    computing total for 2 items
+  stderr:
+    warning: price list is stale
+fail test_cart test_strict_xpass: [XPASS(strict)] should fail
+... 4 more failing cases (--max-cases 0)

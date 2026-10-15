@@ -13,6 +13,11 @@ func Text(r Report, o Options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
+	for _, res := range r.Resources {
+		if res.Error != "" {
+			b.WriteString("error: " + res.Name + ": " + res.Error + "\n")
+		}
+	}
 	writeTargets(&b, r, r.Findings)
 	if r.FindingsOmitted > 0 {
 		var parts []string
@@ -60,7 +65,13 @@ func writeFixes(b *strings.Builder, findings []Finding) {
 
 func header(r Report) string {
 	line := core.ToolLabel(r.Tool, r.ToolVersion)
-	if r.Artifact != "" {
+	if r.Cluster != nil {
+		line += ": cluster"
+		if *r.Cluster != "" {
+			line += " " + *r.Cluster
+		}
+		line += fmt.Sprintf(", %d %s", len(r.Resources), core.Plural(len(r.Resources), "resource", "resources"))
+	} else if r.Artifact != "" {
 		line += ": " + r.Artifact
 		if r.ArtifactType != "" {
 			line += " (" + r.ArtifactType
@@ -107,24 +118,32 @@ func header(r Report) string {
 }
 
 func writeTargets(b *strings.Builder, r Report, findings []Finding) {
-	last := -1
+	last, resource, indent := -1, "", ""
+	if r.Cluster != nil {
+		indent = "  "
+	}
 	for _, f := range findings {
 		if f.TargetIdx != last {
+			t := r.Targets[f.TargetIdx]
+			if r.Cluster != nil && (last == -1 || t.Resource != resource) {
+				resource = t.Resource
+				b.WriteString(resource + ":\n")
+			}
 			last = f.TargetIdx
-			b.WriteString(f.Target)
-			if t := r.Targets[f.TargetIdx]; t.Type != "" {
+			b.WriteString(indent + f.Target)
+			if t.Type != "" {
 				b.WriteString(" (" + t.Type + ")")
 			} else if t.Class != "" {
 				b.WriteString(" (" + t.Class + ")")
 			}
 			b.WriteString(":\n")
 		}
-		writeFinding(b, f)
+		writeFinding(b, indent, f)
 	}
 }
 
-func writeFinding(b *strings.Builder, f Finding) {
-	b.WriteString("  " + f.Severity + " " + f.ID)
+func writeFinding(b *strings.Builder, indent string, f Finding) {
+	b.WriteString(indent + "  " + f.Severity + " " + f.ID)
 	switch f.Kind {
 	case "vulnerability":
 		b.WriteString(" " + f.Package + " " + f.Installed)

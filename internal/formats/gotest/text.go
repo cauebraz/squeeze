@@ -46,6 +46,14 @@ func Text(r Report, o Options) string {
 		b.WriteByte('\n')
 		writeOutput(&b, p.Output)
 	}
+	hiddenSeeds := 0
+	for _, s := range r.Shuffle {
+		if !s.Failed && !o.All {
+			hiddenSeeds++
+			continue
+		}
+		fmt.Fprintf(&b, "shuffle %s: -test.shuffle %s\n", s.Package, s.Seed)
+	}
 	for _, bm := range r.Benchmarks {
 		fmt.Fprintf(&b, "bench %s %s\n", bm.Package, bm.Result)
 	}
@@ -67,7 +75,7 @@ func Text(r Report, o Options) string {
 		for _, c := range []struct {
 			n          int
 			what, many string
-		}{{len(r.Skipped), "skipped test", "skipped tests"}, {len(r.Passing), "passing package", "passing packages"}, {len(r.NoTests), "package without tests", "packages without tests"}} {
+		}{{len(r.Skipped), "skipped test", "skipped tests"}, {len(r.Passing), "passing package", "passing packages"}, {len(r.NoTests), "package without tests", "packages without tests"}, {hiddenSeeds, "shuffle seed", "shuffle seeds"}} {
 			if c.n > 0 {
 				items = append(items, fmt.Sprintf("%d %s", c.n, core.Plural(c.n, c.what, c.many)))
 			}

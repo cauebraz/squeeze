@@ -1,0 +1,7 @@
+kubectl: 32 objects (Pod 17, Deployment 4, ReplicaSet 4, Service 3, DaemonSet 2, 1 other kind), 8 unhealthy
+unhealthy Pod shop/api-badimage: ImagePullBackOff, 0/1 ready; api waiting ImagePullBackOff
+unhealthy Pod shop/batch-pending: Pending, 0/1 ready, Unschedulable; 0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+unhealthy Pod shop/migrate-dvl69: Error, 0/1 ready; migrate terminated Error exit 3
+unhealthy Pod shop/migrate-gtc4v: Error, 0/1 ready; migrate terminated Error exit 3
+unhealthy Pod shop/worker-56bff96fc9-c8xj6: CrashLoopBackOff, 0/1 ready, 3 restarts; worker waiting CrashLoopBackOff, last Error exit 1
+... 27 more objects, 3 unhealthy: Pod 12, Deployment 4, ReplicaSet 4, Service 3, DaemonSet 2, 1 other kind (--max-objects 0)
