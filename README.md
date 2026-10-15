@@ -97,6 +97,8 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
   knows goes through `generic`.
 - To stop on a condition, add `--fail-on error,fail`; exit code 3 means it matched. Every format accepts
   `error`, `fail` and `warning`, and `squeeze <format> -h` lists the format's own names, such as `destroy`.
+- After `tool | squeeze`, `$?` is squeeze's exit code, not the tool's: start the command with `set -o pipefail;`
+  (bash, zsh) to see the tool's failure in the same command, for example `set -o pipefail; npx tsc --noEmit | squeeze; echo $?`.
 - When squeeze reports cut lines and what you need is not in the output, rerun with the flag it names, for example
   `squeeze tfplan --max-attrs 0`; the kept lines already hold every error and warning.
 - Add `--raw-dir .squeeze` to keep the full input (ignore `.squeeze/` in git) and read that file only when

@@ -23,6 +23,15 @@ pub fn format_cents(cents: i64) -> String {
     format!("{}.{:02}", cents / 100, cents % 100)
 }
 
+pub fn digit_count(text: &str) -> u32 {
+    text.chars().filter(|c| c.is_ascii_digit()).count()
+}
+
+pub fn label_amount(label: String, cents: i64) -> String {
+    let owned = label;
+    format!("{}: {} ({} chars)", owned, format_cents(cents), label.len())
+}
+
 pub fn split_evenly(cents: i64, parts: i64) -> Vec<i64> {
     let base = cents / parts;
     let remainder = cents % parts;
