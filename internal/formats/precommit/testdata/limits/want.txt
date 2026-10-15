@@ -1,35 +1,9 @@
 pre-commit: 2 hooks, 1 failed, 1 skipped
 fail unit (unit checks): exit code 2
-  PASS pre_commit_hooks/string_fixer.py
-  PASS pre_commit_hooks/check_shebang_scripts_are_executable.py
-  PASS tests/no_commit_to_branch_test.py
-  PASS pre_commit_hooks/detect_private_key.py
   FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
       assert main(['bad.json']) == 0
   5 checks, 1 failed
   PASS tests/__init__.py
-  PASS tests/check_ast_test.py
-  PASS tests/check_builtin_literals_test.py
-  PASS tests/detect_aws_credentials_test.py
-  FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
-      assert main(['bad.json']) == 0
-  5 checks, 1 failed
-  PASS tests/conftest.py
-  PASS pre_commit_hooks/check_yaml.py
-  PASS pre_commit_hooks/end_of_file_fixer.py
-  PASS pre_commit_hooks/check_executables_have_shebangs.py
-  FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
-      assert main(['bad.json']) == 0
-  5 checks, 1 failed
-  PASS tests/check_merge_conflict_test.py
-  PASS pre_commit_hooks/no_commit_to_branch.py
-  PASS tests/check_yaml_test.py
-  PASS tests/requirements_txt_fixer_test.py
-  FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
-      assert main(['bad.json']) == 0
-  5 checks, 1 failed
-  PASS tests/check_vcs_permalinks_test.py
-  PASS pre_commit_hooks/check_symlinks.py
-  ... 93 lines cut (--max-lines 0)
   3 checks, 1 failed
+  ... 119 lines cut (--max-lines 0)
 ... 1 passed or skipped hook (--all)

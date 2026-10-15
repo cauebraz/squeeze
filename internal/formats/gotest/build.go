@@ -169,7 +169,9 @@ func (b *builder) add(e Event) {
 			return
 		}
 		p := b.pkg(pkg)
-		p.status, p.elapsed = e.Action, elapsed
+		if p.status != "fail" {
+			p.status, p.elapsed = e.Action, elapsed
+		}
 		if e.FailedBuild != "" {
 			p.failedBuild = core.Clean(e.FailedBuild)
 		}

@@ -245,13 +245,19 @@ func TestWideNamesCountTwoColumns(t *testing.T) {
 	}
 }
 
-func TestCutKeepsHeadAndErrorLines(t *testing.T) {
+func TestCutKeepsErrorLinesOrTheHead(t *testing.T) {
 	t.Parallel()
 	lines := []string{"a", "b", "c", "FAIL x - AssertionError", "  assert 1", "d", "FAIL x - AssertionError", "  assert 1", "e", "1 failed"}
 	got, omitted := cut(lines, 2)
-	want := []string{"a", "b", "... 1 line cut (--max-lines 0)", "FAIL x - AssertionError", "  assert 1", "... 4 lines cut (--max-lines 0)", "1 failed"}
-	if diff := cmp.Diff(want, got); diff != "" || omitted != 5 {
+	want := []string{"FAIL x - AssertionError", "  assert 1", "1 failed", "... 7 lines cut (--max-lines 0)"}
+	if diff := cmp.Diff(want, got); diff != "" || omitted != 7 {
 		t.Errorf("omitted %d, lines (-want +got):\n%s", omitted, diff)
+	}
+	plain := []string{"checking a", "checking b", "checking c", "checking d"}
+	got, omitted = cut(plain, 2)
+	want = []string{"checking a", "checking b", "... 2 lines cut (--max-lines 0)"}
+	if diff := cmp.Diff(want, got); diff != "" || omitted != 2 {
+		t.Errorf("no error lines: omitted %d, lines (-want +got):\n%s", omitted, diff)
 	}
 	if got, omitted := cut(lines, 0); len(got) != len(lines) || omitted != 0 {
 		t.Errorf("--max-lines 0 cut %d lines", omitted)

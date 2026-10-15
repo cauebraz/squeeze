@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"ACtion\":\"fail\",\"00000000000\":\"0\"}\n{\"ACtion\":\"skip\"}")
