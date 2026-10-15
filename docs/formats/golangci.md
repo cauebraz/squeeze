@@ -59,7 +59,7 @@ error: QF1004: could use strings.ReplaceAll instead (cart/cart.go:42:9, staticch
 
 - golangci-lint caps the issues itself before it writes them: 50 per linter (`--max-issues-per-linter`) and 3 with the same text (`--max-same-issues`). squeeze cannot count what golangci-lint dropped; run golangci-lint with `--max-issues-per-linter 0 --max-same-issues 0` to see them all.
 - When a package does not compile, golangci-lint 2.14.0 reported only the `typecheck` issue for the whole run in the fixtures, not the other linters' issues in packages that compile.
-- On a timeout or a linter that cannot run, golangci-lint writes no JSON and exits 3 or 4, with the reason on stderr; squeeze then gets an empty input.
+- On a timeout or a linter that cannot run, golangci-lint writes no JSON and exits 3 or 4, with the reason on stderr; squeeze then gets an empty input and prints `no output: the command printed nothing`; golangci-lint's exit code and stderr say why.
 - stderr merged with `2>&1` puts golangci-lint's log lines before the JSON, and the input is no longer detected; keep stderr apart. `Report` holds the same warnings and errors.
 - The text output (`--output.text.path`, the default) is not read and goes to `generic`.
 - `fail` follows golangci-lint's default `issues-exit-code` of 1; a run configured with another exit code still reports `fail` on any issue.

@@ -72,7 +72,7 @@ test/cart.test.js
 
 - Vitest's JSON carries no assertion diff: a failed `toEqual` or snapshot prints `expected { ... } to deeply equal { ... }` or `Snapshot ... mismatched` without the lines that differ. Vitest's own text report shows them.
 - Console output from tests is not in either report.
-- A failure before the run, such as a `globalSetup` that throws, makes Jest print no JSON: the input is empty and squeeze exits with an error. Read Jest's stderr for it.
+- A failure before the run, such as a `globalSetup` that throws, makes Jest print no JSON: the input is empty and squeeze prints `no output: the command printed nothing`. Read Jest's stderr for the failure.
 - With `2>&1`, Jest's stderr text comes before the JSON and the input is not detected; use `2>/dev/null` or `--outputFile`.
 - Vitest 5.0.2 leaves `snapshot.failure` false for a mismatch; the mismatch fails its test, so the status is `fail` and `snapshot` is present from `unmatched`.
 - Coverage (`coverageMap`, per-file `coverage`) is dropped.

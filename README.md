@@ -162,8 +162,8 @@ Until 1.0.0 the text output and the `data` of a format may change between commit
 
 | Code | Meaning |
 |---|---|
-| 0 | output written |
-| 1 | empty input, or a read, parse or write error; stdout is empty |
+| 0 | output written; empty or whitespace-only input prints `no output: the command printed nothing`, since many tools print nothing on success |
+| 1 | a read, parse or write error; stdout is empty |
 | 2 | the input matches no known format and is not text; name one |
 | 3 | `--fail-on` matched; stdout holds the full output and stderr names the conditions |
 | 64 | invalid flags or arguments, including an unknown `--fail-on` condition |

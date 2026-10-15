@@ -85,8 +85,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 		return ExitError
 	}
 	if len(bytes.TrimSpace(input)) == 0 {
-		fmt.Fprintln(stderr, "squeeze: empty input")
-		return ExitError
+		return noInput(inv, len(input), stdout, stderr)
 	}
 	if inv.rawDir != "" {
 		path, err := saveRaw(inv.rawDir, input)
@@ -291,4 +290,27 @@ func saveRaw(dir string, input []byte) (string, error) {
 		return "", err
 	}
 	return path, f.Close()
+}
+
+const noInputText = "no output: the command printed nothing\n"
+
+func noInput(inv invocation, inputBytes int, stdout, stderr io.Writer) int {
+	out := []byte(noInputText)
+	if inv.output == "json" {
+		name := ""
+		if inv.format != nil {
+			name = inv.format.Name()
+		}
+		var err error
+		out, err = core.Envelope(name, inputBytes, core.Result{Text: noInputText, Data: struct{}{}}, inv.failOn)
+		if err != nil {
+			fmt.Fprintf(stderr, "squeeze: render: %v\n", err)
+			return ExitError
+		}
+	}
+	if _, err := stdout.Write(out); err != nil {
+		fmt.Fprintf(stderr, "squeeze: write stdout: %v\n", err)
+		return ExitError
+	}
+	return ExitOK
 }
