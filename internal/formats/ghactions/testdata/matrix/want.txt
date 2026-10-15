@@ -1,0 +1,46 @@
+github actions 2.337.0: 2 jobs, 2 failed; 2 errors
+fail check (macos-latest, 1.27.2): just check
+  files="$(gofmt -l .)"; if [ -n "$files" ]; then echo "$files"; exit 1; fi
+  go vet ./...
+  go tool staticcheck ./...
+  go tool exhaustive ./...
+  go test ./...
+  ?       github.com/cauebraz/squeeze/cmd/squeeze    [no test files]
+  ok      github.com/cauebraz/squeeze/internal/cli    0.028s
+  ok      github.com/cauebraz/squeeze/internal/core    0.010s
+  ok      github.com/cauebraz/squeeze/internal/formats/generic    0.046s
+  ok      github.com/cauebraz/squeeze/internal/formats/gotest    0.015s
+  ok      github.com/cauebraz/squeeze/internal/formats/tfjson    0.048s
+  --- FAIL: TestDeepListsStayLinear (4.38s)
+      diff_test.go:297: diffAttrs() took 4.384320917s
+  FAIL
+  FAIL    github.com/cauebraz/squeeze/internal/formats/tfplan    4.436s
+  ok      github.com/cauebraz/squeeze/internal/formats/tfvalidate    0.018s
+  ?       github.com/cauebraz/squeeze/internal/formattest    [no test files]
+  ok      github.com/cauebraz/squeeze/internal/tfdiag    0.010s
+  FAIL
+  error: recipe `test` failed on line 16 with exit code 1
+  error: Process completed with exit code 1.
+fail check (macos-latest, 1.26.9): just check
+  files="$(gofmt -l .)"; if [ -n "$files" ]; then echo "$files"; exit 1; fi
+  go vet ./...
+  go tool staticcheck ./...
+  go tool exhaustive ./...
+  go test ./...
+  ?       github.com/cauebraz/squeeze/cmd/squeeze    [no test files]
+  ok      github.com/cauebraz/squeeze/internal/cli    0.017s
+  ok      github.com/cauebraz/squeeze/internal/core    0.008s
+  ok      github.com/cauebraz/squeeze/internal/formats/generic    0.038s
+  ok      github.com/cauebraz/squeeze/internal/formats/gotest    0.011s
+  ok      github.com/cauebraz/squeeze/internal/formats/tfjson    0.055s
+  --- FAIL: TestDeepListsStayLinear (2.76s)
+      diff_test.go:297: diffAttrs() took 2.758821375s
+  FAIL
+  error: recipe `test` failed on line 16 with exit code 1
+  FAIL    github.com/cauebraz/squeeze/internal/formats/tfplan    2.830s
+  ok      github.com/cauebraz/squeeze/internal/formats/tfvalidate    0.012s
+  ?       github.com/cauebraz/squeeze/internal/formattest    [no test files]
+  ok      github.com/cauebraz/squeeze/internal/tfdiag    0.008s
+  FAIL
+  error: Process completed with exit code 1.
+... 8 other steps (--all)
