@@ -1,6 +1,6 @@
 # generic
 
-Input: any text output. squeeze uses it when no other format detects the input, and prints `squeeze: no format detected; used generic` on stderr. Detected when the first 64 KiB hold something other than whitespace, no NUL byte and valid UTF-8, or when they are all whitespace and more follows. Empty or whitespace-only input exits with code 1, other input with code 2.
+Input: any text output. squeeze uses it when no other format detects the input, and prints `squeeze: no format detected; used generic` on stderr. Detected when the first 64 KiB hold something other than whitespace, no NUL byte and valid UTF-8, or when they are all whitespace and more follows. Empty or whitespace-only input prints `no output: the command printed nothing` and exits with code 0, as for every format; other input that is not text exits with code 2.
 
 ```
 npm test 2>&1 | squeeze

@@ -212,8 +212,6 @@ func TestRunErrors(t *testing.T) {
 		{"bad format flag value", plan, []string{"tfplan", "--max-attrs", "-1"}, ExitUsage, "must be 0 or more"},
 		{"extra argument", plan, []string{"tfplan", "plan.json"}, ExitUsage, `unexpected argument "plan.json"`},
 		{"bad output", plan, []string{"--output", "yaml"}, ExitUsage, "--output must be text or json"},
-		{"empty input", nil, nil, ExitError, "empty input"},
-		{"whitespace input", []byte(" \n\t"), []string{"tfplan"}, ExitError, "empty input"},
 		{"binary input", []byte("\x7fELF\x00\x01"), nil, ExitUnknownFormat, "input matches no known format and is not text; name it: squeeze <format> (formats: " + formatList + ")"},
 		{"named format on other input", []byte("collected 3 items\n"), []string{"tfplan"}, ExitError, "squeeze: tfplan: decode"},
 		{"state file", []byte(`{"format_version":"1.0","values":{}}`), []string{"tfplan"}, ExitError, "terraform state, not a plan"},
@@ -231,6 +229,30 @@ func TestRunErrors(t *testing.T) {
 			}
 			if !strings.Contains(r.stderr, tt.stderr) {
 				t.Errorf("stderr = %q, want it to contain %q", r.stderr, tt.stderr)
+			}
+		})
+	}
+}
+
+func TestEmptyInputSaysTheCommandPrintedNothing(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name  string
+		input []byte
+		args  []string
+		want  string
+	}{
+		{"empty", nil, nil, "no output: the command printed nothing\n"},
+		{"whitespace with a format", []byte(" \n\t"), []string{"tfplan"}, "no output: the command printed nothing\n"},
+		{"fail-on", nil, []string{"--fail-on", "error,fail"}, "no output: the command printed nothing\n"},
+		{"json", nil, []string{"--output", "json"}, `{"schema_version":1,"format":"","input_bytes":0,"text_bytes":39,"ratio":0,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
+		{"json with a format", []byte("\n"), []string{"tsc", "--output", "json"}, `{"schema_version":1,"format":"tsc","input_bytes":1,"text_bytes":39,"ratio":39,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			r := runCLI(t, tt.input, tt.args...)
+			if r.code != ExitOK || r.stdout != tt.want || r.stderr != "" {
+				t.Errorf("code %d, stdout %q, stderr %q; want 0, %q, empty", r.code, r.stdout, r.stderr, tt.want)
 			}
 		})
 	}
@@ -754,7 +776,7 @@ func TestRunRawDirSkipsEmptyInput(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
 	r := runCLI(t, []byte(" \n"), "--raw-dir", dir)
-	if r.code != ExitError || strings.Contains(r.stderr, "raw input saved") {
+	if r.code != ExitOK || strings.Contains(r.stderr, "raw input saved") {
 		t.Errorf("code = %d, stderr = %q", r.code, r.stderr)
 	}
 	if entries, _ := os.ReadDir(dir); len(entries) != 0 {
