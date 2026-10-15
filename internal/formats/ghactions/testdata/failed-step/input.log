@@ -1,0 +1,52 @@
+check (macos-latest, 1.27.2)	Run just check	﻿2026-10-13T21:57:53.7460580Z ##[group]Run just check
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:53.7460950Z ^[[36;1mjust check^[[0m
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:53.7747640Z shell: /bin/bash -e {0}
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:53.7747860Z env:
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:53.7748180Z   GOTOOLCHAIN: local
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:53.7748680Z ##[endgroup]
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:53.9342340Z files="$(gofmt -l .)"; if [ -n "$files" ]; then echo "$files"; exit 1; fi
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:54.0252850Z go vet ./...
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:55.4821610Z go tool staticcheck ./...
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:58.4156840Z go tool exhaustive ./...
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:59.3417530Z go test ./...
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:57:59.8001650Z ?   	github.com/cauebraz/squeeze/cmd/squeeze	[no test files]
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:00.2944390Z ok  	github.com/cauebraz/squeeze/internal/cli	0.024s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:00.3058840Z ok  	github.com/cauebraz/squeeze/internal/core	0.019s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:00.3835540Z ok  	github.com/cauebraz/squeeze/internal/formats/generic	0.056s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:00.6781840Z ok  	github.com/cauebraz/squeeze/internal/formats/tfjson	0.081s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2024710Z --- FAIL: TestDeepListsStayLinear (4.48s)
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2034100Z     diff_test.go:297: diffAttrs() took 4.481274666s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2034980Z FAIL
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2035920Z FAIL	github.com/cauebraz/squeeze/internal/formats/tfplan	4.591s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2037170Z ok  	github.com/cauebraz/squeeze/internal/formats/tfvalidate	0.017s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2038720Z ?   	github.com/cauebraz/squeeze/internal/formattest	[no test files]
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2040020Z ok  	github.com/cauebraz/squeeze/internal/tfdiag	0.011s
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2040860Z FAIL
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2308970Z error: recipe `test` failed on line 16 with exit code 1
+check (macos-latest, 1.27.2)	Run just check	2026-10-13T21:58:05.2405600Z ##[error]Process completed with exit code 1.
+check (macos-latest, 1.26.9)	Run just check	﻿2026-10-13T21:57:58.0429260Z ##[group]Run just check
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:57:58.0430230Z ^[[36;1mjust check^[[0m
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:57:58.0743040Z shell: /bin/bash -e {0}
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:57:58.0743320Z env:
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:57:58.0743480Z   GOTOOLCHAIN: local
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:57:58.0743680Z ##[endgroup]
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:57:58.2199800Z files="$(gofmt -l .)"; if [ -n "$files" ]; then echo "$files"; exit 1; fi
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:57:58.2922090Z go vet ./...
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:00.1979030Z go tool staticcheck ./...
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:03.5653140Z go tool exhaustive ./...
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:04.5263170Z go test ./...
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:04.8107250Z ?   	github.com/cauebraz/squeeze/cmd/squeeze	[no test files]
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:05.4943950Z ok  	github.com/cauebraz/squeeze/internal/cli	0.026s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:05.5045970Z ok  	github.com/cauebraz/squeeze/internal/core	0.012s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:05.5491070Z ok  	github.com/cauebraz/squeeze/internal/formats/generic	0.070s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:05.8200610Z ok  	github.com/cauebraz/squeeze/internal/formats/tfjson	0.087s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1170410Z --- FAIL: TestDeepListsStayLinear (3.29s)
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1194770Z     diff_test.go:297: diffAttrs() took 3.28475575s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1195730Z FAIL
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1196320Z FAIL	github.com/cauebraz/squeeze/internal/formats/tfplan	3.360s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1197110Z ok  	github.com/cauebraz/squeeze/internal/formats/tfvalidate	0.016s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1197850Z ?   	github.com/cauebraz/squeeze/internal/formattest	[no test files]
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1198420Z ok  	github.com/cauebraz/squeeze/internal/tfdiag	0.016s
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1198960Z FAIL
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1505900Z error: recipe `test` failed on line 16 with exit code 1
+check (macos-latest, 1.26.9)	Run just check	2026-10-13T21:58:09.1581190Z ##[error]Process completed with exit code 1.

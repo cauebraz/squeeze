@@ -17,6 +17,7 @@ import (
 	"github.com/cauebraz/squeeze/internal/formats/checkov"
 	"github.com/cauebraz/squeeze/internal/formats/eslint"
 	"github.com/cauebraz/squeeze/internal/formats/generic"
+	"github.com/cauebraz/squeeze/internal/formats/ghactions"
 	"github.com/cauebraz/squeeze/internal/formats/gotest"
 	"github.com/cauebraz/squeeze/internal/formats/pytest"
 	"github.com/cauebraz/squeeze/internal/formats/sarif"
@@ -39,7 +40,7 @@ const (
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{}, tfstate.Format{}, tfvalidate.Format{}, tflint.Format{}, eslint.Format{}, sarif.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
+	return core.NewRegistry(tfplan.Format{}, tfstate.Format{}, tfvalidate.Format{}, tflint.Format{}, eslint.Format{}, sarif.Format{}, ghactions.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
 }
 
 type invocation struct {

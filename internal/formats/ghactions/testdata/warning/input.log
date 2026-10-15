@@ -1,0 +1,264 @@
+lint	UNKNOWN STEP	﻿2026-10-13T22:20:23.7522810Z Current runner version: '2.337.0'
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7543120Z ##[group]Runner Image Provisioner
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7543740Z Hosted Compute Agent
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7544100Z Version: 20260828.587
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7544500Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7544970Z Build Date: 2026-08-28T16:44:25Z
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7545490Z Worker ID: {c7db925a-3910-4cb5-9465-448147b3f310}
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7545940Z Azure Region: westus
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7546370Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7547300Z ##[group]Operating System
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7547680Z macOS
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7548000Z 26.6.2
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7548310Z 25G83
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7548630Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7548970Z ##[group]Runner Image
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7549340Z Image: macos-26-arm64
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7549710Z Version: 20260907.0351.1
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7550570Z Included Software: https://github.com/actions/runner-images/blob/macos-26-arm64/20260907.0351/images/macos/macos-26-arm64-Readme.md
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7551600Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-26-arm64%2F20260907.0351
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7552260Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7553010Z ##[group]GITHUB_TOKEN Permissions
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7554240Z Contents: read
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7554600Z Metadata: read
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7554950Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7556320Z Secret source: Actions
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7556880Z Cache mode: write
+lint	UNKNOWN STEP	2026-10-13T22:20:23.7557300Z Prepare workflow directory
+lint	UNKNOWN STEP	2026-10-13T22:20:23.8002260Z Prepare all required actions
+lint	UNKNOWN STEP	2026-10-13T22:20:23.8079430Z Getting action download info
+lint	UNKNOWN STEP	2026-10-13T22:20:24.1085770Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+lint	UNKNOWN STEP	2026-10-13T22:20:24.3336680Z Download action repository 'actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e' (SHA:b7ad1dad31e06c5925ef5d2fc7ad053ef454303e)
+lint	UNKNOWN STEP	2026-10-13T22:20:25.1103140Z Download action repository 'extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3' (SHA:53165ef7e734c5c07cb06b3c8e7b647c5aa16db3)
+lint	UNKNOWN STEP	2026-10-13T22:20:25.6003160Z Getting action download info
+lint	UNKNOWN STEP	2026-10-13T22:20:25.7023260Z Download action repository 'extractions/setup-crate@0551596312d4008a6dfbc4d3c38fa20eaef46d2d' (SHA:0551596312d4008a6dfbc4d3c38fa20eaef46d2d)
+lint	UNKNOWN STEP	2026-10-13T22:20:26.2878410Z Complete job name: lint
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3665250Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3666770Z with:
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3667170Z   persist-credentials: false
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3667660Z   repository: cauebraz/squeeze
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3675600Z   token: ***
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3675990Z   ssh-strict: true
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3676370Z   ssh-user: git
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3676730Z   clean: true
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3677210Z   sparse-checkout-cone-mode: true
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3677770Z   fetch-depth: 1
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3678150Z   fetch-tags: false
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3679520Z   show-progress: true
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3679910Z   lfs: false
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3680270Z   submodules: false
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3680680Z   set-safe-directory: true
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3681160Z   allow-unsafe-pr-checkout: false
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3682380Z env:
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3682770Z   GOTOOLCHAIN: local
+lint	UNKNOWN STEP	2026-10-13T22:20:26.3683170Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:26.9858100Z Syncing repository: cauebraz/squeeze
+lint	UNKNOWN STEP	2026-10-13T22:20:26.9866340Z ##[group]Getting Git version info
+lint	UNKNOWN STEP	2026-10-13T22:20:26.9868670Z Working directory is '/Users/runner/work/squeeze/squeeze'
+lint	UNKNOWN STEP	2026-10-13T22:20:26.9875230Z [command]/opt/homebrew/bin/git version
+lint	UNKNOWN STEP	2026-10-13T22:20:27.0838710Z git version 2.55.0
+lint	UNKNOWN STEP	2026-10-13T22:20:27.0862780Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:27.0877200Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/df4e046b-b11b-422c-8bda-d853794b8cf7/.gitconfig'
+lint	UNKNOWN STEP	2026-10-13T22:20:27.0885040Z Temporarily overriding HOME='/Users/runner/work/_temp/df4e046b-b11b-422c-8bda-d853794b8cf7' before making global git config changes
+lint	UNKNOWN STEP	2026-10-13T22:20:27.0889020Z Adding repository directory to the temporary git global config as a safe directory
+lint	UNKNOWN STEP	2026-10-13T22:20:27.0895990Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/squeeze/squeeze
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1113190Z Deleting the contents of '/Users/runner/work/squeeze/squeeze'
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1122160Z ##[group]Determining repository object format
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1124670Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1128540Z ##[group]Initializing the repository
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1133940Z [command]/opt/homebrew/bin/git init /Users/runner/work/squeeze/squeeze
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1507670Z hint: Using 'master' as the name for the initial branch. This default branch name
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1509920Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1511700Z hint: to use in all of your new repositories, which will suppress this warning,
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1513030Z hint: call:
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1513870Z hint:
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1514880Z hint: 	git config --global init.defaultBranch <name>
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1516210Z hint:
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1517230Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1520180Z hint: 'development'. The just-created branch can be renamed via this command:
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1521540Z hint:
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1522370Z hint: 	git branch -m <name>
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1523230Z hint:
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1524290Z hint: Disable this message with "git config set advice.defaultBranchName false"
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1526200Z Initialized empty Git repository in /Users/runner/work/squeeze/squeeze/.git/
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1529040Z [command]/opt/homebrew/bin/git remote add origin https://github.com/cauebraz/squeeze
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1608020Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1609840Z ##[group]Disabling automatic garbage collection
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1611530Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1702440Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1703740Z ##[group]Setting up auth
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1704610Z Removing SSH command configuration
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1706660Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	UNKNOWN STEP	2026-10-13T22:20:27.1787830Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	UNKNOWN STEP	2026-10-13T22:20:27.3179880Z Removing HTTP extra header
+lint	UNKNOWN STEP	2026-10-13T22:20:27.3190620Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	UNKNOWN STEP	2026-10-13T22:20:27.3316170Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	UNKNOWN STEP	2026-10-13T22:20:27.4403300Z Removing includeIf entries pointing to credentials config files
+lint	UNKNOWN STEP	2026-10-13T22:20:27.4408670Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-10-13T22:20:27.4482430Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-10-13T22:20:27.5540970Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+lint	UNKNOWN STEP	2026-10-13T22:20:27.5648770Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/squeeze/squeeze/.git.path /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:27.5783990Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/squeeze/squeeze/.git/worktrees/*.path /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:27.5928170Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:27.5989580Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:27.6056180Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:27.6057590Z ##[group]Fetching the repository
+lint	UNKNOWN STEP	2026-10-13T22:20:27.6060350Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4bff1b643a5a4413d6c2f88f1dbff524e7503462:refs/remotes/origin/main
+lint	UNKNOWN STEP	2026-10-13T22:20:28.0842470Z From https://github.com/cauebraz/squeeze
+lint	UNKNOWN STEP	2026-10-13T22:20:28.0843370Z  * [new ref]         4bff1b643a5a4413d6c2f88f1dbff524e7503462 -> origin/main
+lint	UNKNOWN STEP	2026-10-13T22:20:28.0860370Z [command]/opt/homebrew/bin/git branch --list --remote origin/main
+lint	UNKNOWN STEP	2026-10-13T22:20:28.0963150Z   origin/main
+lint	UNKNOWN STEP	2026-10-13T22:20:28.0978100Z [command]/opt/homebrew/bin/git rev-parse refs/remotes/origin/main
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1088560Z 4bff1b643a5a4413d6c2f88f1dbff524e7503462
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1099950Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1101700Z ##[group]Determining the checkout info
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1103080Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1103910Z [command]/opt/homebrew/bin/git sparse-checkout disable
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1247530Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1382040Z ##[group]Checking out the ref
+lint	UNKNOWN STEP	2026-10-13T22:20:28.1383420Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2003460Z Switched to a new branch 'main'
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2008280Z branch 'main' set up to track 'origin/main'.
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2012530Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2120640Z [command]/opt/homebrew/bin/git log -1 --format=%H
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2260350Z 4bff1b643a5a4413d6c2f88f1dbff524e7503462
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2357270Z ##[group]Removing auth
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2361350Z Removing SSH command configuration
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2454780Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	UNKNOWN STEP	2026-10-13T22:20:28.2471490Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	UNKNOWN STEP	2026-10-13T22:20:28.3659650Z Removing HTTP extra header
+lint	UNKNOWN STEP	2026-10-13T22:20:28.3661660Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	UNKNOWN STEP	2026-10-13T22:20:28.3744510Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	UNKNOWN STEP	2026-10-13T22:20:28.4954910Z Removing includeIf entries pointing to credentials config files
+lint	UNKNOWN STEP	2026-10-13T22:20:28.4956880Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5040950Z includeif.gitdir:/Users/runner/work/squeeze/squeeze/.git.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5062150Z includeif.gitdir:/Users/runner/work/squeeze/squeeze/.git/worktrees/*.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5063180Z includeif.gitdir:/github/workspace/.git.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5066020Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5073210Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/squeeze/squeeze/.git.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5121340Z /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5138710Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/squeeze/squeeze/.git.path \/Users\/runner\/work\/_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5252380Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/squeeze/squeeze/.git/worktrees/*.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5356950Z /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5369170Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/squeeze/squeeze/.git/worktrees/*.path \/Users\/runner\/work\/_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5455730Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5516890Z /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5523280Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5600930Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5674310Z /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5688240Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+lint	UNKNOWN STEP	2026-10-13T22:20:28.5761210Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-10-13T22:20:28.6957870Z Removing credentials config '/Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config'
+lint	UNKNOWN STEP	2026-10-13T22:20:28.6979000Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7328050Z ##[group]Run actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7328550Z with:
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7328790Z   go-version: 1.27.2
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7329020Z   check-latest: false
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7331300Z   token: ***
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7331490Z   cache: true
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7331700Z env:
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7331920Z   GOTOOLCHAIN: local
+lint	UNKNOWN STEP	2026-10-13T22:20:28.7332140Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:28.9071470Z Setup go version spec 1.27.2
+lint	UNKNOWN STEP	2026-10-13T22:20:28.9097050Z Attempting to download 1.27.2...
+lint	UNKNOWN STEP	2026-10-13T22:20:29.6209550Z matching 1.27.2...
+lint	UNKNOWN STEP	2026-10-13T22:20:29.6237860Z Acquiring 1.27.2 from https://github.com/actions/go-versions/releases/download/1.27.2-37875086547/go-1.27.2-darwin-arm64.tar.gz
+lint	UNKNOWN STEP	2026-10-13T22:20:30.4223720Z Extracting Go...
+lint	UNKNOWN STEP	2026-10-13T22:20:30.4428430Z [command]/usr/bin/tar xz -C /Users/runner/work/_temp/637d9478-3cff-43e1-9486-4bb94042606b -f /Users/runner/work/_temp/d2613974-e161-44d6-b7a7-88a4923e4031
+lint	UNKNOWN STEP	2026-10-13T22:20:33.6070000Z Successfully extracted go to /Users/runner/work/_temp/637d9478-3cff-43e1-9486-4bb94042606b
+lint	UNKNOWN STEP	2026-10-13T22:20:33.6071330Z Adding to the cache ...
+lint	UNKNOWN STEP	2026-10-13T22:20:47.7205500Z Successfully cached go to /Users/runner/hostedtoolcache/go/1.27.2/arm64
+lint	UNKNOWN STEP	2026-10-13T22:20:47.7206970Z Added go to the path
+lint	UNKNOWN STEP	2026-10-13T22:20:47.7211370Z Successfully set up Go version 1.27.2
+lint	UNKNOWN STEP	2026-10-13T22:20:47.9070430Z [command]/Users/runner/hostedtoolcache/go/1.27.2/arm64/bin/go env GOCACHE
+lint	UNKNOWN STEP	2026-10-13T22:20:47.9090830Z [command]/Users/runner/hostedtoolcache/go/1.27.2/arm64/bin/go env GOMODCACHE
+lint	UNKNOWN STEP	2026-10-13T22:20:47.9228000Z /Users/runner/go/pkg/mod
+lint	UNKNOWN STEP	2026-10-13T22:20:47.9268750Z /Users/runner/Library/Caches/go-build
+lint	UNKNOWN STEP	2026-10-13T22:20:48.1828890Z Cache hit for: setup-go-macOS-arm64-go-1.27.2-22d5eabe3b1453be67cef8b8c463802684c8e2ebb5c24ab1ec51393c6bc2f59d
+lint	UNKNOWN STEP	2026-10-13T22:20:49.3870930Z Received 25165824 of 92282025 (27.3%), 24.0 MBs/sec
+lint	UNKNOWN STEP	2026-10-13T22:20:50.1186150Z Received 92282025 of 92282025 (100.0%), 50.8 MBs/sec
+lint	UNKNOWN STEP	2026-10-13T22:20:50.1191600Z Cache Size: ~88 MB (92282025 B)
+lint	UNKNOWN STEP	2026-10-13T22:20:50.1281490Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/8f7d46f3-4c7a-4de6-b4a3-b1a9f8269e11/cache.tzst -P -C /Users/runner/work/squeeze/squeeze --delay-directory-restore --use-compress-program unzstd
+lint	UNKNOWN STEP	2026-10-13T22:20:53.8659080Z Cache restored successfully
+lint	UNKNOWN STEP	2026-10-13T22:20:53.8705650Z Cache restored from key: setup-go-macOS-arm64-go-1.27.2-22d5eabe3b1453be67cef8b8c463802684c8e2ebb5c24ab1ec51393c6bc2f59d
+lint	UNKNOWN STEP	2026-10-13T22:20:53.8818270Z go version go1.27.2 darwin/arm64
+lint	UNKNOWN STEP	2026-10-13T22:20:53.8818630Z 
+lint	UNKNOWN STEP	2026-10-13T22:20:53.8819660Z ##[group]go env
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8424230Z AR='ar'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8424690Z CC='clang'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8425230Z CGO_CFLAGS='-O2 -g'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8426560Z CGO_CPPFLAGS=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8426890Z CGO_CXXFLAGS='-O2 -g'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8427260Z CGO_ENABLED='1'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8427550Z CGO_FFLAGS='-O2 -g'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8427780Z CGO_LDFLAGS='-O2 -g'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8428230Z CXX='clang++'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8428660Z GCCGO='gccgo'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8428970Z GO111MODULE=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8429260Z GOARCH='arm64'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8429490Z GOARM64='v8.0'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8429800Z GOAUTH='netrc'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8464430Z GOBIN='/Users/runner/go/bin'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8465940Z GOCACHE='/Users/runner/Library/Caches/go-build'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8467140Z GOCACHEPROG=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8468330Z GODEBUG=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8469440Z GOENV='/Users/runner/Library/Application Support/go/env'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8477050Z GOEXE=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8477990Z GOEXPERIMENT=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8479280Z GOFIPS140='off'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8480270Z GOFLAGS=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8482180Z GOGCCFLAGS='-fPIC -arch arm64 -pthread -fno-caret-diagnostics -Qunused-arguments -fmessage-length=0 -ffile-prefix-map=/var/folders/36/tjdph2t965j8snz9_vkdnw0r0000gn/T/go-build399950020=/tmp/go-build -gno-record-gcc-switches -fno-common'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8484780Z GOHOSTARCH='arm64'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8488600Z GOHOSTOS='darwin'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8490350Z GOINSECURE=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8491900Z GOMOD='/Users/runner/work/squeeze/squeeze/go.mod'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8493220Z GOMODCACHE='/Users/runner/go/pkg/mod'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8494440Z GONOPROXY=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8495520Z GONOSUMDB=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8496200Z GOOS='darwin'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8497870Z GOPACKAGESDRIVER=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8499610Z GOPATH='/Users/runner/go'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8500080Z GOPRIVATE=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8501220Z GOPROXY='https://proxy.golang.org,direct'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8501950Z GOROOT='/Users/runner/hostedtoolcache/go/1.27.2/arm64'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8502470Z GOSUMDB='sum.golang.org'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8502830Z GOTELEMETRY='local'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8503260Z GOTELEMETRYDIR='/Users/runner/Library/Application Support/go/telemetry'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8504170Z GOTMPDIR=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8507500Z GOTOOLCHAIN='local'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8508180Z GOTOOLDIR='/Users/runner/hostedtoolcache/go/1.27.2/arm64/pkg/tool/darwin_arm64'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8508850Z GOVCS=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8509090Z GOVERSION='go1.27.2'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8509360Z GOWORK=''
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8509850Z PKG_CONFIG='pkg-config'
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8510160Z 
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8510670Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8907730Z ##[group]Run extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8908160Z with:
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8908450Z   just-version: 1.58.0
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8910550Z   github-token: ***
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8910770Z env:
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8911120Z   GOTOOLCHAIN: local
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8911340Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:55.8976650Z ##[start-action display=Run extractions/setup-crate@0551596312d4008a6dfbc4d3c38fa20eaef46d2d;id=__extractions_setup-just.__extractions_setup-crate]
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9030200Z ##[group]Run extractions/setup-crate@0551596312d4008a6dfbc4d3c38fa20eaef46d2d
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9030640Z with:
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9030830Z   repo: casey/just
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9031030Z   version: 1.58.0
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9033080Z   github-token: ***
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9033350Z env:
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9033570Z   GOTOOLCHAIN: local
+lint	UNKNOWN STEP	2026-10-13T22:20:55.9033770Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:20:56.9135210Z [command]/usr/bin/tar xz -C /Users/runner/work/_temp/837ccf42-a037-4c6f-98e3-22f2d7b93b99 -f /Users/runner/work/_temp/06e75485-57d6-40a2-ba7a-8c073aa6b918
+lint	UNKNOWN STEP	2026-10-13T22:20:56.9518360Z Successfully setup just v1.58.0
+lint	UNKNOWN STEP	2026-10-13T22:20:56.9563650Z ##[end-action id=__extractions_setup-just.__extractions_setup-crate;outcome=success;conclusion=success;duration_ms=1058]
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z ##[group]Run golangci-lint run ./...
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z golangci-lint run ./...
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z shell: /bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z internal/cli/cli.go:41:2: ineffectual assignment to err (ineffassign)
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z 1 issues:
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z * ineffassign: 1
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z ##[warning]golangci-lint reported 1 issue; the job continues because continue-on-error is set
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z Post job cleanup.
+lint	UNKNOWN STEP	2026-10-13T22:21:40.0000000Z Cleaning up orphan processes

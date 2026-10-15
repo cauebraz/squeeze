@@ -1,0 +1,26 @@
+github actions 2.337.0: 2 jobs, 2 failed; 2 errors
+fail check (macos-latest, 1.27.2): just check
+  ... 10 lines cut (--max-lines 0)
+  --- FAIL: TestDeepListsStayLinear (4.22s)
+      diff_test.go:297: diffAttrs() took 4.22283275s
+  FAIL
+  FAIL    github.com/cauebraz/squeeze/internal/formats/tfplan    4.330s
+  ok      github.com/cauebraz/squeeze/internal/formats/tfvalidate    0.028s
+  ?       github.com/cauebraz/squeeze/internal/formattest    [no test files]
+  ok      github.com/cauebraz/squeeze/internal/tfdiag    0.010s
+  FAIL
+  error: recipe `test` failed on line 16 with exit code 1
+  error: Process completed with exit code 1.
+fail check (macos-latest, 1.26.9): just check
+  ... 10 lines cut (--max-lines 0)
+  --- FAIL: TestDeepListsStayLinear (3.20s)
+      diff_test.go:297: diffAttrs() took 3.201500959s
+  FAIL
+  FAIL    github.com/cauebraz/squeeze/internal/formats/tfplan    3.287s
+  ok      github.com/cauebraz/squeeze/internal/formats/tfvalidate    0.017s
+  ?       github.com/cauebraz/squeeze/internal/formattest    [no test files]
+  ok      github.com/cauebraz/squeeze/internal/tfdiag    0.008s
+  FAIL
+  error: recipe `test` failed on line 16 with exit code 1
+  error: Process completed with exit code 1.
+... 8 other steps (--all)

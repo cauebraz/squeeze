@@ -1,0 +1,4 @@
+github actions 2.337.0: 1 job; 1 warning
+step lint: golangci-lint run ./...
+  warning: golangci-lint reported 1 issue; the job continues because continue-on-error is set
+... 4 other steps (--all)

@@ -72,6 +72,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
   `terraform show -json | squeeze` for the state and `terraform output -json | squeeze` (resource addresses only,
   sensitive outputs print as `(sensitive)`).
   Read squeeze's output instead of Terraform's. Run TFLint as `tflint --format json | squeeze`, Checkov as `checkov -d . -o json | squeeze`, and Trivy as `trivy fs --format json . | squeeze`.
+- Read a failed CI run as `gh run view <run-id> --log-failed | squeeze`.
 - Pipe a SARIF log through `squeeze` when a tool only writes SARIF, for example `semgrep --sarif | squeeze`.
 - Run ESLint as `npx eslint -f json . | squeeze`; `npx eslint --fix` applies the problems marked `fixable`.
 - Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names.
@@ -95,6 +96,7 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `tflint` | `tflint --format json` | [docs/formats/tflint.md](docs/formats/tflint.md) |
 | `eslint` | `eslint -f json` or `-f json-with-metadata` | [docs/formats/eslint.md](docs/formats/eslint.md) |
 | `sarif` | SARIF 2.1.0 from `trivy`, `tflint`, `checkov`, `semgrep` or any other tool | [docs/formats/sarif.md](docs/formats/sarif.md) |
+| `ghactions` | `gh run view --log` or `--log-failed` | [docs/formats/ghactions.md](docs/formats/ghactions.md) |
 | `checkov` | `checkov -o json` | [docs/formats/checkov.md](docs/formats/checkov.md) |
 | `trivy` | `trivy fs`, `config` or `image` with `--format json` | [docs/formats/trivy.md](docs/formats/trivy.md) |
 | `pytest` | pytest's terminal output, default, `-v` or `-q` | [docs/formats/pytest.md](docs/formats/pytest.md) |
