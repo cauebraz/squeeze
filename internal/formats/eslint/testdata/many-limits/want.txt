@@ -1,5 +1,0 @@
-eslint: 120 problems (80 errors, 40 warnings) in 1 of 2 files; 40 fixable with --fix
-error: 'x0' is assigned a value but never used. (src/rules.js:1:32, no-unused-vars)
-error: Expected '===' and instead saw '=='. (src/rules.js:1:39, eqeqeq)
-error: 'x1' is assigned a value but never used. (src/rules.js:2:32, no-unused-vars)
-... 117 more problems, no-var 40, eqeqeq 39, no-unused-vars 38 (--max-problems 0)

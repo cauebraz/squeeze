@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,22 +18,7 @@ import (
 
 const formatsDir = "../formats"
 
-var (
-	formatList = strings.Join(DefaultRegistry().Names(), ", ")
-	allOwners  = flagOwners("all")
-)
-
-func flagOwners(name string) string {
-	var owners []string
-	for _, f := range DefaultRegistry().Formats() {
-		fs := flag.NewFlagSet(f.Name(), flag.ContinueOnError)
-		f.Configure(fs)
-		if fs.Lookup(name) != nil {
-			owners = append(owners, f.Name())
-		}
-	}
-	return strings.Join(owners, ", ")
-}
+var formatList = strings.Join(DefaultRegistry().Names(), ", ")
 
 func readFixture(t *testing.T, format, name string) []byte {
 	t.Helper()
@@ -206,7 +192,6 @@ func TestRunErrors(t *testing.T) {
 		stderr string
 	}{
 		{"unknown flag", plan, []string{"--bogus"}, ExitUsage, "flag provided but not defined"},
-		{"format flag without format", plan, []string{"--max-attrs", "1"}, ExitUsage, "flag provided but not defined: -max-attrs"},
 		{"unknown format", plan, []string{"cargotest"}, ExitUsage, "unknown format \"cargotest\" (formats: " + formatList + ")"},
 		{"version under a format", plan, []string{"tfplan", "--version"}, ExitUsage, "flag provided but not defined: -version"},
 		{"bad format flag value", plan, []string{"tfplan", "--max-attrs", "-1"}, ExitUsage, "must be 0 or more"},
@@ -246,7 +231,7 @@ func TestEmptyInputSaysTheCommandPrintedNothing(t *testing.T) {
 		{"whitespace with a format", []byte(" \n\t"), []string{"tfplan"}, "no output: the command printed nothing\n"},
 		{"fail-on", nil, []string{"--fail-on", "error,fail"}, "no output: the command printed nothing\n"},
 		{"json", nil, []string{"--output", "json"}, `{"schema_version":1,"format":"","input_bytes":0,"text_bytes":39,"ratio":0,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
-		{"json with a format", []byte("\n"), []string{"eslint", "--output", "json"}, `{"schema_version":1,"format":"eslint","input_bytes":1,"text_bytes":39,"ratio":39,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
+		{"json with a format", []byte("\n"), []string{"tflint", "--output", "json"}, `{"schema_version":1,"format":"tflint","input_bytes":1,"text_bytes":39,"ratio":39,"conditions":[],"failed_on":[],"data":{}}` + "\n"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
@@ -470,6 +455,46 @@ func TestEveryFixtureIsDetectedByExactlyItsOwnFormat(t *testing.T) {
 	}
 }
 
+func TestFormatFlagsWorkWithDetection(t *testing.T) {
+	t.Parallel()
+	plan := readFixture(t, "tfplan", "create-only")
+	named := runCLI(t, plan, "tfplan", "--max-attrs", "1")
+	detected := runCLI(t, plan, "--max-attrs", "1", "--output", "json")
+	namedJSON := runCLI(t, plan, "tfplan", "--max-attrs", "1", "--output", "json")
+	if named.code != ExitOK || detected.code != ExitOK || detected.stdout != namedJSON.stdout {
+		t.Errorf("detected code %d stdout %q; named JSON %q", detected.code, detected.stdout, namedJSON.stdout)
+	}
+	for _, tt := range []struct {
+		args   []string
+		stderr string
+	}{
+		{[]string{"--max-checks", "0"}, "squeeze: -max-checks is not a flag of the detected format tfplan; run 'squeeze tfplan -h' for its flags"},
+		{[]string{"--max-attrs", "-1"}, "invalid value \"-1\" for flag -max-attrs"},
+		{[]string{"--bogus"}, "flag provided but not defined: -bogus"},
+	} {
+		r := runCLI(t, plan, tt.args...)
+		if r.code != ExitUsage || r.stdout != "" || !strings.Contains(r.stderr, tt.stderr) {
+			t.Errorf("%v: code %d, stdout %q, stderr %q", tt.args, r.code, r.stdout, r.stderr)
+		}
+	}
+}
+
+func TestFormatFlagNamesAgreeOnKind(t *testing.T) {
+	t.Parallel()
+	kinds := map[string]string{}
+	for _, f := range DefaultRegistry().Formats() {
+		fs := flag.NewFlagSet(f.Name(), flag.ContinueOnError)
+		f.Configure(fs)
+		fs.VisitAll(func(fl *flag.Flag) {
+			kind := fmt.Sprintf("bool=%v", isBoolFlag(fl.Value))
+			if prev, ok := kinds[fl.Name]; ok && prev != kind {
+				t.Errorf("flag -%s is %s in %s but %s elsewhere", fl.Name, kind, f.Name(), prev)
+			}
+			kinds[fl.Name] = kind
+		})
+	}
+}
+
 func TestRunHints(t *testing.T) {
 	t.Parallel()
 	plan := readFixture(t, "tfplan", "create-only")
@@ -481,10 +506,6 @@ func TestRunHints(t *testing.T) {
 		args []string
 		want []string
 	}{
-		"format flag without format": {
-			[]string{"--all"},
-			[]string{"squeeze: flag provided but not defined: -all\n", "squeeze: -all is a flag of formats " + allOwners + ": squeeze <format> -all\n", "squeeze: run 'squeeze -h' for usage\n"},
-		},
 		"version under a format": {
 			[]string{"tfplan", "-version"},
 			[]string{"-version works without a format: squeeze -version", "squeeze: run 'squeeze tfplan -h' for usage"},
