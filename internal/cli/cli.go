@@ -16,7 +16,6 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formats/buildkit"
 	"github.com/cauebraz/squeeze/internal/formats/checkov"
-	"github.com/cauebraz/squeeze/internal/formats/eslint"
 	"github.com/cauebraz/squeeze/internal/formats/generic"
 	"github.com/cauebraz/squeeze/internal/formats/ghactions"
 	"github.com/cauebraz/squeeze/internal/formats/gotest"
@@ -26,7 +25,6 @@ import (
 	"github.com/cauebraz/squeeze/internal/formats/npmaudit"
 	"github.com/cauebraz/squeeze/internal/formats/precommit"
 	"github.com/cauebraz/squeeze/internal/formats/pytest"
-	"github.com/cauebraz/squeeze/internal/formats/sarif"
 	"github.com/cauebraz/squeeze/internal/formats/tfjson"
 	"github.com/cauebraz/squeeze/internal/formats/tflint"
 	"github.com/cauebraz/squeeze/internal/formats/tfplan"
@@ -46,16 +44,17 @@ const (
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{}, tfstate.Format{}, tfvalidate.Format{}, tflint.Format{}, eslint.Format{}, sarif.Format{}, ghactions.Format{}, buildkit.Format{}, jest.Format{}, junit.Format{}, kubectl.Format{}, npmaudit.Format{}, precommit.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
+	return core.NewRegistry(tfplan.Format{}, tfstate.Format{}, tfvalidate.Format{}, tflint.Format{}, ghactions.Format{}, buildkit.Format{}, jest.Format{}, junit.Format{}, kubectl.Format{}, npmaudit.Format{}, precommit.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
 }
 
 type invocation struct {
-	format  core.Format
-	squeeze core.Squeezer
-	output  string
-	rawDir  string
-	failOn  []string
-	version bool
+	format   core.Format
+	squeeze  core.Squeezer
+	output   string
+	rawDir   string
+	failOn   []string
+	version  bool
+	deferred []deferredFlag
 }
 
 func Run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
@@ -106,7 +105,11 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer, reg *core.Reg
 			fmt.Fprintf(stderr, "squeeze: no format detected; used %s\n", f.Name())
 		}
 		inv.format = f
-		inv.squeeze = f.Configure(flag.NewFlagSet(f.Name(), flag.ContinueOnError))
+		squeeze, ok := configureDetected(f, inv.deferred, stderr)
+		if !ok {
+			return ExitUsage
+		}
+		inv.squeeze = squeeze
 		if err := checkConditions(f, inv.failOn); err != nil {
 			fmt.Fprintf(stderr, "squeeze: %v\n", err)
 			return ExitUsage
@@ -202,11 +205,19 @@ func parse(args []string, stdout, stderr io.Writer, reg *core.Registry) (invocat
 	} else {
 		inv.squeeze = inv.format.Configure(fs)
 	}
+	usage := fs
+	if inv.format == nil {
+		parsing := flag.NewFlagSet(name, flag.ContinueOnError)
+		parsing.SetOutput(io.Discard)
+		fs.VisitAll(func(fl *flag.Flag) { parsing.Var(fl.Value, fl.Name, fl.Usage) })
+		addFormatFlags(parsing, reg, &inv.deferred)
+		fs = parsing
+	}
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
-			fs.SetOutput(stdout)
+			usage.SetOutput(stdout)
 			if inv.format == nil {
-				rootUsage(stdout, fs, reg)
+				rootUsage(stdout, usage, reg)
 			} else {
 				formatUsage(stdout, fs, inv.format)
 			}

@@ -57,10 +57,12 @@ go install github.com/cauebraz/squeeze/cmd/squeeze@<commit>   # pin while there 
 ## Usage
 
 ```
-tool | squeeze [flags]                     detect the format, use its defaults; any other text goes through generic
-tool | squeeze <format> [flags]            name the format, unlock its flags
+tool | squeeze [flags]                     detect the format; its own flags work too, as a cut notice names them
+tool | squeeze <format> [flags]            name the format when detection cannot, or to fail early on a wrong flag
 squeeze <format> -h                        list a format's flags
 ```
+
+Without a format name, a flag of the detected format, such as `--max-checks 0` from a checkov cut notice, applies to it; a flag that format does not have exits with code 64 and names the format. Text that no format detects goes through `generic`.
 
 ## Use from an agent
 
@@ -83,8 +85,6 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 - Run npm audit as `npm audit --json | squeeze`; `--fail-on high` stops where `npm audit --audit-level=high` would.
 - Run pre-commit as `pre-commit run --all-files 2>&1 | squeeze`; a hook marked `files modified` changed
   the files itself, so rerun pre-commit before editing them by hand.
-- Pipe a SARIF log through `squeeze` when a tool only writes SARIF, for example `semgrep --sarif | squeeze`.
-- Run ESLint as `npx eslint -f json . | squeeze`; `npx eslint --fix` applies the problems marked `fixable`.
 - Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names, and with the `-test.shuffle` seed it prints after a `-shuffle` run.
 - Run Python tests with `pytest 2>&1 | squeeze`; rerun one failure with `pytest <node id>`, using the node ID it prints.
 - Pipe other long output through `squeeze` too, for example `npm test 2>&1 | squeeze`; text that no format
@@ -107,8 +107,6 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `tfstate` | `terraform show -json` without a plan file, `terraform state show -json <address>`, `terraform output -json` | [docs/formats/tfstate.md](docs/formats/tfstate.md) |
 | `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
 | `tflint` | `tflint --format json` | [docs/formats/tflint.md](docs/formats/tflint.md) |
-| `eslint` | `eslint -f json` or `-f json-with-metadata` | [docs/formats/eslint.md](docs/formats/eslint.md) |
-| `sarif` | SARIF 2.1.0 from `trivy`, `tflint`, `checkov`, `semgrep` or any other tool | [docs/formats/sarif.md](docs/formats/sarif.md) |
 | `ghactions` | `gh run view --log` or `--log-failed` | [docs/formats/ghactions.md](docs/formats/ghactions.md) |
 | `buildkit` | `docker buildx build --progress=plain` or `--progress=rawjson` | [docs/formats/buildkit.md](docs/formats/buildkit.md) |
 | `jest` | `jest --json`, Vitest `--reporter=json` | [docs/formats/jest.md](docs/formats/jest.md) |

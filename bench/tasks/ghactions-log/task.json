@@ -1,0 +1,9 @@
+{
+  "prompt": "CI failed on this Go module, and the log of the failing job was saved in ci.log with `gh run view --log-failed`. Start from that log: find the defects it reports and fix them in the package code, not in the tests or go.mod. Finish when `go test ./...` passes.",
+  "setup": "",
+  "verify": "[ \"$(cat */*_test.go go.mod | shasum -a 256 | cut -d' ' -f1)\" = f321c433e50e766d6485cc0ec08bca42de3b8646454c91955d84d655b7a76edd ] && [ \"$(ls */*_test.go | wc -l | tr -d ' ')\" = 5 ] && go vet ./... >/dev/null 2>&1 && go test -count=1 ./... >/dev/null 2>&1",
+  "solution": "/usr/bin/python3 -I -c \"def sub(p, a, b):\n    s = open(p).read(); assert s.count(a) == 1, p; open(p, 'w').write(s.replace(a, b))\nsub('calendar/calendar.go', 'case time.Saturday:\\n\\t\\treturn d.AddDate(0, 0, 1)', 'case time.Saturday:\\n\\t\\treturn d.AddDate(0, 0, 2)')\nsub('invoice/invoice.go', 'i < len(lines)-1;', 'i < len(lines);')\nsub('tax/tax.go', 'return subtotal * money.Cents(r.BasisPoints) / 10000', 'return (subtotal*money.Cents(r.BasisPoints) + 5000) / 10000')\n\"",
+  "tool": "ghactions",
+  "control": "- Read the CI log with `cat ci.log`. Check a fix with `go test ./...`.",
+  "squeeze": "- Read the CI log with `squeeze < ci.log` and read squeeze's output instead of the log. Check a fix with `go test ./...`."
+}

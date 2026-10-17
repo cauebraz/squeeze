@@ -1,0 +1,573 @@
+test (macos-latest, 1.27.2)	UNKNOWN STEP	﻿2026-10-13T22:20:23.7522810Z Current runner version: '2.337.0'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7543120Z ##[group]Runner Image Provisioner
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7543740Z Hosted Compute Agent
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7544100Z Version: 20260828.587
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7544500Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7544970Z Build Date: 2026-08-28T16:44:25Z
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7545490Z Worker ID: {c7db925a-3910-4cb5-9465-448147b3f310}
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7545940Z Azure Region: westus
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7546370Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7547300Z ##[group]Operating System
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7547680Z macOS
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7548000Z 26.6.2
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7548310Z 25G83
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7548630Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7548970Z ##[group]Runner Image
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7549340Z Image: macos-26-arm64
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7549710Z Version: 20260907.0351.1
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7550570Z Included Software: https://github.com/actions/runner-images/blob/macos-26-arm64/20260907.0351/images/macos/macos-26-arm64-Readme.md
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7551600Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-26-arm64%2F20260907.0351
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7552260Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7553010Z ##[group]GITHUB_TOKEN Permissions
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7554240Z Contents: read
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7554600Z Metadata: read
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7554950Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7556320Z Secret source: Actions
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7556880Z Cache mode: write
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.7557300Z Prepare workflow directory
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.8002260Z Prepare all required actions
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:23.8079430Z Getting action download info
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:24.1085770Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:24.3336680Z Download action repository 'actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e' (SHA:b7ad1dad31e06c5925ef5d2fc7ad053ef454303e)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.2878410Z Complete job name: test (macos-latest, 1.27.2)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3665250Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3666770Z with:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3667170Z   persist-credentials: false
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3667660Z   repository: example/billing
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3675600Z   token: ***
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3675990Z   ssh-strict: true
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3676370Z   ssh-user: git
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3676730Z   clean: true
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3677210Z   sparse-checkout-cone-mode: true
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3677770Z   fetch-depth: 1
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3678150Z   fetch-tags: false
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3679520Z   show-progress: true
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3679910Z   lfs: false
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3680270Z   submodules: false
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3680680Z   set-safe-directory: true
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3681160Z   allow-unsafe-pr-checkout: false
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3682380Z env:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3682770Z   GOTOOLCHAIN: local
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.3683170Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.9858100Z Syncing repository: example/billing
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.9866340Z ##[group]Getting Git version info
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.9868670Z Working directory is '/Users/runner/work/billing/billing'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:26.9875230Z [command]/opt/homebrew/bin/git version
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.0838710Z git version 2.55.0
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.0862780Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.0877200Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/df4e046b-b11b-422c-8bda-d853794b8cf7/.gitconfig'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.0885040Z Temporarily overriding HOME='/Users/runner/work/_temp/df4e046b-b11b-422c-8bda-d853794b8cf7' before making global git config changes
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.0889020Z Adding repository directory to the temporary git global config as a safe directory
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.0895990Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/billing/billing
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1113190Z Deleting the contents of '/Users/runner/work/billing/billing'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1122160Z ##[group]Determining repository object format
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1124670Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1128540Z ##[group]Initializing the repository
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1133940Z [command]/opt/homebrew/bin/git init /Users/runner/work/billing/billing
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1507670Z hint: Using 'master' as the name for the initial branch. This default branch name
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1509920Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1511700Z hint: to use in all of your new repositories, which will suppress this warning,
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1513030Z hint: call:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1513870Z hint:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1514880Z hint: 	git config --global init.defaultBranch <name>
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1516210Z hint:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1517230Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1520180Z hint: 'development'. The just-created branch can be renamed via this command:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1521540Z hint:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1522370Z hint: 	git branch -m <name>
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1523230Z hint:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1524290Z hint: Disable this message with "git config set advice.defaultBranchName false"
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1526200Z Initialized empty Git repository in /Users/runner/work/billing/billing/.git/
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1529040Z [command]/opt/homebrew/bin/git remote add origin https://github.com/example/billing
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1608020Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1609840Z ##[group]Disabling automatic garbage collection
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1611530Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1702440Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1703740Z ##[group]Setting up auth
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1704610Z Removing SSH command configuration
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1706660Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.1787830Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.3179880Z Removing HTTP extra header
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.3190620Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.3316170Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.4403300Z Removing includeIf entries pointing to credentials config files
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.4408670Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.4482430Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.5540970Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.5648770Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/billing/billing/.git.path /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.5783990Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.5928170Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.5989580Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.6056180Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.6057590Z ##[group]Fetching the repository
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:27.6060350Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4:refs/remotes/origin/main
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.0842470Z From https://github.com/example/billing
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.0843370Z  * [new ref]         9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4 -> origin/main
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.0860370Z [command]/opt/homebrew/bin/git branch --list --remote origin/main
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.0963150Z   origin/main
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.0978100Z [command]/opt/homebrew/bin/git rev-parse refs/remotes/origin/main
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1088560Z 9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1099950Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1101700Z ##[group]Determining the checkout info
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1103080Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1103910Z [command]/opt/homebrew/bin/git sparse-checkout disable
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1247530Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1382040Z ##[group]Checking out the ref
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.1383420Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2003460Z Switched to a new branch 'main'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2008280Z branch 'main' set up to track 'origin/main'.
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2012530Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2120640Z [command]/opt/homebrew/bin/git log -1 --format=%H
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2260350Z 9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2357270Z ##[group]Removing auth
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2361350Z Removing SSH command configuration
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2454780Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.2471490Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.3659650Z Removing HTTP extra header
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.3661660Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.3744510Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.4954910Z Removing includeIf entries pointing to credentials config files
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.4956880Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5040950Z includeif.gitdir:/Users/runner/work/billing/billing/.git.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5062150Z includeif.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5063180Z includeif.gitdir:/github/workspace/.git.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5066020Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5073210Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/billing/billing/.git.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5121340Z /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5138710Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/billing/billing/.git.path \/Users\/runner\/work\/_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5252380Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5356950Z /Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5369170Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path \/Users\/runner\/work\/_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5455730Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5516890Z /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5523280Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5600930Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5674310Z /github/runner_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5688240Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-9495854f\-d688\-463e\-928f\-d855b23ee1fb\.config
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.5761210Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.6957870Z Removing credentials config '/Users/runner/work/_temp/git-credentials-9495854f-d688-463e-928f-d855b23ee1fb.config'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.6979000Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7328050Z ##[group]Run actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7328550Z with:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7328790Z   go-version: 1.27.2
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7329020Z   check-latest: false
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7331300Z   token: ***
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7331490Z   cache: true
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7331700Z env:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7331920Z   GOTOOLCHAIN: local
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.7332140Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.9071470Z Setup go version spec 1.27.2
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:28.9097050Z Attempting to download 1.27.2...
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:29.6209550Z matching 1.27.2...
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:29.6237860Z Acquiring 1.27.2 from https://github.com/actions/go-versions/releases/download/1.27.2-37875086547/go-1.27.2-darwin-arm64.tar.gz
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:30.4223720Z Extracting Go...
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:30.4428430Z [command]/usr/bin/tar xz -C /Users/runner/work/_temp/637d9478-3cff-43e1-9486-4bb94042606b -f /Users/runner/work/_temp/d2613974-e161-44d6-b7a7-88a4923e4031
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:33.6070000Z Successfully extracted go to /Users/runner/work/_temp/637d9478-3cff-43e1-9486-4bb94042606b
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:33.6071330Z Adding to the cache ...
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:47.7205500Z Successfully cached go to /Users/runner/hostedtoolcache/go/1.27.2/arm64
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:47.7206970Z Added go to the path
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:47.7211370Z Successfully set up Go version 1.27.2
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:47.9070430Z [command]/Users/runner/hostedtoolcache/go/1.27.2/arm64/bin/go env GOCACHE
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:47.9090830Z [command]/Users/runner/hostedtoolcache/go/1.27.2/arm64/bin/go env GOMODCACHE
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:47.9228000Z /Users/runner/go/pkg/mod
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:47.9268750Z /Users/runner/Library/Caches/go-build
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:48.1828890Z Cache hit for: setup-go-macOS-arm64-go-1.27.2-22d5eabe3b1453be67cef8b8c463802684c8e2ebb5c24ab1ec51393c6bc2f59d
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:49.3870930Z Received 25165824 of 92282025 (27.3%), 24.0 MBs/sec
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:50.1186150Z Received 92282025 of 92282025 (100.0%), 50.8 MBs/sec
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:50.1191600Z Cache Size: ~88 MB (92282025 B)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:50.1281490Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/8f7d46f3-4c7a-4de6-b4a3-b1a9f8269e11/cache.tzst -P -C /Users/runner/work/billing/billing --delay-directory-restore --use-compress-program unzstd
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:53.8659080Z Cache restored successfully
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:53.8705650Z Cache restored from key: setup-go-macOS-arm64-go-1.27.2-22d5eabe3b1453be67cef8b8c463802684c8e2ebb5c24ab1ec51393c6bc2f59d
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:53.8818270Z go version go1.27.2 darwin/arm64
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:53.8818630Z 
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:53.8819660Z ##[group]go env
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8424230Z AR='ar'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8424690Z CC='clang'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8425230Z CGO_CFLAGS='-O2 -g'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8426560Z CGO_CPPFLAGS=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8426890Z CGO_CXXFLAGS='-O2 -g'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8427260Z CGO_ENABLED='1'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8427550Z CGO_FFLAGS='-O2 -g'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8427780Z CGO_LDFLAGS='-O2 -g'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8428230Z CXX='clang++'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8428660Z GCCGO='gccgo'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8428970Z GO111MODULE=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8429260Z GOARCH='arm64'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8429490Z GOARM64='v8.0'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8429800Z GOAUTH='netrc'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8464430Z GOBIN='/Users/runner/go/bin'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8465940Z GOCACHE='/Users/runner/Library/Caches/go-build'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8467140Z GOCACHEPROG=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8468330Z GODEBUG=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8469440Z GOENV='/Users/runner/Library/Application Support/go/env'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8477050Z GOEXE=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8477990Z GOEXPERIMENT=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8479280Z GOFIPS140='off'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8480270Z GOFLAGS=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8482180Z GOGCCFLAGS='-fPIC -arch arm64 -pthread -fno-caret-diagnostics -Qunused-arguments -fmessage-length=0 -ffile-prefix-map=/var/folders/36/tjdph2t965j8snz9_vkdnw0r0000gn/T/go-build399950020=/tmp/go-build -gno-record-gcc-switches -fno-common'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8484780Z GOHOSTARCH='arm64'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8488600Z GOHOSTOS='darwin'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8490350Z GOINSECURE=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8491900Z GOMOD='/Users/runner/work/billing/billing/go.mod'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8493220Z GOMODCACHE='/Users/runner/go/pkg/mod'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8494440Z GONOPROXY=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8495520Z GONOSUMDB=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8496200Z GOOS='darwin'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8497870Z GOPACKAGESDRIVER=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8499610Z GOPATH='/Users/runner/go'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8500080Z GOPRIVATE=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8501220Z GOPROXY='https://proxy.golang.org,direct'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8501950Z GOROOT='/Users/runner/hostedtoolcache/go/1.27.2/arm64'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8502470Z GOSUMDB='sum.golang.org'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8502830Z GOTELEMETRY='local'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8503260Z GOTELEMETRYDIR='/Users/runner/Library/Application Support/go/telemetry'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8504170Z GOTMPDIR=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8507500Z GOTOOLCHAIN='local'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8508180Z GOTOOLDIR='/Users/runner/hostedtoolcache/go/1.27.2/arm64/pkg/tool/darwin_arm64'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8508850Z GOVCS=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8509090Z GOVERSION='go1.27.2'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8509360Z GOWORK=''
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8509850Z PKG_CONFIG='pkg-config'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8510160Z 
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8510670Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8937730Z ##[group]Run go vet ./...
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.8947730Z ^[[36;1mgo vet ./...^[[0m
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.9147730Z shell: /bin/bash -e {0}
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.9157730Z env:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.9167730Z   GOTOOLCHAIN: local
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:55.9177730Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.0207730Z ##[group]Run go test ./...
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.0217730Z ^[[36;1mgo test ./...^[[0m
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.0417730Z shell: /bin/bash -e {0}
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.0427730Z env:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.0437730Z   GOTOOLCHAIN: local
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.0447730Z ##[endgroup]
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.4247730Z --- FAIL: TestNextBusinessDay (0.00s)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.4257730Z     calendar_test.go:26: NextBusinessDay(2026-10-17) = 2026-10-18 (Sunday), want 2026-10-19
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.4267730Z     calendar_test.go:26: NextBusinessDay(2026-10-31) = 2026-11-01 (Sunday), want 2026-11-02
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.4277730Z --- FAIL: TestDueDate (0.00s)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.4287730Z     calendar_test.go:43: DueDate(2026-10-01, net 30) = 2026-11-01, want 2026-11-02
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.4297730Z     calendar_test.go:43: DueDate(2026-10-02, net 15) = 2026-10-18, want 2026-10-19
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.4307730Z FAIL
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.6707730Z FAIL	example.com/bench/billing/calendar	0.235s
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9107730Z ok  	example.com/bench/billing/export	0.095s
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9117730Z --- FAIL: TestSubtotal (0.00s)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9127730Z     invoice_test.go:23: one line: Subtotal() = $0.00, want $13.50
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9137730Z     invoice_test.go:23: three lines: Subtotal() = $21.00, want $60.99
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9147730Z --- FAIL: TestCompute (0.00s)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9157730Z     invoice_test.go:41: Compute(INV-1042) = subtotal $21.00, tax $1.52, total $22.52, want subtotal $60.99, tax $4.42, total $65.41
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9167730Z     invoice_test.go:44: Compute(INV-1042) due 2026-10-18, want 2026-10-19
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:58.9177730Z FAIL
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.1577730Z FAIL	example.com/bench/billing/invoice	0.096s
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.3977730Z ok  	example.com/bench/billing/money	0.095s
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.3987730Z --- FAIL: TestCompute (0.00s)
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.3997730Z     tax_test.go:31: tax on $50.00 in NY = $4.43, want $4.44
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.4007730Z     tax_test.go:31: tax on $10.00 in TX = $0.62, want $0.63
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.4017730Z     tax_test.go:31: tax on $30.00 in TX = $1.87, want $1.88
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.4027730Z FAIL
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.6427730Z FAIL	example.com/bench/billing/tax	0.234s
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.6437730Z FAIL
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.6657730Z ##[error]Process completed with exit code 1.
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:20:59.6897730Z Post job cleanup.
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1066260Z [command]/opt/homebrew/bin/git version
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1341990Z git version 2.55.0
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1371170Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/b8157c13-402a-4e62-b083-fcc9eface30a/.gitconfig'
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1386400Z Temporarily overriding HOME='/Users/runner/work/_temp/b8157c13-402a-4e62-b083-fcc9eface30a' before making global git config changes
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1397940Z Adding repository directory to the temporary git global config as a safe directory
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1398910Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/billing/billing
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1541690Z Removing SSH command configuration
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1547080Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.1656000Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.3171870Z Removing HTTP extra header
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.3181130Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.3318270Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.5004440Z Removing includeIf entries pointing to credentials config files
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.5010200Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.5153960Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (macos-latest, 1.27.2)	UNKNOWN STEP	2026-10-13T22:21:00.7100680Z Cleaning up orphan processes
+test (macos-latest, 1.26.9)	UNKNOWN STEP	﻿2026-10-13T22:20:21.0636920Z Current runner version: '2.337.0'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0653050Z ##[group]Runner Image Provisioner
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0653580Z Hosted Compute Agent
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0653980Z Version: 20260828.587
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0654390Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0654920Z Build Date: 2026-08-28T16:44:25Z
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0655380Z Worker ID: {027e7a07-9513-4123-8ab7-94be9ed4b409}
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0655830Z Azure Region: westus
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0656210Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0657040Z ##[group]Operating System
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0657440Z macOS
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0657760Z 26.6.2
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0658180Z 25G83
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0658530Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0658900Z ##[group]Runner Image
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0659280Z Image: macos-26-arm64
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0659710Z Version: 20260907.0351.1
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0660510Z Included Software: https://github.com/actions/runner-images/blob/macos-26-arm64/20260907.0351/images/macos/macos-26-arm64-Readme.md
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0661560Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-26-arm64%2F20260907.0351
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0662220Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0662960Z ##[group]GITHUB_TOKEN Permissions
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0664050Z Contents: read
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0664500Z Metadata: read
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0664860Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0666350Z Secret source: Actions
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0666960Z Cache mode: write
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0667390Z Prepare workflow directory
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0923540Z Prepare all required actions
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.0957300Z Getting action download info
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.5063750Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:21.6971810Z Download action repository 'actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e' (SHA:b7ad1dad31e06c5925ef5d2fc7ad053ef454303e)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.8766100Z Complete job name: test (macos-latest, 1.26.9)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9227870Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9228800Z with:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9229160Z   persist-credentials: false
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9229640Z   repository: example/billing
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9235790Z   token: ***
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9236140Z   ssh-strict: true
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9236500Z   ssh-user: git
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9236990Z   clean: true
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9237380Z   sparse-checkout-cone-mode: true
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9237870Z   fetch-depth: 1
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9238230Z   fetch-tags: false
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9238660Z   show-progress: true
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9239050Z   lfs: false
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9239390Z   submodules: false
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9239790Z   set-safe-directory: true
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9240240Z   allow-unsafe-pr-checkout: false
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9240820Z env:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9241150Z   GOTOOLCHAIN: local
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:22.9241530Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.2969030Z Syncing repository: example/billing
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.2970840Z ##[group]Getting Git version info
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.2971540Z Working directory is '/Users/runner/work/billing/billing'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.2972530Z [command]/opt/homebrew/bin/git version
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3306890Z git version 2.55.0
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3423960Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3430660Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/e1b8ecec-b2aa-4a27-bf5f-43b2538ba25e/.gitconfig'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3433480Z Temporarily overriding HOME='/Users/runner/work/_temp/e1b8ecec-b2aa-4a27-bf5f-43b2538ba25e' before making global git config changes
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3435730Z Adding repository directory to the temporary git global config as a safe directory
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3437150Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/billing/billing
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3561390Z Deleting the contents of '/Users/runner/work/billing/billing'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3563730Z ##[group]Determining repository object format
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3565280Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3569510Z ##[group]Initializing the repository
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3584620Z [command]/opt/homebrew/bin/git init /Users/runner/work/billing/billing
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3676040Z hint: Using 'master' as the name for the initial branch. This default branch name
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3679710Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3682820Z hint: to use in all of your new repositories, which will suppress this warning,
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3688120Z hint: call:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3690180Z hint:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3698060Z hint: 	git config --global init.defaultBranch <name>
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3704570Z hint:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3713170Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3714400Z hint: 'development'. The just-created branch can be renamed via this command:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3715310Z hint:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3715830Z hint: 	git branch -m <name>
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3716400Z hint:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3717370Z hint: Disable this message with "git config set advice.defaultBranchName false"
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3718610Z Initialized empty Git repository in /Users/runner/work/billing/billing/.git/
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3720950Z [command]/opt/homebrew/bin/git remote add origin https://github.com/example/billing
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3769210Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3769940Z ##[group]Disabling automatic garbage collection
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3771760Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3835670Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3836460Z ##[group]Setting up auth
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3837000Z Removing SSH command configuration
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3839750Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.3904530Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.4796900Z Removing HTTP extra header
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.4800660Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.4861510Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.5670970Z Removing includeIf entries pointing to credentials config files
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.5674360Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.5738590Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6579700Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6594650Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/billing/billing/.git.path /Users/runner/work/_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6659120Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path /Users/runner/work/_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6708370Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6772520Z [command]/opt/homebrew/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6834840Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6835600Z ##[group]Fetching the repository
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:23.6839160Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4:refs/remotes/origin/main
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.0975070Z From https://github.com/example/billing
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.0976290Z  * [new ref]         9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4 -> origin/main
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.0982090Z [command]/opt/homebrew/bin/git branch --list --remote origin/main
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1053310Z   origin/main
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1058210Z [command]/opt/homebrew/bin/git rev-parse refs/remotes/origin/main
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1116310Z 9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1118540Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1119380Z ##[group]Determining the checkout info
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1120500Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1123130Z [command]/opt/homebrew/bin/git sparse-checkout disable
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1198420Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1260860Z ##[group]Checking out the ref
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1263100Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1611190Z Switched to a new branch 'main'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1614490Z branch 'main' set up to track 'origin/main'.
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1621360Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1709770Z [command]/opt/homebrew/bin/git log -1 --format=%H
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1772780Z 9c41e7d2a06b5f38e1c7a4d09b2e6f15c8d3a7e4
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1779880Z ##[group]Removing auth
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1780940Z Removing SSH command configuration
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1782620Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.1841370Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.2512650Z Removing HTTP extra header
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.2514590Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.2566540Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3203480Z Removing includeIf entries pointing to credentials config files
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3205190Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3252920Z includeif.gitdir:/Users/runner/work/billing/billing/.git.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3254430Z includeif.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3255660Z includeif.gitdir:/github/workspace/.git.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3256800Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3259520Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/billing/billing/.git.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3305790Z /Users/runner/work/_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3311720Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/billing/billing/.git.path \/Users\/runner\/work\/_temp\/git\-credentials\-231702d6\-0571\-4733\-b410\-3b3e13f6d7f3\.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3375670Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3426640Z /Users/runner/work/_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3432500Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/Users/runner/work/billing/billing/.git/worktrees/*.path \/Users\/runner\/work\/_temp\/git\-credentials\-231702d6\-0571\-4733\-b410\-3b3e13f6d7f3\.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3485130Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3534060Z /github/runner_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3538490Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-231702d6\-0571\-4733\-b410\-3b3e13f6d7f3\.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3591440Z [command]/opt/homebrew/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3639250Z /github/runner_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3645440Z [command]/opt/homebrew/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-231702d6\-0571\-4733\-b410\-3b3e13f6d7f3\.config
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.3704160Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4533270Z Removing credentials config '/Users/runner/work/_temp/git-credentials-231702d6-0571-4733-b410-3b3e13f6d7f3.config'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4535820Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4761040Z ##[group]Run actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4762220Z with:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4762850Z   go-version: 1.26.9
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4763540Z   check-latest: false
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4769170Z   token: ***
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4769720Z   cache: true
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4770280Z env:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4770810Z   GOTOOLCHAIN: local
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.4771390Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.5832810Z Setup go version spec 1.26.9
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:24.5844520Z Attempting to download 1.26.9...
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:25.3073850Z matching 1.26.9...
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:25.3092540Z Acquiring 1.26.9 from https://github.com/actions/go-versions/releases/download/1.26.9-37875104533/go-1.26.9-darwin-arm64.tar.gz
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:25.8163350Z Extracting Go...
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:25.8311750Z [command]/usr/bin/tar xz -C /Users/runner/work/_temp/29f83467-27ab-4485-b6ec-bc074c9f703f -f /Users/runner/work/_temp/a532f71d-159b-4cd6-bc87-b4e576594e8c
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:28.2135450Z Successfully extracted go to /Users/runner/work/_temp/29f83467-27ab-4485-b6ec-bc074c9f703f
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:28.2136530Z Adding to the cache ...
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.3278570Z Successfully cached go to /Users/runner/hostedtoolcache/go/1.26.9/arm64
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.3279300Z Added go to the path
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.3281680Z Successfully set up Go version 1.26.9
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.4328280Z [command]/Users/runner/hostedtoolcache/go/1.26.9/arm64/bin/go env GOCACHE
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.4343050Z [command]/Users/runner/hostedtoolcache/go/1.26.9/arm64/bin/go env GOMODCACHE
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.4436590Z /Users/runner/Library/Caches/go-build
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.4451860Z /Users/runner/go/pkg/mod
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:36.7197090Z Cache hit for: setup-go-macOS-arm64-go-1.26.9-22d5eabe3b1453be67cef8b8c463802684c8e2ebb5c24ab1ec51393c6bc2f59d
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:38.0110470Z Received 0 of 88483162 (0.0%), 0.0 MBs/sec
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:38.8820690Z Received 88483162 of 88483162 (100.0%), 45.0 MBs/sec
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:38.8842100Z Cache Size: ~84 MB (88483162 B)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:38.8939290Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/dc86261c-d180-40b9-9a97-6f603388025a/cache.tzst -P -C /Users/runner/work/billing/billing --delay-directory-restore --use-compress-program unzstd
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:41.5277720Z Cache restored successfully
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:41.5327390Z Cache restored from key: setup-go-macOS-arm64-go-1.26.9-22d5eabe3b1453be67cef8b8c463802684c8e2ebb5c24ab1ec51393c6bc2f59d
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:41.5385320Z go version go1.26.9 darwin/arm64
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:41.5385610Z 
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:41.5386230Z ##[group]go env
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4145320Z AR='ar'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4146420Z CC='clang'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4152300Z CGO_CFLAGS='-O2 -g'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4154010Z CGO_CPPFLAGS=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4157030Z CGO_CXXFLAGS='-O2 -g'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4159070Z CGO_ENABLED='1'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4160430Z CGO_FFLAGS='-O2 -g'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4162280Z CGO_LDFLAGS='-O2 -g'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4167990Z CXX='clang++'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4168580Z GCCGO='gccgo'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4211380Z GO111MODULE=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4232250Z GOARCH='arm64'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4233090Z GOARM64='v8.0'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4233940Z GOAUTH='netrc'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4241730Z GOBIN=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4243040Z GOCACHE='/Users/runner/Library/Caches/go-build'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4243440Z GOCACHEPROG=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4243890Z GODEBUG=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4244400Z GOENV='/Users/runner/Library/Application Support/go/env'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4309210Z GOEXE=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4309870Z GOEXPERIMENT=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4325640Z GOFIPS140='off'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4327910Z GOFLAGS=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4330220Z GOGCCFLAGS='-fPIC -arch arm64 -pthread -fno-caret-diagnostics -Qunused-arguments -fmessage-length=0 -ffile-prefix-map=/var/folders/36/tjdph2t965j8snz9_vkdnw0r0000gn/T/go-build2558998352=/tmp/go-build -gno-record-gcc-switches -fno-common'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4331730Z GOHOSTARCH='arm64'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4336440Z GOHOSTOS='darwin'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4337320Z GOINSECURE=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4338960Z GOMOD='/Users/runner/work/billing/billing/go.mod'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4339340Z GOMODCACHE='/Users/runner/go/pkg/mod'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4339960Z GONOPROXY=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4341450Z GONOSUMDB=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4343910Z GOOS='darwin'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4344170Z GOPATH='/Users/runner/go'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4344440Z GOPRIVATE=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4345510Z GOPROXY='https://proxy.golang.org,direct'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4345880Z GOROOT='/Users/runner/hostedtoolcache/go/1.26.9/arm64'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4346250Z GOSUMDB='sum.golang.org'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4347030Z GOTELEMETRY='local'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4347340Z GOTELEMETRYDIR='/Users/runner/Library/Application Support/go/telemetry'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4347750Z GOTMPDIR=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4348000Z GOTOOLCHAIN='local'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4348460Z GOTOOLDIR='/Users/runner/hostedtoolcache/go/1.26.9/arm64/pkg/tool/darwin_arm64'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4348780Z GOVCS=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4348930Z GOVERSION='go1.26.9'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4349360Z GOWORK=''
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4349640Z PKG_CONFIG='pkg-config'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4349790Z 
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4350310Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4491680Z ##[group]Run go vet ./...
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4501680Z ^[[36;1mgo vet ./...^[[0m
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4701680Z shell: /bin/bash -e {0}
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4711680Z env:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4721680Z   GOTOOLCHAIN: local
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:47.4731680Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:49.9761680Z ##[group]Run go test ./...
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:49.9771680Z ^[[36;1mgo test ./...^[[0m
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:49.9971680Z shell: /bin/bash -e {0}
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:49.9981680Z env:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:49.9991680Z   GOTOOLCHAIN: local
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.0001680Z ##[endgroup]
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.3801680Z --- FAIL: TestNextBusinessDay (0.00s)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.3811680Z     calendar_test.go:26: NextBusinessDay(2026-10-17) = 2026-10-18 (Sunday), want 2026-10-19
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.3821680Z     calendar_test.go:26: NextBusinessDay(2026-10-31) = 2026-11-01 (Sunday), want 2026-11-02
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.3831680Z --- FAIL: TestDueDate (0.00s)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.3841680Z     calendar_test.go:43: DueDate(2026-10-01, net 30) = 2026-11-01, want 2026-11-02
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.3851680Z     calendar_test.go:43: DueDate(2026-10-02, net 15) = 2026-10-18, want 2026-10-19
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.3861680Z FAIL
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.6261680Z FAIL	example.com/bench/billing/calendar	0.308s
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8661680Z ok  	example.com/bench/billing/export	0.124s
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8671680Z --- FAIL: TestSubtotal (0.00s)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8681680Z     invoice_test.go:23: one line: Subtotal() = $0.00, want $13.50
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8691680Z     invoice_test.go:23: three lines: Subtotal() = $21.00, want $60.99
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8701680Z --- FAIL: TestCompute (0.00s)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8711680Z     invoice_test.go:41: Compute(INV-1042) = subtotal $21.00, tax $1.52, total $22.52, want subtotal $60.99, tax $4.42, total $65.41
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8721680Z     invoice_test.go:44: Compute(INV-1042) due 2026-10-18, want 2026-10-19
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:50.8731680Z FAIL
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.1131680Z FAIL	example.com/bench/billing/invoice	0.126s
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.3531680Z ok  	example.com/bench/billing/money	0.124s
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.3541680Z --- FAIL: TestCompute (0.00s)
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.3551680Z     tax_test.go:31: tax on $50.00 in NY = $4.43, want $4.44
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.3561680Z     tax_test.go:31: tax on $10.00 in TX = $0.62, want $0.63
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.3571680Z     tax_test.go:31: tax on $30.00 in TX = $1.87, want $1.88
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.3581680Z FAIL
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.5981680Z FAIL	example.com/bench/billing/tax	0.307s
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.5991680Z FAIL
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.6211680Z ##[error]Process completed with exit code 1.
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.6451680Z Post job cleanup.
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.7954000Z [command]/opt/homebrew/bin/git version
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8042040Z git version 2.55.0
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8061330Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/a3ecce1b-96cb-4854-a939-297a72478a1d/.gitconfig'
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8069720Z Temporarily overriding HOME='/Users/runner/work/_temp/a3ecce1b-96cb-4854-a939-297a72478a1d' before making global git config changes
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8070680Z Adding repository directory to the temporary git global config as a safe directory
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8073270Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/billing/billing
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8152980Z Removing SSH command configuration
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8159580Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.8232380Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.9049880Z Removing HTTP extra header
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.9053870Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.9110070Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.9793010Z Removing includeIf entries pointing to credentials config files
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.9796960Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:51.9856300Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (macos-latest, 1.26.9)	UNKNOWN STEP	2026-10-13T22:20:52.1165960Z Cleaning up orphan processes
