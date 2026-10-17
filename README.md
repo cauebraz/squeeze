@@ -22,7 +22,7 @@ terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace
 
 The plan JSON for this example is 6,294 bytes; the output is 485.
 
-On four agent tasks, an agent that pipes the tool through squeeze fixes the same defects with 65 percent fewer tokens ([bench/README.md](bench/README.md)):
+On eight agent tasks, an agent that pipes the tool through squeeze fixes the same defects with 47 percent fewer tokens; `lint-log` accounts for most of it, the other seven save 28 percent, and on tasks whose output is a few kilobytes squeeze can cost more than it saves ([bench/README.md](bench/README.md) has every task, losses included):
 
 ![Tokens an agent spends per task with and without squeeze](bench/results.svg)
 
@@ -66,7 +66,7 @@ Without a format name, a flag of the detected format, such as `--max-checks 0` f
 
 ## Use from an agent
 
-Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool output:
+Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool output. Keep only the lines for the tools the project runs, plus the `$?` and cut-notice lines: the agent reads the block on every turn, the whole block is about 3,000 bytes, and the bench measures a 456-byte block plus one line for the task's tool, so a task whose output is a few kilobytes can cost more with squeeze than without it ([bench/README.md](bench/README.md#where-squeeze-loses)).
 
 ```
 - Run Terraform with `-json` and pipe it through `squeeze`: `terraform validate -json | squeeze`,
