@@ -2,7 +2,21 @@
 
 [![ci](https://github.com/cauebraz/squeeze/actions/workflows/ci.yml/badge.svg)](https://github.com/cauebraz/squeeze/actions/workflows/ci.yml)
 
-squeeze reads a tool's output on stdin and prints the smallest text that still carries every change, failure or decision in it, for coding agents that pay for every byte they read.
+Tool output, compacted for coding agents.
+
+squeeze reads a tool's output on stdin and prints only what an agent acts on: every change, failure and decision, plus a note naming what it cut.
+
+## Install
+
+```
+go install github.com/cauebraz/squeeze/cmd/squeeze@latest
+```
+
+Go 1.27. No release yet: output can change until 1.0.
+
+## Quickstart
+
+**1. Pipe.** squeeze detects the format.
 
 ```
 $ terraform show -json plan.out | squeeze
@@ -18,76 +32,58 @@ terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace
   ~ password: (sensitive)
 ```
 
-The plan JSON for this example is 6,294 bytes; the output is 485.
+6,294 bytes of plan JSON become 485.
 
-## Install
-
-```
-go install github.com/cauebraz/squeeze/cmd/squeeze@latest
-```
-
-Needs Go 1.27. There is no release yet, so output can change between commits until 1.0.
-
-## Use from an agent
-
-Add these lines to the project's `AGENTS.md` or `CLAUDE.md`; each format page has a line for its tool.
+**2. Tell your agent.** Add to `AGENTS.md` or `CLAUDE.md`:
 
 ```
-- Pipe long tool output through `squeeze`, using the tool's JSON mode when it has one:
-  `terraform show -json plan.out | squeeze`, `go test -json ./... 2>&1 | squeeze`, `npm test 2>&1 | squeeze`.
-- squeeze names what it cut and the flag that shows it, such as `--max-attrs 0`; rerun with that flag only when the output lacks what you need.
-- `$?` is squeeze's exit code, not the tool's: add `--fail-on error,fail` to exit 3 on a failure, or start the command with `set -o pipefail;`.
+- Pipe long tool output through `squeeze`, in the tool's JSON mode when it has one: `go test -json ./... 2>&1 | squeeze`.
+- Rerun with the flag squeeze names, such as `--max-attrs 0`, only when the output lacks what you need.
+- Add `--fail-on error,fail` to exit 3 on a failure; `$?` is otherwise squeeze's, not the tool's.
 ```
+
+## How it works
+
+- **Parses, never truncates.** Each format knows its tool's output; every cut is announced with a count and the flag that shows it.
+- **Secrets stay out.** Values the tool marks as sensitive never reach stdout or `--output json`.
+- **Just a pipe.** No MCP server, plugin or hook: any agent that runs shell commands can use it.
+
+On 13 agent tasks the median task used 23 percent fewer tokens; two small-output tasks used 9 and 10 percent more ([bench](bench/README.md)).
 
 ## Formats
 
-| Format | Input | Docs |
-|---|---|---|
-| `tfplan` | `terraform show -json <planfile>` | [docs/formats/tfplan.md](docs/formats/tfplan.md) |
-| `tfstate` | `terraform show -json` without a plan file, `terraform state show -json <address>`, `terraform output -json` | [docs/formats/tfstate.md](docs/formats/tfstate.md) |
-| `tfvalidate` | `terraform validate -json` | [docs/formats/tfvalidate.md](docs/formats/tfvalidate.md) |
-| `tflint` | `tflint --format json` | [docs/formats/tflint.md](docs/formats/tflint.md) |
-| `ghactions` | `gh run view --log` or `--log-failed` | [docs/formats/ghactions.md](docs/formats/ghactions.md) |
-| `buildkit` | `docker buildx build --progress=plain` or `--progress=rawjson` | [docs/formats/buildkit.md](docs/formats/buildkit.md) |
-| `jest` | `jest --json`, Vitest `--reporter=json` | [docs/formats/jest.md](docs/formats/jest.md) |
-| `junit` | JUnit XML reports from `pytest --junitxml`, `gotestsum`, `go-junit-report`, Surefire, `jest-junit`, `checkov -o junitxml` | [docs/formats/junit.md](docs/formats/junit.md) |
-| `kubectl` | `kubectl get <resources> -o json`, a list or one object | [docs/formats/kubectl.md](docs/formats/kubectl.md) |
-| `npmaudit` | `npm audit --json` | [docs/formats/npmaudit.md](docs/formats/npmaudit.md) |
-| `precommit` | `pre-commit run`, with or without `--verbose` and color | [docs/formats/precommit.md](docs/formats/precommit.md) |
-| `checkov` | `checkov -o json` | [docs/formats/checkov.md](docs/formats/checkov.md) |
-| `trivy` | `trivy fs`, `config`, `image` or `k8s` with `--format json` | [docs/formats/trivy.md](docs/formats/trivy.md) |
-| `pytest` | pytest's terminal output, default, `-v` or `-q` | [docs/formats/pytest.md](docs/formats/pytest.md) |
-| `tfjson` | `terraform plan`, `apply`, `destroy`, `init`, `test` or `query` with `-json`, and the same `tofu` commands | [docs/formats/tfjson.md](docs/formats/tfjson.md) |
-| `gotest` | `go test -json`, or `go test` text with or without `-v` | [docs/formats/gotest.md](docs/formats/gotest.md) |
-| `generic` | any other text, when no format above detects it | [docs/formats/generic.md](docs/formats/generic.md) |
+| Format | Input |
+|---|---|
+| `tfplan` | `terraform show -json <planfile>` |
+| `tfstate` | `terraform show -json`, `state show -json`, `output -json` |
+| `tfvalidate` | `terraform validate -json` |
+| `tflint` | `tflint --format json` |
+| `ghactions` | `gh run view --log` |
+| `buildkit` | `docker buildx build --progress=plain` or `rawjson` |
+| `jest` | `jest --json`, Vitest `--reporter=json` |
+| `junit` | JUnit XML |
+| `kubectl` | `kubectl get -o json` |
+| `npmaudit` | `npm audit --json` |
+| `precommit` | `pre-commit run` |
+| `checkov` | `checkov -o json` |
+| `trivy` | `trivy --format json` |
+| `pytest` | pytest terminal output |
+| `tfjson` | `terraform` or `tofu` with `-json` |
+| `gotest` | `go test`, with or without `-json` |
+| `generic` | any other text |
 
-## How it differs
+## Docs
 
-One diagnostics call returned about 580,700 tokens and filled an agent's context window ([anthropics/claude-code#12054](https://github.com/anthropics/claude-code/issues/12054)).
-A `pytest -v` run printed an estimated 150 lines when 8 carried the decision ([anthropics/claude-code#49048](https://github.com/anthropics/claude-code/issues/49048)).
+- [Usage, flags, JSON envelope and exit codes](docs/cli.md)
+- [Formats, one page each](docs/formats/)
+- [Bench](bench/README.md)
+- [Contributing](CONTRIBUTING.md)
 
-- It parses instead of truncating. A byte cap or `tail -n 100` cuts blindly; squeeze keeps every change, failure or decision and names what it left out and the flag that shows it.
-- Secrets are never printed. Values the tool marks as sensitive never reach stdout or `--output json`, at any nesting depth.
-- It is a pipe, with no integration. No MCP server, plugin or hook: any agent that runs shell commands can run `tool | squeeze`.
+## Contributing
 
-## Bench
+```
+just check   # format, lint, test
+just cover   # coverage, 95 percent minimum
+```
 
-Across the 13 agent tasks in [bench/README.md](bench/README.md), the median task used 23 percent fewer tokens with squeeze.
-Small outputs can cost more: `tfvalidate-errors` used 9 percent more tokens and `checkov-findings` 10 percent more.
-
-![Tokens an agent spends per task with and without squeeze](bench/results.svg)
-
-## Reference
-
-- [docs/cli.md](docs/cli.md): usage, common flags, the JSON envelope, exit codes and the guarantees every format keeps.
-- [docs/formats/](docs/formats/): one page per format.
-- [CONTRIBUTING.md](CONTRIBUTING.md): branches, commits, pull requests and new formats.
-
-## Development
-
-`just` lists the recipes.
-Run `just check` before and after a change.
-
-## License
-
-MIT
+MIT license.
