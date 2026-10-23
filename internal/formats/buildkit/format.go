@@ -6,13 +6,13 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-type Options struct {
+type options struct {
 	MaxLines int
 	All      bool
 }
 
-func DefaultOptions() Options {
-	return Options{MaxLines: 20}
+func defaultOptions() options {
+	return options{MaxLines: 20}
 }
 
 type Format struct{}
@@ -23,33 +23,31 @@ func (Format) Description() string {
 	return "Docker BuildKit build output from docker buildx build --progress=plain or rawjson"
 }
 
-var conditionNames = []string{"error", "fail", "warning"}
-
-func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+func (Format) Conditions() []string { return core.SharedConditions() }
 
 func (Format) Detect(head []byte) bool {
 	return detect(head)
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
-	o := DefaultOptions()
+	o := defaultOptions()
 	core.CountFlag(fs, &o.MaxLines, "max-lines", "log lines of each failed step, 0 for all")
 	fs.BoolVar(&o.All, "all", false, "print every step with its log")
 	return func(input []byte) (core.Result, error) {
-		return Squeeze(input, o)
+		return squeeze(input, o)
 	}
 }
 
-func Squeeze(input []byte, o Options) (core.Result, error) {
-	b, err := Parse(input)
+func squeeze(input []byte, o options) (core.Result, error) {
+	b, err := parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r := Build(b, o)
-	return core.Result{Text: Text(r), Data: r, Conditions: conditions(r)}, nil
+	r := build(b, o)
+	return core.Result{Text: text(r), Data: r, Conditions: conditions(r)}, nil
 }
 
-func conditions(r Report) []string {
+func conditions(r report) []string {
 	failed := r.FailedSteps > 0 || len(r.Errors) > 0
 	return core.Conditions(map[string]bool{
 		"error":   failed,

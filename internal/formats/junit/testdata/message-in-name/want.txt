@@ -1,0 +1,9 @@
+junit: 4 tests in 1 suite: 4 failures
+fail tests.test_client test_timeout_handling: timeout
+  AssertionError: request did not finish
+fail tests.test_client test_handle_timeout: timeout
+  AssertionError: request did not finish
+fail tests.test_client test_retry
+  AssertionError: no retry
+fail lint [HIGH][CHK_1] Ensure the client sets a timeout
+  File: client.py: 3-9

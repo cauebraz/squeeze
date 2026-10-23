@@ -3,10 +3,14 @@ fail test_cart test_total_two_items: assert 10 == 11  +  where 10 = total([(3, 2
   def test_total_two_items():
           print("computing total for 2 items")
           sys.stderr.write("warning: price list is stale\n")
-  ... 4 more lines (--max-lines 0)
+  ... 4 more lines (--max-output 0)
   stdout:
     computing total for 2 items
   stderr:
     warning: price list is stale
-fail test_cart test_strict_xpass: [XPASS(strict)] should fail
-... 4 more failing cases (--max-cases 0)
+error test_cart test_checkout_uses_db: failed on setup with "ConnectionError: database at localhost:5432 refused the connection"
+  @pytest.fixture
+      def db():
+  >       raise ConnectionError("database at localhost:5432 refused the connection")
+  ... 2 more lines (--max-output 0)
+... 4 more failed tests (--max-tests 0)

@@ -1,13 +1,14 @@
 package gotest
 
 import (
+	"cmp"
 	"maps"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
 var (
@@ -27,16 +28,20 @@ type line struct {
 }
 
 type pkgState struct {
-	status      string
+	status      action
 	elapsed     float64
 	failedBuild string
 	lines       []line
 }
 
+type testKey struct {
+	pkg, name string
+}
+
 type testState struct {
 	pkg, name string
 	run       int
-	status    string
+	status    action
 	elapsed   float64
 	lines     []line
 	attrs     map[string]string
@@ -44,38 +49,40 @@ type testState struct {
 }
 
 type builder struct {
-	o          Options
+	o          options
 	pkgs       map[string]*pkgState
-	tests      map[[2]string]*testState
-	runs       map[[2]string][]*testState
+	tests      map[testKey]*testState
+	runs       map[testKey][]*testState
 	builds     map[string][]string
 	buildFail  map[string]bool
 	text       []string
 	outputType bool
 	other      map[string]int
-	partial    map[[2]string]line
+	partial    map[testKey]line
 	seeds      map[string]string
 }
 
-func Build(events []Event, o Options) Report {
+func build(events []rawEvent, o options, plain bool) report {
 	b := builder{
 		o:         o,
 		pkgs:      map[string]*pkgState{},
-		tests:     map[[2]string]*testState{},
-		runs:      map[[2]string][]*testState{},
+		tests:     map[testKey]*testState{},
+		runs:      map[testKey][]*testState{},
 		builds:    map[string][]string{},
 		buildFail: map[string]bool{},
 		other:     map[string]int{},
-		partial:   map[[2]string]line{},
+		partial:   map[testKey]line{},
 		seeds:     map[string]string{},
 	}
 	for _, e := range events {
 		b.add(e)
 	}
-	for key, l := range b.partial {
-		b.appendLine(key[0], key[1], l)
+	for _, key := range slices.SortedFunc(maps.Keys(b.partial), compareKeys) {
+		b.appendLine(key.pkg, key.name, b.partial[key])
 	}
-	return b.finish()
+	r := b.finish()
+	r.testsUnlisted = plain && !slices.ContainsFunc(events, func(e rawEvent) bool { return e.Action == actionRun })
+	return r
 }
 
 func (b *builder) pkg(name string) *pkgState {
@@ -88,7 +95,7 @@ func (b *builder) pkg(name string) *pkgState {
 }
 
 func (b *builder) test(pkg, name string) *testState {
-	key := [2]string{pkg, name}
+	key := testKey{pkg, name}
 	if t, ok := b.tests[key]; ok {
 		return t
 	}
@@ -96,7 +103,7 @@ func (b *builder) test(pkg, name string) *testState {
 }
 
 func (b *builder) newRun(pkg, name string) *testState {
-	key := [2]string{pkg, name}
+	key := testKey{pkg, name}
 	t := &testState{pkg: pkg, name: name, run: len(b.runs[key]) + 1, attrs: map[string]string{}}
 	b.tests[key] = t
 	b.runs[key] = append(b.runs[key], t)
@@ -110,39 +117,39 @@ func (b *builder) appendLine(pkg, test string, l line) {
 		return
 	}
 	p := b.pkg(pkg)
-	if m := shuffleLine.FindStringSubmatch(strings.TrimSpace(core.Line(l.text))); m != nil {
+	if m := shuffleLine.FindStringSubmatch(strings.TrimSpace(sanitize.Line(l.text))); m != nil {
 		b.seeds[pkg] = m[1]
 		return
 	}
 	p.lines = append(p.lines, l)
 }
 
-func (b *builder) add(e Event) {
+func (b *builder) add(e rawEvent) {
 	if e.Action == "" {
 		b.text = append(b.text, e.Text)
 		return
 	}
-	pkg, test := core.Clean(e.Package), core.Clean(e.Test)
+	pkg, test := sanitize.Clean(e.Package), sanitize.Clean(e.Test)
 	switch e.Action {
-	case "build-output":
-		ip := core.Clean(e.ImportPath)
+	case actionBuildOutput:
+		ip := sanitize.Clean(e.ImportPath)
 		b.builds[ip] = append(b.builds[ip], splitOutput(e.Output)...)
-	case "build-fail":
-		b.buildFail[core.Clean(e.ImportPath)] = true
-	case "start":
+	case actionBuildFail:
+		b.buildFail[sanitize.Clean(e.ImportPath)] = true
+	case actionStart:
 		b.pkg(pkg)
-	case "run":
+	case actionRun:
 		b.pkg(pkg)
-		if t, ok := b.tests[[2]string{pkg, test}]; ok && t.status == "" && len(t.lines) == 0 {
+		if t, ok := b.tests[testKey{pkg, test}]; ok && t.status == "" && len(t.lines) == 0 {
 			return
 		}
 		b.newRun(pkg, test)
-	case "pause", "cont":
-	case "output":
+	case actionPause, actionCont:
+	case actionOutput:
 		if e.OutputType != "" {
 			b.outputType = true
 		}
-		key := [2]string{pkg, test}
+		key := testKey{pkg, test}
 		pending, ok := b.partial[key]
 		text, typ := e.Output, e.OutputType
 		if ok {
@@ -156,7 +163,7 @@ func (b *builder) add(e Event) {
 		if last := parts[len(parts)-1]; last != "" {
 			b.partial[key] = line{text: last, typ: typ}
 		}
-	case "pass", "fail", "skip", "bench":
+	case actionPass, actionFail, actionSkip, actionBench:
 		elapsed := 0.0
 		if e.Elapsed != nil {
 			elapsed = *e.Elapsed
@@ -167,18 +174,18 @@ func (b *builder) add(e Event) {
 			return
 		}
 		p := b.pkg(pkg)
-		if p.status != "fail" {
+		if p.status != actionFail {
 			p.status, p.elapsed = e.Action, elapsed
 		}
 		if e.FailedBuild != "" {
-			p.failedBuild = core.Clean(e.FailedBuild)
+			p.failedBuild = sanitize.Clean(e.FailedBuild)
 		}
-	case "attr":
-		b.test(pkg, test).attrs[core.Clean(e.Key)] = core.Clean(e.Value)
-	case "artifacts":
-		b.test(pkg, test).artifacts = core.Clean(e.Path)
+	case actionAttr:
+		b.test(pkg, test).attrs[sanitize.Clean(e.Key)] = sanitize.Clean(e.Value)
+	case actionArtifacts:
+		b.test(pkg, test).artifacts = sanitize.Clean(e.Path)
 	default:
-		b.other[core.Clean(e.Action)]++
+		b.other[sanitize.Clean(string(e.Action))]++
 	}
 }
 
@@ -186,7 +193,7 @@ func coverage(lines []line) string {
 	found := ""
 	for _, l := range lines {
 		if m := coverLine.FindStringSubmatch(strings.TrimSpace(l.text)); m != nil && (found == "" || !strings.HasPrefix(l.text, "ok")) {
-			found = core.Clean(m[1])
+			found = sanitize.Clean(m[1])
 		}
 	}
 	return found
@@ -199,26 +206,54 @@ func displayPackage(importPath string) string {
 	return importPath
 }
 
-func (b *builder) finish() Report {
-	r := Report{
-		Tool:            "go",
-		BuildFailures:   []BuildFailure{},
-		Failures:        []Failure{},
-		PackageFailures: []PackageFailure{},
-		Benchmarks:      []Benchmark{},
-		Skipped:         []TestRef{},
-		Passing:         []PackageRef{},
-		NoTests:         []string{},
-		Coverage:        []PackageCoverage{},
-		Shuffle:         []PackageSeed{},
-		Text:            Output{Lines: []string{}},
-		Warnings:        []string{},
-		Other:           b.other,
+func (b *builder) finish() report {
+	r := report{
+		Tool:                 "go",
+		BuildFailures:        []buildFailure{},
+		Failures:             []failure{},
+		PackageFailures:      []packageFailure{},
+		Benchmarks:           []benchmark{},
+		Skipped:              []testRef{},
+		PassingPackages:      []packageRef{},
+		PackagesWithoutTests: []string{},
+		Coverage:             []packageCoverage{},
+		Shuffle:              []packageSeed{},
+		Text:                 output{Block: core.HeadBlock(nil, 0)},
+		WarningMessages:      []string{},
+		Other:                b.other,
 	}
+	failedPkg := b.packages(&r)
+	b.buildFailures(&r)
+	keys := slices.SortedFunc(maps.Keys(b.runs), compareKeys)
+	failing := b.countTests(&r, keys, failedPkg)
+	r.Failures = b.failures(keys, failing, failedPkg)
+	listed := map[string]bool{}
+	for _, f := range r.Failures {
+		listed[f.Package] = true
+	}
+	r.Tests.Failed = len(r.Failures)
+	r.Failures, r.TestsOmitted = core.Limit(r.Failures, b.o.MaxTests)
+	if !b.o.All {
+		r.Coverage, r.CoverageOmitted = core.Limit(r.Coverage, maxCoverage)
+	}
+	b.packageFailures(&r, failedPkg, listed)
+	for _, name := range sortedKeys(b.seeds) {
+		r.Shuffle = append(r.Shuffle, packageSeed{Package: name, Seed: b.seeds[name], Failed: failedPkg[name]})
+	}
+	b.scan(&r, toLines(b.text))
+	r.Text = b.output(toLines(b.text), "")
+	r.Status = statusPass
+	if r.Packages.Failed+r.Packages.BuildFailed+len(r.BuildFailures)+r.Tests.Failed > 0 {
+		r.Status = statusFail
+	}
+	return r
+}
+
+func (b *builder) packages(r *report) map[string]bool {
 	failedPkg := map[string]bool{}
 	for _, name := range sortedKeys(b.pkgs) {
 		p := b.pkgs[name]
-		if p.status == "fail" && p.failedBuild == "" {
+		if p.status == actionFail && p.failedBuild == "" {
 			for _, l := range p.lines {
 				if strings.TrimSpace(l.text) == "FAIL\t"+name+" [build failed]" {
 					p.failedBuild = name
@@ -226,35 +261,39 @@ func (b *builder) finish() Report {
 			}
 		}
 		switch {
-		case p.status == "fail" && p.failedBuild != "":
+		case p.status == actionFail && p.failedBuild != "":
 			r.Packages.BuildFailed++
 			if _, ok := b.builds[p.failedBuild]; !ok {
 				b.buildFail[p.failedBuild] = true
 			}
-		case p.status == "fail" || p.status == "":
+		case p.status == actionFail || p.status == "":
 			r.Packages.Failed++
 			failedPkg[name] = true
-		case p.status == "skip":
+		case p.status == actionSkip:
 			r.Packages.NoTests++
-			r.NoTests = append(r.NoTests, name)
+			r.PackagesWithoutTests = append(r.PackagesWithoutTests, name)
 		default:
 			r.Packages.OK++
-			r.Passing = append(r.Passing, PackageRef{Package: name, Elapsed: p.elapsed})
+			r.PassingPackages = append(r.PassingPackages, packageRef{Package: name, Elapsed: p.elapsed})
 		}
-		b.scan(&r, p.lines)
+		b.scan(r, p.lines)
 		if c := coverage(p.lines); c != "" {
-			r.Coverage = append(r.Coverage, PackageCoverage{Package: name, Coverage: c})
+			r.Coverage = append(r.Coverage, packageCoverage{Package: name, Coverage: c})
 		}
 		for _, l := range p.lines {
 			text := strings.TrimSpace(l.text)
 			switch {
 			case benchResult.MatchString(text):
-				r.Benchmarks = append(r.Benchmarks, Benchmark{Package: name, Result: spaces.ReplaceAllString(text, " ")})
+				r.Benchmarks = append(r.Benchmarks, benchmark{Package: name, Result: spaces.ReplaceAllString(text, " ")})
 			case strings.HasPrefix(text, "testing: warning: "):
-				r.Warnings = append(r.Warnings, name+": "+core.Clean(text))
+				r.WarningMessages = append(r.WarningMessages, name+": "+sanitize.Clean(text))
 			}
 		}
 	}
+	return failedPkg
+}
+
+func (b *builder) buildFailures(r *report) {
 	for _, ip := range sortedKeys(b.buildFail) {
 		var out []string
 		for _, l := range b.builds[ip] {
@@ -262,18 +301,11 @@ func (b *builder) finish() Report {
 				out = append(out, l)
 			}
 		}
-		r.BuildFailures = append(r.BuildFailures, BuildFailure{Package: displayPackage(ip), Output: b.output(toLines(out), "")})
+		r.BuildFailures = append(r.BuildFailures, buildFailure{Package: displayPackage(ip), Output: b.output(toLines(out), "")})
 	}
-	r.Failures = b.failures(&r, failedPkg)
-	listed := map[string]bool{}
-	for _, f := range r.Failures {
-		listed[f.Package] = true
-	}
-	r.Tests.Failed = len(r.Failures)
-	r.Failures, r.FailuresOmitted = core.Limit(r.Failures, b.o.MaxTests)
-	if !b.o.All {
-		r.Coverage, r.CoverageOmitted = core.Limit(r.Coverage, maxCoverage)
-	}
+}
+
+func (b *builder) packageFailures(r *report, failedPkg, listed map[string]bool) {
 	for _, name := range sortedKeys(failedPkg) {
 		p := b.pkgs[name]
 		var kept []line
@@ -285,67 +317,55 @@ func (b *builder) finish() Report {
 		if len(kept) == 0 && listed[name] && p.status != "" {
 			continue
 		}
-		r.PackageFailures = append(r.PackageFailures, PackageFailure{Package: name, Unfinished: p.status == "", Output: b.output(kept, name)})
+		r.PackageFailures = append(r.PackageFailures, packageFailure{Package: name, Unfinished: p.status == "", Output: b.output(kept, name)})
 	}
-	for _, name := range sortedKeys(b.seeds) {
-		r.Shuffle = append(r.Shuffle, PackageSeed{Package: name, Seed: b.seeds[name], Failed: failedPkg[name]})
-	}
-	b.scan(&r, toLines(b.text))
-	r.Text = b.output(toLines(b.text), "")
-	r.Status = "pass"
-	if r.Packages.Failed+r.Packages.BuildFailed+len(r.BuildFailures)+r.Tests.Failed > 0 {
-		r.Status = "fail"
-	}
-	return r
 }
 
-func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
-	keys := make([][2]string, 0, len(b.runs))
-	for k := range b.runs {
-		keys = append(keys, k)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		if keys[i][0] != keys[j][0] {
-			return keys[i][0] < keys[j][0]
-		}
-		return keys[i][1] < keys[j][1]
-	})
-	failing := map[[2]string]bool{}
+func failed(t *testState, failedPkg map[string]bool) bool {
+	return t.status == actionFail || (t.status == "" && failedPkg[t.pkg] && !strings.HasPrefix(t.name, "Benchmark"))
+}
+
+func (b *builder) countTests(r *report, keys []testKey, failedPkg map[string]bool) map[testKey]bool {
+	failing := map[testKey]bool{}
 	for _, k := range keys {
 		for _, t := range b.runs[k] {
 			b.scan(r, t.lines)
 			for _, l := range t.lines {
 				if text := strings.TrimSpace(l.text); benchResult.MatchString(text) {
-					r.Benchmarks = append(r.Benchmarks, Benchmark{Package: t.pkg, Result: spaces.ReplaceAllString(text, " ")})
+					r.Benchmarks = append(r.Benchmarks, benchmark{Package: t.pkg, Result: spaces.ReplaceAllString(text, " ")})
 				}
 			}
 			switch {
-			case t.status == "fail" || (t.status == "" && failedPkg[t.pkg] && !strings.HasPrefix(t.name, "Benchmark")):
+			case failed(t, failedPkg):
 				failing[k] = true
-			case t.status == "skip":
+			case t.status == actionSkip:
 				r.Tests.Skipped++
-				r.Skipped = append(r.Skipped, TestRef{Package: t.pkg, Test: t.name})
-			case t.status == "pass" && !strings.HasPrefix(t.name, "Benchmark"):
+				r.Skipped = append(r.Skipped, testRef{Package: t.pkg, Test: t.name})
+			case t.status == actionPass && !strings.HasPrefix(t.name, "Benchmark"):
 				r.Tests.Passed++
 			}
 		}
 	}
+	return failing
+}
+
+func (b *builder) failures(keys []testKey, failing map[testKey]bool, failedPkg map[string]bool) []failure {
 	parents := failingParents(failing)
-	var out []Failure
+	out := []failure{}
 	for _, k := range keys {
 		if !failing[k] {
 			continue
 		}
 		runs := b.runs[k]
 		for _, t := range runs {
-			if t.status != "fail" && !(t.status == "" && failedPkg[t.pkg] && !strings.HasPrefix(t.name, "Benchmark")) {
+			if !failed(t, failedPkg) {
 				continue
 			}
-			output := b.testOutput(t)
-			if len(output.Lines) == 0 && parents[k] {
+			lines := b.testOutput(t)
+			if len(lines.Lines) == 0 && parents[k] {
 				continue
 			}
-			f := Failure{Package: t.pkg, Test: t.name, Elapsed: t.elapsed, Unfinished: t.status == "", Artifacts: t.artifacts, Output: output}
+			f := failure{Package: t.pkg, Test: t.name, Elapsed: t.elapsed, Unfinished: t.status == "", Artifacts: t.artifacts, Output: lines}
 			if len(runs) > 1 {
 				f.Run, f.Runs = t.run, len(runs)
 			}
@@ -355,25 +375,22 @@ func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
 			out = append(out, f)
 		}
 	}
-	if out == nil {
-		out = []Failure{}
-	}
 	return out
 }
 
-func failingParents(failing map[[2]string]bool) map[[2]string]bool {
-	parents := map[[2]string]bool{}
+func failingParents(failing map[testKey]bool) map[testKey]bool {
+	parents := map[testKey]bool{}
 	for k := range failing {
-		for i := range len(k[1]) {
-			if k[1][i] == '/' {
-				parents[[2]string{k[0], k[1][:i]}] = true
+		for i := range len(k.name) {
+			if k.name[i] == '/' {
+				parents[testKey{k.pkg, k.name[:i]}] = true
 			}
 		}
 	}
 	return parents
 }
 
-func (b *builder) scan(r *Report, lines []line) {
+func (b *builder) scan(r *report, lines []line) {
 	for _, l := range lines {
 		text := strings.TrimSpace(l.text)
 		switch {
@@ -385,6 +402,10 @@ func (b *builder) scan(r *Report, lines []line) {
 			r.Races++
 		}
 	}
+}
+
+func compareKeys(a, b testKey) int {
+	return cmp.Or(cmp.Compare(a.pkg, b.pkg), cmp.Compare(a.name, b.name))
 }
 
 func sortedKeys[V any](m map[string]V) []string {

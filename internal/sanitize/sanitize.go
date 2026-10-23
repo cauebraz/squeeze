@@ -1,4 +1,4 @@
-package core
+package sanitize
 
 import (
 	"strings"
@@ -41,7 +41,7 @@ func scrub(s, tab string) string {
 			b.WriteString(tab)
 		case r == '\n' || r == '\r' || r == 0x2028 || r == 0x2029:
 			b.WriteByte(' ')
-		case invisible(r):
+		case Invisible(r):
 		default:
 			b.WriteRune(r)
 		}
@@ -49,7 +49,7 @@ func scrub(s, tab string) string {
 	return b.String()
 }
 
-func invisible(r rune) bool {
+func Invisible(r rune) bool {
 	switch {
 	case r < 0x20 || r == 0x7f || (r >= 0x80 && r < 0xa0):
 		return true

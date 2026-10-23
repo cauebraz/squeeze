@@ -47,12 +47,13 @@ low serve-static <=1.16.0: fix with npm audit fix; GHSA-cm22-4g7w-348p
 ```
 
 - The header counts the vulnerable packages by severity, most severe first, as npm's `metadata.vulnerabilities` does (npm derives those counts from the same entries, `audit-report.js` lines 77-80), and gives `metadata.dependencies.total`, how many vulnerable packages are direct dependencies (`isDirect`) and how many have each kind of fix.
-- Packages are sorted by npm's severity order, `critical`, `high`, `moderate`, `low`, `info` (`vuln.js` lines 20-27), then by name.
+- Packages are sorted by npm's severity order, `critical`, `high`, `moderate`, `low`, `info` (`vuln.js` lines 20-27), then `unknown`, then by name.
 - The fix follows `fixAvailable` (`vuln.js` lines 58-61): `true` prints `fix with npm audit fix`; an object prints `fix <name>@<version> (--force)`, the package and version that `npm audit fix --force` installs, with `, breaking` when `isSemVerMajor` is true, which npm's text report calls "a breaking change" (`npm-audit-report` `lib/reporters/detail.js` line 63); `false` prints `no fix`.
 - An entry in `via` that is an advisory prints as its ID, the last part of its `url` (`GHSA-...`), or npm's numeric `source` when there is no URL; the most severe advisories come first and a repeated ID prints once. A package whose `via` names only other vulnerable packages, because it depends on them, prints `via <packages>`.
 - A transitive package that `npm audit fix --force` cannot fix by updating a named package (`no fix`, or a fix by `npm audit fix`) prints `required by <effects>`, the packages that depend on it, so the dependency to change or replace is named.
 - Past `--max-vulnerabilities`, the least severe packages are cut and counted by severity: `... 20 more vulnerabilities, high 11, moderate 4, low 5 (--max-vulnerabilities 0)`.
 - Advisory titles, URLs, CWE lists, CVSS scores and vulnerable ranges, `effects` and `nodes` are in `--output json` only.
+- A line after the JSON document that reads as an error or a warning, such as the `npm warn ...` lines npm writes to stderr when it is piped too (`npm audit --json 2>&1`), prints after the header as `error: <line>` or `warning: <line>`; an error line sets `error` and a warning line sets `warning`. Error and warning lines before the document are read the same way, and detection skips them. Other lines after the document are dropped. The `trailing-log` and `leading-warning` fixtures show it.
 - When npm prints its error object instead of a report, `{"error":{"code","summary","detail"}}` (for example `ENOLOCK` without a lockfile, `lib/utils/output-error.js` lines 16-24) or, when the registry cannot be reached, a `message` beside an empty `error` (`lib/utils/audit-error.js` lines 24-37, merged by `lib/utils/display.js` lines 103-138), `squeeze npmaudit` exits with code 1 and prints npm's code, summary, detail and message on stderr. Auto-detection does not claim npm's error object, which every npm command prints with `--json`; `generic` reads it.
 
 ## Flags
@@ -68,18 +69,20 @@ npm audit exits with 1 when a vulnerability is at or above `--audit-level`, `low
 | Condition | Present when |
 |---|---|
 | `critical` | a vulnerable package has severity `critical` |
+| `error` | an error line follows the JSON |
 | `fail` | `low`: npm audit's default `--audit-level` |
 | `fixable` | a vulnerable package has a fix, by `npm audit fix` or `npm audit fix --force` |
 | `high` | a vulnerable package has severity `high` or `critical` |
-| `info` | a vulnerable package has any severity |
+| `info` | a vulnerable package has one of npm's five severities |
 | `low` | a vulnerable package has severity `low` or above |
 | `moderate` | a vulnerable package has severity `moderate` or above |
+| `warning` | a warning line follows the JSON |
 
-A severity outside npm's five is reported as `unknown`, sorted first and counted as above `critical` for every condition, so an unexpected value cannot hide a failure; npm itself would not count it.
+A severity outside npm's five is reported as `unknown`, sorted last and counted for no condition, as npm's exit code counts only its five severities (`npm-audit-report` `lib/exit-code.js`); the `unknown-severity` fixture shows it.
 
 ## JSON data
 
-`data` holds `tool` (`npm`), `tool_version` (empty: the report carries none), `audit_report_version`, `dependencies` (`prod`, `dev`, `optional`, `peer`, `peer_optional`, `total`, as npm counts them), `total`, `by_severity` (`name`, `count`, most severe first), `direct`, `fixes` (`auto` by `npm audit fix`, `force` by `--force` and not breaking, `breaking`, `none`), `vulnerabilities`, `vulnerabilities_omitted` and `omitted_by_severity`. Each vulnerability has `name`, `severity`, `range`, `direct`, `fix` (`available` and, for a `--force` fix, `force`, `name`, `version` and `semver_major`), `advisories` (`id`, `source`, `title`, `url`, `severity`, `range`, `cwe`, `cvss_score`), `via` (the vulnerable packages it depends on), `effects` and `nodes`.
+`data` holds `tool` (`npm`), `tool_version` (empty: the report carries none), `audit_report_version`, `dependencies` (`prod`, `dev`, `optional`, `peer`, `peer_optional`, `total`, as npm counts them), `total`, `by_severity` (`name`, `count`, most severe first), `direct`, `fixes` (`auto` by `npm audit fix`, `force` by `--force` and not breaking, `breaking`, `none`), `vulnerabilities`, `vulnerabilities_omitted`, `omitted_by_severity` and, when lines before or after the JSON read as errors or warnings, `diagnostics` (`severity`, `summary`, `count`). Each vulnerability has `name`, `severity`, `range`, `direct`, `fix` (`available` and, for a `--force` fix, `force`, `name`, `version` and `semver_major`), `advisories` (`id`, `source`, `title`, `url`, `severity`, `range`, `cwe`, `cvss_score`), `via` (the vulnerable packages it depends on), `effects` and `nodes`.
 
 ## Limitations
 

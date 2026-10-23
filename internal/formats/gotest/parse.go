@@ -8,16 +8,36 @@ import (
 	"github.com/cauebraz/squeeze/internal/jsonl"
 )
 
-var ErrNoEvents = errors.New("no go test -json events in the input")
+var errNotGoTestJSON = errors.New("no go test -json events in the input")
 
-var knownActions = map[string]bool{
-	"start": true, "run": true, "pause": true, "cont": true, "pass": true, "bench": true,
-	"fail": true, "output": true, "skip": true, "attr": true, "artifacts": true,
-	"build-output": true, "build-fail": true,
+type action string
+
+const (
+	actionStart       action = "start"
+	actionRun         action = "run"
+	actionPause       action = "pause"
+	actionCont        action = "cont"
+	actionPass        action = "pass"
+	actionBench       action = "bench"
+	actionFail        action = "fail"
+	actionOutput      action = "output"
+	actionSkip        action = "skip"
+	actionAttr        action = "attr"
+	actionArtifacts   action = "artifacts"
+	actionBuildOutput action = "build-output"
+	actionBuildFail   action = "build-fail"
+)
+
+func (a action) known() bool {
+	switch a {
+	case actionStart, actionRun, actionPause, actionCont, actionPass, actionBench, actionFail, actionOutput, actionSkip, actionAttr, actionArtifacts, actionBuildOutput, actionBuildFail:
+		return true
+	}
+	return false
 }
 
-type Event struct {
-	Action      string   `json:"Action"`
+type rawEvent struct {
+	Action      action   `json:"Action"`
 	Package     string   `json:"Package"`
 	Test        string   `json:"Test"`
 	Elapsed     *float64 `json:"Elapsed"`
@@ -31,8 +51,8 @@ type Event struct {
 	Text        string   `json:"-"`
 }
 
-func Parse(input []byte) ([]Event, error) {
-	var events []Event
+func parseEvents(input []byte) ([]rawEvent, error) {
+	var events []rawEvent
 	seen := 0
 	for _, raw := range jsonl.Lines(input) {
 		e := parseLine(raw)
@@ -42,19 +62,19 @@ func Parse(input []byte) ([]Event, error) {
 		events = append(events, e)
 	}
 	if seen == 0 {
-		return nil, ErrNoEvents
+		return nil, errNotGoTestJSON
 	}
 	return events, nil
 }
 
-func parseLine(raw []byte) Event {
+func parseLine(raw []byte) rawEvent {
 	if raw[0] == '{' {
-		var e Event
+		var e rawEvent
 		if json.Unmarshal(raw, &e) == nil && e.Action != "" {
 			return e
 		}
 	}
-	return Event{Text: string(raw)}
+	return rawEvent{Text: string(raw)}
 }
 
 func isEvent(raw []byte) bool {
@@ -62,8 +82,8 @@ func isEvent(raw []byte) bool {
 	if len(raw) == 0 || raw[0] != '{' {
 		return false
 	}
-	var e Event
-	if json.Unmarshal(raw, &e) != nil || !knownActions[e.Action] {
+	var e rawEvent
+	if json.Unmarshal(raw, &e) != nil || !e.Action.known() {
 		return false
 	}
 	return e.Package != "" || e.ImportPath != ""

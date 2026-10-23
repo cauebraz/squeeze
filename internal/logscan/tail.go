@@ -1,4 +1,4 @@
-package core
+package logscan
 
 import "fmt"
 
@@ -27,10 +27,17 @@ func TailLines(lines []string, limit int, flag string) ([]string, int) {
 			continue
 		}
 		if gap > 0 {
-			out = append(out, fmt.Sprintf("... %d %s cut (%s 0)", gap, Plural(gap, "line", "lines"), flag))
+			out = append(out, gapNotice(gap, flag))
 			gap = 0
 		}
 		out = append(out, l)
 	}
 	return out, omitted
+}
+
+func gapNotice(n int, flag string) string {
+	if n == 1 {
+		return fmt.Sprintf("... 1 line cut (%s 0)", flag)
+	}
+	return fmt.Sprintf("... %d lines cut (%s 0)", n, flag)
 }

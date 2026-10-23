@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 const fixtureDir = "testdata"
@@ -23,13 +24,13 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func report(t *testing.T, input []byte, o Options) Report {
+func reportOf(t *testing.T, input []byte, o options) report {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r.Data.(Report)
+	return r.Data.(report)
 }
 
 func TestContract(t *testing.T) {
@@ -73,7 +74,7 @@ func TestParseErrors(t *testing.T) {
 		"schema 3":  `{"SchemaVersion":3,"Results":[]}`,
 		"k8s":       `{"Resources":[{"Kind":"Pod","Name":"a"}]}`,
 	} {
-		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
+		if _, err := squeeze([]byte(input), defaultOptions()); err == nil {
 			t.Errorf("%s: Squeeze() returned no error", name)
 		}
 	}
@@ -89,7 +90,7 @@ func TestConditions(t *testing.T) {
 		"k8s":    {"critical", "error", "fail", "fixable", "high", "misconfiguration", "vulnerability"},
 	}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,39 +102,48 @@ func TestConditions(t *testing.T) {
 
 func TestHiddenFindingsSetNoSeverityCondition(t *testing.T) {
 	t.Parallel()
-	misconf := func(id, severity, status string) Misconfiguration {
-		return Misconfiguration{ID: id, Title: id, Severity: severity, Status: status}
+	misconf := func(id, severity, status string) rawMisconfiguration {
+		return rawMisconfiguration{ID: id, Title: id, Severity: severity, Status: status}
 	}
 	tests := map[string]struct {
-		results []Result
-		o       Options
+		results []rawResult
+		o       options
 		want    []string
 	}{
 		"a critical exception": {
-			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "CRITICAL", "EXCEPTION"), misconf("AVD-2", "LOW", "FAIL")}}},
-			o:       DefaultOptions(),
+			results: []rawResult{{Target: "main.tf", Misconfigurations: []rawMisconfiguration{misconf("AVD-1", "CRITICAL", "EXCEPTION"), misconf("AVD-2", "LOW", "FAIL")}}},
+			o:       defaultOptions(),
 			want:    []string{"fail", "misconfiguration"},
 		},
 		"a high exception beside a passed check": {
-			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "HIGH", "EXCEPTION"), misconf("AVD-2", "HIGH", "PASS")}}},
-			o:       DefaultOptions(),
+			results: []rawResult{{Target: "main.tf", Misconfigurations: []rawMisconfiguration{misconf("AVD-1", "HIGH", "EXCEPTION"), misconf("AVD-2", "HIGH", "PASS")}}},
+			o:       defaultOptions(),
 			want:    []string{},
 		},
 		"a critical finding cut by --max-findings": {
-			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "CRITICAL", "FAIL"), misconf("AVD-2", "LOW", "FAIL")}}},
-			o:       Options{MaxFindings: 1},
+			results: []rawResult{{Target: "main.tf", Misconfigurations: []rawMisconfiguration{misconf("AVD-1", "CRITICAL", "FAIL"), misconf("AVD-2", "LOW", "FAIL")}}},
+			o:       options{maxFindings: 1},
 			want:    []string{"critical", "fail", "high", "misconfiguration"},
 		},
 		"a critical finding listed with --all beside an exception": {
-			results: []Result{{Target: "main.tf", Misconfigurations: []Misconfiguration{misconf("AVD-1", "CRITICAL", "EXCEPTION"), misconf("AVD-2", "HIGH", "FAIL")}}},
-			o:       Options{All: true},
+			results: []rawResult{{Target: "main.tf", Misconfigurations: []rawMisconfiguration{misconf("AVD-1", "CRITICAL", "EXCEPTION"), misconf("AVD-2", "HIGH", "FAIL")}}},
+			o:       options{all: true},
 			want:    []string{"fail", "high", "misconfiguration"},
 		},
 	}
 	for name, tt := range tests {
-		raw := &RawReport{SchemaVersion: 2, ArtifactName: ".", ArtifactType: "filesystem", Results: tt.results}
-		if diff := cmp.Diff(tt.want, conditions(Build(raw, tt.o))); diff != "" {
+		raw := &rawReport{SchemaVersion: 2, ArtifactName: ".", ArtifactType: "filesystem", Results: tt.results}
+		r := build(raw, tt.o)
+		got := conditions(r)
+		if diff := cmp.Diff(tt.want, got); diff != "" {
 			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
+		}
+		h := header(r)
+		if strings.Contains(h, " CRITICAL") != slices.Contains(got, "critical") {
+			t.Errorf("%s: header %q disagrees with conditions %v", name, h, got)
+		}
+		if (strings.Contains(h, " HIGH") || strings.Contains(h, " CRITICAL")) != slices.Contains(got, "high") {
+			t.Errorf("%s: header %q disagrees with conditions %v", name, h, got)
 		}
 	}
 }
@@ -141,10 +151,10 @@ func TestHiddenFindingsSetNoSeverityCondition(t *testing.T) {
 func TestFixesListEachCheckOnce(t *testing.T) {
 	t.Parallel()
 	long := strings.Repeat("x", 120)
-	misconf := func(id, severity, status, resource, fix string) Misconfiguration {
-		return Misconfiguration{ID: id, Title: id, Severity: severity, Status: status, Resolution: fix, CauseMetadata: Cause{Resource: resource}}
+	misconf := func(id, severity, status, resource, fix string) rawMisconfiguration {
+		return rawMisconfiguration{ID: id, Title: id, Severity: severity, Status: status, Resolution: fix, CauseMetadata: rawCause{Resource: resource}}
 	}
-	raw := &RawReport{SchemaVersion: 2, ArtifactName: ".", ArtifactType: "filesystem", Results: []Result{{Target: "main.tf", Type: "terraform", Misconfigurations: []Misconfiguration{
+	raw := &rawReport{SchemaVersion: 2, ArtifactName: ".", ArtifactType: "filesystem", Results: []rawResult{{Target: "main.tf", Type: "terraform", Misconfigurations: []rawMisconfiguration{
 		misconf("AVD-1", "HIGH", "FAIL", "a", "fix one"),
 		misconf("AVD-1", "HIGH", "FAIL", "b", "fix one"),
 		misconf("AVD-2", "MEDIUM", "FAIL", "a", long),
@@ -153,16 +163,16 @@ func TestFixesListEachCheckOnce(t *testing.T) {
 		misconf("AVD-5", "CRITICAL", "EXCEPTION", "a", "fix five"),
 	}}}}
 	tests := map[string]struct {
-		o    Options
+		o    options
 		want []string
 	}{
-		"default":      {DefaultOptions(), []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "...", "AVD-4: fix four"}},
-		"--all":        {Options{All: true}, []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "...", "AVD-4: fix four", "AVD-5: fix five"}},
-		"cut to three": {Options{MaxFindings: 3}, []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "..."}},
+		"default":      {defaultOptions(), []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "...", "AVD-4: fix four"}},
+		"--all":        {options{all: true}, []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "...", "AVD-4: fix four", "AVD-5: fix five"}},
+		"cut to three": {options{maxFindings: 3}, []string{"AVD-1: fix one", "AVD-2: " + strings.Repeat("x", 97) + "..."}},
 	}
 	for name, tt := range tests {
-		r := Build(raw, tt.o)
-		text := Text(r, tt.o)
+		r := build(raw, tt.o)
+		text := text(r)
 		_, section, ok := strings.Cut(text, "fixes:\n")
 		if !ok {
 			t.Fatalf("%s: no fixes section:\n%s", name, text)
@@ -182,7 +192,7 @@ func TestFixesListEachCheckOnce(t *testing.T) {
 
 func TestCounts(t *testing.T) {
 	t.Parallel()
-	r := report(t, fixture(t, "image"), DefaultOptions())
+	r := reportOf(t, fixture(t, "image"), defaultOptions())
 	got := []int{r.Vulnerabilities, r.Misconfigurations, r.Secrets, r.Licenses, r.SevereLicenses, r.Exceptions, r.Fixable, r.ChecksPassed}
 	if diff := cmp.Diff([]int{5, 1, 0, 2, 1, 1, 3, 40}, got); diff != "" {
 		t.Errorf("counts (-want +got):\n%s", diff)
@@ -197,7 +207,7 @@ func TestResultsWithTheSameTargetStayApart(t *testing.T) {
 	input := []byte(`{"SchemaVersion":2,"ArtifactName":"app","Results":[` +
 		`{"Target":"requirements.txt","Class":"lang-pkgs","Type":"pip","Vulnerabilities":[{"VulnerabilityID":"CVE-1","PkgName":"requests","InstalledVersion":"2.25.1","FixedVersion":"2.32.0","Severity":"HIGH"}]},` +
 		`{"Target":"requirements.txt","Class":"secret","Secrets":[{"RuleID":"aws-access-key-id","Severity":"CRITICAL","Title":"AWS Access Key ID","StartLine":3,"EndLine":3}]}]}`)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +229,7 @@ func TestK8sResultsGroupByResource(t *testing.T) {
 		`{"Namespace":"shop","Kind":"Deployment","Name":"api","Results":[{"Target":"nginx:1.25.0 (debian 11.7)","Class":"os-pkgs","Type":"debian",` +
 		`"Vulnerabilities":[{"VulnerabilityID":"CVE-1","PkgName":"libc6","InstalledVersion":"2.31","Severity":"LOW","Status":"affected"}]}],"Error":"scan error:\n\t* timeout"},` +
 		`{"Namespace":"shop","Kind":"Deployment","Name":"api","Error":"second"}]}`)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,8 +244,8 @@ func TestK8sResultsGroupByResource(t *testing.T) {
 	if diff := cmp.Diff([]string{"critical", "error", "fail", "high", "misconfiguration", "vulnerability"}, r.Conditions); diff != "" {
 		t.Errorf("conditions (-want +got):\n%s", diff)
 	}
-	data := r.Data.(Report)
-	wantResources := []Resource{{Name: "shop/Deployment/api", Findings: 2, Error: "scan error: * timeout; second"}, {Name: "ClusterRole/admin", Findings: 1}}
+	data := r.Data.(report)
+	wantResources := []resourceSummary{{Name: "shop/Deployment/api", Findings: 2, Error: "scan error: * timeout; second"}, {Name: "ClusterRole/admin", Findings: 1}}
 	if diff := cmp.Diff(wantResources, data.Resources); diff != "" {
 		t.Errorf("resources (-want +got):\n%s", diff)
 	}
@@ -250,7 +260,7 @@ func TestK8sResultsGroupByResource(t *testing.T) {
 
 func TestK8sEmptyCluster(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze([]byte(`{"ClusterName":""}`), DefaultOptions())
+	r, err := squeeze([]byte(`{"ClusterName":""}`), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,20 +271,20 @@ func TestK8sEmptyCluster(t *testing.T) {
 
 func TestLimitKeepsTheMostSevere(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "fs"), Options{MaxFindings: 5})
+	r, err := squeeze(fixture(t, "fs"), options{maxFindings: 5})
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
+	data := r.Data.(report)
 	var kept []string
-	for _, f := range report.Findings {
+	for _, f := range data.Findings {
 		kept = append(kept, f.Severity)
 	}
 	if diff := cmp.Diff([]string{"HIGH", "HIGH", "HIGH", "HIGH", "CRITICAL"}, kept); diff != "" {
 		t.Errorf("kept severities in print order (-want +got):\n%s", diff)
 	}
-	if report.FindingsOmitted != 16 || report.OmittedBySeverity["MEDIUM"] != 10 || report.OmittedBySeverity["LOW"] != 1 {
-		t.Errorf("omitted %d by severity %v", report.FindingsOmitted, report.OmittedBySeverity)
+	if data.FindingsOmitted != 16 || data.OmittedBySeverity["MEDIUM"] != 10 || data.OmittedBySeverity["LOW"] != 1 {
+		t.Errorf("omitted %d by severity %v", data.FindingsOmitted, data.OmittedBySeverity)
 	}
 	if !strings.HasSuffix(r.Text, "... 16 more findings, 5 HIGH, 10 MEDIUM, 1 LOW (--max-findings 0)\n") {
 		t.Errorf("text:\n%s", r.Text)
@@ -286,8 +296,8 @@ func TestSecretMatchNeverReachesTheOutput(t *testing.T) {
 	input := []byte(`{"SchemaVersion":2,"ArtifactName":"app","Results":[{"Target":"app.env","Class":"secret","Secrets":[` +
 		`{"RuleID":"github-pat","Severity":"CRITICAL","Title":"GitHub Personal Access Token","StartLine":2,"EndLine":2,` +
 		`"Match":"GITHUB_TOKEN=hunter2hunter2hunter2","Code":{"Lines":[{"Number":2,"Content":"GITHUB_TOKEN=hunter2hunter2hunter2"}]}}]}]}`)
-	for _, o := range []Options{DefaultOptions(), {All: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {all: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -311,9 +321,9 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`"Results":[{"Target":"t\nX","Secrets":[{"RuleID":"r\nX","Severity":"HIGH"}]}]}]}`)
 	for _, tt := range []struct {
 		input []byte
-		o     Options
-	}{{input, DefaultOptions()}, {input, Options{All: true}}, {k8s, DefaultOptions()}} {
-		r, err := Squeeze(tt.input, tt.o)
+		o     options
+	}{{input, defaultOptions()}, {input, options{all: true}}, {k8s, defaultOptions()}} {
+		r, err := squeeze(tt.input, tt.o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -334,14 +344,14 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte(`{"SchemaVersion":2,"Results":[{"Misconfigurations":[{"Status":"EXCEPTION"},{"Status":"PASS"},{}],"Licenses":[{"Severity":"x"}],"Secrets":[{}]}]}`))
 	f.Add([]byte("{\"SchemaVersion\":2}\nError: x\nWARN y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		raw, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		raw, err := parse(input)
 		if err != nil {
 			return
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxFindings: 1, All: true}} {
-			r := Build(raw, o)
-			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {maxFindings: 1, all: true}} {
+			r := build(raw, o)
+			res := core.Result{Text: text(r), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
 			listed := r.Vulnerabilities + r.Misconfigurations + r.Secrets + r.SevereLicenses
 			if got := len(r.Findings) + r.FindingsOmitted; got != listed {

@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 const fixtureDir = "testdata"
@@ -27,13 +28,13 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func squeeze(t *testing.T, input []byte, o Options) (core.Result, Report) {
+func run(t *testing.T, input []byte, o options) (core.Result, report) {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r, r.Data.(Report)
+	return r, r.Data.(report)
 }
 
 func TestContract(t *testing.T) {
@@ -73,7 +74,7 @@ func TestDetect(t *testing.T) {
 
 func TestParseRejectsInputWithoutProgress(t *testing.T) {
 	t.Parallel()
-	if _, err := Squeeze([]byte("hello\n{\"a\":1}\n"), DefaultOptions()); err == nil {
+	if _, err := squeeze([]byte("hello\n{\"a\":1}\n"), defaultOptions()); err == nil {
 		t.Error("Squeeze() returned no error")
 	}
 }
@@ -81,8 +82,8 @@ func TestParseRejectsInputWithoutProgress(t *testing.T) {
 func TestPlainAndRawJSONReadTheSame(t *testing.T) {
 	t.Parallel()
 	for _, name := range []string{"failed-run", "missing-copy", "warning", "canceled"} {
-		plain, pr := squeeze(t, fixture(t, name), DefaultOptions())
-		raw, rr := squeeze(t, fixture(t, name+"-rawjson"), DefaultOptions())
+		plain, pr := run(t, fixture(t, name), defaultOptions())
+		raw, rr := run(t, fixture(t, name+"-rawjson"), defaultOptions())
 		if pr.Progress != "plain" || rr.Progress != "rawjson" {
 			t.Errorf("%s: progress %q and %q", name, pr.Progress, rr.Progress)
 		}
@@ -97,16 +98,16 @@ func TestPlainAndRawJSONReadTheSame(t *testing.T) {
 
 func TestStepStatuses(t *testing.T) {
 	t.Parallel()
-	_, r := squeeze(t, fixture(t, "canceled-rawjson"), Options{All: true})
-	got := map[string]string{}
+	_, r := run(t, fixture(t, "canceled-rawjson"), options{All: true})
+	got := map[string]stepStatus{}
 	for _, s := range r.Steps {
 		got[s.Name[:min(len(s.Name), 16)]] = s.Status
 	}
-	want := map[string]string{
-		"[internal] load ": "done",
-		"[app 1/2] FROM d": "cached",
-		"[assets 2/2] RUN": "canceled",
-		"[app 2/2] RUN ec": "failed",
+	want := map[string]stepStatus{
+		"[internal] load ": statusDone,
+		"[app 1/2] FROM d": statusCached,
+		"[assets 2/2] RUN": statusCanceled,
+		"[app 2/2] RUN ec": statusFailed,
 	}
 	for k, v := range want {
 		if got[k] != v {
@@ -118,9 +119,18 @@ func TestStepStatuses(t *testing.T) {
 	}
 }
 
+func TestUnknownStatusPrintsAsIs(t *testing.T) {
+	t.Parallel()
+	got := text(report{Steps: []step{{Name: "[app 1/1] RUN make", Status: "paused"}}})
+	want := "buildkit: 0 steps\npaused [app 1/1] RUN make\n"
+	if got != want {
+		t.Errorf("Text() = %q, want %q", got, want)
+	}
+}
+
 func TestFailedStepPrintsItsLogTailAndTheFinalError(t *testing.T) {
 	t.Parallel()
-	res, r := squeeze(t, fixture(t, "failed-run"), Options{MaxLines: 3})
+	res, r := run(t, fixture(t, "failed-run"), options{MaxLines: 3})
 	want := "buildkit: 7 steps, 1 cached, 1 failed\n" +
 		"fail [4/5] RUN for i in $(seq 1 25); do echo \"compiling module $i\"; done; echo \"error: module 26 failed: undefined symbol shop_init\" >&2; exit 1\n" +
 		"  ... 23 lines cut (--max-lines 0)\n" +
@@ -140,7 +150,7 @@ func TestFailedStepPrintsItsLogTailAndTheFinalError(t *testing.T) {
 func TestWarningsAreNeverDropped(t *testing.T) {
 	t.Parallel()
 	for _, name := range []string{"warning", "warning-rawjson", "cached"} {
-		res, r := squeeze(t, fixture(t, name), DefaultOptions())
+		res, r := run(t, fixture(t, name), defaultOptions())
 		if len(r.Warnings) == 0 || !cmp.Equal(res.Conditions, []string{"warning"}) {
 			t.Errorf("%s: conditions %v, warnings %v", name, res.Conditions, r.Warnings)
 		}
@@ -150,8 +160,8 @@ func TestWarningsAreNeverDropped(t *testing.T) {
 			}
 		}
 	}
-	_, r := squeeze(t, fixture(t, "warning-rawjson"), DefaultOptions())
-	want := Warning{
+	_, r := run(t, fixture(t, "warning-rawjson"), defaultOptions())
+	want := warning{
 		Step:    "[internal] load build definition from Dockerfile",
 		Message: "FromAsCasing: 'as' and 'FROM' keywords' casing do not match (line 1)",
 		Detail:  []string{"The 'as' keyword should match the case of the 'from' keyword"},
@@ -167,7 +177,7 @@ func TestWarningOnlyInTheSummaryIsKept(t *testing.T) {
 	input := "#1 [internal] load build definition from Dockerfile\n#1 WARN: A: first (line 1)\n#1 DONE 0.0s\n\n" +
 		"WARNING: current commit information was not captured by the build\n" +
 		" \x1b[33m2 warnings found (use docker --debug to expand):\n\x1b[0m - A: first (line 1)\n - B: second (line 2)\n"
-	res, r := squeeze(t, []byte(input), DefaultOptions())
+	res, r := run(t, []byte(input), defaultOptions())
 	var got []string
 	for _, w := range r.Warnings {
 		got = append(got, w.Message)
@@ -182,7 +192,7 @@ func TestUnknownLinesWithErrorsAreKept(t *testing.T) {
 	t.Parallel()
 	input := "#1 [internal] load build definition from Dockerfile\n#1 0.1 partial\ncontinued output\n#1 DONE 0.0s\n\n" +
 		"------\n > x:\n------\nfatal: something broke\nplain note\n"
-	res, r := squeeze(t, []byte(input), Options{All: true})
+	res, r := run(t, []byte(input), options{All: true})
 	if !cmp.Equal(r.Errors, []string{"fatal: something broke"}) || !strings.Contains(res.Text, "  continued output\n") {
 		t.Errorf("errors %v, text:\n%s", r.Errors, res.Text)
 	}
@@ -197,8 +207,8 @@ func TestDockerfileSourceAndBuildArgsAreNotPrinted(t *testing.T) {
 	if !strings.Contains(string(input), base64.StdEncoding.EncodeToString([]byte("FROM alpine:3.21 as base\nENV SHOP_SECRET=s3cr3t-value\nMAINTAINER dev@example.com\nRUN echo \"warn build\"\nCMD echo hello\n"))) {
 		t.Fatal("fixture no longer carries the Dockerfile source in sourceInfo")
 	}
-	for _, o := range []Options{DefaultOptions(), {All: true}} {
-		res, _ := squeeze(t, input, o)
+	for _, o := range []options{defaultOptions(), {All: true}} {
+		res, _ := run(t, input, o)
 		envelope, err := core.Envelope("buildkit", len(input), res, nil)
 		if err != nil {
 			t.Fatal(err)
@@ -218,7 +228,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 	input := `{"vertexes":[{"digest":"d","name":"[1/1] RUN x\nfail forged\u001b]0;t\u0007","started":"2026-10-15T00:59:44Z","completed":"2026-10-15T00:59:45Z","error":"bad\nerror: forged"}]}` + "\n" +
 		`{"logs":[{"vertex":"d","stream":1,"data":"` + log + `"}],"warnings":[{"vertex":"d","short":"` + short + `"}]}` + "\n" +
 		"ERROR: failed\x1b[1m to solve\n"
-	res, _ := squeeze(t, []byte(input), Options{All: true})
+	res, _ := run(t, []byte(input), options{All: true})
 	formattest.CheckText(t, res.Text)
 	for _, l := range strings.Split(res.Text, "\n") {
 		if strings.HasPrefix(l, "fail forged") || strings.HasPrefix(l, "forged") || strings.HasPrefix(l, "error: forged") {
@@ -233,16 +243,35 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte("#1 [internal] load build definition from Dockerfile\n#1 WARN: x\n#2 a\n#2 ERROR: y\nERROR: z\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		b, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		b, err := parse(input)
 		if err != nil {
 			return
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxLines: 1}, {All: true}} {
-			r := Build(b, o)
-			res := core.Result{Text: Text(r), Data: r, Conditions: conditions(r)}
+		logged := map[string]bool{}
+		for _, v := range b.byKey {
+			for _, l := range v.logs {
+				logged[l] = true
+			}
+		}
+		for _, o := range []options{defaultOptions(), {MaxLines: 1}, {All: true}} {
+			r := build(b, o)
+			res := core.Result{Text: text(r), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
-			formattest.CheckNotices(t, res.Text)
+			var notices []string
+			for _, l := range strings.Split(res.Text, "\n") {
+				if !strings.HasPrefix(l, "  ") {
+					notices = append(notices, l)
+				}
+			}
+			for _, s := range r.Steps {
+				for _, l := range s.Output {
+					if !logged[l] {
+						notices = append(notices, l)
+					}
+				}
+			}
+			formattest.CheckNotices(t, strings.Join(notices, "\n"))
 			if len(r.Warnings) != len(b.warnings) {
 				t.Fatalf("%d warnings reported, %d parsed", len(r.Warnings), len(b.warnings))
 			}
@@ -257,7 +286,7 @@ func FuzzSqueeze(f *testing.F) {
 				}
 			}
 			for _, s := range r.Steps {
-				if s.Status == "failed" && !strings.Contains(res.Text, "fail "+s.Name+"\n") {
+				if s.Status == statusFailed && !strings.Contains(res.Text, "fail "+s.Name+"\n") {
 					t.Fatalf("failed step %q not printed:\n%s", s.Name, res.Text)
 				}
 			}

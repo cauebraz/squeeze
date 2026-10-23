@@ -6,9 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
 const fixtureDir = "testdata"
@@ -22,13 +24,13 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func report(t *testing.T, input []byte, o Options) Report {
+func mustReport(t *testing.T, input []byte, o options) report {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r.Data.(Report)
+	return r.Data.(report)
 }
 
 func TestContract(t *testing.T) {
@@ -69,7 +71,7 @@ func TestDetect(t *testing.T) {
 
 func TestParseRejectsInputWithoutTimestamps(t *testing.T) {
 	t.Parallel()
-	if _, err := Squeeze([]byte("hello\nworld\n"), DefaultOptions()); err == nil {
+	if _, err := squeeze([]byte("hello\nworld\n"), defaultOptions()); err == nil {
 		t.Error("Squeeze() returned no error")
 	}
 }
@@ -84,7 +86,7 @@ func TestDownloadedJobLogWithoutColumns(t *testing.T) {
 		"2026-10-13T22:20:25.1Z \tmain_test.go:9: want 2",
 		"2026-10-13T22:20:25.2Z ##[error]Process completed with exit code 2.",
 	}, "\n")
-	r, err := Squeeze([]byte(input), DefaultOptions())
+	r, err := squeeze([]byte(input), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +101,7 @@ func TestDownloadedJobLogWithoutColumns(t *testing.T) {
 
 func TestMatrix(t *testing.T) {
 	t.Parallel()
-	r := report(t, fixture(t, "matrix"), DefaultOptions())
+	r := mustReport(t, fixture(t, "matrix"), defaultOptions())
 	var got []string
 	for _, j := range r.Jobs {
 		for _, s := range j.Steps {
@@ -116,17 +118,17 @@ func TestMatrix(t *testing.T) {
 	if r.ToolVersion != "2.337.0" || r.Errors != 2 || r.OtherSteps != 8 {
 		t.Errorf("version %q, errors %d, other steps %d", r.ToolVersion, r.Errors, r.OtherSteps)
 	}
-	text, _ := Squeeze(fixture(t, "matrix"), DefaultOptions())
+	res, _ := squeeze(fixture(t, "matrix"), defaultOptions())
 	for _, noise := range []string{"Runner Image", "GITHUB_TOKEN", "safe.directory", "GOTOOLCHAIN: local"} {
-		if strings.Contains(text.Text, noise) {
-			t.Errorf("setup line %q printed:\n%s", noise, text.Text)
+		if strings.Contains(res.Text, noise) {
+			t.Errorf("setup line %q printed:\n%s", noise, res.Text)
 		}
 	}
 }
 
 func TestWarningsAreNeverDropped(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "warning"), DefaultOptions())
+	r, err := squeeze(fixture(t, "warning"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +140,7 @@ func TestWarningsAreNeverDropped(t *testing.T) {
 
 func TestAllPrintsEveryStep(t *testing.T) {
 	t.Parallel()
-	r := report(t, fixture(t, "warning"), Options{MaxLines: 30, All: true})
+	r := mustReport(t, fixture(t, "warning"), options{MaxLines: 30, All: true})
 	var names []string
 	for _, s := range r.Jobs[0].Steps {
 		names = append(names, s.Name)
@@ -152,7 +154,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 	t.Parallel()
 	input := line("j\u001b[31m", "##[group]Run x\u001b[2J") + "\n" + line("j\u001b[31m", "##[endgroup]") + "\n" +
 		line("j\u001b[31m", "out\u0007put\u001b]0;title\u0007") + "\n" + line("j\u001b[31m", "##[error]bad\u001b[1m") + "\n"
-	r, err := Squeeze([]byte(input), DefaultOptions())
+	r, err := squeeze([]byte(input), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,23 +167,23 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(line("j", "##[group]Run a") + "\n" + line("j", "##[error]x") + "\n" + line("", "##[warning]") + "\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		jobs, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		jobs, err := parse(input)
 		if err != nil {
 			return
 		}
 		var messages []string
 		for _, j := range jobs {
-			for _, l := range j.Lines {
-				if strings.HasPrefix(l.Text, "##[error]") {
-					messages = append(messages, "  error: "+core.Clean(strings.TrimPrefix(l.Text, "##[error]"))+"\n")
+			for _, l := range j.lines {
+				if strings.HasPrefix(l.text, "##[error]") {
+					messages = append(messages, "  error: "+sanitize.Clean(strings.TrimPrefix(l.text, "##[error]"))+"\n")
 				}
 			}
 		}
 		errorsIn := len(messages)
-		for _, o := range []Options{DefaultOptions(), {MaxLines: 1}, {All: true}} {
-			r := Build(jobs, o)
-			res := core.Result{Text: Text(r), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {MaxLines: 1}, {All: true}} {
+			r := build(jobs, o)
+			res := core.Result{Text: text(r), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
 			if r.Errors != errorsIn {
 				t.Fatalf("%d errors counted, %d in the input", r.Errors, errorsIn)

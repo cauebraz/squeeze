@@ -9,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 const fixtureDir = "testdata"
@@ -25,13 +26,13 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func report(t *testing.T, input []byte, o Options) Report {
+func squeezeReport(t *testing.T, input []byte, o options) report {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r.Data.(Report)
+	return r.Data.(report)
 }
 
 func TestContract(t *testing.T) {
@@ -74,7 +75,7 @@ func TestParseErrors(t *testing.T) {
 		"no issues":  `{"errors":[]}`,
 		"wrong type": `{"issues":{},"errors":[]}`,
 	} {
-		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
+		if _, err := squeeze([]byte(input), defaultOptions()); err == nil {
 			t.Errorf("%s: Squeeze() returned no error", name)
 		}
 	}
@@ -91,7 +92,7 @@ func TestConditions(t *testing.T) {
 		"notice-only": {"fail", "notice"},
 	}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -125,7 +126,7 @@ func TestTrailingLines(t *testing.T) {
 		},
 	}
 	for name, tc := range tests {
-		r, err := Squeeze([]byte(tc.input), DefaultOptions())
+		r, err := squeeze([]byte(tc.input), defaultOptions())
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
@@ -145,7 +146,7 @@ func TestSeverities(t *testing.T) {
 		`{"rule":{"name":"b","severity":"warning"},"message":"w","range":{"filename":"a.tf","start":{"line":2,"column":1}},"callers":[]},` +
 		`{"rule":{"name":"c","severity":"critical"},"message":"u","range":{"filename":"b.tf","start":{"line":1,"column":1}},"callers":[]}],` +
 		`"errors":[{"message":"plugin crashed","severity":"error"}]}`)
-	r := report(t, input, DefaultOptions())
+	r := squeezeReport(t, input, defaultOptions())
 	if r.Errors != 1 || r.Warnings != 1 || r.Notices != 1 || r.ToolErrors != 1 {
 		t.Errorf("counts = %+v", r)
 	}
@@ -167,20 +168,20 @@ func TestLimitCountsLinesNotOccurrences(t *testing.T) {
 	input := []byte(`{"issues":[` + dup + `,` + dup + `,` + dup + `,` +
 		`{"rule":{"name":"r_err","severity":"error"},"message":"e","range":{"filename":"a.tf","start":{"line":2,"column":1}},"callers":[]},` +
 		`{"rule":{"name":"r_warn","severity":"warning"},"message":"w","range":{"filename":"a.tf","start":{"line":3,"column":1}},"callers":[]}],"errors":[]}`)
-	r, err := Squeeze(input, Options{MaxIssues: 2})
+	r, err := squeeze(input, options{MaxIssues: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
+	rep := r.Data.(report)
 	var listed []string
-	for _, is := range report.Issues {
+	for _, is := range rep.Issues {
 		listed = append(listed, fmt.Sprintf("%s x%d", is.Rule, max(is.Count, 1)))
 	}
 	if diff := cmp.Diff([]string{"r_dup x3", "r_err x1"}, listed); diff != "" {
 		t.Errorf("listed (-want +got):\n%s", diff)
 	}
-	if report.IssuesOmitted != 1 || !strings.HasSuffix(r.Text, "... 1 more issue, r_warn 1 (--max-issues 0)\n") {
-		t.Errorf("omitted %d, text:\n%s", report.IssuesOmitted, r.Text)
+	if rep.IssuesOmitted != 1 || !strings.HasSuffix(r.Text, "... 1 more issue, r_warn 1 (--max-issues 0)\n") {
+		t.Errorf("omitted %d, text:\n%s", rep.IssuesOmitted, r.Text)
 	}
 }
 
@@ -191,13 +192,13 @@ func TestFoldedIssuesCountInTheCut(t *testing.T) {
 		`{"rule":{"name":"r_err","severity":"error"},"message":"e1","range":{"filename":"a.tf","start":{"line":1,"column":1}},"callers":[],"fixed":true},` +
 		`{"rule":{"name":"r_err","severity":"error"},"message":"e2","range":{"filename":"a.tf","start":{"line":2,"column":1}},"callers":[]}],` +
 		`"errors":[{"message":"late","severity":"warning"}]}`)
-	r, err := Squeeze(input, Options{MaxIssues: 2})
+	r, err := squeeze(input, options{MaxIssues: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if len(report.Issues) != 2 || report.IssuesOmitted != 3 || len(report.Problems) != 1 {
-		t.Errorf("issues %d, omitted %d, problems %d", len(report.Issues), report.IssuesOmitted, len(report.Problems))
+	rep := r.Data.(report)
+	if len(rep.Issues) != 2 || rep.IssuesOmitted != 3 || len(rep.Problems) != 1 {
+		t.Errorf("issues %d, omitted %d, problems %d", len(rep.Issues), rep.IssuesOmitted, len(rep.Problems))
 	}
 	if !strings.Contains(r.Text, "warning: late (tflint)\n") || !strings.HasSuffix(r.Text, "... 3 more issues, r_dup 3 (--max-issues 0)\n") {
 		t.Errorf("text:\n%s", r.Text)
@@ -209,28 +210,28 @@ func TestFoldedIssuesCountInTheCut(t *testing.T) {
 
 func TestCallerChainReadsRootToModule(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "modules"), DefaultOptions())
+	r, err := squeeze(fixture(t, "modules"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if report.Issues[0].Detail != "evaluated in main.tf:20:19 -> modules/app/main.tf:4:19" || report.Issues[1].Detail != "evaluated in modules/app/main.tf:4:19" {
-		t.Errorf("details = %q, %q", report.Issues[0].Detail, report.Issues[1].Detail)
+	rep := r.Data.(report)
+	if rep.Issues[0].Detail != "evaluated in main.tf:20:19 -> modules/app/main.tf:4:19" || rep.Issues[1].Detail != "evaluated in modules/app/main.tf:4:19" {
+		t.Errorf("details = %q, %q", rep.Issues[0].Detail, rep.Issues[1].Detail)
 	}
 }
 
 func TestLimitNamesTheOmittedRules(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "many"), Options{MaxIssues: 5})
+	r, err := squeeze(fixture(t, "many"), options{MaxIssues: 5})
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if len(report.Issues) != 5 || report.IssuesOmitted != 116 {
-		t.Fatalf("issues = %d, omitted %d", len(report.Issues), report.IssuesOmitted)
+	rep := r.Data.(report)
+	if len(rep.Issues) != 5 || rep.IssuesOmitted != 116 {
+		t.Fatalf("issues = %d, omitted %d", len(rep.Issues), rep.IssuesOmitted)
 	}
 	want := []core.Count{{Name: "terraform_naming_convention", Count: 60}, {Name: "terraform_unused_declarations", Count: 56}}
-	if diff := cmp.Diff(want, report.OmittedByRule); diff != "" {
+	if diff := cmp.Diff(want, rep.OmittedByRule); diff != "" {
 		t.Errorf("omitted rules (-want +got):\n%s", diff)
 	}
 	if !strings.HasSuffix(r.Text, "... 116 more issues, terraform_naming_convention 60, terraform_unused_declarations 56 (--max-issues 0)\n") {
@@ -243,8 +244,8 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 	input := []byte(`{"issues":[{"rule":{"name":"r\nerror: forged","severity":"warning"},"message":"m\u001b[31m\nerror: forged",` +
 		`"range":{"filename":"a.tf\nerror: forged","start":{"line":1,"column":1}},"callers":[{"filename":"b.tf\nerror: forged","start":{"line":2,"column":1}}]}],` +
 		`"errors":[{"summary":"s\nerror: forged","message":"x","severity":"warning"}]}`)
-	for _, o := range []Options{DefaultOptions(), {NoDetail: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {NoDetail: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -259,7 +260,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 
 func TestDataPayload(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "no-issues"), DefaultOptions())
+	r, err := squeeze(fixture(t, "no-issues"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,14 +286,14 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte(`{"issues":[{"rule":{"severity":""},"range":{},"callers":[{}]}],"errors":[{"range":{}}]}`))
 	f.Add([]byte("{\"issues\":[],\"errors\":[]}\nError: Failed to load plugin\nWarning: x\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		out, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		out, err := parse(input)
 		if err != nil {
 			return
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxIssues: 1, NoDetail: true}} {
-			r := Build(out, o)
-			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {MaxIssues: 1, NoDetail: true}} {
+			r := build(out, o)
+			res := core.Result{Text: text(r, o), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
 			if got := r.Errors + r.Warnings + r.Notices; got != len(*out.Issues) {
 				t.Fatalf("%d issues counted, %d in the input", got, len(*out.Issues))

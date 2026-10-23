@@ -59,3 +59,69 @@ func TestSplitLines(t *testing.T) {
 		break
 	}
 }
+
+func TestPlural(t *testing.T) {
+	t.Parallel()
+	if Plural(1, "line", "lines") != "line" || Plural(0, "line", "lines") != "lines" || Plural(2, "line", "lines") != "lines" {
+		t.Error("Plural() picks the wrong form")
+	}
+}
+
+func TestTruncate(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		s    string
+		n    int
+		want string
+	}{
+		{"abc", 0, "abc"},
+		{"abc", 5, "abc"},
+		{"abcdef", 3, "abc"},
+		{"aéb", 2, "a"},
+		{"éb", 1, "é"},
+		{"漢字", 3, "漢"},
+	}
+	for _, tt := range tests {
+		if got := Truncate(tt.s, tt.n); got != tt.want {
+			t.Errorf("Truncate(%q, %d) = %q, want %q", tt.s, tt.n, got, tt.want)
+		}
+	}
+}
+
+func TestToolLabel(t *testing.T) {
+	t.Parallel()
+	if got := ToolLabel("trivy", "0.75.0"); got != "trivy 0.75.0" {
+		t.Errorf("ToolLabel(trivy, 0.75.0) = %q", got)
+	}
+	if got := ToolLabel("trivy", ""); got != "trivy" {
+		t.Errorf("ToolLabel(trivy, \"\") = %q", got)
+	}
+}
+
+func TestEllipsis(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		in   string
+		n    int
+		want string
+	}{
+		{"abcdef", 6, "abcdef"},
+		{"abcdefg", 6, "abc..."},
+		{"ab\u00e9def", 6, "ab..."},
+		{"", 6, ""},
+		{"abcdef", 3, "abc"},
+		{"abcdef", 2, "ab"},
+		{"abcdef", 0, "abcdef"},
+	} {
+		if got := Ellipsis(tt.in, tt.n); got != tt.want {
+			t.Errorf("Ellipsis(%q, %d) = %q, want %q", tt.in, tt.n, got, tt.want)
+		}
+	}
+}
+
+func TestSeconds(t *testing.T) {
+	t.Parallel()
+	if Seconds(1.5) != "1.5s" || Seconds(2) != "2s" || Seconds(0.001) != "0.001s" {
+		t.Error("Seconds() format")
+	}
+}

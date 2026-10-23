@@ -1,19 +1,21 @@
 package checkov
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxChecksInNotice = 5
 
-var severityRank = map[string]int{"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4, "UNKNOWN": 5}
+var severities = core.SeverityOrder{"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "UNKNOWN"}
 
-type Check struct {
+type check struct {
 	Framework string `json:"framework"`
 	CheckID   string `json:"check_id"`
 	Name      string `json:"name"`
@@ -27,7 +29,7 @@ type Check struct {
 	Comment   string `json:"suppress_comment,omitempty"`
 }
 
-type Framework struct {
+type frameworkSummary struct {
 	CheckType     string `json:"check_type"`
 	Passed        int    `json:"passed"`
 	Failed        int    `json:"failed"`
@@ -36,7 +38,7 @@ type Framework struct {
 	Resources     int    `json:"resource_count"`
 }
 
-type Report struct {
+type report struct {
 	Tool           string              `json:"tool"`
 	ToolVersion    string              `json:"tool_version"`
 	Passed         int                 `json:"passed"`
@@ -44,20 +46,21 @@ type Report struct {
 	Skipped        int                 `json:"skipped"`
 	ParsingErrors  int                 `json:"parsing_errors"`
 	Resources      int                 `json:"resource_count"`
-	Frameworks     []Framework         `json:"frameworks"`
+	Frameworks     []frameworkSummary  `json:"frameworks"`
 	BySeverity     map[string]int      `json:"failed_by_severity"`
-	FailedChecks   []Check             `json:"failed_checks"`
+	FailedChecks   []check             `json:"failed_checks"`
 	ChecksOmitted  int                 `json:"failed_checks_omitted"`
 	OmittedChecks  []core.Count        `json:"omitted_by_check_id"`
-	SkippedChecks  []Check             `json:"skipped_checks"`
+	SkippedChecks  []check             `json:"skipped_checks"`
 	ParseErrorPath []string            `json:"parsing_error_files"`
 	CountsOnly     bool                `json:"counts_only,omitempty"`
 	Diagnostics    []tfdiag.Diagnostic `json:"diagnostics,omitempty"`
-	PerResource    map[string]int      `json:"-"`
+	perResource    map[string]int
+	all            bool
 }
 
 func relative(p string) string {
-	return strings.TrimPrefix(core.Clean(p), "/")
+	return strings.TrimPrefix(sanitize.Clean(p), "/")
 }
 
 func lines(r []int) (int, int) {
@@ -70,27 +73,27 @@ func lines(r []int) (int, int) {
 	return 0, 0
 }
 
-func convert(framework string, rec Record) Check {
-	c := Check{
+func convert(framework string, rec rawRecord) check {
+	c := check{
 		Framework: framework,
-		CheckID:   core.Clean(rec.CheckID),
-		Name:      core.Clean(rec.CheckName),
-		Resource:  core.Clean(rec.Resource),
+		CheckID:   sanitize.Clean(rec.CheckID),
+		Name:      sanitize.Clean(rec.CheckName),
+		Resource:  sanitize.Clean(rec.Resource),
 		File:      relative(rec.FilePath),
-		Comment:   core.Clean(rec.CheckResult.SuppressComment),
+		Comment:   sanitize.Clean(rec.CheckResult.SuppressComment),
 	}
 	if framework == "secrets" {
 		c.Resource = "secret"
 	}
 	c.Start, c.End = lines(rec.FileLineRange)
 	if rec.Severity != nil && *rec.Severity != "" {
-		c.Severity = strings.ToUpper(core.Clean(*rec.Severity))
-		if _, ok := severityRank[c.Severity]; !ok {
+		c.Severity = strings.ToUpper(sanitize.Clean(*rec.Severity))
+		if !severities.Known(c.Severity) {
 			c.Severity = "UNKNOWN"
 		}
 	}
 	if rec.Guideline != nil {
-		c.Guideline = core.Clean(*rec.Guideline)
+		c.Guideline = sanitize.Clean(*rec.Guideline)
 	}
 	if rec.CallerFilePath != nil && *rec.CallerFilePath != "" {
 		c.Caller = location(relative(*rec.CallerFilePath), rec.CallerFileLineRange)
@@ -110,41 +113,28 @@ func location(file string, r []int) string {
 	}
 }
 
-func rank(s string) int {
-	if r, ok := severityRank[s]; ok {
-		return r
-	}
-	return len(severityRank)
-}
-
-func Build(in Input, o Options) Report {
-	r := Report{
+func build(in parsed, o options) report {
+	r := report{
 		Tool:           "checkov",
-		Frameworks:     []Framework{},
+		Frameworks:     []frameworkSummary{},
 		BySeverity:     map[string]int{},
-		FailedChecks:   []Check{},
+		FailedChecks:   []check{},
 		OmittedChecks:  []core.Count{},
-		SkippedChecks:  []Check{},
+		SkippedChecks:  []check{},
 		ParseErrorPath: []string{},
+		all:            o.all,
 	}
-	var failed []Check
-	for _, l := range in.Trailing {
-		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
-		if l.Error {
-			d.Severity = "error"
-		}
-		r.Diagnostics = append(r.Diagnostics, d)
-	}
-	r.Diagnostics = tfdiag.Normalize(r.Diagnostics)
+	var failed []check
+	r.Diagnostics = tfdiag.Normalize(tfdiag.FromLines(in.Trailing, ""))
 	for _, rep := range in.Reports {
 		s, res := rep.Summary, rep.Results
 		if rep.CountsOnly {
 			r.CountsOnly = true
 		}
 		if r.ToolVersion == "" {
-			r.ToolVersion = core.Clean(s.CheckovVersion)
+			r.ToolVersion = sanitize.Clean(s.CheckovVersion)
 		}
-		ct := core.Clean(rep.CheckType)
+		ct := sanitize.Clean(rep.CheckType)
 		failedHere := max(s.Failed, len(res.FailedChecks))
 		skippedHere := max(s.Skipped, len(res.SkippedChecks))
 		errorsHere := max(s.ParsingErrors, len(res.ParsingErrors))
@@ -155,7 +145,7 @@ func Build(in Input, o Options) Report {
 		r.ParsingErrors += errorsHere
 		r.Resources += s.ResourceCount
 		if ct != "" {
-			r.Frameworks = append(r.Frameworks, Framework{CheckType: ct, Passed: passedHere, Failed: failedHere, Skipped: skippedHere, ParsingErrors: errorsHere, Resources: s.ResourceCount})
+			r.Frameworks = append(r.Frameworks, frameworkSummary{CheckType: ct, Passed: passedHere, Failed: failedHere, Skipped: skippedHere, ParsingErrors: errorsHere, Resources: s.ResourceCount})
 		}
 		for _, rec := range res.FailedChecks {
 			c := convert(ct, rec)
@@ -168,17 +158,17 @@ func Build(in Input, o Options) Report {
 			r.SkippedChecks = append(r.SkippedChecks, convert(ct, rec))
 		}
 		for _, p := range res.ParsingErrors {
-			r.ParseErrorPath = append(r.ParseErrorPath, core.Clean(p))
+			r.ParseErrorPath = append(r.ParseErrorPath, sanitize.Clean(p))
 		}
 	}
 	sortGrouped(failed)
-	r.PerResource = map[string]int{}
+	r.perResource = map[string]int{}
 	for _, c := range failed {
-		r.PerResource[c.key()]++
+		r.perResource[c.key()]++
 	}
 	sortGrouped(r.SkippedChecks)
-	sort.Strings(r.ParseErrorPath)
-	kept, omitted := core.Limit(failed, o.MaxChecks)
+	slices.Sort(r.ParseErrorPath)
+	kept, omitted := core.Limit(failed, o.maxChecks)
 	r.FailedChecks = append(r.FailedChecks, kept...)
 	r.ChecksOmitted = omitted
 	if omitted > 0 {
@@ -191,36 +181,32 @@ func Build(in Input, o Options) Report {
 	return r
 }
 
-func (c Check) key() string {
+func (c check) key() string {
 	return fmt.Sprintf("%s\x00%09d\x00%09d\x00%s\x00%s", c.File, c.Start, c.End, c.Resource, c.Caller)
 }
 
-func sortGrouped(checks []Check) {
+func sortGrouped(checks []check) {
 	type keyed struct {
 		key   string
-		check Check
+		rank  int
+		check check
 	}
 	worst := map[string]int{}
 	items := make([]keyed, len(checks))
 	for i, c := range checks {
-		k := c.key()
-		items[i] = keyed{key: k, check: c}
-		if r, ok := worst[k]; !ok || rank(c.Severity) < r {
-			worst[k] = rank(c.Severity)
+		k, r := c.key(), severities.Rank(c.Severity)
+		items[i] = keyed{key: k, rank: r, check: c}
+		if w, ok := worst[k]; !ok || r < w {
+			worst[k] = r
 		}
 	}
-	sort.SliceStable(items, func(i, j int) bool {
-		a, b := items[i], items[j]
-		if worst[a.key] != worst[b.key] {
-			return worst[a.key] < worst[b.key]
-		}
-		if a.key != b.key {
-			return a.key < b.key
-		}
-		if rank(a.check.Severity) != rank(b.check.Severity) {
-			return rank(a.check.Severity) < rank(b.check.Severity)
-		}
-		return a.check.CheckID < b.check.CheckID
+	slices.SortStableFunc(items, func(a, b keyed) int {
+		return cmp.Or(
+			cmp.Compare(worst[a.key], worst[b.key]),
+			strings.Compare(a.key, b.key),
+			cmp.Compare(a.rank, b.rank),
+			strings.Compare(a.check.CheckID, b.check.CheckID),
+		)
 	})
 	for i, it := range items {
 		checks[i] = it.check

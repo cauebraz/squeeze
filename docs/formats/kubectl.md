@@ -77,9 +77,11 @@ Each line is `[unhealthy] <Kind> <namespace>/<name>: <status and counts>`, then 
 - A missing `spec.replicas` counts as 1, the API's default.
 - An object of a known kind whose `spec` or `status` does not have the API's shape prints as `unhealthy ... unreadable status`, so a broken object is not counted healthy.
 - An object with `metadata.deletionTimestamp` shows `Terminating` or `terminating`.
-- `Event` objects are not listed as objects. The header counts them and the Warning ones, and each Warning event prints as `warning <Kind> <namespace>/<name> <reason>: <message> (xN)`, newest first by `series.lastObservedTime`, `lastTimestamp`, `deprecatedLastTimestamp`, `eventTime` or `firstTimestamp`. Warning events with the same object, reason and message print once with their counts summed. Both `v1` events (`involvedObject`, `message`, `count`) and `events.k8s.io/v1` events (`regarding`, `note`, `deprecatedCount`, `series.count`) are read. `Normal` events are counted only.
+- `Event` objects are not listed as objects. The header counts them and the Warning ones, and each Warning event prints as `warning <Kind> <namespace>/<name> <reason>: <message> (xN)`, newest first by `series.lastObservedTime`, `lastTimestamp`, `deprecatedLastTimestamp`, `eventTime` or `firstTimestamp`, compared as RFC 3339 times, so `00:00:01.5Z` is newer than `00:00:01Z`; an event whose time does not parse sorts after the ones that do. Warning events with the same object, reason and message print once with their counts summed. Both `v1` events (`involvedObject`, `message`, `count`) and `events.k8s.io/v1` events (`regarding`, `note`, `deprecatedCount`, `series.count`) are read. `Normal` events are counted only. An event whose fields do not have the API's shape, such as a `count` that is a string, prints as `warning Event <namespace>/<name> unreadable event` and counts as a Warning event, so a broken event is not dropped.
 - Past `--max-objects`, the notice counts the cut objects, the unhealthy ones among them and their kinds: `... 27 more objects, 3 unhealthy: Pod 12, Deployment 4, ReplicaSet 4, Service 3, DaemonSet 2, 1 other kind (--max-objects 0)`. Past `--max-events`, it counts the cut warning events by reason.
+- Control characters and terminal escape sequences are removed from every name, status, reason and message, in the text and in `--output json`; a newline or tab becomes a space. The `escapes` fixture shows it.
 - Messages (a condition message, `status.message`, an event message) are cut at 200 bytes with `...` in the text; `--output json` keeps them whole.
+- A line after the JSON document that reads as an error or a warning, such as `error: the server doesn't have a resource type "widgets"` that `kubectl get pods,widgets -o json 2>&1` prints after the pods, prints after the header as `error: <line>` or `warning: <line>`, without an `error:` or `Warning:` prefix; an error line sets `error` and a warning line sets `warning`. Error and warning lines before the document, such as a `Warning:` line about a deprecated API, are read the same way; detection skips them, so a Secret behind such a line still goes through this format and not `generic`. Other lines after the document are dropped. The `trailing-errors` and `leading-warning` fixtures show it.
 
 ### Secrets
 
@@ -103,13 +105,14 @@ A test extracts every Secret and ConfigMap value, base64-decoded too, every anno
 
 | Condition | Present when |
 |---|---|
+| `error` | an error line follows the JSON |
 | `fail` | an object is unhealthy, as the table above defines it |
 | `restarts` | a pod's containers restarted at least once |
-| `warning` | the input holds an event of type `Warning` |
+| `warning` | the input holds an event of type `Warning`, or a warning line follows the JSON |
 
 ## JSON data
 
-`data` holds `tool`, `tool_version` (empty: the JSON carries no kubectl version), `objects_total`, `unhealthy`, `restarts` (the sum over pods), `kinds` (`name`, `count`, most objects first), `objects`, `objects_omitted`, `unhealthy_omitted`, `omitted_by_kind`, `events_total`, `warnings` (Warning events in the input), `events` (the listed warning events), `events_omitted` and `omitted_by_reason`. Each object has `kind`, `namespace`, `name`, `unhealthy`, `status`, `details`, `restarts` and, when set, `containers`, `keys` and `message`. Each event has `kind`, `namespace` and `name` of the object it is about, `reason`, `message`, `count` and `last`.
+`data` holds `tool`, `tool_version` (empty: the JSON carries no kubectl version), `objects_total`, `unhealthy`, `restarts` (the sum over pods), `kinds` (`name`, `count`, most objects first), `objects`, `objects_omitted`, `unhealthy_omitted`, `omitted_by_kind`, `events_total`, `warnings` (Warning events in the input), `events` (the listed warning events), `events_omitted`, `omitted_by_reason` and, when lines before or after the JSON read as errors or warnings, `diagnostics` (`severity`, `summary`, `count`). Each object has `kind`, `namespace`, `name`, `unhealthy`, `status`, `details`, `restarts` and, when set, `containers`, `keys` and `message`. Each event has `kind`, `namespace` and `name` of the object it is about, `reason`, `message`, `count` and `last`.
 
 ## Limitations
 
@@ -117,4 +120,4 @@ A test extracts every Secret and ConfigMap value, base64-decoded too, every anno
 - Event messages are printed as Kubernetes wrote them; a controller that puts a secret in an event message would leak it the same way `kubectl get events` does.
 - Health is per object. squeeze does not join objects, so a Deployment line does not name its failing pods; list the pods in the same call (`kubectl get deploy,pods -o json`).
 - A custom resource is judged by its `Ready` or `Available` condition and `status.phase` only; any other convention prints the object without a health verdict.
-- `kubectl get` errors (an unknown resource type, a forbidden namespace) go to stderr, which squeeze does not read.
+- `kubectl get` errors (an unknown resource type, a forbidden namespace) and warnings go to stderr. squeeze reads them only when stderr is piped too (`2>&1`). A line before the JSON that does not read as an error or a warning makes the input fail detection, and it goes to `generic`, which does not know which values are secret.

@@ -10,7 +10,7 @@ fail /main.tf.aws_security_group.web [NONE][CKV_AWS_24] Ensure no security group
           9  |     to_port     = 22
           10 |     protocol    = "tcp"
           11 |     cidr_blocks = ["0.0.0.0/0"]
-  ... 2 more lines (--max-lines 0)
+  ... 2 more lines (--max-output 0)
 fail /main.tf.aws_security_group.web [NONE][CKV_AWS_23] Ensure every security group and rule has a description
   Resource: aws_security_group.web
   File: /main.tf: 5-13
@@ -22,4 +22,4 @@ fail /main.tf.aws_security_group.web [NONE][CKV_AWS_23] Ensure every security gr
           9  |     to_port     = 22
           10 |     protocol    = "tcp"
           11 |     cidr_blocks = ["0.0.0.0/0"]
-  ... 2 more lines (--max-lines 0)
+  ... 2 more lines (--max-output 0)

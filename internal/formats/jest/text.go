@@ -2,19 +2,13 @@ package jest
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-type part struct {
-	n    int
-	what string
-	many string
-}
-
-func Text(r Report, o Options) string {
+func render(r report, o options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -22,11 +16,11 @@ func Text(r Report, o Options) string {
 		b.WriteString("run error\n")
 		writeLines(&b, *r.RunError, "    ")
 	}
-	errs := map[string]Lines{}
+	errs := map[string]output{}
 	for _, e := range r.FileErrors {
 		errs[e.File] = e.Output
 	}
-	byFile := map[string][]Failure{}
+	byFile := map[string][]failure{}
 	var order []string
 	for _, f := range r.Failures {
 		if _, ok := byFile[f.File]; !ok {
@@ -39,7 +33,7 @@ func Text(r Report, o Options) string {
 			order = append(order, e.File)
 		}
 	}
-	sort.Strings(order)
+	slices.Sort(order)
 	for _, file := range order {
 		fails := byFile[file]
 		if out, ok := errs[file]; ok {
@@ -53,8 +47,8 @@ func Text(r Report, o Options) string {
 			writeLines(&b, f.Output, "    ")
 		}
 	}
-	if r.FailuresOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more failed %s (--max-tests 0)\n", r.FailuresOmitted, core.Plural(r.FailuresOmitted, "test", "tests"))
+	if r.TestsOmitted > 0 {
+		fmt.Fprintf(&b, "... %d more failed %s (--max-tests 0)\n", r.TestsOmitted, core.Plural(r.TestsOmitted, "test", "tests"))
 	}
 	for _, h := range r.OpenHandles {
 		fmt.Fprintf(&b, "open handle: %s\n", handleLabel(h))
@@ -68,59 +62,52 @@ func Text(r Report, o Options) string {
 		for _, t := range r.NotRun {
 			fmt.Fprintf(&b, "%s %s: %s\n", t.Status, t.File, t.Test)
 		}
-		for _, f := range r.Passing {
+		for _, f := range r.PassingFiles {
 			fmt.Fprintf(&b, "pass %s\n", f)
 		}
 	} else {
 		skipped, todo := 0, 0
 		for _, t := range r.NotRun {
-			if t.Status == "todo" {
+			if t.Status == testTodo {
 				todo++
 			} else {
 				skipped++
 			}
 		}
-		var items []string
-		for _, c := range []struct {
-			n          int
-			what, many string
-		}{{skipped, "skipped test", "skipped tests"}, {todo, "todo test", "todo tests"}, {len(r.Passing), "passing file", "passing files"}} {
-			if c.n > 0 {
-				items = append(items, fmt.Sprintf("%d %s", c.n, core.Plural(c.n, c.what, c.many)))
-			}
-		}
-		if len(items) > 0 {
-			fmt.Fprintf(&b, "... %s (--all)\n", strings.Join(items, ", "))
+		if items := core.JoinCounts(
+			core.Part{N: skipped, One: "skipped test", Many: "skipped tests"},
+			core.Part{N: todo, One: "todo test", Many: "todo tests"},
+			core.Part{N: len(r.PassingFiles), One: "passing file", Many: "passing files"},
+		); items != "" {
+			fmt.Fprintf(&b, "... %s (--all)\n", items)
 		}
 	}
-	writeUnknown(&b, r.UnknownStatus)
+	if notice := core.UnknownNotice(r.UnknownStatus, "test", "tests", "status"); notice != "" {
+		b.WriteString(notice + "\n")
+	}
 	return b.String()
 }
 
-func handleLabel(h Handle) string {
+func handleLabel(h handle) string {
 	if h.Message != "" {
 		return h.Message
 	}
 	return h.Name
 }
 
-func header(r Report) string {
+func header(r report) string {
 	t := r.Tests
-	tests := []part{{t.Passed, "passed", ""}, {t.Failed, "failed", ""}}
-	if t.Skipped > 0 {
-		tests = append(tests, part{t.Skipped, "skipped", ""})
+	line := fmt.Sprintf("%s: %s; %d %s: %d passed, %d failed", r.Tool, r.Status, t.Total, core.Plural(t.Total, "test", "tests"), t.Passed, t.Failed)
+	if more := core.JoinCounts(core.Part{N: t.Skipped, One: "skipped"}, core.Part{N: t.Todo, One: "todo"}); more != "" {
+		line += ", " + more
 	}
-	if t.Todo > 0 {
-		tests = append(tests, part{t.Todo, "todo", ""})
-	}
-	line := fmt.Sprintf("%s: %s; %d %s: %s", r.Tool, r.Status, t.Total, core.Plural(t.Total, "test", "tests"), join(tests))
 	f := r.Files
-	if files := nonZero([]part{{f.Passed, "passed", ""}, {f.Failed, "failed", ""}, {f.FailedToRun, "failed to run", ""}, {f.Skipped, "skipped", ""}}); len(files) > 0 {
-		line += fmt.Sprintf("; %d %s: %s", f.Total, core.Plural(f.Total, "file", "files"), join(files))
+	if files := core.JoinCounts(core.Part{N: f.Passed, One: "passed"}, core.Part{N: f.Failed, One: "failed"}, core.Part{N: f.FailedToRun, One: "failed to run"}, core.Part{N: f.Skipped, One: "skipped"}); files != "" {
+		line += fmt.Sprintf("; %d %s: %s", f.Total, core.Plural(f.Total, "file", "files"), files)
 	}
 	s := r.Snapshots
-	if snaps := nonZero([]part{{s.Failed, "failed", ""}, {s.Obsolete, "obsolete", ""}, {s.Removed, "removed file", "removed files"}, {s.Written, "written", ""}, {s.Updated, "updated", ""}}); len(snaps) > 0 {
-		line += fmt.Sprintf("; %d %s: %s", s.Total, core.Plural(s.Total, "snapshot", "snapshots"), join(snaps))
+	if snaps := core.JoinCounts(core.Part{N: s.Failed, One: "failed"}, core.Part{N: s.Obsolete, One: "obsolete"}, core.Part{N: s.FilesRemoved, One: "removed file", Many: "removed files"}, core.Part{N: s.Written, One: "written"}, core.Part{N: s.Updated, One: "updated"}); snaps != "" {
+		line += fmt.Sprintf("; %d %s: %s", s.Total, core.Plural(s.Total, "snapshot", "snapshots"), snaps)
 	}
 	if r.Interrupted {
 		line += "; interrupted"
@@ -131,60 +118,9 @@ func header(r Report) string {
 	return line
 }
 
-func nonZero(parts []part) []part {
-	var out []part
-	for _, p := range parts {
-		if p.n > 0 {
-			out = append(out, p)
-		}
-	}
-	return out
-}
-
-func join(parts []part) string {
-	items := make([]string, 0, len(parts))
-	for _, p := range parts {
-		what := p.what
-		if p.many != "" {
-			what = core.Plural(p.n, p.what, p.many)
-		}
-		items = append(items, fmt.Sprintf("%d %s", p.n, what))
-	}
-	return strings.Join(items, ", ")
-}
-
-func writeLines(b *strings.Builder, l Lines, indent string) {
-	for _, line := range l.Lines {
-		b.WriteString(indent)
-		b.WriteString(line)
-		b.WriteByte('\n')
-	}
-	if l.Omitted > 0 {
-		fmt.Fprintf(b, "%s... %d more %s (--max-output 0)\n", indent, l.Omitted, core.Plural(l.Omitted, "line", "lines"))
-	}
+func writeLines(b *strings.Builder, l output, indent string) {
+	l.Write(b, indent, "--max-output")
 	if l.Hidden > 0 {
 		fmt.Fprintf(b, "%s... %d node_modules, node internal and code frame %s (--full)\n", indent, l.Hidden, core.Plural(l.Hidden, "line", "lines"))
 	}
-}
-
-func writeUnknown(b *strings.Builder, unknown map[string]int) {
-	if len(unknown) == 0 {
-		return
-	}
-	keys := make([]string, 0, len(unknown))
-	total := 0
-	for k, n := range unknown {
-		keys = append(keys, k)
-		total += n
-	}
-	sort.Strings(keys)
-	items := make([]string, 0, len(keys))
-	for _, k := range keys {
-		name := core.NoticeName(k)
-		if name == "" {
-			name = "empty"
-		}
-		items = append(items, fmt.Sprintf("%s %d", name, unknown[k]))
-	}
-	fmt.Fprintf(b, "... %d %s with an unknown status: %s (--raw-dir)\n", total, core.Plural(total, "test", "tests"), strings.Join(items, ", "))
 }

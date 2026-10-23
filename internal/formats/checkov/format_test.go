@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 const fixtureDir = "testdata"
@@ -23,13 +24,13 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func report(t *testing.T, input []byte, o Options) Report {
+func reportOf(t *testing.T, input []byte, o options) report {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r.Data.(Report)
+	return r.Data.(report)
 }
 
 func TestContract(t *testing.T) {
@@ -71,8 +72,9 @@ func TestParseErrors(t *testing.T) {
 		"list no summary": `[{"check_type":"terraform","results":{}}]`,
 		"other object":    `{"issues":[],"errors":[]}`,
 		"empty":           ` `,
+		"bad counts":      `{"checkov_version":"3.2.0","passed":"x"}`,
 	} {
-		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
+		if _, err := squeeze([]byte(input), defaultOptions()); err == nil {
 			t.Errorf("%s: Squeeze() returned no error", name)
 		}
 	}
@@ -89,7 +91,7 @@ func TestConditions(t *testing.T) {
 		"severity": {"critical", "fail", "high", "skip"},
 	}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -102,12 +104,12 @@ func TestConditions(t *testing.T) {
 func TestCountsComeFromTheSummary(t *testing.T) {
 	t.Parallel()
 	for _, name := range []string{"single", "quiet", "compact"} {
-		r := report(t, fixture(t, name), DefaultOptions())
+		r := reportOf(t, fixture(t, name), defaultOptions())
 		if r.Failed != 18 || r.Passed != 14 || r.Skipped != 1 || len(r.FailedChecks) != 18 {
 			t.Errorf("%s: failed %d, passed %d, skipped %d, listed %d", name, r.Failed, r.Passed, r.Skipped, len(r.FailedChecks))
 		}
 	}
-	multi := report(t, fixture(t, "multi"), DefaultOptions())
+	multi := reportOf(t, fixture(t, "multi"), defaultOptions())
 	var frameworks []string
 	for _, f := range multi.Frameworks {
 		frameworks = append(frameworks, f.CheckType)
@@ -125,7 +127,7 @@ func TestGroupsAreOrderedByWorstSeverityThenLocation(t *testing.T) {
 		`{"check_id":"C","check_name":"c","file_path":"/a.tf","file_line_range":[3,4],"resource":"r.early","severity":"HIGH"},` +
 		`{"check_id":"D","check_name":"d","file_path":"/a.tf","file_line_range":[3,4],"resource":"r.early","severity":"CRITICAL"}],` +
 		`"passed_checks":[],"skipped_checks":[],"parsing_errors":[]}}`)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,11 +144,11 @@ func TestNullResultsAndCountsOnly(t *testing.T) {
 	t.Parallel()
 	list := []byte(`[{"check_type":"terraform","results":{"failed_checks":[],"passed_checks":[],"skipped_checks":[],"parsing_errors":[]},"summary":{"passed":1,"checkov_version":"3"}},` +
 		`{"check_type":"dockerfile","results":null,"summary":{"passed":2,"checkov_version":"3"}}]`)
-	if r := report(t, list, DefaultOptions()); r.Passed != 3 || len(r.Frameworks) != 2 {
+	if r := reportOf(t, list, defaultOptions()); r.Passed != 3 || len(r.Frameworks) != 2 {
 		t.Errorf("report = %+v", r)
 	}
 	counts := []byte(`{"passed":3,"failed":2,"skipped":1,"parsing_errors":0,"resource_count":2,"checkov_version":"3.3.29"}`)
-	r, err := Squeeze(counts, DefaultOptions())
+	r, err := squeeze(counts, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +162,7 @@ func TestUnknownSeverityIsNamed(t *testing.T) {
 	input := []byte(`{"check_type":"t","summary":{"failed":2,"checkov_version":"3"},"results":{"failed_checks":[` +
 		`{"check_id":"A","check_name":"a","file_path":"/a.tf","resource":"r","severity":"Bogus"},` +
 		`{"check_id":"B","check_name":"b","file_path":"/a.tf","resource":"r","severity":"low"}],"passed_checks":[],"skipped_checks":[],"parsing_errors":[]}}`)
-	r := report(t, input, DefaultOptions())
+	r := reportOf(t, input, defaultOptions())
 	if r.FailedChecks[0].Severity != "LOW" || r.FailedChecks[1].Severity != "UNKNOWN" || r.BySeverity["UNKNOWN"] != 1 {
 		t.Errorf("severities = %+v", r.FailedChecks)
 	}
@@ -168,13 +170,13 @@ func TestUnknownSeverityIsNamed(t *testing.T) {
 
 func TestLimitNamesTheOmittedChecks(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "single"), Options{MaxChecks: 4})
+	r, err := squeeze(fixture(t, "single"), options{maxChecks: 4})
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if len(report.FailedChecks) != 4 || report.ChecksOmitted != 14 || len(report.OmittedChecks) == 0 {
-		t.Fatalf("listed %d, omitted %d, ids %v", len(report.FailedChecks), report.ChecksOmitted, report.OmittedChecks)
+	data := r.Data.(report)
+	if len(data.FailedChecks) != 4 || data.ChecksOmitted != 14 || len(data.OmittedChecks) == 0 {
+		t.Fatalf("listed %d, omitted %d, ids %v", len(data.FailedChecks), data.ChecksOmitted, data.OmittedChecks)
 	}
 	if !strings.Contains(r.Text, "... 14 more failed checks, ") || !strings.Contains(r.Text, "(--max-checks 0)\n") {
 		t.Errorf("text:\n%s", r.Text)
@@ -188,8 +190,8 @@ func TestCodeAndEvaluationsNeverReachTheOutput(t *testing.T) {
 		`"resource":"25910f981e85ca04baf359199dd0bd4a3ae738b6","code_block":[[2,"TOKEN=hunter2-hunter2-hunter2"]],` +
 		`"evaluations":{"token":{"value":"hunter2-hunter2-hunter2"}},"entity_tags":{"owner":"hunter2-hunter2-hunter2"}}],` +
 		`"passed_checks":[],"skipped_checks":[],"parsing_errors":[]}}`)
-	for _, o := range []Options{DefaultOptions(), {All: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {all: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -209,8 +211,8 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`"failed_checks":[{"check_id":"C\nX","check_name":"n\u001b[31m\nX","file_path":"/f\nX","resource":"r\nX","severity":"HIGH\nX","caller_file_path":"/c\nX"}],` +
 		`"skipped_checks":[{"check_id":"S","check_name":"s","file_path":"/f","resource":"r","check_result":{"suppress_comment":"why\nX"}}],` +
 		`"passed_checks":[],"parsing_errors":["p\nX"]}}`)
-	for _, o := range []Options{DefaultOptions(), {All: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {all: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -230,8 +232,8 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte(`[{"check_type":"x","summary":{"failed":-3},"results":{"failed_checks":[{"file_line_range":[5]},{"severity":"high"}]}}]`))
 	f.Add([]byte("{\"summary\":{\"checkov_version\":\"3\"}}\nError: x\nWarning: y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		in, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		in, err := parse(input)
 		if err != nil {
 			return
 		}
@@ -239,9 +241,9 @@ func FuzzSqueeze(f *testing.F) {
 		for _, rep := range in.Reports {
 			listed += len(rep.Results.FailedChecks)
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxChecks: 1, All: true}} {
-			r := Build(in, o)
-			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {maxChecks: 1, all: true}} {
+			r := build(in, o)
+			res := core.Result{Text: text(r), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
 			if got := len(r.FailedChecks) + r.ChecksOmitted; got != listed {
 				t.Fatalf("%d failed checks kept or omitted, %d in the input", got, listed)

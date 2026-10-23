@@ -1,12 +1,14 @@
 package jest
 
 import (
+	"cmp"
 	"path"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
 const (
@@ -20,38 +22,44 @@ var (
 	contextFrame = regexp.MustCompile(`^\s*\d+ \|`)
 )
 
-type Lines struct {
-	Lines   []string `json:"lines"`
-	Omitted int      `json:"omitted,omitempty"`
-	Hidden  int      `json:"hidden,omitempty"`
+type output struct {
+	core.Block
+	Hidden int `json:"hidden,omitempty"`
 }
 
-type Failure struct {
+type status string
+
+const (
+	statusPass status = "pass"
+	statusFail status = "fail"
+)
+
+type failure struct {
 	File   string `json:"file"`
 	Test   string `json:"test"`
 	Line   int    `json:"line,omitempty"`
 	Column int    `json:"column,omitempty"`
-	Output Lines  `json:"output"`
+	Output output `json:"output"`
 }
 
-type FileError struct {
+type fileError struct {
 	File   string `json:"file"`
-	Output Lines  `json:"output"`
+	Output output `json:"output"`
 }
 
-type Handle struct {
+type handle struct {
 	Name    string `json:"name"`
 	Message string `json:"message"`
-	Output  Lines  `json:"output"`
+	Output  output `json:"output"`
 }
 
-type TestRef struct {
-	File   string `json:"file"`
-	Test   string `json:"test"`
-	Status string `json:"status"`
+type testRef struct {
+	File   string     `json:"file"`
+	Test   string     `json:"test"`
+	Status testStatus `json:"status"`
 }
 
-type Tests struct {
+type testCounts struct {
 	Total   int `json:"total"`
 	Passed  int `json:"passed"`
 	Failed  int `json:"failed"`
@@ -59,7 +67,7 @@ type Tests struct {
 	Todo    int `json:"todo"`
 }
 
-type Files struct {
+type fileCounts struct {
 	Total       int `json:"total"`
 	Passed      int `json:"passed"`
 	Failed      int `json:"failed"`
@@ -67,147 +75,147 @@ type Files struct {
 	Skipped     int `json:"skipped"`
 }
 
-type Snapshots struct {
-	Total    int  `json:"total"`
-	Failed   int  `json:"failed"`
-	Obsolete int  `json:"obsolete"`
-	Written  int  `json:"written"`
-	Updated  int  `json:"updated"`
-	Removed  int  `json:"files_removed"`
-	Failure  bool `json:"failure"`
+type snapshotCounts struct {
+	Total        int  `json:"total"`
+	Failed       int  `json:"failed"`
+	Obsolete     int  `json:"obsolete"`
+	Written      int  `json:"written"`
+	Updated      int  `json:"updated"`
+	FilesRemoved int  `json:"files_removed"`
+	Failure      bool `json:"failure"`
 }
 
-type Report struct {
-	Tool            string         `json:"tool"`
-	ToolVersion     string         `json:"tool_version"`
-	Status          string         `json:"status"`
-	Root            string         `json:"root"`
-	Interrupted     bool           `json:"interrupted"`
-	Tests           Tests          `json:"tests"`
-	Files           Files          `json:"files"`
-	Snapshots       Snapshots      `json:"snapshots"`
-	RunError        *Lines         `json:"run_error"`
-	FileErrors      []FileError    `json:"file_errors"`
-	Failures        []Failure      `json:"failures"`
-	FailuresOmitted int            `json:"failures_omitted"`
-	OpenHandles     []Handle       `json:"open_handles"`
-	NotRun          []TestRef      `json:"not_run"`
-	Passing         []string       `json:"passing_files"`
-	UnknownStatus   map[string]int `json:"unknown_status"`
-	Trailing        Lines          `json:"trailing"`
+type report struct {
+	Tool          string         `json:"tool"`
+	ToolVersion   string         `json:"tool_version"`
+	Status        status         `json:"status"`
+	Root          string         `json:"root"`
+	Interrupted   bool           `json:"interrupted"`
+	Tests         testCounts     `json:"tests"`
+	Files         fileCounts     `json:"files"`
+	Snapshots     snapshotCounts `json:"snapshots"`
+	RunError      *output        `json:"run_error"`
+	FileErrors    []fileError    `json:"file_errors"`
+	Failures      []failure      `json:"failures"`
+	TestsOmitted  int            `json:"tests_omitted"`
+	OpenHandles   []handle       `json:"open_handles"`
+	NotRun        []testRef      `json:"not_run"`
+	PassingFiles  []string       `json:"passing_files"`
+	UnknownStatus map[string]int `json:"unknown_status"`
+	Trailing      output         `json:"trailing"`
 }
 
 type builder struct {
-	o    Options
+	o    options
 	root string
 }
 
-func Build(out *Output, o Options) Report {
-	files := append([]TestFile(nil), (*out.TestResults)...)
-	sort.SliceStable(files, func(i, j int) bool { return files[i].Name < files[j].Name })
+func build(out *rawOutput, o options) report {
+	files := slices.Clone(out.TestResults)
+	slices.SortStableFunc(files, func(a, b rawTestFile) int { return cmp.Compare(a.Name, b.Name) })
 	b := builder{o: o, root: root(out, files)}
-	r := Report{
+	r := report{
 		Tool:          "vitest",
-		Status:        "pass",
-		Root:          core.Clean(b.root),
+		Status:        statusPass,
+		Root:          sanitize.Clean(b.root),
 		Interrupted:   out.WasInterrupted,
-		FileErrors:    []FileError{},
-		Failures:      []Failure{},
-		OpenHandles:   []Handle{},
-		NotRun:        []TestRef{},
-		Passing:       []string{},
+		FileErrors:    []fileError{},
+		Failures:      []failure{},
+		OpenHandles:   []handle{},
+		NotRun:        []testRef{},
+		PassingFiles:  []string{},
 		UnknownStatus: map[string]int{},
-		Trailing:      Lines{Lines: []string{}},
-		Tests: Tests{
+		Trailing:      output{Block: core.HeadBlock(nil, 0)},
+		Tests: testCounts{
 			Total:   out.NumTotalTests,
 			Passed:  out.NumPassedTests,
 			Failed:  out.NumFailedTests,
 			Skipped: out.NumPendingTests,
 			Todo:    out.NumTodoTests,
 		},
-		Snapshots: Snapshots{
-			Total:    out.Snapshot.Total,
-			Failed:   out.Snapshot.Unmatched,
-			Obsolete: out.Snapshot.Unchecked,
-			Written:  out.Snapshot.Added,
-			Updated:  out.Snapshot.Updated,
-			Removed:  out.Snapshot.FilesRemoved,
-			Failure:  out.Snapshot.Failure,
+		Snapshots: snapshotCounts{
+			Total:        out.Snapshot.Total,
+			Failed:       out.Snapshot.Unmatched,
+			Obsolete:     out.Snapshot.Unchecked,
+			Written:      out.Snapshot.Added,
+			Updated:      out.Snapshot.Updated,
+			FilesRemoved: out.Snapshot.FilesRemoved,
+			Failure:      out.Snapshot.Failure,
 		},
 	}
 	if out.NumRuntimeErrorTestSuites != nil {
 		r.Tool = "jest"
 	}
 	if !out.Success {
-		r.Status = "fail"
+		r.Status = statusFail
 	}
 	if e := out.RunExecError; e != nil {
 		lines := b.lines(splitLines(e.Message + "\n" + stackFrames(e.Stack)))
 		r.RunError = &lines
 	}
-	var failures []Failure
+	var failures []failure
 	for _, f := range files {
 		r.Files.Total++
 		name := b.rel(f.Name)
 		failed := map[string]bool{}
 		fileFailures := 0
 		for _, a := range f.AssertionResults {
-			test := core.Clean(testName(a))
+			test := sanitize.Clean(testName(a))
 			switch a.Status {
-			case "failed":
+			case testFailed:
 				fileFailures++
 				failed[strings.Join(titles(a), " › ")] = true
-				fl := Failure{File: name, Test: test, Output: b.lines(splitLines(strings.Join(a.FailureMessages, "\n")))}
+				fl := failure{File: name, Test: test, Output: b.lines(splitLines(strings.Join(a.FailureMessages, "\n")))}
 				if a.Location != nil {
 					fl.Line, fl.Column = a.Location.Line, a.Location.Column
 				}
 				failures = append(failures, fl)
-			case "passed":
-			case "pending", "skipped", "disabled", "focused", "todo":
-				r.NotRun = append(r.NotRun, TestRef{File: name, Test: test, Status: core.Clean(a.Status)})
+			case testPassed:
+			case testPending, testSkipped, testDisabled, testFocused, testTodo:
+				r.NotRun = append(r.NotRun, testRef{File: name, Test: test, Status: a.Status})
 			default:
-				r.UnknownStatus[core.Clean(a.Status)]++
+				r.UnknownStatus[sanitize.Clean(string(a.Status))]++
 			}
 		}
-		fileError := fileErrorLines(f.Message, failed)
+		errLines := fileErrorLines(f.Message, failed)
 		switch {
-		case len(fileError) > 0:
+		case len(errLines) > 0:
 			r.Files.FailedToRun++
-			r.FileErrors = append(r.FileErrors, FileError{File: name, Output: b.lines(fileError)})
-		case f.Status == "failed" || fileFailures > 0:
+			r.FileErrors = append(r.FileErrors, fileError{File: name, Output: b.lines(errLines)})
+		case f.Status == testFailed || fileFailures > 0:
 			r.Files.Failed++
-		case f.Status == "skipped":
+		case f.Status == testSkipped:
 			r.Files.Skipped++
 		default:
 			r.Files.Passed++
-			r.Passing = append(r.Passing, name)
+			r.PassingFiles = append(r.PassingFiles, name)
 		}
 	}
-	r.Failures, r.FailuresOmitted = core.Limit(failures, o.MaxTests)
+	r.Failures, r.TestsOmitted = core.Limit(failures, o.MaxTests)
 	if r.Failures == nil {
-		r.Failures = []Failure{}
+		r.Failures = []failure{}
 	}
 	for _, h := range out.OpenHandles {
 		stack := splitLines(h.Stack)
 		if len(stack) > 0 && !stackFrame.MatchString(stack[0]) {
 			stack = stack[1:]
 		}
-		r.OpenHandles = append(r.OpenHandles, Handle{Name: core.Clean(h.Name), Message: core.Clean(h.Message), Output: b.lines(stack)})
+		r.OpenHandles = append(r.OpenHandles, handle{Name: sanitize.Clean(h.Name), Message: sanitize.Clean(h.Message), Output: b.lines(stack)})
 	}
 	if out.Trailing != "" {
 		r.Trailing = b.lines(splitLines(out.Trailing))
 	}
-	if r.Status == "pass" && (len(r.FileErrors) > 0 || len(failures) > 0 || r.RunError != nil) {
-		r.Status = "fail"
+	if r.Status == statusPass && (len(r.FileErrors) > 0 || len(failures) > 0 || r.RunError != nil) {
+		r.Status = statusFail
 	}
 	return r
 }
 
-func titles(a Assertion) []string {
-	return append(append([]string(nil), a.AncestorTitles...), a.Title)
+func titles(a rawAssertion) []string {
+	return append(slices.Clone(a.AncestorTitles), a.Title)
 }
 
-func testName(a Assertion) string {
+func testName(a rawAssertion) string {
 	if a.Title == "" && len(a.AncestorTitles) == 0 {
 		return a.FullName
 	}
@@ -231,8 +239,7 @@ func stackFrames(stack string) string {
 }
 
 func splitLines(s string) []string {
-	s = strings.ReplaceAll(s, "\r\n", "\n")
-	return strings.Split(strings.TrimRight(s, "\n"), "\n")
+	return slices.Collect(core.SplitLines(strings.TrimRight(s, "\r\n")))
 }
 
 func fileErrorLines(message string, failed map[string]bool) []string {
@@ -243,7 +250,7 @@ func fileErrorLines(message string, failed map[string]bool) []string {
 	var out []string
 	keep, blocks := true, false
 	for _, l := range lines {
-		title, ok := strings.CutPrefix(strings.TrimSpace(core.Clean(l)), bullet)
+		title, ok := strings.CutPrefix(strings.TrimSpace(sanitize.Clean(l)), bullet)
 		if ok {
 			blocks = true
 			title = strings.TrimSpace(title)
@@ -261,7 +268,7 @@ func fileErrorLines(message string, failed map[string]bool) []string {
 		return lines
 	}
 	for _, l := range out {
-		if strings.TrimSpace(core.Line(l)) != "" {
+		if strings.TrimSpace(sanitize.Line(l)) != "" {
 			return out
 		}
 	}
@@ -269,18 +276,18 @@ func fileErrorLines(message string, failed map[string]bool) []string {
 }
 
 func (b *builder) rel(p string) string {
-	p = core.Clean(p)
-	if b.root != "" && strings.HasPrefix(p, b.root+"/") {
-		return p[len(b.root)+1:]
+	p = sanitize.Clean(p)
+	if rest, ok := strings.CutPrefix(p, b.root+"/"); ok && b.root != "" {
+		return rest
 	}
 	return p
 }
 
-func (b *builder) lines(raw []string) Lines {
-	out := Lines{Lines: []string{}}
+func (b *builder) lines(raw []string) output {
+	var out output
 	var kept []string
 	for _, l := range raw {
-		c := core.Line(l)
+		c := sanitize.Line(l)
 		if strings.TrimSpace(c) == "" {
 			continue
 		}
@@ -288,15 +295,9 @@ func (b *builder) lines(raw []string) Lines {
 			out.Hidden++
 			continue
 		}
-		if b.root != "" {
-			c = strings.ReplaceAll(c, "file://"+b.root+"/", "")
-			c = strings.ReplaceAll(c, b.root+"/", "")
-		}
-		kept = append(kept, c)
+		kept = append(kept, core.TrimRoot(c, b.root))
 	}
-	kept = core.Dedent(kept)
-	kept, out.Omitted = core.Limit(kept, b.o.MaxOutput)
-	out.Lines = append(out.Lines, kept...)
+	out.Block = core.HeadBlock(core.Dedent(kept), b.o.MaxOutput)
 	return out
 }
 
@@ -307,10 +308,10 @@ func internalFrame(l string) bool {
 	return strings.Contains(l, "node_modules/") || strings.Contains(l, "(node:") || strings.Contains(l, " node:") || strings.HasSuffix(l, "(<anonymous>)")
 }
 
-func root(out *Output, files []TestFile) string {
+func root(out *rawOutput, files []rawTestFile) string {
 	common := ""
 	for i, f := range files {
-		dir := path.Dir(core.Clean(f.Name))
+		dir := path.Dir(sanitize.Clean(f.Name))
 		if i == 0 {
 			common = dir
 			continue

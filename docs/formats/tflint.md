@@ -38,8 +38,8 @@ notice: resource name `LogsBucket` must match the following format: snake_case (
 ```
 
 - The header counts the issues by severity. TFLint's JSON calls the lowest level `info`; squeeze prints `notice`, the name TFLint's own text output and `--minimum-failure-severity` use. A severity other than `warning`, `info` or `notice` counts as an error, so an unexpected value cannot hide a failure.
-- Each issue prints with `file:line:column`, the rule name and, when set, `fixable` or `fixed`. The header counts the fixable issues; `tflint --fix` applies them.
-- Issues are sorted errors first, then warnings, then notices, and by file, line and column. Identical issues print once with `(xN)`.
+- Each issue prints with `file:line:column` (`file:line` when the column is 0, in the call chain too), the rule name and, when set, `fixable` or `fixed`. The header counts the fixable issues; `tflint --fix` applies them.
+- Issues are sorted errors first, then warnings, then notices, and by file, line and column. Identical issues print once with `(xN)`, marked `fixable` or `fixed` when any of them is.
 - An issue TFLint raises through a module call is reported, as TFLint does, at the root-module expression that set the value; the module expressions it was evaluated in print under it, outermost first: `evaluated in main.tf:20:19 -> modules/app/main.tf:4:19`.
 - Entries of the `errors` array, which TFLint reports when it cannot parse a file or a plugin fails, print first as diagnostics with `tflint` in place of a rule, are never cut by `--max-issues`, and the header says not every check ran. `--no-detail` drops their explanation along with the call chains.
 - A line after the JSON document that reads as an error or a warning, such as `Error: Failed to load plugin` when stderr is piped too, prints as a diagnostic with `tflint` in place of a rule, without its `Error:` or `Warning:` prefix. An error line counts as a TFLint error; a warning line sets `warning`. Other lines after the document are dropped.

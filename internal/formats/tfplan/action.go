@@ -1,30 +1,42 @@
 package tfplan
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
-var actionTable = map[string]Action{
-	"no-op":         Noop,
-	"create":        Create,
-	"read":          Read,
-	"update":        Update,
-	"delete":        Delete,
-	"delete,create": Replace,
-	"create,delete": ReplaceCBD,
-	"forget":        Forget,
-	"forget,create": ForgetThenCreate,
-	"create,forget": CreateThenForget,
+var actionTable = map[string]action{
+	"no-op":         actionNoop,
+	"create":        actionCreate,
+	"read":          actionRead,
+	"update":        actionUpdate,
+	"delete":        actionDelete,
+	"delete,create": actionReplace,
+	"create,delete": actionReplaceCBD,
+	"forget":        actionForget,
+	"forget,create": actionForgetThenCreate,
+	"create,forget": actionCreateThenForget,
 }
 
-func mapAction(actions []string, importing bool) (Action, error) {
+func mapAction(actions []string, importing bool) action {
 	a, ok := actionTable[strings.Join(actions, ",")]
-	if !ok {
-		return 0, fmt.Errorf("unsupported actions %q", actions)
+	switch {
+	case !ok:
+		return actionUnknown
+	case a == actionNoop && importing:
+		return actionImport
 	}
-	if a == Noop && importing {
-		return Import, nil
+	return a
+}
+
+func rawActions(actions []string, a action) []string {
+	if a != actionUnknown {
+		return nil
 	}
-	return a, nil
+	out := make([]string, 0, len(actions))
+	for _, s := range actions {
+		out = append(out, sanitize.Clean(s))
+	}
+	return out
 }

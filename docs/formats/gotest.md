@@ -101,7 +101,7 @@ fail example.com/shop/calc TestTable/one
 
 - `failures`: `package`, `test`, `output` and, when set, `run` and `runs` (with `-count`), `elapsed`, `unfinished`, `attrs`, `artifacts`.
 - `build_failures`: `package`, `output`. `package_failures`: `package`, `output` and, when set, `unfinished`.
-- Every `output` and `text` holds `lines` and, when set, `logs_hidden`, `stack_hidden` and `omitted` (lines past `--max-output`).
+- Every `output` and `text` holds `lines`, `lines_omitted` (lines past `--max-output`) and, when set, `logs_hidden` and `stack_hidden`.
 
 ## Limitations
 

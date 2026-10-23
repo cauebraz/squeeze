@@ -7,17 +7,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-var defaults = DefaultOptions()
+var defaults = defaultOptions()
 
-func addresses(cs []ResourceChange) []string {
+func addresses(cs []resourceChange) []string {
 	out := make([]string, 0, len(cs))
 	for _, c := range cs {
-		out = append(out, c.Action.Symbol()+" "+c.Address)
+		out = append(out, c.Action.symbol()+" "+c.Address)
 	}
 	return out
 }
@@ -25,26 +27,23 @@ func addresses(cs []ResourceChange) []string {
 func TestBuildOrderingAndTerraformCounts(t *testing.T) {
 	t.Parallel()
 	obj := map[string]any{}
-	plan := &Plan{FormatVersion: "1.2", ResourceChanges: []PlanResource{
-		{Address: "b.create", Change: PlanChange{Actions: []string{"create"}}},
-		{Address: "a.create", Change: PlanChange{Actions: []string{"create"}}},
-		{Address: "z.update", Change: PlanChange{Actions: []string{"update"}, Before: obj, After: obj}},
-		{Address: "y.read", Change: PlanChange{Actions: []string{"read"}}},
-		{Address: "x.import", Change: PlanChange{Actions: []string{"no-op"}, Importing: &PlanImporting{ID: "x"}}},
-		{Address: "w.cbd", Change: PlanChange{Actions: []string{"create", "delete"}, Before: obj, After: obj}},
-		{Address: "v.replace", Change: PlanChange{Actions: []string{"delete", "create"}, Before: obj, After: obj}},
-		{Address: "u.delete", Change: PlanChange{Actions: []string{"delete"}}},
-		{Address: "t.forget", Change: PlanChange{Actions: []string{"forget"}}},
-		{Address: "s.fc", Change: PlanChange{Actions: []string{"forget", "create"}, Before: obj, After: obj}},
-		{Address: "r.cf", Change: PlanChange{Actions: []string{"create", "forget"}, Before: obj, After: obj}},
-		{Address: "u.delete", Deposed: "b", Change: PlanChange{Actions: []string{"delete"}}},
-		{Address: "u.delete", Deposed: "a", Change: PlanChange{Actions: []string{"delete"}}},
-		{Address: "q.noop", Change: PlanChange{Actions: []string{"no-op"}}},
+	plan := &rawPlan{FormatVersion: "1.2", ResourceChanges: []rawResource{
+		{Address: "b.create", Change: rawChange{Actions: []string{"create"}}},
+		{Address: "a.create", Change: rawChange{Actions: []string{"create"}}},
+		{Address: "z.update", Change: rawChange{Actions: []string{"update"}, Before: obj, After: obj}},
+		{Address: "y.read", Change: rawChange{Actions: []string{"read"}}},
+		{Address: "x.import", Change: rawChange{Actions: []string{"no-op"}, Importing: &rawImporting{ID: "x"}}},
+		{Address: "w.cbd", Change: rawChange{Actions: []string{"create", "delete"}, Before: obj, After: obj}},
+		{Address: "v.replace", Change: rawChange{Actions: []string{"delete", "create"}, Before: obj, After: obj}},
+		{Address: "u.delete", Change: rawChange{Actions: []string{"delete"}}},
+		{Address: "t.forget", Change: rawChange{Actions: []string{"forget"}}},
+		{Address: "s.fc", Change: rawChange{Actions: []string{"forget", "create"}, Before: obj, After: obj}},
+		{Address: "r.cf", Change: rawChange{Actions: []string{"create", "forget"}, Before: obj, After: obj}},
+		{Address: "u.delete", Deposed: "b", Change: rawChange{Actions: []string{"delete"}}},
+		{Address: "u.delete", Deposed: "a", Change: rawChange{Actions: []string{"delete"}}},
+		{Address: "q.noop", Change: rawChange{Actions: []string{"no-op"}}},
 	}}
-	r, err := Build(plan, defaults)
-	if err != nil {
-		t.Fatal(err)
-	}
+	r := build(plan, defaults)
 	want := []string{
 		"- u.delete", "- u.delete", "- u.delete", "-/+ v.replace", "+/- w.cbd", "./+ s.fc", "+/. r.cf",
 		". t.forget", "~ z.update", "+ a.create", "+ b.create", "<= y.read", ">> x.import",
@@ -55,7 +54,7 @@ func TestBuildOrderingAndTerraformCounts(t *testing.T) {
 	if got := []string{r.Changes[0].Deposed, r.Changes[1].Deposed, r.Changes[2].Deposed}; !cmp.Equal(got, []string{"", "a", "b"}) {
 		t.Errorf("deposed order = %q", got)
 	}
-	wantSummary := Summary{Import: 1, Add: 6, Change: 1, Destroy: 5, Replace: 4, Forget: 3, Read: 1, Noop: 1, Complete: true}
+	wantSummary := summary{Import: 1, Add: 6, Change: 1, Destroy: 5, Replace: 4, Forget: 3, Read: 1, Noop: 1, Complete: true}
 	if diff := cmp.Diff(wantSummary, r.Summary); diff != "" {
 		t.Errorf("summary (-want +got):\n%s", diff)
 	}
@@ -69,29 +68,26 @@ func TestBuildTruncation(t *testing.T) {
 		before[fmt.Sprintf("a%d", i)] = i
 		after[fmt.Sprintf("a%d", i)] = i + 1
 	}
-	plan := &Plan{FormatVersion: "1.2"}
+	plan := &rawPlan{FormatVersion: "1.2"}
 	for i := range 5 {
-		plan.ResourceChanges = append(plan.ResourceChanges, PlanResource{
+		plan.ResourceChanges = append(plan.ResourceChanges, rawResource{
 			Address: fmt.Sprintf("r.n%d", i),
-			Change:  PlanChange{Actions: []string{"update"}, Before: before, After: after},
+			Change:  rawChange{Actions: []string{"update"}, Before: before, After: after},
 		})
 	}
 	tests := map[string]struct {
-		o                                     Options
+		o                                     options
 		changes, omitted, attrs, attrsOmitted int
 	}{
 		"defaults":       {defaults, 5, 0, 8, 2},
-		"limits":         {Options{MaxAttrs: 3, MaxResources: 2}, 2, 3, 3, 7},
-		"zero means all": {Options{}, 5, 0, 10, 0},
-		"exact limits":   {Options{MaxAttrs: 10, MaxResources: 5}, 5, 0, 10, 0},
+		"limits":         {options{MaxAttrs: 3, MaxResources: 2}, 2, 3, 3, 7},
+		"zero means all": {options{}, 5, 0, 10, 0},
+		"exact limits":   {options{MaxAttrs: 10, MaxResources: 5}, 5, 0, 10, 0},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			r, err := Build(plan, tt.o)
-			if err != nil {
-				t.Fatal(err)
-			}
+			r := build(plan, tt.o)
 			got := []int{len(r.Changes), r.Omitted, len(r.Changes[0].Attrs), r.Changes[0].AttrsOmitted, r.Summary.Change}
 			if diff := cmp.Diff([]int{tt.changes, tt.omitted, tt.attrs, tt.attrsOmitted, 5}, got); diff != "" {
 				t.Errorf("changes, omitted, attrs, attrs omitted, summary (-want +got):\n%s", diff)
@@ -103,10 +99,10 @@ func TestBuildTruncation(t *testing.T) {
 func TestBuildNoopVisibility(t *testing.T) {
 	t.Parallel()
 	hidden := mustBuild(t, "noop-only", defaults)
-	if len(hidden.Changes) != 0 || len(hidden.Outputs) != 0 || hidden.Summary.Noop != 2 || hidden.Summary.Changed() {
+	if len(hidden.Changes) != 0 || len(hidden.Outputs) != 0 || hidden.Summary.Noop != 2 || hidden.Summary.changed() {
 		t.Errorf("noop hidden: %+v", hidden)
 	}
-	shown := mustBuild(t, "noop-only", Options{IncludeNoop: true})
+	shown := mustBuild(t, "noop-only", options{IncludeNoop: true})
 	if len(shown.Changes) != 2 || len(shown.Outputs) != 1 || shown.Summary.Outputs != 0 {
 		t.Errorf("noop shown: changes = %d, outputs = %d, summary.Outputs = %d", len(shown.Changes), len(shown.Outputs), shown.Summary.Outputs)
 	}
@@ -124,8 +120,11 @@ func TestBuildMovedNoopStaysVisible(t *testing.T) {
 	}
 }
 
-func actionsFor(t *testing.T, a Action) []string {
+func actionsFor(t *testing.T, a action) []string {
 	t.Helper()
+	if a == actionUnknown {
+		return []string{"archive"}
+	}
 	for key, candidate := range actionTable {
 		if candidate == a {
 			return strings.Split(key, ",")
@@ -138,21 +137,18 @@ func actionsFor(t *testing.T, a Action) []string {
 func TestBuildAttrsOnlyForUpdatesAndReplaces(t *testing.T) {
 	t.Parallel()
 	for _, a := range allActions {
-		if a == Import {
+		if a == actionImport {
 			continue
 		}
-		plan := &Plan{FormatVersion: "1.2", ResourceChanges: []PlanResource{{
+		plan := &rawPlan{FormatVersion: "1.2", ResourceChanges: []rawResource{{
 			Address: "r.x",
-			Change: PlanChange{
+			Change: rawChange{
 				Actions: actionsFor(t, a),
 				Before:  map[string]any{"a": "1"},
 				After:   map[string]any{"a": "2"},
 			},
 		}}}
-		r, err := Build(plan, Options{IncludeNoop: true})
-		if err != nil {
-			t.Fatalf("%s: %v", a, err)
-		}
+		r := build(plan, options{IncludeNoop: true})
 		if got, want := len(r.Changes[0].Attrs) > 0, hasAttrDiff(a); got != want {
 			t.Errorf("%s: has attrs = %v, want %v", a, got, want)
 		}
@@ -165,16 +161,16 @@ func TestBuildDriftRelevance(t *testing.T) {
 	if diff := cmp.Diff([]string{"~ aws_s3_bucket.assets"}, addresses(r.Drift)); diff != "" {
 		t.Errorf("relevant drift (-want +got):\n%s", diff)
 	}
-	if r.Summary.Drift != 1 || r.Summary.DriftIgnored != 2 || r.DriftOmitted != 2 {
-		t.Errorf("drift counts = %d relevant, %d ignored, %d omitted", r.Summary.Drift, r.Summary.DriftIgnored, r.DriftOmitted)
+	if r.Summary.Drift != 1 || r.Summary.DriftIgnored != 2 || r.DriftHidden != 2 {
+		t.Errorf("drift counts = %d relevant, %d ignored, %d omitted", r.Summary.Drift, r.Summary.DriftIgnored, r.DriftHidden)
 	}
-	all := mustBuild(t, "drift", Options{IncludeNoop: true})
+	all := mustBuild(t, "drift", options{IncludeNoop: true})
 	want := []string{"- aws_instance.bastion", "~ aws_s3_bucket.assets", "~ aws_s3_bucket.static"}
 	if diff := cmp.Diff(want, addresses(all.Drift)); diff != "" {
 		t.Errorf("all drift (-want +got):\n%s", diff)
 	}
-	if !all.Drift[0].Irrelevant || all.Drift[1].Irrelevant || !all.Drift[2].Irrelevant || all.DriftOmitted != 0 {
-		t.Errorf("irrelevant flags = %v %v %v, omitted = %d", all.Drift[0].Irrelevant, all.Drift[1].Irrelevant, all.Drift[2].Irrelevant, all.DriftOmitted)
+	if !all.Drift[0].Irrelevant || all.Drift[1].Irrelevant || !all.Drift[2].Irrelevant || all.DriftHidden != 0 {
+		t.Errorf("irrelevant flags = %v %v %v, omitted = %d", all.Drift[0].Irrelevant, all.Drift[1].Irrelevant, all.Drift[2].Irrelevant, all.DriftHidden)
 	}
 }
 
@@ -193,18 +189,15 @@ func TestDriftRelevanceThroughListIndex(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			plan := &Plan{FormatVersion: "1.2",
-				ResourceDrift: []PlanResource{{Address: "r.sg", Change: PlanChange{
+			plan := &rawPlan{FormatVersion: "1.2",
+				ResourceDrift: []rawResource{{Address: "r.sg", Change: rawChange{
 					Actions: []string{"update"},
 					Before:  map[string]any{"ingress": tt.before},
 					After:   map[string]any{"ingress": tt.after},
 				}}},
-				RelevantAttributes: []PlanRelevantAttr{{Resource: "r.sg", Attribute: []any{"ingress", json.Number("0"), "cidr"}}},
+				RelevantAttributes: []rawRelevantAttr{{Resource: "r.sg", Attribute: []any{"ingress", json.Number("0"), "cidr"}}},
 			}
-			r, err := Build(plan, defaults)
-			if err != nil {
-				t.Fatal(err)
-			}
+			r := build(plan, defaults)
 			if len(r.Drift) != 1 || r.Summary.Drift != 1 {
 				t.Fatalf("drift = %+v, summary = %+v", r.Drift, r.Summary)
 			}
@@ -221,54 +214,51 @@ func TestDriftRelevanceThroughListIndex(t *testing.T) {
 
 func TestDriftRelevanceRules(t *testing.T) {
 	t.Parallel()
-	upd := func(addr string) PlanResource {
-		return PlanResource{Address: addr, Change: PlanChange{
+	upd := func(addr string) rawResource {
+		return rawResource{Address: addr, Change: rawChange{
 			Actions: []string{"update"},
 			Before:  map[string]any{"tags": map[string]any{"a": "1"}, "acl": "private"},
 			After:   map[string]any{"tags": map[string]any{"a": "2"}, "acl": "public"},
 		}}
 	}
-	del := PlanResource{Address: "r.gone", Change: PlanChange{Actions: []string{"delete"}, Before: map[string]any{"id": "x"}}}
+	del := rawResource{Address: "r.gone", Change: rawChange{Actions: []string{"delete"}, Before: map[string]any{"id": "x"}}}
 	tests := map[string]struct {
-		relevant  []PlanRelevantAttr
+		relevant  []rawRelevantAttr
 		wantDrift []string
 		wantAttrs []string
 	}{
 		"no relevant attributes hides all drift": {nil, []string{}, nil},
 		"resource path keeps matching attrs": {
-			[]PlanRelevantAttr{{Resource: "r.a", Attribute: []any{"tags"}}},
+			[]rawRelevantAttr{{Resource: "r.a", Attribute: []any{"tags"}}},
 			[]string{"~ r.a"}, []string{"tags.a"},
 		},
 		"global path applies to every resource": {
-			[]PlanRelevantAttr{{Attribute: []any{"acl"}}},
+			[]rawRelevantAttr{{Attribute: []any{"acl"}}},
 			[]string{"- r.gone", "~ r.a", "~ r.b"}, []string{"acl"},
 		},
 		"path without a change hides the resource": {
-			[]PlanRelevantAttr{{Resource: "r.a", Attribute: []any{"other"}}},
+			[]rawRelevantAttr{{Resource: "r.a", Attribute: []any{"other"}}},
 			[]string{}, nil,
 		},
 		"delete is relevant when its address is referenced": {
-			[]PlanRelevantAttr{{Resource: "r.gone", Attribute: []any{"id"}}},
+			[]rawRelevantAttr{{Resource: "r.gone", Attribute: []any{"id"}}},
 			[]string{"- r.gone"}, nil,
 		},
 		"invalid path is ignored": {
-			[]PlanRelevantAttr{{Resource: "r.a", Attribute: []any{true}}},
+			[]rawRelevantAttr{{Resource: "r.a", Attribute: []any{true}}},
 			[]string{}, nil,
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			plan := &Plan{FormatVersion: "1.2", ResourceDrift: []PlanResource{upd("r.a"), upd("r.b"), del}, RelevantAttributes: tt.relevant}
-			r, err := Build(plan, defaults)
-			if err != nil {
-				t.Fatal(err)
-			}
+			plan := &rawPlan{FormatVersion: "1.2", ResourceDrift: []rawResource{upd("r.a"), upd("r.b"), del}, RelevantAttributes: tt.relevant}
+			r := build(plan, defaults)
 			if diff := cmp.Diff(tt.wantDrift, addresses(r.Drift), cmpopts.EquateEmpty()); diff != "" {
 				t.Errorf("drift (-want +got):\n%s", diff)
 			}
 			for _, c := range r.Drift {
-				if c.Action != Update {
+				if c.Action != actionUpdate {
 					continue
 				}
 				var paths []string
@@ -289,9 +279,9 @@ func TestDriftRelevanceRules(t *testing.T) {
 func TestBuildDeferred(t *testing.T) {
 	t.Parallel()
 	r := mustBuild(t, "deferred", defaults)
-	want := []DeferredChange{
-		{Address: "aws_subnet.private[\"*\"]", Action: Create, Reason: "instance_count_unknown"},
-		{Address: "kubernetes_namespace.app", Action: Create, Reason: "provider_config_unknown"},
+	want := []deferredChange{
+		{Address: "aws_subnet.private[\"*\"]", Action: actionCreate, Reason: "instance_count_unknown"},
+		{Address: "kubernetes_namespace.app", Action: actionCreate, Reason: "provider_config_unknown"},
 	}
 	if diff := cmp.Diff(want, r.Deferred); diff != "" {
 		t.Errorf("deferred (-want +got):\n%s", diff)
@@ -299,19 +289,18 @@ func TestBuildDeferred(t *testing.T) {
 	if r.Summary.Deferred != 2 || r.Summary.Complete {
 		t.Errorf("summary = %+v", r.Summary)
 	}
-	moved := &Plan{FormatVersion: "1.2", DeferredChanges: []PlanDeferred{{Reason: "deferred_prereq", ResourceChange: PlanResource{
-		Address: "b", PreviousAddress: "a", Change: PlanChange{Actions: []string{"no-op"}},
+	moved := &rawPlan{FormatVersion: "1.2", DeferredChanges: []rawDeferred{{Reason: "deferred_prereq", ResourceChange: rawResource{
+		Address: "b", PreviousAddress: "a", Change: rawChange{Actions: []string{"no-op"}},
 	}}}}
-	got, err := Build(moved, defaults)
-	if err != nil || len(got.Deferred) != 1 {
-		t.Errorf("moved no-op deferred = %+v, %v", got.Deferred, err)
+	if got := build(moved, defaults); len(got.Deferred) != 1 {
+		t.Errorf("moved no-op deferred = %+v", got.Deferred)
 	}
 }
 
 func TestBuildActions(t *testing.T) {
 	t.Parallel()
 	r := mustBuild(t, "actions", defaults)
-	want := []ActionInvocation{
+	want := []tfdiag.ActionInvocation{
 		{Address: "action.aws_lambda_invoke.notify", Event: "AfterCreate", Resource: "aws_instance.web"},
 		{Address: "action.aws_lambda_invoke.audit", Invoked: true},
 	}
@@ -326,9 +315,9 @@ func TestBuildActions(t *testing.T) {
 func TestBuildDeferredActions(t *testing.T) {
 	t.Parallel()
 	r := mustBuild(t, "deferred-actions", defaults)
-	want := []DeferredAction{
-		{ActionInvocation{Address: "action.aws_lambda_invoke.notify", Event: "AfterCreate", Resource: "kubernetes_namespace.app"}, "deferred_prereq"},
-		{ActionInvocation{Address: "action.aws_lambda_invoke.audit", Invoked: true}, "provider_config_unknown"},
+	want := []deferredAction{
+		{tfdiag.ActionInvocation{Address: "action.aws_lambda_invoke.notify", Event: "AfterCreate", Resource: "kubernetes_namespace.app"}, "deferred_prereq"},
+		{tfdiag.ActionInvocation{Address: "action.aws_lambda_invoke.audit", Invoked: true}, "provider_config_unknown"},
 	}
 	if diff := cmp.Diff(want, r.DeferredActions); diff != "" {
 		t.Errorf("deferred actions (-want +got):\n%s", diff)
@@ -336,11 +325,8 @@ func TestBuildDeferredActions(t *testing.T) {
 	if r.Summary.DeferredActions != 2 || r.Summary.Deferred != 1 || r.Summary.Actions != 1 {
 		t.Errorf("summary = %+v", r.Summary)
 	}
-	only := &Plan{FormatVersion: "1.2", DeferredActions: []PlanDeferredAction{{Reason: "absent_prereq", ActionInvocation: PlanAction{Address: "action.a.b"}}}}
-	got, err := Build(only, defaults)
-	if err != nil {
-		t.Fatal(err)
-	}
+	only := &rawPlan{FormatVersion: "1.2", DeferredActions: []rawDeferredAction{{Reason: "absent_prereq", ActionInvocation: rawAction{Address: "action.a.b"}}}}
+	got := build(only, defaults)
 	if c := conditions(got); strings.Join(c, ",") != "deferred" {
 		t.Errorf("conditions with only a deferred action = %v, want [deferred]", c)
 	}
@@ -349,17 +335,17 @@ func TestBuildDeferredActions(t *testing.T) {
 func TestBuildGeneratedConfig(t *testing.T) {
 	t.Parallel()
 	r := mustBuild(t, "generated-config", defaults)
-	want := []ResourceChange{
-		{Address: "aws_db_instance.legacy", Action: Import, Importing: true, GeneratedLines: 9},
-		{Address: "aws_s3_bucket.legacy", Action: Import, Importing: true, GeneratedLines: 8},
+	want := []resourceChange{
+		{Address: "aws_db_instance.legacy", Action: actionImport, Importing: true, GeneratedLines: 9},
+		{Address: "aws_s3_bucket.legacy", Action: actionImport, Importing: true, GeneratedLines: 8},
 	}
-	if diff := cmp.Diff(want, r.Changes, cmpopts.IgnoreFields(ResourceChange{}, "GeneratedConfig")); diff != "" {
+	if diff := cmp.Diff(want, r.Changes, cmpopts.IgnoreFields(resourceChange{}, "GeneratedConfig")); diff != "" {
 		t.Errorf("changes (-want +got):\n%s", diff)
 	}
 	if !strings.Contains(r.Changes[0].GeneratedConfig, "password            = null # sensitive\n") {
 		t.Errorf("generated config = %q", r.Changes[0].GeneratedConfig)
 	}
-	hidden := mustBuild(t, "generated-config", Options{NoValues: true})
+	hidden := mustBuild(t, "generated-config", options{NoValues: true})
 	if hidden.Changes[0].GeneratedConfig != "" || hidden.Changes[0].GeneratedLines != 9 {
 		t.Errorf("--no-values change = %+v", hidden.Changes[0])
 	}
@@ -403,10 +389,10 @@ func TestBuildForgetReplace(t *testing.T) {
 func TestBuildOutputs(t *testing.T) {
 	t.Parallel()
 	r := mustBuild(t, "outputs", defaults)
-	want := []OutputChange{
-		{Name: "bucket_name", Action: Delete},
-		{Name: "db_endpoint", Action: Create, Unknown: true},
-		{Name: "db_password", Action: Update, Sensitive: true},
+	want := []outputChange{
+		{Name: "bucket_name", Action: actionDelete},
+		{Name: "db_endpoint", Action: actionCreate, Unknown: true},
+		{Name: "db_password", Action: actionUpdate, Sensitive: true},
 	}
 	if diff := cmp.Diff(want, r.Outputs); diff != "" || r.Summary.Outputs != 3 {
 		t.Errorf("outputs (-want +got):\n%s, summary.Outputs = %d", diff, r.Summary.Outputs)
@@ -422,88 +408,85 @@ func TestBuildImport(t *testing.T) {
 	if !r.Changes[0].Importing || r.Summary.Import != 2 || r.Summary.Change != 1 || r.Summary.Noop != 0 {
 		t.Errorf("summary = %+v", r.Summary)
 	}
-	if a := r.Changes[0].Attrs[0]; a.Kind != Added || a.Path != "tags.ManagedBy" {
+	if a := r.Changes[0].Attrs[0]; a.Kind != attrAdded || a.Path != "tags.ManagedBy" {
 		t.Errorf("first attr = %+v, want added tags.ManagedBy", a)
 	}
 }
 
 func TestBuildChecks(t *testing.T) {
 	t.Parallel()
-	check := func(kind, addr, status string, instances ...PlanCheckInstance) PlanCheck {
-		return PlanCheck{Address: PlanCheckAddress{Kind: kind, ToDisplay: addr}, Status: status, Instances: instances}
+	check := func(kind, addr, status string, instances ...rawCheckInstance) rawCheck {
+		return rawCheck{Address: rawCheckAddress{Kind: kind, ToDisplay: addr}, Status: status, Instances: instances}
 	}
-	instance := func(addr, status string, messages ...string) PlanCheckInstance {
-		in := PlanCheckInstance{Address: PlanCheckAddress{ToDisplay: addr}, Status: status}
+	instance := func(addr, status string, messages ...string) rawCheckInstance {
+		in := rawCheckInstance{Address: rawCheckAddress{ToDisplay: addr}, Status: status}
 		for _, m := range messages {
-			in.Problems = append(in.Problems, PlanCheckProblem{Message: m})
+			in.Problems = append(in.Problems, rawCheckProblem{Message: m})
 		}
 		return in
 	}
 	tests := []struct {
 		name       string
-		checks     []PlanCheck
+		checks     []rawCheck
 		errored    bool
-		want       []CheckResult
+		want       []checkResult
 		conditions []string
 	}{
 		{
 			name:       "pass and unknown are not listed",
-			checks:     []PlanCheck{check("check", "check.a", "pass", instance("check.a", "pass")), check("var", "var.b", "unknown")},
-			want:       []CheckResult{},
+			checks:     []rawCheck{check("check", "check.a", "pass", instance("check.a", "pass")), check("var", "var.b", "unknown")},
+			want:       []checkResult{},
 			conditions: []string{},
 		},
 		{
 			name:       "a failed check block is a warning",
-			checks:     []PlanCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down"))},
-			want:       []CheckResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down"}}},
+			checks:     []rawCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down"))},
+			want:       []checkResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down"}}},
 			conditions: []string{"check", "warning"},
 		},
 		{
 			name:       "a failed resource condition in a plan that did not error is a warning",
-			checks:     []PlanCheck{check("resource", "aws_instance.web", "fail", instance("aws_instance.web[0]", "pass"), instance("aws_instance.web[1]", "fail", "bad ami", "no tags"))},
-			want:       []CheckResult{{Address: "aws_instance.web[1]", Kind: "resource", Status: "fail", Problems: []string{"bad ami", "no tags"}}},
+			checks:     []rawCheck{check("resource", "aws_instance.web", "fail", instance("aws_instance.web[0]", "pass"), instance("aws_instance.web[1]", "fail", "bad ami", "no tags"))},
+			want:       []checkResult{{Address: "aws_instance.web[1]", Kind: "resource", Status: "fail", Problems: []string{"bad ami", "no tags"}}},
 			conditions: []string{"check", "warning"},
 		},
 		{
 			name:       "a failed resource condition in an errored plan is the error",
-			checks:     []PlanCheck{check("resource", "aws_instance.web", "fail", instance("aws_instance.web", "fail", "bad ami"))},
+			checks:     []rawCheck{check("resource", "aws_instance.web", "fail", instance("aws_instance.web", "fail", "bad ami"))},
 			errored:    true,
-			want:       []CheckResult{{Address: "aws_instance.web", Kind: "resource", Status: "fail", Problems: []string{"bad ami"}}},
+			want:       []checkResult{{Address: "aws_instance.web", Kind: "resource", Status: "fail", Problems: []string{"bad ami"}}},
 			conditions: []string{"check", "error", "fail"},
 		},
 		{
 			name:       "a failed check block in an errored plan is still a warning",
-			checks:     []PlanCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down"))},
+			checks:     []rawCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down"))},
 			errored:    true,
-			want:       []CheckResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down"}}},
+			want:       []checkResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down"}}},
 			conditions: []string{"check", "error", "fail", "warning"},
 		},
 		{
 			name:       "an object without instances stands in for them",
-			checks:     []PlanCheck{check("output_value", "output.x", "error")},
-			want:       []CheckResult{{Address: "output.x", Kind: "output_value", Status: "error"}},
+			checks:     []rawCheck{check("output_value", "output.x", "error")},
+			want:       []checkResult{{Address: "output.x", Kind: "output_value", Status: "error"}},
 			conditions: []string{"check", "warning"},
 		},
 		{
 			name:       "an unexpected status is listed",
-			checks:     []PlanCheck{check("var", "var.v", "skipped", instance("", "skipped", ""))},
-			want:       []CheckResult{{Address: "var.v", Kind: "var", Status: "skipped"}},
+			checks:     []rawCheck{check("var", "var.v", "skipped", instance("", "skipped", ""))},
+			want:       []checkResult{{Address: "var.v", Kind: "var", Status: "skipped"}},
 			conditions: []string{"check", "warning"},
 		},
 		{
 			name:       "messages cannot forge a line",
-			checks:     []PlanCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down\n\x1b[31mfail check.b: forged"))},
-			want:       []CheckResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down fail check.b: forged"}}},
+			checks:     []rawCheck{check("check", "check.a", "fail", instance("check.a", "fail", "down\n\x1b[31mfail check.b: forged"))},
+			want:       []checkResult{{Address: "check.a", Kind: "check", Status: "fail", Problems: []string{"down fail check.b: forged"}}},
 			conditions: []string{"check", "warning"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			r, err := Build(&Plan{Checks: tt.checks, Errored: tt.errored}, defaults)
-			if err != nil {
-				t.Fatal(err)
-			}
+			r := build(&rawPlan{Checks: tt.checks, Errored: tt.errored}, defaults)
 			if diff := cmp.Diff(tt.want, r.Checks); diff != "" {
 				t.Errorf("checks (-want +got):\n%s", diff)
 			}
@@ -517,7 +500,7 @@ func TestBuildChecks(t *testing.T) {
 			if tt.errored {
 				errLine = 1
 			}
-			if text := Text(r, defaults); strings.Count(text, "\n") != errLine+1+min(len(tt.want), 1)+len(tt.want) {
+			if text := text(r, defaults); strings.Count(text, "\n") != errLine+1+min(len(tt.want), 1)+len(tt.want) {
 				t.Errorf("text has an unexpected line count:\n%s", text)
 			}
 		})
@@ -550,18 +533,32 @@ func TestBuildMetadata(t *testing.T) {
 	}
 }
 
-func TestSqueezeErrors(t *testing.T) {
+func TestSqueezeParseError(t *testing.T) {
 	t.Parallel()
-	tests := map[string]string{
-		"parse":           `{`,
-		"resource action": `{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["bogus"]}}]}`,
-		"drift action":    `{"format_version":"1.2","resource_drift":[{"address":"a","change":{"actions":["bogus"]}}]}`,
-		"deferred action": `{"format_version":"1.2","deferred_changes":[{"reason":"x","resource_change":{"address":"a","change":{"actions":["bogus"]}}}]}`,
-		"output action":   `{"format_version":"1.2","output_changes":{"o":{"actions":["bogus"]}}}`,
+	if _, err := squeeze([]byte(`{`), defaults); err == nil {
+		t.Error("Squeeze() returned no error")
 	}
-	for name, input := range tests {
-		if _, err := Squeeze([]byte(input), defaults); err == nil {
-			t.Errorf("%s: Squeeze() returned no error", name)
+}
+
+func TestUnknownActionsAreKept(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		input string
+		want  string
+	}{
+		"resource": {`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["bogus"]}}]}`, "? a (unknown actions [bogus])"},
+		"drift":    {`{"format_version":"1.2","resource_drift":[{"address":"a","change":{"actions":["bogus"]}}],"relevant_attributes":[{"resource":"a","attribute":["x"]}]}`, "? a (unknown actions [bogus])"},
+		"deferred": {`{"format_version":"1.2","deferred_changes":[{"reason":"x","resource_change":{"address":"a","change":{"actions":["bogus"]}}}]}`, "? a (x; unknown actions [bogus])"},
+		"output":   {`{"format_version":"1.2","output_changes":{"o":{"actions":["bogus"]}}}`, "outputs: ? o (unknown actions [bogus])"},
+		"empty":    {`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":[]}}]}`, "? a (unknown actions [])"},
+	}
+	for name, tt := range tests {
+		r, err := squeeze([]byte(tt.input), options{ListDrift: true})
+		if err != nil {
+			t.Fatalf("%s: Squeeze() error = %v", name, err)
+		}
+		if !strings.Contains(r.Text, tt.want+"\n") {
+			t.Errorf("%s: text lacks %q:\n%s", name, tt.want, r.Text)
 		}
 	}
 }
@@ -572,8 +569,8 @@ func TestFixturesNeverLeakSensitiveValues(t *testing.T) {
 		if len(sensitiveStrings(t, data)) == 0 {
 			continue
 		}
-		for _, o := range []Options{defaults, {IncludeNoop: true, ListDrift: true}, {NoValues: true}} {
-			r, err := Squeeze(data, o)
+		for _, o := range []options{defaults, {IncludeNoop: true, ListDrift: true}, {NoValues: true}} {
+			r, err := squeeze(data, o)
 			if err != nil {
 				t.Fatalf("%s: %v", name, err)
 			}
@@ -607,7 +604,7 @@ func TestRatioOnFixtures(t *testing.T) {
 		if err := json.Compact(&compact, data); err != nil {
 			t.Fatalf("compact %s: %v", name, err)
 		}
-		r, err := Squeeze(compact.Bytes(), defaults)
+		r, err := squeeze(compact.Bytes(), defaults)
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
@@ -625,7 +622,7 @@ func TestRatioOnFixtures(t *testing.T) {
 func TestRatioOnLargePlan(t *testing.T) {
 	t.Parallel()
 	input := largePlan(t, 2000)
-	r, err := Squeeze(input, defaults)
+	r, err := squeeze(input, defaults)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -637,7 +634,7 @@ func TestRatioOnLargePlan(t *testing.T) {
 func TestInputStringsCannotForgeLines(t *testing.T) {
 	t.Parallel()
 	input := `{"format_version":"1.2","terraform_version":"1.9\nerror: forged","resource_changes":[{"address":"aws_instance.a\nerror: forged","change":{"actions":["create"]}}],"output_changes":{"x\u0000\nerror: forged":{"actions":["create"]}}}`
-	r, err := Squeeze([]byte(input), DefaultOptions())
+	r, err := squeeze([]byte(input), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}

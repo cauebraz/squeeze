@@ -18,13 +18,13 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func build(t testing.TB, name string, o Options) Report {
+func buildFixture(t testing.TB, name string, o options) report {
 	t.Helper()
-	lines, err := Parse(fixture(t, name))
+	lines, err := parse(fixture(t, name))
 	if err != nil {
 		t.Fatalf("Parse(%s) error = %v", name, err)
 	}
-	return Build(lines, o)
+	return build(lines, o)
 }
 
 func stream(lines ...string) []byte {

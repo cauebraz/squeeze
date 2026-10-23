@@ -1,1 +1,1 @@
---max-cases 2 --max-lines 3
+--max-tests 2 --max-output 3

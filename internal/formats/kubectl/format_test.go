@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
+	"github.com/cauebraz/squeeze/internal/logscan"
 )
 
 const fixtureDir = "testdata"
@@ -25,18 +28,18 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func report(t *testing.T, input string) Report {
+func reportOf(t *testing.T, input string) report {
 	t.Helper()
-	r, err := Squeeze([]byte(input), Options{})
+	r, err := squeeze([]byte(input), options{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r.Data.(Report)
+	return r.Data.(report)
 }
 
-func only(t *testing.T, input string) Object {
+func only(t *testing.T, input string) object {
 	t.Helper()
-	r := report(t, input)
+	r := reportOf(t, input)
 	if len(r.Objects) != 1 {
 		t.Fatalf("objects = %+v", r.Objects)
 	}
@@ -68,16 +71,16 @@ func TestDetect(t *testing.T) {
 		"terraform outputs": {`{"bucket":{"sensitive":false,"type":"string","value":"x"}}`, false},
 		"yaml":              {"apiVersion: v1\nkind: Pod\nmetadata:\n  name: a\n", false},
 	}
-	for name, tt := range tests {
+	for label, tt := range tests {
 		if got := (Format{}).Detect([]byte(tt.input)); got != tt.want {
-			t.Errorf("%s: Detect() = %v, want %v", name, got, tt.want)
+			t.Errorf("%s: Detect() = %v, want %v", label, got, tt.want)
 		}
 	}
 }
 
 func TestParseErrors(t *testing.T) {
 	t.Parallel()
-	for name, input := range map[string]string{
+	for label, input := range map[string]string{
 		"truncated":          `{"apiVersion":`,
 		"array":              `[]`,
 		"null":               `null`,
@@ -87,16 +90,17 @@ func TestParseErrors(t *testing.T) {
 		"item without kind":  `{"apiVersion":"v1","kind":"List","items":[{"metadata":{"name":"a"}}]}`,
 		"null item":          `{"apiVersion":"v1","kind":"PodList","items":[null]}`,
 		"metadata not a map": `{"apiVersion":"v1","kind":"Pod","metadata":[]}`,
+		"item not an object": `{"apiVersion":"v1","kind":"List","items":[1]}`,
 	} {
-		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
-			t.Errorf("%s: Squeeze() returned no error", name)
+		if _, err := squeeze([]byte(input), defaultOptions()); err == nil {
+			t.Errorf("%s: Squeeze() returned no error", label)
 		}
 	}
 }
 
 func TestTypedListItemsTakeTheListKind(t *testing.T) {
 	t.Parallel()
-	r := report(t, `{"apiVersion":"v1","kind":"PodList","items":[{"metadata":{"name":"a","namespace":"n"},"status":{"phase":"Succeeded"}}]}`)
+	r := reportOf(t, `{"apiVersion":"v1","kind":"PodList","items":[{"metadata":{"name":"a","namespace":"n"},"status":{"phase":"Succeeded"}}]}`)
 	if len(r.Objects) != 1 || r.Objects[0].Kind != "Pod" || r.Objects[0].Status != "Succeeded" {
 		t.Errorf("objects = %+v", r.Objects)
 	}
@@ -105,30 +109,31 @@ func TestTypedListItemsTakeTheListKind(t *testing.T) {
 func TestConditions(t *testing.T) {
 	t.Parallel()
 	tests := map[string][]string{
-		"mixed":         {"fail", "restarts"},
-		"events":        {"warning"},
-		"single-secret": {},
-		"nodes":         {},
-		"node-notready": {"fail"},
+		"mixed":           {"fail", "restarts"},
+		"events":          {"warning"},
+		"single-secret":   {},
+		"nodes":           {},
+		"node-notready":   {"fail"},
+		"trailing-errors": {"error", "fail", "restarts", "warning"},
 	}
-	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+	for label, want := range tests {
+		r, err := squeeze(fixture(t, label), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(want, r.Conditions); diff != "" {
-			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
+			t.Errorf("%s: conditions (-want +got):\n%s", label, diff)
 		}
 	}
 }
 
 func TestMixedFixture(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "mixed"), DefaultOptions())
+	r, err := squeeze(fixture(t, "mixed"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	data := r.Data.(Report)
+	data := r.Data.(report)
 	want := []string{
 		"Pod shop/api-badimage ImagePullBackOff",
 		"Pod shop/batch-pending Pending",
@@ -224,10 +229,10 @@ func TestPodStatusFollowsKubectl(t *testing.T) {
 			"Unknown", true, nil,
 		},
 	}
-	for name, tt := range tests {
+	for label, tt := range tests {
 		o := only(t, `{"apiVersion":"v1","kind":"Pod",`+tt.pod+`}`)
 		if o.Status != tt.status || o.Unhealthy != tt.unhealthy || !cmp.Equal(o.Containers, tt.containers) {
-			t.Errorf("%s: status %q unhealthy %v containers %q, want %q %v %q", name, o.Status, o.Unhealthy, o.Containers, tt.status, tt.unhealthy, tt.containers)
+			t.Errorf("%s: status %q unhealthy %v containers %q, want %q %v %q", label, o.Status, o.Unhealthy, o.Containers, tt.status, tt.unhealthy, tt.containers)
 		}
 	}
 	if o := only(t, `{"apiVersion":"v1","kind":"Pod","spec":{"containers":[{"name":"c"}]},"status":{"phase":"Failed","reason":"Evicted","message":"low on memory"}}`); o.Message != "low on memory" {
@@ -327,10 +332,10 @@ func TestWorkloads(t *testing.T) {
 			"ServiceAccount default", false,
 		},
 	}
-	for name, tt := range tests {
+	for label, tt := range tests {
 		o := only(t, `{"apiVersion":"v1",`+tt.object+`}`)
 		if got := line(o); got != tt.line || o.Unhealthy != tt.unhealthy {
-			t.Errorf("%s: line %q unhealthy %v, want %q %v", name, got, o.Unhealthy, tt.line, tt.unhealthy)
+			t.Errorf("%s: line %q unhealthy %v, want %q %v", label, got, o.Unhealthy, tt.line, tt.unhealthy)
 		}
 	}
 }
@@ -358,7 +363,7 @@ func TestEvents(t *testing.T) {
 		{"apiVersion":"events.k8s.io/v1","kind":"Event","type":"Warning","reason":"FailedMount","note":"volume x","deprecatedCount":4,"series":{"count":6,"lastObservedTime":"2026-01-01T00:00:09Z"},"regarding":{"kind":"Pod","namespace":"n","name":"q"}},
 		{"apiVersion":"v1","kind":"Event","type":"Warning","eventTime":"2026-01-01T00:00:00Z"},
 		{"apiVersion":"v1","kind":"Event","type":"Normal","reason":"Pulled","message":"ok"}]}`
-	r, err := Squeeze([]byte(input), DefaultOptions())
+	r, err := squeeze([]byte(input), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -369,7 +374,7 @@ func TestEvents(t *testing.T) {
 	if r.Text != want {
 		t.Errorf("text:\n%s\nwant:\n%s", r.Text, want)
 	}
-	cut, err := Squeeze([]byte(input), Options{MaxEvents: 1})
+	cut, err := squeeze([]byte(input), options{maxEvents: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -378,13 +383,59 @@ func TestEvents(t *testing.T) {
 	}
 }
 
-func TestLimitsCountEveryObject(t *testing.T) {
+func TestEventsAreOrderedByTime(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "all-namespaces"), Options{MaxObjects: 5})
+	input := `{"apiVersion":"v1","kind":"List","items":[
+		{"apiVersion":"v1","kind":"Event","type":"Warning","reason":"Old","message":"m","lastTimestamp":"2026-01-01T00:00:01Z","involvedObject":{"kind":"Pod","namespace":"n","name":"a"}},
+		{"apiVersion":"events.k8s.io/v1","kind":"Event","type":"Warning","reason":"New","note":"m","series":{"count":2,"lastObservedTime":"2026-01-01T00:00:01.500000Z"},"regarding":{"kind":"Pod","namespace":"n","name":"b"}},
+		{"apiVersion":"v1","kind":"Event","type":"Warning","reason":"Folded","message":"m","lastTimestamp":"2026-01-01T00:00:01.250000Z","involvedObject":{"kind":"Pod","namespace":"n","name":"c"}},
+		{"apiVersion":"v1","kind":"Event","type":"Warning","reason":"Folded","message":"m","lastTimestamp":"2026-01-01T00:00:01Z","involvedObject":{"kind":"Pod","namespace":"n","name":"c"}},
+		{"apiVersion":"v1","kind":"Event","type":"Warning","reason":"Unparsed","message":"m","lastTimestamp":"yesterday","involvedObject":{"kind":"Pod","namespace":"n","name":"d"}},
+		{"apiVersion":"v1","kind":"Event","type":"Warning","reason":"Untimed","message":"m","involvedObject":{"kind":"Pod","namespace":"n","name":"e"}}]}`
+	r := reportOf(t, input)
+	var got []string
+	for _, e := range r.Events {
+		got = append(got, e.Reason+" "+e.Last)
+	}
+	want := []string{
+		"New 2026-01-01T00:00:01.500000Z",
+		"Folded 2026-01-01T00:00:01.250000Z",
+		"Old 2026-01-01T00:00:01Z",
+		"Unparsed yesterday",
+		"Untimed ",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("events (-want +got):\n%s", diff)
+	}
+}
+
+func TestUnreadableEventsAreWarnings(t *testing.T) {
+	t.Parallel()
+	input := `{"apiVersion":"v1","kind":"List","items":[
+		{"apiVersion":"v1","kind":"Event","metadata":{"name":"e1","namespace":"n"},"type":"Warning","reason":"BackOff","count":"3","involvedObject":{"kind":"Pod","namespace":"n","name":"p"}},
+		{"apiVersion":"v1","kind":"Event","metadata":{"name":"e2","namespace":"n"},"type":"Normal","reason":"Pulled","involvedObject":[]}]}`
+	r, err := squeeze([]byte(input), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	data := r.Data.(Report)
+	want := "kubectl: 2 events, 2 warnings\n" +
+		"warning Event n/e1 unreadable event\n" +
+		"warning Event n/e2 unreadable event\n"
+	if r.Text != want {
+		t.Errorf("text:\n%s\nwant:\n%s", r.Text, want)
+	}
+	if diff := cmp.Diff([]string{"warning"}, r.Conditions); diff != "" {
+		t.Errorf("conditions (-want +got):\n%s", diff)
+	}
+}
+
+func TestLimitsCountEveryObject(t *testing.T) {
+	t.Parallel()
+	r, err := squeeze(fixture(t, "all-namespaces"), options{maxObjects: 5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data := r.Data.(report)
 	sum := 0
 	for _, c := range data.OmittedByKind {
 		sum += c.Count
@@ -402,14 +453,14 @@ func TestLimitsCountEveryObject(t *testing.T) {
 func TestLongMessagesAreCutInTextOnly(t *testing.T) {
 	t.Parallel()
 	long := strings.Repeat("x", 500)
-	r, err := Squeeze([]byte(`{"apiVersion":"v1","kind":"PersistentVolume","metadata":{"name":"pv"},"status":{"phase":"Failed","message":"`+long+`"}}`), DefaultOptions())
+	r, err := squeeze([]byte(`{"apiVersion":"v1","kind":"PersistentVolume","metadata":{"name":"pv"},"status":{"phase":"Failed","message":"`+long+`"}}`), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(r.Text, long) || !strings.Contains(r.Text, "...") {
 		t.Errorf("text keeps the whole message:\n%s", r.Text)
 	}
-	if r.Data.(Report).Objects[0].Message != long {
+	if r.Data.(report).Objects[0].Message != long {
 		t.Errorf("data lost the message")
 	}
 }
@@ -471,14 +522,15 @@ func values(v any, f visit) any {
 }
 
 func rewrite(input []byte, f visit) ([]byte, bool) {
-	dec := json.NewDecoder(bytes.NewReader(input))
+	lead, rest := logscan.LeadingLines(input)
+	dec := json.NewDecoder(bytes.NewReader(rest))
 	dec.UseNumber()
 	var doc any
 	if dec.Decode(&doc) != nil {
 		return nil, false
 	}
 	out, err := json.Marshal(walk(doc, "", f))
-	return out, err == nil
+	return slices.Concat(lead, out, rest[dec.InputOffset():]), err == nil
 }
 
 func sensitive(t *testing.T, input []byte) []string {
@@ -510,8 +562,8 @@ func TestSensitiveValuesNeverReachOutput(t *testing.T) {
 	t.Parallel()
 	checked := map[string]bool{}
 	for _, c := range formattest.Cases(t, fixtureDir) {
-		values := sensitive(t, c.Input)
-		r, err := Squeeze(c.Input, Options{})
+		found := sensitive(t, c.Input)
+		r, err := squeeze(c.Input, options{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -519,7 +571,7 @@ func TestSensitiveValuesNeverReachOutput(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, v := range values {
+		for _, v := range found {
 			checked[v] = true
 			if strings.Contains(r.Text, v) || strings.Contains(string(envelope), v) || strings.Contains(string(envelope), strings.TrimSuffix(strings.TrimPrefix(string(mustJSON(t, v)), `"`), `"`)) {
 				t.Errorf("%s: a sensitive value reached the output: %q", c.Name, v)
@@ -549,11 +601,11 @@ func TestOutputDoesNotDependOnSensitiveValues(t *testing.T) {
 		if !ok {
 			t.Fatal("input is not JSON")
 		}
-		before, err := Squeeze(c.Input, Options{})
+		before, err := squeeze(c.Input, options{})
 		if err != nil {
 			t.Fatal(err)
 		}
-		after, err := Squeeze(changed, Options{})
+		after, err := squeeze(changed, options{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -570,21 +622,30 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		{"apiVersion":"v1","kind":"Pod","metadata":{"name":"q"},"spec":{"containers":[{"name":"c"}]},"status":{"phase":"Pending","message":"m\nunhealthy forged","containerStatuses":[{"name":"c\nunhealthy forged","state":{"waiting":{"reason":"r\nunhealthy forged"}}}]}},
 		{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"c"},"data":{"k\nunhealthy forged":"v"}},
 		{"apiVersion":"v1","kind":"Event","type":"Warning","reason":"r\nwarning forged","message":"m\nwarning forged","involvedObject":{"kind":"K\nwarning forged","name":"x"}}]}`)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
 	formattest.CheckText(t, r.Text)
-	for _, line := range strings.Split(r.Text, "\n") {
-		if strings.HasPrefix(line, "unhealthy forged") || strings.HasPrefix(line, "warning forged") {
-			t.Errorf("input forged a line: %q\n%s", line, r.Text)
+	for _, l := range strings.Split(r.Text, "\n") {
+		if strings.HasPrefix(l, "unhealthy forged") || strings.HasPrefix(l, "warning forged") {
+			t.Errorf("input forged a line: %q\n%s", l, r.Text)
+		}
+	}
+	data, err := json.Marshal(r.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, escaped := range []string{`\n`, `\u001b`} {
+		if bytes.Contains(data, []byte(escaped)) {
+			t.Errorf("data holds %s: %s", escaped, data)
 		}
 	}
 }
 
 func TestDataPayload(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "empty"), DefaultOptions())
+	r, err := squeeze(fixture(t, "empty"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -603,24 +664,24 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(`{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Secret","metadata":{"name":"s","annotations":{"a":"s"}},"data":{"k":"s"}},{"apiVersion":"v1","kind":"Event","type":"Warning","count":-3}]}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		raws, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		in, err := parse(input)
 		if err != nil {
 			return
 		}
 		objects, warnings := 0, 0
-		for _, r := range raws {
+		for _, r := range in.Objects {
 			if r.Kind == "Event" {
-				if f, _ := event(r); f.Type == "Warning" {
+				if f, _, err := toEvent(r); err != nil || f.Type == eventWarning {
 					warnings++
 				}
 				continue
 			}
 			objects++
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxObjects: 1, MaxEvents: 1}} {
-			r := Build(raws, o)
-			res := core.Result{Text: Text(r), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {maxObjects: 1, maxEvents: 1}} {
+			r := build(in, o)
+			res := core.Result{Text: text(r), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
 			formattest.CheckNotices(t, res.Text)
 			if len(r.Objects)+r.ObjectsOmitted != objects || r.ObjectsTotal != objects {
@@ -640,8 +701,8 @@ func FuzzSqueeze(f *testing.F) {
 		if !ok {
 			return
 		}
-		before, errBefore := Squeeze(input, Options{})
-		after, errAfter := Squeeze(changed, Options{})
+		before, errBefore := squeeze(input, options{})
+		after, errAfter := squeeze(changed, options{})
 		if errBefore != nil || errAfter != nil {
 			return
 		}

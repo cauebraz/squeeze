@@ -1,0 +1,9 @@
+pre-commit: 2 hooks, 1 failed, 1 passed
+fail mypy: exit code 1
+  ... 1 line cut (--max-lines 0)
+  pre_commit_hooks/util.py:12: error: Missing return statement  [return]
+      def cmd_output(*cmd: str) -> str:
+  pre_commit_hooks/removed.py:30: error: Name "argv" is not defined  [name-defined]
+      return main(argv)
+  Found 2 errors in 2 files (checked 4 source files)
+... 1 passed or skipped hook (--all)

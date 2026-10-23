@@ -1,0 +1,3 @@
+npm audit: 2 vulnerabilities (1 low, 1 unknown) in 2 dependencies; 1 direct; fix: 1 with npm audit fix, 1 without one
+low ms <2.0.0: no fix; GHSA-0000-0000-0002
+unknown left-pad <1.3.0 direct: fix with npm audit fix; GHSA-0000-0000-0001

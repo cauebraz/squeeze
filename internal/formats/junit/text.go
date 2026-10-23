@@ -7,27 +7,29 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-func Text(r Report) string {
+func render(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
 	for _, c := range r.Cases {
 		kind := "fail"
-		if c.Kind == "error" {
+		switch c.Kind {
+		case kindError:
 			kind = "error"
+		case kindFailure:
 		}
 		name := label(c)
-		if strings.Contains(name, c.Message) {
+		if messageInName(c, name) {
 			fmt.Fprintf(&b, "%s %s\n", kind, name)
 		} else {
 			fmt.Fprintf(&b, "%s %s: %s\n", kind, name, core.Ellipsis(c.Message, maxMessage))
 		}
-		writeBlock(&b, "  ", c.Text)
+		c.Text.Write(&b, "  ", "--max-output")
 		writeStream(&b, "  ", "stdout", c.Stdout)
 		writeStream(&b, "  ", "stderr", c.Stderr)
 	}
-	if r.CasesOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more failing %s (--max-cases 0)\n", r.CasesOmitted, core.Plural(r.CasesOmitted, "case", "cases"))
+	if r.TestsOmitted > 0 {
+		fmt.Fprintf(&b, "... %d more failed %s (--max-tests 0)\n", r.TestsOmitted, core.Plural(r.TestsOmitted, "test", "tests"))
 	}
 	for _, s := range r.SuiteOutput {
 		name := s.Suite
@@ -40,7 +42,7 @@ func Text(r Report) string {
 	return b.String()
 }
 
-func label(c FailedCase) string {
+func label(c failedCase) string {
 	name := c.Name
 	if name == "" {
 		name = "(no name)"
@@ -51,36 +53,28 @@ func label(c FailedCase) string {
 	return c.Classname + " " + name
 }
 
-func writeBlock(b *strings.Builder, indent string, blk Block) {
-	for _, l := range blk.Lines {
-		b.WriteString(indent + l + "\n")
-	}
-	if blk.LinesOmitted > 0 {
-		fmt.Fprintf(b, "%s... %d more %s (--max-lines 0)\n", indent, blk.LinesOmitted, core.Plural(blk.LinesOmitted, "line", "lines"))
-	}
+func messageInName(c failedCase, label string) bool {
+	return c.Message == "" || c.Message == c.Name || c.Message == label || strings.HasSuffix(c.Name, " "+c.Message)
 }
 
-func writeStream(b *strings.Builder, indent, name string, blk Block) {
+func writeStream(b *strings.Builder, indent, name string, blk core.Block) {
 	if len(blk.Lines) == 0 {
 		return
 	}
 	b.WriteString(indent + name + ":\n")
-	writeBlock(b, indent+"  ", blk)
+	blk.Write(b, indent+"  ", "--max-output")
 }
 
-func header(r Report) string {
+func header(r report) string {
 	line := fmt.Sprintf("junit: %d %s in %d %s", r.Tests, core.Plural(r.Tests, "test", "tests"), r.Suites, core.Plural(r.Suites, "suite", "suites"))
-	var parts []string
-	for _, c := range []struct {
-		n         int
-		one, many string
-	}{{r.Passed, "passed", "passed"}, {r.Failures, "failure", "failures"}, {r.Errors, "error", "errors"}, {r.Skipped, "skipped", "skipped"}, {r.Flaky, "flaky", "flaky"}} {
-		if c.n > 0 {
-			parts = append(parts, fmt.Sprintf("%d %s", c.n, core.Plural(c.n, c.one, c.many)))
-		}
-	}
-	if len(parts) > 0 {
-		line += ": " + strings.Join(parts, ", ")
+	if parts := core.JoinCounts(
+		core.Part{N: r.Passed, One: "passed"},
+		core.Part{N: r.Failures, One: "failure", Many: "failures"},
+		core.Part{N: r.Errors, One: "error", Many: "errors"},
+		core.Part{N: r.Skipped, One: "skipped"},
+		core.Part{N: r.Flaky, One: "flaky"},
+	); parts != "" {
+		line += ": " + parts
 	}
 	if len(r.Mismatches) > 0 {
 		var said []string

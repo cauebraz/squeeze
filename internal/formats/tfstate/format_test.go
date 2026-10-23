@@ -12,9 +12,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const fixtureDir = "testdata"
@@ -100,24 +102,25 @@ func TestParseErrors(t *testing.T) {
 	}{
 		"truncated":         {`{"a":{"sensitive":false,`, nil, "decode"},
 		"array":             {`[]`, nil, "decode"},
-		"null":              {`null`, ErrNotObject, ""},
-		"no sensitive":      {`{"a":{"type":"string","value":"x"}}`, ErrMissingSensitive, `output "a"`},
+		"null":              {`null`, errNotObject, ""},
+		"no sensitive":      {`{"a":{"type":"string","value":"x"}}`, errMissingSensitive, `output "a"`},
 		"sensitive string":  {`{"a":{"sensitive":"true","type":"string","value":"x"}}`, nil, "decode"},
 		"output not object": {`{"a":"x"}`, nil, "decode"},
-		"state major 2":     {`{"format_version":"2.0","values":{"root_module":{}}}`, nil, "unsupported format_version"},
-		"state output":      {`{"format_version":"1.0","values":{"outputs":{"a":{"value":"x"}},"root_module":{}}}`, ErrMissingSensitive, `output "a"`},
+		"state major 2":     {`{"format_version":"2.0","values":{"root_module":{}}}`, tfdiag.ErrUnsupportedVersion, "unsupported format_version"},
+		"state output":      {`{"format_version":"1.0","values":{"outputs":{"a":{"value":"x"}},"root_module":{}}}`, errMissingSensitive, `output "a"`},
 		"state values":      {`{"format_version":"1.0","values":[]}`, nil, "decode"},
-		"show major 2":      {`{"format_version":"2.0","resource":{}}`, nil, "unsupported format_version"},
-		"show no mask":      {`{"format_version":"1.0","resource":{"address":"a.b","values":{"x":"s"}}}`, ErrMissingSensitive, `resource "a.b"`},
+		"show major 2":      {`{"format_version":"2.0","resource":{}}`, tfdiag.ErrUnsupportedVersion, "unsupported format_version"},
+		"state no version":  {`{"format_version":"","values":{"root_module":{}}}`, tfdiag.ErrMissingVersion, ""},
+		"show no mask":      {`{"format_version":"1.0","resource":{"address":"a.b","values":{"x":"s"}}}`, errMissingSensitive, `resource "a.b"`},
 		"show values array": {`{"format_version":"1.0","resource":{"address":"a.b","values":[],"sensitive_values":{}}}`, nil, "decode values"},
 		"show not object":   {`{"format_version":"1.0","resource":[]}`, nil, "decode"},
 	}
 	for name, tt := range tests {
-		_, err := Parse([]byte(tt.input))
+		_, err := parse([]byte(tt.input))
 		if err == nil || (tt.err != nil && !errors.Is(err, tt.err)) || !strings.Contains(err.Error(), tt.msg) {
 			t.Errorf("%s: Parse() error = %v", name, err)
 		}
-		if _, err := Squeeze([]byte(tt.input), DefaultOptions()); err == nil {
+		if _, err := squeeze([]byte(tt.input), defaultOptions()); err == nil {
 			t.Errorf("%s: Squeeze() returned no error", name)
 		}
 	}
@@ -126,7 +129,7 @@ func TestParseErrors(t *testing.T) {
 func TestSensitiveValuesNeverPrinted(t *testing.T) {
 	t.Parallel()
 	input := fixture(t, "outputs")
-	raw, err := Parse(input)
+	raw, err := parse(input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,8 +142,8 @@ func TestSensitiveValuesNeverPrinted(t *testing.T) {
 	if len(secrets) < 3 {
 		t.Fatalf("fixture holds %d sensitive values, want at least 3", len(secrets))
 	}
-	for _, o := range []Options{DefaultOptions(), {MaxOutputs: 0}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {MaxOutputs: 0}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -185,7 +188,7 @@ func leaves(t *testing.T, raw json.RawMessage) []string {
 func TestNoForgedLines(t *testing.T) {
 	t.Parallel()
 	input := []byte(`{"a\nb = forged":{"sensitive":false,"type":"string","value":"x\ny\u001b[31m\r\u0085z"}}`)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,7 +197,7 @@ func TestNoForgedLines(t *testing.T) {
 		t.Errorf("text has %d lines, want 2:\n%s", lines, r.Text)
 	}
 	state := []byte(`{"format_version":"1.0","terraform_version":"1.9\n5","values":{"root_module":{"resources":[{"address":"a.b\nforged.c","mode":"managed","deposed_key":"k\u001b[31m\n"}]}}}`)
-	r, err = Squeeze(state, DefaultOptions())
+	r, err = squeeze(state, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +212,7 @@ func TestStateValuesNeverPrinted(t *testing.T) {
 	input := fixture(t, "state")
 	var doc struct {
 		Values struct {
-			Outputs    map[string]RawOutput `json:"outputs"`
+			Outputs    map[string]rawOutput `json:"outputs"`
 			RootModule json.RawMessage      `json:"root_module"`
 		} `json:"values"`
 	}
@@ -253,8 +256,8 @@ func TestStateValuesNeverPrinted(t *testing.T) {
 	if !slices.Contains(secrets, "hunter2-STATE") || !slices.Contains(secrets, "hunter2-STATE-OUTPUT") || !slices.Contains(secrets, "10.0.2.0/24") {
 		t.Fatalf("fixture values = %v", secrets)
 	}
-	for _, o := range []Options{DefaultOptions(), {}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -298,7 +301,7 @@ func TestStateShowSensitiveNeverPrinted(t *testing.T) {
 		var hidden []string
 		var walk func(v, m any, sensitive bool)
 		walk = func(v, m any, sensitive bool) {
-			if m == true {
+			if b, ok := m.(bool); ok && b {
 				sensitive = true
 			}
 			switch v := v.(type) {
@@ -336,7 +339,7 @@ func TestStateShowSensitiveNeverPrinted(t *testing.T) {
 				t.Fatalf("%s: sensitive values %q lack %q", name, secrets, k)
 			}
 		}
-		r, err := Squeeze(input, DefaultOptions())
+		r, err := squeeze(input, defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -356,26 +359,30 @@ func TestStateShowRedact(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		values, mask string
-		want         []Attribute
+		want         []attribute
 	}{
-		"whole resource": {`{"a":"x","b":1}`, `true`, []Attribute{
+		"whole resource": {`{"a":"x","b":1}`, `true`, []attribute{
 			{Name: "a", Sensitive: true, Text: sensitiveText},
 			{Name: "b", Sensitive: true, Text: sensitiveText},
 		}},
-		"empty array mask":   {`{"a":"x"}`, `[]`, []Attribute{{Name: "a", Value: json.RawMessage(`"x"`), Text: `"x"`}}},
-		"mask type mismatch": {`{"a":["x"]}`, `{"a":{"0":true}}`, []Attribute{{Name: "a", Sensitive: true, Text: sensitiveText}}},
-		"length mismatch":    {`{"a":["x","y"]}`, `{"a":[true]}`, []Attribute{{Name: "a", Sensitive: true, Text: sensitiveText}}},
-		"unknown mask value": {`{"a":"x","b":"y"}`, `{"a":"yes","b":1}`, []Attribute{
+		"empty array mask":   {`{"a":"x"}`, `[]`, []attribute{{Name: "a", Value: json.RawMessage(`"x"`), Text: `"x"`}}},
+		"mask type mismatch": {`{"a":["x"]}`, `{"a":{"0":true}}`, []attribute{{Name: "a", Sensitive: true, Text: sensitiveText}}},
+		"length mismatch":    {`{"a":["x","y"]}`, `{"a":[true]}`, []attribute{{Name: "a", Sensitive: true, Text: sensitiveText}}},
+		"unknown mask value": {`{"a":"x","b":"y"}`, `{"a":"yes","b":1}`, []attribute{
 			{Name: "a", Sensitive: true, Text: sensitiveText},
 			{Name: "b", Sensitive: true, Text: sensitiveText},
 		}},
-		"false leaves": {`{"a":{"k":[1,2]}}`, `{"a":{"k":[false,false]}}`, []Attribute{{Name: "a", Value: json.RawMessage(`{"k":[1,2]}`), Text: `{"k":[1,2]}`}}},
-		"nested": {`{"a":{"k":"s","l":"v"}}`, `{"a":{"k":true}}`, []Attribute{
+		"false leaves": {`{"a":{"k":[1,2]}}`, `{"a":{"k":[false,false]}}`, []attribute{{Name: "a", Value: json.RawMessage(`{"k":[1,2]}`), Text: `{"k":[1,2]}`}}},
+		"nested": {`{"a":{"k":"s","l":"v"}}`, `{"a":{"k":true}}`, []attribute{
 			{Name: "a", Value: json.RawMessage(`{"k":null,"l":"v"}`), SensitiveValues: json.RawMessage(`{"k":true}`), Text: `{"k":(sensitive),"l":"v"}`},
 		}},
 	}
 	for name, tt := range tests {
-		got := attributes(json.RawMessage(tt.values), json.RawMessage(tt.mask))
+		var vals map[string]json.RawMessage
+		if err := json.Unmarshal([]byte(tt.values), &vals); err != nil {
+			t.Fatal(err)
+		}
+		got := attributes(vals, json.RawMessage(tt.mask))
 		if diff := cmp.Diff(tt.want, got); diff != "" {
 			t.Errorf("%s: attributes() (-want +got):\n%s", name, diff)
 		}
@@ -395,7 +402,7 @@ func TestStateShowBuild(t *testing.T) {
 		"state-show-warning": {"terraform state show random_pet.name[0]: 5 attributes, 1 warning", []string{"warning"}, 2},
 	}
 	for name, tt := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -406,12 +413,12 @@ func TestStateShowBuild(t *testing.T) {
 		if diff := cmp.Diff(tt.conditions, r.Conditions); diff != "" {
 			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
 		}
-		report := r.Data.(Report)
-		if report.Source != "resource" || report.State != nil || len(report.Outputs) != 0 {
-			t.Errorf("%s: report = %+v", name, report)
+		rep := r.Data.(report)
+		if rep.Source != "resource" || rep.State != nil || len(rep.Outputs) != 0 {
+			t.Errorf("%s: report = %+v", name, rep)
 		}
-		if got := -1; report.Resource != nil {
-			got = report.Resource.Null
+		if got := -1; rep.Resource != nil {
+			got = rep.Resource.Null
 			if got != tt.nulls {
 				t.Errorf("%s: null = %d, want %d", name, got, tt.nulls)
 			}
@@ -419,11 +426,11 @@ func TestStateShowBuild(t *testing.T) {
 			t.Errorf("%s: no resource", name)
 		}
 	}
-	empty, err := Squeeze([]byte(`{"format_version":"1.0","resource":{"address":"a.b"},"diagnostics":[]}`), DefaultOptions())
+	empty, err := squeeze([]byte(`{"format_version":"1.0","resource":{"address":"a.b"},"diagnostics":[]}`), defaultOptions())
 	if err != nil || empty.Text != "terraform state show a.b: 0 attributes\n" {
 		t.Errorf("Squeeze(no values) = %q, %v", empty.Text, err)
 	}
-	none, err := Squeeze([]byte(`{"format_version":"1.0","resource":null}`), DefaultOptions())
+	none, err := squeeze([]byte(`{"format_version":"1.0","resource":null}`), defaultOptions())
 	if err != nil || none.Text != "terraform state show: no resource\n" {
 		t.Errorf("Squeeze(null resource) = %q, %v", none.Text, err)
 	}
@@ -431,11 +438,11 @@ func TestStateShowBuild(t *testing.T) {
 
 func TestStateBuild(t *testing.T) {
 	t.Parallel()
-	in, err := Parse(fixture(t, "state"))
+	in, err := parse(fixture(t, "state"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := Build(in, DefaultOptions())
+	r := build(in, defaultOptions())
 	var got []string
 	for _, res := range r.State.Resources {
 		got = append(got, res.Address+" "+res.Mode+" "+res.DeposedKey)
@@ -457,7 +464,7 @@ func TestStateBuild(t *testing.T) {
 	if r.Source != "state" || r.ToolVersion != "1.9.5" || r.State.Managed != 7 || r.State.DataSources != 1 || r.State.Tainted != 1 || r.State.Deposed != 1 || r.Total != 3 || r.Sensitive != 1 {
 		t.Errorf("report = %+v", r)
 	}
-	limited := Build(in, Options{MaxResources: 2, MaxOutputs: 1})
+	limited := build(in, options{MaxResources: 2, MaxOutputs: 1})
 	if s := limited.State; len(s.Resources) != 2 || s.ResourcesOmitted != 7 || len(limited.Outputs) != 1 || limited.Omitted != 2 || s.Managed != 7 {
 		t.Errorf("limited = %+v", limited)
 	}
@@ -474,7 +481,7 @@ func TestStateHeader(t *testing.T) {
 		"one data":     {`{"format_version":"1.0","values":{"root_module":{"resources":[{"address":"data.x.y","mode":"data"}]}}}`, "terraform state: 0 resources, 1 data source\ndata.x.y\n"},
 	}
 	for name, tt := range tests {
-		r, err := Squeeze([]byte(tt.input), DefaultOptions())
+		r, err := squeeze([]byte(tt.input), defaultOptions())
 		if err != nil || r.Text != tt.want {
 			t.Errorf("%s: Squeeze() = %q, %v, want %q", name, r.Text, err, tt.want)
 		}
@@ -483,11 +490,11 @@ func TestStateHeader(t *testing.T) {
 
 func TestBuild(t *testing.T) {
 	t.Parallel()
-	raw, err := Parse(fixture(t, "outputs"))
+	raw, err := parse(fixture(t, "outputs"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := Build(raw, DefaultOptions())
+	r := build(raw, defaultOptions())
 	var names []string
 	for _, o := range r.Outputs {
 		names = append(names, o.Name)
@@ -502,7 +509,7 @@ func TestBuild(t *testing.T) {
 	if r.Total != 11 || r.Sensitive != 2 || r.Omitted != 0 {
 		t.Errorf("report = %+v", r)
 	}
-	limited := Build(raw, Options{MaxOutputs: 4})
+	limited := build(raw, options{MaxOutputs: 4})
 	if len(limited.Outputs) != 4 || limited.Omitted != 7 || limited.Total != 11 || limited.Sensitive != 2 {
 		t.Errorf("limited = %+v", limited)
 	}
@@ -510,12 +517,12 @@ func TestBuild(t *testing.T) {
 
 func TestLongValueKeptInData(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "outputs"), DefaultOptions())
+	r, err := squeeze(fixture(t, "outputs"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
 	var full string
-	for _, o := range r.Data.(Report).Outputs {
+	for _, o := range r.Data.(report).Outputs {
 		if o.Name == "private_subnet_ids" {
 			full = string(o.Value)
 		}
@@ -530,11 +537,11 @@ func TestLongValueKeptInData(t *testing.T) {
 
 func TestEmptyAndMissingValue(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze([]byte("{}\n"), DefaultOptions())
+	r, err := squeeze([]byte("{}\n"), defaultOptions())
 	if err != nil || r.Text != "terraform output: 0 outputs\n" {
 		t.Errorf("Squeeze({}) = %q, %v", r.Text, err)
 	}
-	r, err = Squeeze([]byte(`{"a":{"sensitive":false}}`), DefaultOptions())
+	r, err = squeeze([]byte(`{"a":{"sensitive":false}}`), defaultOptions())
 	if err != nil || r.Text != "terraform output: 1 output\na = null\n" {
 		t.Errorf("Squeeze(no value) = %q, %v", r.Text, err)
 	}
@@ -590,7 +597,7 @@ func TestTrailingLines(t *testing.T) {
 		},
 	}
 	for name, tc := range tests {
-		r, err := Squeeze([]byte(tc.input), DefaultOptions())
+		r, err := squeeze([]byte(tc.input), defaultOptions())
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
@@ -710,7 +717,7 @@ func TestMissingSensitiveNamesTheFirstOutput(t *testing.T) {
 	t.Parallel()
 	input := []byte(`{"d":{"type":"string","value":"x"},"b":{"type":"string","value":"x"},"c":{"type":"string","value":"x"},"a":{"sensitive":false,"type":"string","value":"x"}}`)
 	for range 20 {
-		_, err := Squeeze(input, DefaultOptions())
+		_, err := squeeze(input, defaultOptions())
 		if err == nil || err.Error() != `output "b": missing sensitive` {
 			t.Fatalf("error = %v", err)
 		}
@@ -727,9 +734,9 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte("{\"format_version\":\"1.0\",\"resource\":null,\"diagnostics\":[]}\nError: x\n"))
 	f.Add([]byte(`{"format_version":"1.0","resource":{"address":"a.b","values":{"p":"s3cret","q":{"k":"s3cret","n":"x"},"l":["x","s3cret"]},"sensitive_values":{"p":1,"q":{"k":true},"l":[false,true]}},"diagnostics":[]}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		for _, o := range []Options{DefaultOptions(), {MaxOutputs: 1, MaxResources: 1}} {
-			r, err := Squeeze(input, o)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		for _, o := range []options{defaultOptions(), {MaxOutputs: 1, MaxResources: 1}} {
+			r, err := squeeze(input, o)
 			if err != nil {
 				return
 			}
@@ -738,27 +745,27 @@ func FuzzSqueeze(f *testing.F) {
 			if err != nil {
 				t.Fatalf("Envelope() error: %v", err)
 			}
-			report := r.Data.(Report)
-			if in, err := Parse(input); err == nil {
+			rep := r.Data.(report)
+			if in, err := parse(input); err == nil {
 				for _, l := range in.Trailing {
 					if !strings.Contains(r.Text, l.Text) {
 						t.Fatalf("line after the JSON dropped: %q\n%s", l.Text, r.Text)
 					}
-					if l.Error && report.Errors == 0 {
+					if l.Error && rep.Errors == 0 {
 						t.Fatalf("error line %q counts no error", l.Text)
 					}
 				}
 			}
-			if o.MaxOutputs > 0 && len(report.Outputs) > o.MaxOutputs {
-				t.Fatalf("%d outputs over the limit %d", len(report.Outputs), o.MaxOutputs)
+			if o.MaxOutputs > 0 && len(rep.Outputs) > o.MaxOutputs {
+				t.Fatalf("%d outputs over the limit %d", len(rep.Outputs), o.MaxOutputs)
 			}
-			if report.Source == "resource" && onlyHiddenCanaries(input) && (strings.Contains(r.Text, canary) || bytes.Contains(envelope, []byte(canary))) {
+			if rep.Source == "resource" && onlyHiddenCanaries(input) && (strings.Contains(r.Text, canary) || bytes.Contains(envelope, []byte(canary))) {
 				t.Fatalf("sensitive value %q reached the output:\n%s\n%s", canary, r.Text, envelope)
 			}
-			if report.Source == "resource" {
-				attrs := []Attribute{}
-				if report.Resource != nil {
-					attrs = report.Resource.Attributes
+			if rep.Source == "resource" {
+				attrs := []attribute{}
+				if rep.Resource != nil {
+					attrs = rep.Resource.Attributes
 				}
 				for _, a := range attrs {
 					if a.Sensitive && a.Value != nil {
@@ -768,21 +775,21 @@ func FuzzSqueeze(f *testing.F) {
 						t.Fatalf("sensitive attribute %q prints a value:\n%s", a.Name, r.Text)
 					}
 				}
-				if got, max := strings.Count(r.Text, "\n"), 2+len(attrs)+12*len(report.Diagnostics); got > max {
-					t.Fatalf("text has %d lines, over %d", got, max)
+				if got, limit := strings.Count(r.Text, "\n"), 2+len(attrs)+12*len(rep.Diagnostics); got > limit {
+					t.Fatalf("text has %d lines, over %d", got, limit)
 				}
 				continue
 			}
-			for _, out := range report.Outputs {
+			for _, out := range rep.Outputs {
 				if out.Sensitive && out.Value != nil {
 					t.Fatalf("sensitive output %q keeps its value in data: %s", out.Name, envelope)
 				}
 			}
-			listed := len(report.Outputs) + 12*len(report.Diagnostics)
-			if report.State != nil {
-				listed += len(report.State.Resources) + 2
-				if o.MaxResources > 0 && len(report.State.Resources) > o.MaxResources {
-					t.Fatalf("%d resources over the limit %d", len(report.State.Resources), o.MaxResources)
+			listed := len(rep.Outputs) + 12*len(rep.Diagnostics)
+			if rep.State != nil {
+				listed += len(rep.State.Resources) + 2
+				if o.MaxResources > 0 && len(rep.State.Resources) > o.MaxResources {
+					t.Fatalf("%d resources over the limit %d", len(rep.State.Resources), o.MaxResources)
 				}
 			}
 			if got := strings.Count(r.Text, "\n"); got > listed+2 {
@@ -790,4 +797,28 @@ func FuzzSqueeze(f *testing.F) {
 			}
 		}
 	})
+}
+
+func TestAddressesAreTrimmed(t *testing.T) {
+	t.Parallel()
+	state := []byte(`{"format_version":"1.0","values":{"root_module":{"resources":[{"address":"\t aws_s3_bucket.a \t","mode":"managed"}]}}}`)
+	r, err := squeeze(state, defaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "\naws_s3_bucket.a\n"; !strings.Contains(r.Text, want) {
+		t.Errorf("state text lacks %q:\n%s", want, r.Text)
+	}
+	show := []byte(`{"format_version":"1.0","resource":{"address":"\taws_s3_bucket.a","mode":"managed","type":"aws_s3_bucket","values":{"id":"x"},"sensitive_values":{}}}`)
+	r, err = squeeze(show, defaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "terraform state show aws_s3_bucket.a:"; !strings.HasPrefix(r.Text, want) {
+		t.Errorf("show text does not start with %q:\n%s", want, r.Text)
+	}
+	missing := []byte(`{"format_version":"1.0","resource":{"address":"\taws_s3_bucket.a","values":{"id":"x"}}}`)
+	if _, err := squeeze(missing, defaultOptions()); err == nil || !strings.Contains(err.Error(), `"aws_s3_bucket.a"`) {
+		t.Errorf("Squeeze() error = %v, want the trimmed address", err)
+	}
 }

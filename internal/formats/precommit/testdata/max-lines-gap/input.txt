@@ -1,0 +1,12 @@
+mypy.....................................................................Failed
+- hook id: mypy
+- exit code: 1
+
+Checking 4 source files
+pre_commit_hooks/util.py:12: error: Missing return statement  [return]
+    def cmd_output(*cmd: str) -> str:
+pre_commit_hooks/removed.py:30: error: Name "argv" is not defined  [name-defined]
+    return main(argv)
+Found 2 errors in 2 files (checked 4 source files)
+
+check yaml...............................................................Passed

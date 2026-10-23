@@ -2,13 +2,14 @@ package tfvalidate
 
 import (
 	"fmt"
-	"github.com/cauebraz/squeeze/internal/core"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
 
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-func Text(r Report, o Options) string {
+func text(r report, o options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -21,17 +22,14 @@ func Text(r Report, o Options) string {
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	state := "valid"
 	if !r.Valid {
 		state = "invalid"
 	}
-	var parts []string
-	if r.Errors > 0 || !r.Valid {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Errors, core.Plural(r.Errors, "error", "errors")))
-	}
-	if r.Warnings > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Warnings, core.Plural(r.Warnings, "warning", "warnings")))
+	parts := tfdiag.CountWords(r.Errors, r.Warnings)
+	if !r.Valid && r.Errors == 0 {
+		parts = append([]string{"0 errors"}, parts...)
 	}
 	line := r.Tool + " validate: " + state
 	if len(parts) > 0 {

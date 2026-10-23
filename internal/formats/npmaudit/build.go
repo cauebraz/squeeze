@@ -1,24 +1,20 @@
 package npmaudit
 
 import (
+	"cmp"
 	"path"
 	"slices"
-	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-var severities = []string{"critical", "high", "moderate", "low", "info"}
+var severities = core.SeverityOrder{"critical", "high", "moderate", "low", "info"}
 
-func rank(s string) int {
-	if i := slices.Index(severities, s); i >= 0 {
-		return len(severities) - 1 - i
-	}
-	return len(severities)
-}
-
-type AdvisoryData struct {
+type advisory struct {
 	ID       string   `json:"id"`
 	Source   int      `json:"source"`
 	Title    string   `json:"title"`
@@ -29,50 +25,59 @@ type AdvisoryData struct {
 	CVSS     float64  `json:"cvss_score"`
 }
 
-type Entry struct {
-	Name       string         `json:"name"`
-	Severity   string         `json:"severity"`
-	Range      string         `json:"range"`
-	Direct     bool           `json:"direct"`
-	Fix        Fix            `json:"fix"`
-	Advisories []AdvisoryData `json:"advisories"`
-	Via        []string       `json:"via"`
-	Effects    []string       `json:"effects"`
-	Nodes      []string       `json:"nodes"`
+type entry struct {
+	Name       string     `json:"name"`
+	Severity   string     `json:"severity"`
+	Range      string     `json:"range"`
+	Direct     bool       `json:"direct"`
+	Fix        fix        `json:"fix"`
+	Advisories []advisory `json:"advisories"`
+	Via        []string   `json:"via"`
+	Effects    []string   `json:"effects"`
+	Nodes      []string   `json:"nodes"`
 	key        string
 }
 
-type Fixes struct {
+type fix struct {
+	Available   bool   `json:"available"`
+	Force       bool   `json:"force,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Version     string `json:"version,omitempty"`
+	SemVerMajor bool   `json:"semver_major,omitempty"`
+}
+
+type fixCounts struct {
 	Auto     int `json:"auto"`
 	Force    int `json:"force"`
 	Breaking int `json:"breaking"`
 	None     int `json:"none"`
 }
 
-type Report struct {
-	Tool                   string       `json:"tool"`
-	ToolVersion            string       `json:"tool_version"`
-	AuditReportVersion     int          `json:"audit_report_version"`
-	Dependencies           Dependencies `json:"dependencies"`
-	Total                  int          `json:"total"`
-	BySeverity             []core.Count `json:"by_severity"`
-	Direct                 int          `json:"direct"`
-	Fixes                  Fixes        `json:"fixes"`
-	Vulnerabilities        []Entry      `json:"vulnerabilities"`
-	VulnerabilitiesOmitted int          `json:"vulnerabilities_omitted"`
-	OmittedBySeverity      []core.Count `json:"omitted_by_severity"`
+type report struct {
+	Tool                   string              `json:"tool"`
+	ToolVersion            string              `json:"tool_version"`
+	AuditReportVersion     int                 `json:"audit_report_version"`
+	Dependencies           dependencies        `json:"dependencies"`
+	Total                  int                 `json:"total"`
+	BySeverity             []core.Count        `json:"by_severity"`
+	Direct                 int                 `json:"direct"`
+	Fixes                  fixCounts           `json:"fixes"`
+	Vulnerabilities        []entry             `json:"vulnerabilities"`
+	VulnerabilitiesOmitted int                 `json:"vulnerabilities_omitted"`
+	OmittedBySeverity      []core.Count        `json:"omitted_by_severity"`
+	Diagnostics            []tfdiag.Diagnostic `json:"diagnostics,omitempty"`
 }
 
 func cleanAll(in []string) []string {
 	out := make([]string, 0, len(in))
 	for _, s := range in {
-		out = append(out, core.Clean(s))
+		out = append(out, sanitize.Clean(s))
 	}
 	return out
 }
 
-func advisoryID(a *Advisory) string {
-	if id := core.Clean(path.Base(a.URL)); a.URL != "" && id != "" && id != "." && id != "/" {
+func advisoryID(a *rawAdvisory) string {
+	if id := sanitize.Clean(path.Base(a.URL)); a.URL != "" && id != "" && id != "." && id != "/" {
 		return id
 	}
 	if a.Source != 0 {
@@ -81,45 +86,51 @@ func advisoryID(a *Advisory) string {
 	return "advisory"
 }
 
-func entry(key string, v Vulnerability) Entry {
-	e := Entry{Name: core.Clean(v.Name), Severity: core.Clean(v.Severity), Range: core.Clean(v.Range), Direct: v.IsDirect, Fix: v.FixAvailable,
-		Advisories: []AdvisoryData{}, Via: []string{}, Effects: cleanAll(v.Effects), Nodes: cleanAll(v.Nodes), key: key}
+func convertFix(f rawFix) fix {
+	return fix{Available: f.Available, Force: f.Force, Name: sanitize.Clean(f.Name), Version: sanitize.Clean(f.Version), SemVerMajor: f.IsSemVerMajor}
+}
+
+func toEntry(key string, v rawVulnerability) entry {
+	e := entry{Name: sanitize.Clean(v.Name), Severity: sanitize.Clean(v.Severity), Range: sanitize.Clean(v.Range), Direct: v.IsDirect, Fix: convertFix(v.FixAvailable),
+		Advisories: []advisory{}, Via: []string{}, Effects: cleanAll(v.Effects), Nodes: cleanAll(v.Nodes), key: key}
 	if e.Name == "" {
-		e.Name = core.Clean(key)
+		e.Name = sanitize.Clean(key)
 	}
-	if !slices.Contains(severities, e.Severity) {
+	if !severities.Known(e.Severity) {
 		e.Severity = "unknown"
 	}
-	e.Fix.Name, e.Fix.Version = core.Clean(e.Fix.Name), core.Clean(e.Fix.Version)
 	for _, via := range v.Via {
 		switch {
 		case via.Advisory != nil:
 			a := via.Advisory
-			e.Advisories = append(e.Advisories, AdvisoryData{ID: advisoryID(a), Source: a.Source, Title: core.Clean(a.Title), URL: core.Clean(a.URL),
-				Severity: core.Clean(a.Severity), Range: core.Clean(a.Range), CWE: cleanAll(a.CWE), CVSS: a.CVSS.Score})
+			e.Advisories = append(e.Advisories, advisory{ID: advisoryID(a), Source: a.Source, Title: sanitize.Clean(a.Title), URL: sanitize.Clean(a.URL),
+				Severity: sanitize.Clean(a.Severity), Range: sanitize.Clean(a.Range), CWE: cleanAll(a.CWE), CVSS: a.CVSS.Score})
 		case via.Package != "":
-			e.Via = append(e.Via, core.Clean(via.Package))
+			e.Via = append(e.Via, sanitize.Clean(via.Package))
 		}
 	}
-	sort.SliceStable(e.Advisories, func(i, j int) bool { return rank(e.Advisories[i].Severity) > rank(e.Advisories[j].Severity) })
+	slices.SortStableFunc(e.Advisories, func(a, b advisory) int {
+		return cmp.Compare(severities.Rank(a.Severity), severities.Rank(b.Severity))
+	})
 	return e
 }
 
-func bySeverity(entries []Entry) []core.Count {
+func bySeverity(entries []entry) []core.Count {
 	counts := map[string]int{}
 	for _, e := range entries {
 		counts[e.Severity]++
 	}
 	out := core.SortedCounts(counts)
-	sort.SliceStable(out, func(i, j int) bool { return rank(out[i].Name) > rank(out[j].Name) })
+	slices.SortStableFunc(out, func(a, b core.Count) int { return cmp.Compare(severities.Rank(a.Name), severities.Rank(b.Name)) })
 	return out
 }
 
-func Build(a *Audit, o Options) Report {
-	r := Report{Tool: "npm", AuditReportVersion: a.Version, Dependencies: a.Dependencies, Vulnerabilities: []Entry{}}
-	entries := make([]Entry, 0, len(a.Vulnerabilities))
+func build(a *audit, o options) report {
+	r := report{Tool: "npm", AuditReportVersion: a.Version, Dependencies: a.Dependencies, Vulnerabilities: []entry{}}
+	r.Diagnostics = tfdiag.Normalize(tfdiag.FromLines(a.Trailing, ""))
+	entries := make([]entry, 0, len(a.Vulnerabilities))
 	for key, v := range a.Vulnerabilities {
-		e := entry(key, v)
+		e := toEntry(key, v)
 		entries = append(entries, e)
 		if e.Direct {
 			r.Direct++
@@ -135,18 +146,12 @@ func Build(a *Audit, o Options) Report {
 			r.Fixes.Auto++
 		}
 	}
-	sort.Slice(entries, func(i, j int) bool {
-		if ri, rj := rank(entries[i].Severity), rank(entries[j].Severity); ri != rj {
-			return ri > rj
-		}
-		if entries[i].Name != entries[j].Name {
-			return entries[i].Name < entries[j].Name
-		}
-		return entries[i].key < entries[j].key
+	slices.SortFunc(entries, func(a, b entry) int {
+		return cmp.Or(cmp.Compare(severities.Rank(a.Severity), severities.Rank(b.Severity)), strings.Compare(a.Name, b.Name), strings.Compare(a.key, b.key))
 	})
 	r.Total = len(entries)
 	r.BySeverity = bySeverity(entries)
-	kept, omitted := core.Limit(entries, o.MaxVulnerabilities)
+	kept, omitted := core.Limit(entries, o.maxVulnerabilities)
 	r.Vulnerabilities = append(r.Vulnerabilities, kept...)
 	r.VulnerabilitiesOmitted = omitted
 	r.OmittedBySeverity = bySeverity(entries[len(kept):])

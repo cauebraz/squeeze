@@ -2,17 +2,18 @@ package precommit
 
 import (
 	"flag"
+	"slices"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-type Options struct {
+type options struct {
 	MaxLines int
 	All      bool
 }
 
-func DefaultOptions() Options {
-	return Options{MaxLines: 30}
+func defaultOptions() options {
+	return options{MaxLines: 30}
 }
 
 type Format struct{}
@@ -25,31 +26,31 @@ func (Format) Description() string {
 
 var conditionNames = []string{"error", "fail", "modified", "warning"}
 
-func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+func (Format) Conditions() []string { return slices.Clone(conditionNames) }
 
 func (Format) Detect(head []byte) bool {
 	return detect(head)
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
-	o := DefaultOptions()
+	o := defaultOptions()
 	core.CountFlag(fs, &o.MaxLines, "max-lines", "output lines per failed hook, 0 for all")
 	fs.BoolVar(&o.All, "all", false, "also list passed and skipped hooks with their output, and the diff of --show-diff-on-failure")
 	return func(input []byte) (core.Result, error) {
-		return Squeeze(input, o)
+		return squeeze(input, o)
 	}
 }
 
-func Squeeze(input []byte, o Options) (core.Result, error) {
-	run, err := Parse(input)
+func squeeze(input []byte, o options) (core.Result, error) {
+	run, err := parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r := Build(run, o)
-	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}, nil
+	r := build(run, o)
+	return core.Result{Text: text(r), Data: r, Conditions: conditions(r)}, nil
 }
 
-func conditions(r Report) []string {
+func conditions(r report) []string {
 	return core.Conditions(map[string]bool{
 		"error":    len(r.Errors) > 0,
 		"fail":     r.Failed+r.Unfinished > 0 || len(r.Errors) > 0,

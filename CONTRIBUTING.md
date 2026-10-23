@@ -160,7 +160,7 @@ Title: the same format as a commit subject. A single-commit pull request uses th
 
 Description: fill in `.github/pull_request_template.md`. It asks for the problem, the change, the evidence (tool source or docs for a tool semantic, each changed golden line), the docs updated and the checks run.
 
-Review: CI runs `just check`, `just cover` and `just fuzz-all` on Go 1.27, the Terraform conformance suite, and, on pull requests, `just commits` and `just check-each`. All of them pass before a merge.
+Review: CI runs `just check`, `just cover`, `just vuln` and `just fuzz-all` on Go 1.27, `just test` on macOS, the Terraform conformance suite, and, on pull requests, `just commits` and `just check-each`. All of them pass before a merge.
 
 Merge: "Rebase and merge" only. Every commit of the branch lands on `main` as it is, which is why each one passes the checks and carries a Conventional Commits message. The branch is deleted after the merge.
 
@@ -169,7 +169,7 @@ Merge: "Rebase and merge" only. Every commit of the branch lands on `main` as it
 `just` lists every recipe. Four of them gate a merge:
 
 ```
-just check          # gofmt, go vet, staticcheck, exhaustive, go mod tidy, tests
+just check          # goimports, go vet, staticcheck, exhaustive, revive, cross vet, go mod tidy, tests
 just cover          # fails below 95 percent coverage
 just commits        # commit messages and branch name since origin/main; prints the size
 just check-each     # just check on every commit since origin/main, in a temporary worktree

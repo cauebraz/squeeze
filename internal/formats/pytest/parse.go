@@ -1,9 +1,13 @@
 package pytest
 
 import (
+	"math"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
 var (
@@ -58,26 +62,25 @@ type entry struct {
 }
 
 type record struct {
-	word, label, test, message string
-	used                       bool
+	kind                 failureKind
+	label, test, message string
+	used                 bool
 }
 
 type parser struct {
-	r        Report
+	r        report
 	rootdir  string
 	section  string
 	entries  []*entry
 	cur      *entry
 	records  []*record
+	index    recordIndex
 	warnings warningParser
 	found    bool
 }
 
 func (p *parser) relative(l string) string {
-	if p.rootdir == "" {
-		return l
-	}
-	return strings.ReplaceAll(l, p.rootdir+"/", "")
+	return core.TrimRoot(l, p.rootdir)
 }
 
 func (p *parser) inCaptured() bool {
@@ -127,7 +130,11 @@ func (p *parser) line(l string) {
 	case "short test summary info":
 		if m := summaryEntry.FindStringSubmatch(l); m != nil && (m[2] == "FAILED" || m[2] == "ERROR") {
 			test, message := splitSummary(m[4])
-			p.records = append(p.records, &record{word: m[2], label: strings.TrimSpace(m[3]), test: test, message: message})
+			kind := kindFailed
+			if m[2] == "ERROR" {
+				kind = kindError
+			}
+			p.records = append(p.records, &record{kind: kind, label: strings.TrimSpace(m[3]), test: test, message: message})
 		} else if m != nil {
 			p.r.Outcomes = append(p.r.Outcomes, p.relative(l))
 		} else if strings.TrimSpace(l) != "" {
@@ -141,11 +148,13 @@ func (p *parser) line(l string) {
 		if strings.TrimSpace(l) == "" {
 			return
 		}
-		if _, seen := p.r.Sections[p.section]; !seen {
-			p.r.sectionOrder = append(p.r.sectionOrder, p.section)
+		i := slices.IndexFunc(p.r.OtherSectionLines, func(s sectionLines) bool { return s.Name == p.section })
+		if i < 0 {
+			i = len(p.r.OtherSectionLines)
+			p.r.OtherSectionLines = append(p.r.OtherSectionLines, sectionLines{Name: p.section})
 		}
-		p.r.Sections[p.section]++
-		p.r.sectionLines[p.section] = append(p.r.sectionLines[p.section], p.relative(l))
+		p.r.OtherSections[p.section]++
+		p.r.OtherSectionLines[i].Lines = append(p.r.OtherSectionLines[i].Lines, p.relative(l))
 	}
 }
 
@@ -172,7 +181,7 @@ func (p *parser) headerLine(l string) {
 	switch {
 	case strings.HasPrefix(l, "platform "):
 		if m := versionField.FindStringSubmatch(l); m != nil {
-			p.r.Version = m[1]
+			p.r.ToolVersion = m[1]
 		}
 	case strings.HasPrefix(l, "rootdir: "):
 		p.rootdir = strings.TrimSpace(strings.TrimPrefix(l, "rootdir: "))
@@ -234,7 +243,7 @@ func (p *parser) stats(parts, duration string) {
 	s := &p.r.Summary
 	s.Duration = duration
 	s.Line = parts + " in " + duration
-	p.r.Complete = true
+	p.r.SummaryFound = true
 	if parts == "no tests ran" {
 		return
 	}
@@ -243,7 +252,7 @@ func (p *parser) stats(parts, duration string) {
 		if m == nil {
 			continue
 		}
-		n, _ := strconv.Atoi(m[1])
+		n := parseCount(m[1])
 		switch m[2] {
 		case "failed":
 			s.Failed = n
@@ -265,4 +274,16 @@ func (p *parser) stats(parts, duration string) {
 			s.Other[m[2]] = n
 		}
 	}
+}
+
+func parseCount(digits string) int {
+	n, err := strconv.Atoi(digits)
+	if err != nil || n > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	return n
+}
+
+func addCounts(a, b int) int {
+	return min(a+b, math.MaxInt32)
 }

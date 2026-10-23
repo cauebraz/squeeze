@@ -22,7 +22,7 @@ pre-commit prints one dotted status line per hook.
 For a hook that failed or ran with `--verbose`, it also prints the id, exit code, whether the hook modified files, and its output.
 squeeze keeps the failed hooks with their output, counts the passed and skipped ones, and keeps pre-commit's own errors and warnings.
 On the `failed` fixture the text is 909 of 1,408 bytes.
-On `limits`, where one hook prints 125 lines, it is 1,450 of 5,250 bytes, and `generic` printed all 5,250.
+On `limits`, where one hook prints 125 lines and repeats one failure 18 times, it is 363 of 5,250 bytes, and `generic` printed all 5,250.
 A clean run of eight hooks prints two lines.
 
 - Detection: a line, without a tab, ends in a run of three or more dots and `Passed`, `Failed`, `Skipped` or `(no files to check)Skipped`, and is at least 79 columns wide. pre-commit pads every status line to the same width, at least 80 columns minus one (`pre_commit/commands/run.py`, `_compute_cols` and `_full_msg`, pre-commit 4.6.2).
@@ -49,11 +49,11 @@ changed: CHANGELOG.md
 
 - The header counts the hooks by status and the hooks that modified files. pre-commit has no version line, so the header names no version.
 - A hook is failed when its status line says `Failed`: pre-commit fails a hook that exits non-zero or changes `git diff` (`run.py`, `_run_single_hook`). It prints as `fail <id> (<name>)` with `exit code N` from `- exit code:` and `files modified` from `- files were modified by this hook`, then its output. The id comes from `- hook id:`; a hook printed without one shows its name only.
-- A hook's output longer than `--max-lines` is cut to its lines with an error or warning word, each with the line after it, unless the same line was already printed; a hook without such lines keeps its first `--max-lines` lines. One notice after the kept lines counts the rest: `... N lines cut (--max-lines 0)`. A hook that prints a progress line per file before its errors therefore shows the errors, not the progress. pre-commit runs a hook in parallel batches of files, so the same failure often repeats; the repeats are cut.
+- A hook's output longer than `--max-lines` is cut to its lines with an error or warning word, each with the line after it, unless the same line was already printed; a hook without such lines keeps its first `--max-lines` lines. Each gap prints as `... N lines cut (--max-lines 0)` where the lines were cut. A hook that prints a progress line per file before its errors therefore shows the errors, not the progress. pre-commit runs a hook in parallel batches of files, so the same failure often repeats; the repeats are cut.
 - Passed and skipped hooks are counted in `... N passed or skipped hooks (--all)`. `--all` lists each as `pass <name>`, `skip <name>: no files to check` (no file matched the hook) or `skip <name>: SKIP` (the hook id is in the `SKIP` environment variable), with its output when `--verbose` printed some.
 - pre-commit's own `[WARNING]` and `[ERROR]` lines print as `warning:` and `error:`; `[INFO]` lines are dropped. `An error has occurred:`, `An unexpected error has occurred:`, `Interrupted (^C):` and `No hook with id ...` print as `error:`. A hook whose status line ends in one of these messages, because pre-commit stopped while it ran, prints as `unfinished <name>`.
 - With `--show-diff-on-failure`, each file in pre-commit's `All changes made by hooks:` diff prints as `changed: <file>`; the diff itself is counted in `... N diff lines (--all)` and `--all` prints it. The three lines before it are dropped.
-- Lines outside a hook's output that squeeze does not know, such as `Check the log at <path>`, print under `other output:`, cut the same way.
+- Lines outside a hook's output that squeeze does not know, such as `Check the log at <path>`, print under `other output:`, cut the same way. A `- duration:` or `- exit code:` line whose number does not fit a 64-bit value prints there too.
 - Color codes are removed, so `--color always` and `--color never` give the same output; tabs print as four spaces.
 
 ## Flags

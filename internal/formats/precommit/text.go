@@ -7,25 +7,25 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-func label(h Hook) string {
+func label(h hook) string {
 	if h.ID == "" || h.ID == h.Name {
 		return h.Name
 	}
 	return h.ID + " (" + h.Name + ")"
 }
 
-func verdict(h Hook) string {
+func verdict(h hook) string {
 	switch h.Status {
-	case Passed:
+	case statusPassed:
 		return "pass " + label(h)
-	case Skipped:
+	case statusSkipped:
 		if h.NoFiles {
 			return "skip " + label(h) + ": no files to check"
 		}
 		return "skip " + label(h) + ": SKIP"
-	case Unfinished:
+	case statusUnfinished:
 		return "unfinished " + label(h)
-	case Failed:
+	case statusFailed:
 	}
 	var why []string
 	if h.ExitCode != 0 {
@@ -51,7 +51,7 @@ func indent(b *strings.Builder, lines []string) {
 	}
 }
 
-func Text(r Report, o Options) string {
+func text(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -62,7 +62,7 @@ func Text(r Report, o Options) string {
 		b.WriteString("warning: " + w + "\n")
 	}
 	for _, h := range r.Hooks {
-		b.WriteString(verdict(h.Hook) + "\n")
+		b.WriteString(verdict(h.hook) + "\n")
 		indent(&b, h.Output)
 	}
 	if len(r.Other) > 0 {
@@ -72,7 +72,7 @@ func Text(r Report, o Options) string {
 	for _, f := range r.ChangedFiles {
 		b.WriteString("changed: " + f + "\n")
 	}
-	if o.All && len(r.Diff) > 0 {
+	if len(r.Diff) > 0 {
 		b.WriteString("diff:\n")
 		indent(&b, r.Diff)
 	}
@@ -85,7 +85,7 @@ func Text(r Report, o Options) string {
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	line := fmt.Sprintf("%s: %d %s", core.ToolLabel("pre-commit", r.ToolVersion), r.Total, core.Plural(r.Total, "hook", "hooks"))
 	var parts []string
 	for _, c := range []struct {

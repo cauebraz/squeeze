@@ -14,7 +14,10 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
 const RealDirEnv = "SQUEEZE_REAL_DIR"
@@ -75,9 +78,9 @@ func Inputs(t testing.TB, dir string) map[string][]byte {
 
 func Run(t testing.TB, f core.Format, input []byte, args ...string) (core.Result, error) {
 	t.Helper()
-	fs := flag.NewFlagSet(f.Name(), flag.ContinueOnError)
-	squeeze := f.Configure(fs)
-	if err := fs.Parse(args); err != nil {
+	flags := flag.NewFlagSet(f.Name(), flag.ContinueOnError)
+	squeeze := f.Configure(flags)
+	if err := flags.Parse(args); err != nil {
 		t.Fatalf("parse %v: %v", args, err)
 	}
 	return squeeze(input)
@@ -193,8 +196,8 @@ func CheckText(t testing.TB, text string) {
 		t.Errorf("text is not valid UTF-8")
 	}
 	for i, r := range text {
-		if (r < 0x20 && r != '\n') || r == 0x7f || (r >= 0x80 && r < 0xa0) {
-			t.Errorf("text contains control character %#x at %d", r, i)
+		if r != '\n' && sanitize.Invisible(r) {
+			t.Errorf("text contains control or invisible character %#x at %d", r, i)
 			return
 		}
 	}
@@ -213,7 +216,8 @@ func golden(t *testing.T, path string, got []byte) {
 		t.Fatalf("%v; run `just golden`", err)
 	}
 	if !bytes.Equal(got, want) {
-		t.Errorf("output differs from %s; run `just golden` and review the diff\ngot:\n%s\nwant:\n%s", path, got, want)
+		diff := cmp.Diff(strings.Split(string(want), "\n"), strings.Split(string(got), "\n"))
+		t.Errorf("output differs from %s; run `just golden` and review the diff (-want +got):\n%s", path, diff)
 	}
 }
 

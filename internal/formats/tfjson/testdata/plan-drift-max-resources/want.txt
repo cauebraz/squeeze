@@ -1,0 +1,8 @@
+terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy; 2 drifted; 2 deferred
+~ aws_security_group.web
+drift:
+- aws_instance.bastion
+... 1 more drifted resource (--max-resources 0)
+deferred:
++ aws_subnet.private["*"] (instance_count_unknown)
+... 1 more deferred resource (--max-resources 0)

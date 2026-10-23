@@ -8,7 +8,7 @@ import (
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-func Text(r Report, o Options) string {
+func text(r report, o options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -31,19 +31,14 @@ func Text(r Report, o Options) string {
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	total := r.Errors + r.Warnings + r.Notices
 	if total == 0 && len(r.Problems) == 0 {
 		return "tflint: no issues"
 	}
-	var parts []string
-	for _, c := range []struct {
-		n         int
-		one, many string
-	}{{r.Errors, "error", "errors"}, {r.Warnings, "warning", "warnings"}, {r.Notices, "notice", "notices"}} {
-		if c.n > 0 {
-			parts = append(parts, fmt.Sprintf("%d %s", c.n, core.Plural(c.n, c.one, c.many)))
-		}
+	parts := tfdiag.CountWords(r.Errors, r.Warnings)
+	if r.Notices > 0 {
+		parts = append(parts, fmt.Sprintf("%d %s", r.Notices, core.Plural(r.Notices, "notice", "notices")))
 	}
 	line := fmt.Sprintf("tflint: %d %s", total, core.Plural(total, "issue", "issues"))
 	if len(parts) > 0 {

@@ -18,25 +18,35 @@ build:
 test:
     go test -race ./...
 
-[doc('format the Go code with gofmt')]
+[doc('format the Go code with goimports, which runs gofmt and groups module imports last')]
 fmt:
-    gofmt -w .
+    go tool goimports -local github.com/cauebraz/squeeze -w .
 
-[doc('fail when a Go file is not gofmt-formatted')]
+[doc('fail when a Go file is not goimports-formatted')]
 fmt-check:
-    files="$(gofmt -l .)"; if [ -n "$files" ]; then echo "$files"; exit 1; fi
+    files="$(go tool goimports -local github.com/cauebraz/squeeze -l .)"; if [ -n "$files" ]; then echo "$files"; exit 1; fi
 
 [doc('run go vet')]
 vet:
     go vet ./...
 
-[doc('run staticcheck and exhaustive')]
+[doc('run staticcheck, exhaustive and revive')]
 lint:
     go tool staticcheck ./...
     go tool exhaustive ./...
+    go tool revive -config revive.toml -set_exit_status -exclude ./bench/... ./...
 
-[doc('run gofmt, vet, staticcheck, exhaustive, tidy and tests; before and after a change')]
-check: fmt-check vet lint tidy-check test
+[doc('vet for windows and linux arm64 to catch platform-specific code')]
+cross:
+    GOOS=windows GOARCH=amd64 go vet ./...
+    GOOS=linux GOARCH=arm64 go vet ./...
+
+[doc('report known vulnerabilities in the code paths squeeze calls; needs network')]
+vuln:
+    go tool govulncheck ./...
+
+[doc('run goimports, vet, staticcheck, exhaustive, revive, cross vet, tidy and tests; before and after a change')]
+check: fmt-check vet lint cross tidy-check test
 
 [doc('fail when go mod tidy would change go.mod or go.sum')]
 tidy-check:

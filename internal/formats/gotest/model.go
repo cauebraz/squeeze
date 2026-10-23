@@ -1,26 +1,34 @@
 package gotest
 
-type Counts struct {
+import "github.com/cauebraz/squeeze/internal/core"
+
+type status string
+
+const (
+	statusPass status = "pass"
+	statusFail status = "fail"
+)
+
+type testCounts struct {
 	Passed  int `json:"passed"`
 	Failed  int `json:"failed"`
 	Skipped int `json:"skipped"`
 }
 
-type PackageCounts struct {
+type packageCounts struct {
 	OK          int `json:"ok"`
 	Failed      int `json:"failed"`
 	BuildFailed int `json:"build_failed"`
 	NoTests     int `json:"no_tests"`
 }
 
-type Output struct {
-	Lines   []string `json:"lines"`
-	Logs    int      `json:"logs_hidden,omitempty"`
-	Stack   int      `json:"stack_hidden,omitempty"`
-	Omitted int      `json:"omitted,omitempty"`
+type output struct {
+	core.Block
+	LogsHidden  int `json:"logs_hidden,omitempty"`
+	StackHidden int `json:"stack_hidden,omitempty"`
 }
 
-type Failure struct {
+type failure struct {
 	Package    string            `json:"package"`
 	Test       string            `json:"test"`
 	Run        int               `json:"run,omitempty"`
@@ -29,68 +37,68 @@ type Failure struct {
 	Unfinished bool              `json:"unfinished,omitempty"`
 	Attrs      map[string]string `json:"attrs,omitempty"`
 	Artifacts  string            `json:"artifacts,omitempty"`
-	Output     Output            `json:"output"`
+	Output     output            `json:"output"`
 }
 
-type BuildFailure struct {
+type buildFailure struct {
 	Package string `json:"package"`
-	Output  Output `json:"output"`
+	Output  output `json:"output"`
 }
 
-type PackageFailure struct {
+type packageFailure struct {
 	Package    string `json:"package"`
 	Unfinished bool   `json:"unfinished,omitempty"`
-	Output     Output `json:"output"`
+	Output     output `json:"output"`
 }
 
-type Benchmark struct {
+type benchmark struct {
 	Package string `json:"package"`
 	Result  string `json:"result"`
 }
 
-type TestRef struct {
+type testRef struct {
 	Package string `json:"package"`
 	Test    string `json:"test"`
 }
 
-type PackageRef struct {
+type packageRef struct {
 	Package string  `json:"package"`
 	Elapsed float64 `json:"elapsed,omitempty"`
 }
 
-type PackageCoverage struct {
+type packageCoverage struct {
 	Package  string `json:"package"`
 	Coverage string `json:"coverage"`
 }
 
-type PackageSeed struct {
+type packageSeed struct {
 	Package string `json:"package"`
 	Seed    string `json:"seed"`
 	Failed  bool   `json:"failed,omitempty"`
 }
 
-type Report struct {
-	Tool            string            `json:"tool"`
-	ToolVersion     string            `json:"tool_version"`
-	Status          string            `json:"status"`
-	Tests           Counts            `json:"tests"`
-	Packages        PackageCounts     `json:"packages"`
-	BuildFailures   []BuildFailure    `json:"build_failures"`
-	Failures        []Failure         `json:"failures"`
-	FailuresOmitted int               `json:"tests_omitted"`
-	PackageFailures []PackageFailure  `json:"package_failures"`
-	Benchmarks      []Benchmark       `json:"benchmarks"`
-	Skipped         []TestRef         `json:"skipped"`
-	Passing         []PackageRef      `json:"passing_packages"`
-	NoTests         []string          `json:"packages_without_tests"`
-	Coverage        []PackageCoverage `json:"coverage"`
-	CoverageOmitted int               `json:"coverage_omitted"`
-	Shuffle         []PackageSeed     `json:"shuffle"`
-	Text            Output            `json:"text"`
-	Warnings        []string          `json:"warning_messages"`
-	Panics          int               `json:"panics"`
-	Timeouts        int               `json:"timeouts"`
-	Races           int               `json:"races"`
-	Other           map[string]int    `json:"other"`
-	testsUnlisted   bool
+type report struct {
+	Tool                 string            `json:"tool"`
+	ToolVersion          string            `json:"tool_version"`
+	Status               status            `json:"status"`
+	Tests                testCounts        `json:"tests"`
+	Packages             packageCounts     `json:"packages"`
+	BuildFailures        []buildFailure    `json:"build_failures"`
+	Failures             []failure         `json:"failures"`
+	TestsOmitted         int               `json:"tests_omitted"`
+	PackageFailures      []packageFailure  `json:"package_failures"`
+	Benchmarks           []benchmark       `json:"benchmarks"`
+	Skipped              []testRef         `json:"skipped"`
+	PassingPackages      []packageRef      `json:"passing_packages"`
+	PackagesWithoutTests []string          `json:"packages_without_tests"`
+	Coverage             []packageCoverage `json:"coverage"`
+	CoverageOmitted      int               `json:"coverage_omitted"`
+	Shuffle              []packageSeed     `json:"shuffle"`
+	Text                 output            `json:"text"`
+	WarningMessages      []string          `json:"warning_messages"`
+	Panics               int               `json:"panics"`
+	Timeouts             int               `json:"timeouts"`
+	Races                int               `json:"races"`
+	Other                map[string]int    `json:"other"`
+	testsUnlisted        bool
 }

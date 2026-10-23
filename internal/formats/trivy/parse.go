@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
 )
 
-var ErrNotTrivy = errors.New("input has no trivy SchemaVersion or ClusterName")
+var errNotTrivy = errors.New("input has no trivy SchemaVersion or ClusterName")
 
-type Vulnerability struct {
+type rawVulnerability struct {
 	VulnerabilityID  string `json:"VulnerabilityID"`
 	PkgName          string `json:"PkgName"`
 	InstalledVersion string `json:"InstalledVersion"`
@@ -20,25 +21,25 @@ type Vulnerability struct {
 	PrimaryURL       string `json:"PrimaryURL"`
 }
 
-type Cause struct {
+type rawCause struct {
 	Resource  string `json:"Resource"`
 	StartLine int    `json:"StartLine"`
 	EndLine   int    `json:"EndLine"`
 }
 
-type Misconfiguration struct {
-	ID            string `json:"ID"`
-	AVDID         string `json:"AVDID"`
-	Title         string `json:"Title"`
-	Message       string `json:"Message"`
-	Resolution    string `json:"Resolution"`
-	Severity      string `json:"Severity"`
-	Status        string `json:"Status"`
-	PrimaryURL    string `json:"PrimaryURL"`
-	CauseMetadata Cause  `json:"CauseMetadata"`
+type rawMisconfiguration struct {
+	ID            string   `json:"ID"`
+	AVDID         string   `json:"AVDID"`
+	Title         string   `json:"Title"`
+	Message       string   `json:"Message"`
+	Resolution    string   `json:"Resolution"`
+	Severity      string   `json:"Severity"`
+	Status        string   `json:"Status"`
+	PrimaryURL    string   `json:"PrimaryURL"`
+	CauseMetadata rawCause `json:"CauseMetadata"`
 }
 
-type Secret struct {
+type rawSecret struct {
 	RuleID    string `json:"RuleID"`
 	Category  string `json:"Category"`
 	Severity  string `json:"Severity"`
@@ -47,7 +48,7 @@ type Secret struct {
 	EndLine   int    `json:"EndLine"`
 }
 
-type License struct {
+type rawLicense struct {
 	Severity string `json:"Severity"`
 	Category string `json:"Category"`
 	PkgName  string `json:"PkgName"`
@@ -55,31 +56,31 @@ type License struct {
 	Name     string `json:"Name"`
 }
 
-type Summary struct {
+type rawSummary struct {
 	Successes int `json:"Successes"`
 	Failures  int `json:"Failures"`
 }
 
-type Result struct {
-	Target            string             `json:"Target"`
-	Class             string             `json:"Class"`
-	Type              string             `json:"Type"`
-	Vulnerabilities   []Vulnerability    `json:"Vulnerabilities"`
-	MisconfSummary    *Summary           `json:"MisconfSummary"`
-	Misconfigurations []Misconfiguration `json:"Misconfigurations"`
-	Secrets           []Secret           `json:"Secrets"`
-	Licenses          []License          `json:"Licenses"`
+type rawResult struct {
+	Target            string                `json:"Target"`
+	Class             string                `json:"Class"`
+	Type              string                `json:"Type"`
+	Vulnerabilities   []rawVulnerability    `json:"Vulnerabilities"`
+	MisconfSummary    *rawSummary           `json:"MisconfSummary"`
+	Misconfigurations []rawMisconfiguration `json:"Misconfigurations"`
+	Secrets           []rawSecret           `json:"Secrets"`
+	Licenses          []rawLicense          `json:"Licenses"`
 }
 
-type K8sResource struct {
-	Namespace string   `json:"Namespace"`
-	Kind      string   `json:"Kind"`
-	Name      string   `json:"Name"`
-	Results   []Result `json:"Results"`
-	Error     string   `json:"Error"`
+type rawK8sResource struct {
+	Namespace string      `json:"Namespace"`
+	Kind      string      `json:"Kind"`
+	Name      string      `json:"Name"`
+	Results   []rawResult `json:"Results"`
+	Error     string      `json:"Error"`
 }
 
-type RawReport struct {
+type rawReport struct {
 	SchemaVersion int `json:"SchemaVersion"`
 	Trivy         struct {
 		Version string `json:"Version"`
@@ -92,23 +93,23 @@ type RawReport struct {
 			Name   string `json:"Name"`
 		} `json:"OS"`
 	} `json:"Metadata"`
-	Results     []Result           `json:"Results"`
-	ClusterName *string            `json:"ClusterName"`
-	Resources   []K8sResource      `json:"Resources"`
-	Findings    []K8sResource      `json:"Findings"`
-	Trailing    []core.FlaggedLine `json:"-"`
+	Results     []rawResult           `json:"Results"`
+	ClusterName *string               `json:"ClusterName"`
+	Resources   []rawK8sResource      `json:"Resources"`
+	Findings    []rawK8sResource      `json:"Findings"`
+	Trailing    []logscan.FlaggedLine `json:"-"`
 }
 
-func Parse(input []byte) (*RawReport, error) {
-	var r RawReport
+func parse(input []byte) (*rawReport, error) {
+	var r rawReport
 	rest, err := core.DecodeJSON(input, &r)
 	if err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
-	r.Trailing = core.FlaggedLines(rest)
+	r.Trailing = logscan.FlaggedLines(rest)
 	if r.SchemaVersion == 0 {
 		if r.ClusterName == nil {
-			return nil, ErrNotTrivy
+			return nil, errNotTrivy
 		}
 		return &r, nil
 	}

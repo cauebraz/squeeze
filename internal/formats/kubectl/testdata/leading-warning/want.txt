@@ -1,0 +1,3 @@
+kubectl: 1 object (Secret 1), 0 unhealthy
+warning: the v1 Secret API is used by an admission webhook that is deprecated
+Secret shop/db-credentials: Opaque, keys password username

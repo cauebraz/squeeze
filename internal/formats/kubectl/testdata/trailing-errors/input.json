@@ -1,0 +1,225 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "creationTimestamp": "2026-10-15T01:01:22Z",
+        "generateName": "worker-56bff96fc9-",
+        "generation": 1,
+        "labels": {
+            "app": "worker",
+            "pod-template-hash": "56bff96fc9"
+        },
+        "name": "worker-56bff96fc9-c8xj6",
+        "namespace": "shop",
+        "ownerReferences": [
+            {
+                "apiVersion": "apps/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "ReplicaSet",
+                "name": "worker-56bff96fc9",
+                "uid": "85dd1acc-5c2c-447a-b007-29a87a146296"
+            }
+        ],
+        "resourceVersion": "737",
+        "uid": "d39d6608-c90e-4a54-9e04-1b09136cbb47"
+    },
+    "spec": {
+        "containers": [
+            {
+                "command": [
+                    "sh",
+                    "-c",
+                    "echo starting; exit 1"
+                ],
+                "image": "alpine:3.21",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "worker",
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-gpwwv",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "squeeze-kubectl-control-plane",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "name": "kube-api-access-gpwwv",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-10-15T01:01:28Z",
+                "status": "True",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-10-15T01:01:22Z",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-10-15T01:01:29Z",
+                "message": "containers with unready status: [worker]",
+                "reason": "ContainersNotReady",
+                "status": "False",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-10-15T01:01:29Z",
+                "message": "containers with unready status: [worker]",
+                "reason": "ContainersNotReady",
+                "status": "False",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-10-15T01:01:22Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "containerd://39d191ffcc845bfcac83dcacd3f04245cac510144c09dc91be00e9b1e8b3661e",
+                "image": "docker.io/library/alpine:3.21",
+                "imageID": "docker.io/library/alpine@sha256:ce64758a109eb420d874a118f87920e625e12d3634e03b4a5573fd9f6e5d3507",
+                "lastState": {
+                    "terminated": {
+                        "containerID": "containerd://39d191ffcc845bfcac83dcacd3f04245cac510144c09dc91be00e9b1e8b3661e",
+                        "exitCode": 1,
+                        "finishedAt": "2026-10-15T01:02:13Z",
+                        "reason": "Error",
+                        "startedAt": "2026-10-15T01:02:13Z"
+                    }
+                },
+                "name": "worker",
+                "ready": false,
+                "resources": {},
+                "restartCount": 3,
+                "started": false,
+                "state": {
+                    "waiting": {
+                        "message": "back-off 40s restarting failed container=worker pod=worker-56bff96fc9-c8xj6_shop(d39d6608-c90e-4a54-9e04-1b09136cbb47)",
+                        "reason": "CrashLoopBackOff"
+                    }
+                },
+                "user": {
+                    "linux": {
+                        "gid": 0,
+                        "supplementalGroups": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            6,
+                            10,
+                            11,
+                            20,
+                            26,
+                            27
+                        ],
+                        "uid": 0
+                    }
+                },
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-gpwwv",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    }
+                ]
+            }
+        ],
+        "hostIP": "172.20.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.20.0.2"
+            }
+        ],
+        "phase": "Running",
+        "podIP": "10.244.0.7",
+        "podIPs": [
+            {
+                "ip": "10.244.0.7"
+            }
+        ],
+        "qosClass": "BestEffort",
+        "startTime": "2026-10-15T01:01:22Z"
+    }
+}
+Warning: policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+error: the server doesn't have a resource type "widgets"

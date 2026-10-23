@@ -1,6 +1,8 @@
 package pytest
 
-type Summary struct {
+import "github.com/cauebraz/squeeze/internal/core"
+
+type summary struct {
 	Failed     int            `json:"failed"`
 	Passed     int            `json:"passed"`
 	Skipped    int            `json:"skipped"`
@@ -14,49 +16,67 @@ type Summary struct {
 	Line       string         `json:"line"`
 }
 
-type Captured struct {
-	Name    string   `json:"name"`
-	Lines   []string `json:"lines"`
-	Omitted int      `json:"omitted,omitempty"`
+type capturedSection struct {
+	Name string `json:"name"`
+	core.Block
 }
 
-type Failure struct {
-	Kind      string     `json:"kind"`
-	Test      string     `json:"test"`
-	Subtest   string     `json:"subtest,omitempty"`
-	When      string     `json:"when,omitempty"`
-	Message   string     `json:"message,omitempty"`
-	Lines     []string   `json:"lines"`
-	Hidden    int        `json:"hidden,omitempty"`
-	Captured  []Captured `json:"captured,omitempty"`
-	Omitted   int        `json:"omitted,omitempty"`
-	Untracked bool       `json:"from_summary_only,omitempty"`
-	Location  string     `json:"location,omitempty"`
-	Same      []string   `json:"same_location_tests,omitempty"`
+type failureKind string
+
+const (
+	kindFailed failureKind = "failed"
+	kindError  failureKind = "error"
+)
+
+func (k failureKind) word() string {
+	switch k {
+	case kindError:
+		return "ERROR"
+	case kindFailed:
+	}
+	return "FAILED"
 }
 
-type Warning struct {
+type failure struct {
+	Kind    failureKind `json:"kind"`
+	Test    string      `json:"test"`
+	Subtest string      `json:"subtest,omitempty"`
+	When    string      `json:"when,omitempty"`
+	Message string      `json:"message,omitempty"`
+	core.Block
+	Hidden            int               `json:"hidden,omitempty"`
+	Captured          []capturedSection `json:"captured,omitempty"`
+	FromSummaryOnly   bool              `json:"from_summary_only,omitempty"`
+	Location          string            `json:"location,omitempty"`
+	SameLocationTests []string          `json:"same_location_tests,omitempty"`
+}
+
+type warningMessage struct {
 	Message string `json:"message"`
 	Count   int    `json:"count"`
 }
 
-type Report struct {
-	Tool            string         `json:"tool"`
-	Version         string         `json:"tool_version"`
-	Complete        bool           `json:"summary_found"`
-	Summary         Summary        `json:"summary"`
-	Interrupted     string         `json:"interrupted,omitempty"`
-	InternalError   bool           `json:"internal_error,omitempty"`
-	Stopped         string         `json:"stopped,omitempty"`
-	Failures        []Failure      `json:"failures"`
-	FailuresOmitted int            `json:"tests_omitted"`
-	FailuresFolded  int            `json:"failures_folded"`
-	Warnings        []Warning      `json:"warning_messages"`
-	WarningsOmitted int            `json:"warnings_omitted"`
-	Notes           []string       `json:"notes"`
-	NotesOmitted    int            `json:"notes_omitted"`
-	Outcomes        []string       `json:"outcomes"`
-	Sections        map[string]int `json:"other_sections"`
-	sectionLines    map[string][]string
-	sectionOrder    []string
+type report struct {
+	Tool              string           `json:"tool"`
+	ToolVersion       string           `json:"tool_version"`
+	SummaryFound      bool             `json:"summary_found"`
+	Summary           summary          `json:"summary"`
+	Interrupted       string           `json:"interrupted,omitempty"`
+	InternalError     bool             `json:"internal_error,omitempty"`
+	Stopped           string           `json:"stopped,omitempty"`
+	Failures          []failure        `json:"failures"`
+	TestsOmitted      int              `json:"tests_omitted"`
+	FailuresFolded    int              `json:"failures_folded"`
+	WarningMessages   []warningMessage `json:"warning_messages"`
+	WarningsOmitted   int              `json:"warnings_omitted"`
+	Notes             []string         `json:"notes"`
+	NotesOmitted      int              `json:"notes_omitted"`
+	Outcomes          []string         `json:"outcomes"`
+	OtherSections     map[string]int   `json:"other_sections"`
+	OtherSectionLines []sectionLines   `json:"other_section_lines"`
+}
+
+type sectionLines struct {
+	Name  string   `json:"name"`
+	Lines []string `json:"lines"`
 }

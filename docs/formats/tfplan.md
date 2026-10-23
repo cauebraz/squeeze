@@ -60,6 +60,7 @@ Resource symbols follow Terraform's:
 | `<=` | read a data source |
 | `>>` | import without other changes |
 | `=` | no change; shown for moves and with `--all` |
+| `?` | an `actions` list outside Terraform's published set |
 
 Attribute symbols:
 
@@ -70,7 +71,8 @@ Attribute symbols:
 | `-` | removed: the key or element no longer exists |
 | `!` | changed and forces the replacement |
 
-- The header counts match `terraform plan`: a replacement counts in `to add` and `to destroy`, forget-and-create counts in `to add`, imports come first. `to replace`, `to forget`, `to move` and `to read` follow when present.
+- The header counts match `terraform plan`: a replacement counts in `to add` and `to destroy`, forget-and-create counts in `to add`, imports come first. `to replace`, `to forget`, `to move`, `to read` and `with unknown actions` follow when present.
+- A resource, deferred resource or output whose `actions` list is not one of the ten Terraform publishes for the JSON plan format, such as one a newer Terraform adds, prints with `?` and the note `unknown actions [<actions>]`, sorted before the deletes. It counts in the header as `N with unknown actions` and sets `change`; its attributes are not compared.
 - A line after the JSON document that reads as an error or a warning, such as `Error: Failed to write plan file` when stderr is piped too, prints below the header as a diagnostic without a location, its `Error:` or `Warning:` prefix removed. Other lines after the document are dropped.
 - A sensitive attribute prints `(sensitive)` at any nesting depth; its value is never printed or stored. An attribute whose value stays the same but becomes sensitive, or stops being sensitive, also prints `(sensitive)`. A mark in `before_sensitive` or `after_sensitive` that is not `false`, `null`, an object or an array (for example `1` or `"true"`) counts as sensitive, and a list whose mark is an array of a different length prints `(sensitive)` for the whole list, so a malformed mask never shows a value.
 - A value Terraform knows only after apply prints `(known after apply)`.
@@ -80,7 +82,7 @@ Attribute symbols:
 - Line notes carry the deposed key, `moved from <address>`, `import`, the size of the generated config, the attributes that force replacement and Terraform's `action_reason`.
 - A resource whose configuration Terraform generated (`plan -generate-config-out`, the change's `generated_config`) prints `N lines of generated config in --output json`, as in `>> aws_s3_bucket.legacy (8 lines of generated config in --output json)`. The text does not print the HCL; `--output json` holds it, with control characters and color codes removed, tabs expanded and trailing spaces and newlines trimmed. Terraform writes the same HCL to the file named by `-generate-config-out`, and writes a sensitive attribute as `null # sensitive` (`internal/genconfig/generate_config.go` at v1.17.0-rc2). With `--no-values` the note drops `in --output json` and the JSON keeps the line count only.
 - Drift is shown the way Terraform shows it: only attributes listed in the plan's `relevant_attributes`. A relevant path that goes through a list index makes the whole list relevant, as Terraform's renderer treats every element of a relevant list (`internal/command/jsonformat/differ/list.go`).
-- A replacement path that names a set element by its value prints the element as `[*]`, so the value never reaches the text. Drift that affects the plan is counted in `... N drifted resources (--drift)` unless `--drift` lists it; drift that does not affect the plan is counted in a `... N drifted resources not affecting this plan (--all)` line. Resources without changes are counted in `... N resources without changes (--all)`.
+- A replacement path that names a set element by its value prints the element as `[*]`, so the value never reaches the text. Drift that affects the plan is counted in `... N drifted resources (--drift)` unless `--drift` lists it; `--max-resources` cuts the listed drift and the deferred list too, announced as `... N more drifted resources (--max-resources 0)` and `... N more deferred resources (--max-resources 0)`; drift that does not affect the plan is counted in a `... N drifted resources not affecting this plan (--all)` line. Resources without changes are counted in `... N resources without changes (--all)`.
 - Deferred resources (`deferred_changes`, in incomplete plans) are listed with Terraform's reason. Deferred no-ops are hidden unless moved.
 - Action invocations (`action_invocations`) are listed with their trigger event and resource.
 - Deferred action invocations (`deferred_action_invocations`, in incomplete plans) are listed on one `deferred actions:` line in the plan's order. Each has its trigger and Terraform's deferral reason: `unknown`, `instance_count_unknown`, `resource_config_unknown`, `provider_config_unknown`, `deferred_prereq` or `absent_prereq` (`internal/command/jsonplan/action_invocations.go` at v1.17.0-rc2). The header counts them as `N deferred actions`.
@@ -93,14 +95,14 @@ Attribute symbols:
 | `--all` | off | include resources and outputs without changes, and drift that does not affect the plan |
 | `--drift` | off | list drifted resources instead of counting them |
 | `--max-attrs` | `8` | attributes per resource listed, `0` for all |
-| `--max-resources` | `200` | resources listed, `0` for all |
+| `--max-resources` | `200` | resources, drifted and deferred resources listed, each, `0` for all |
 | `--no-values` | off | print attribute paths only |
 
 ## Conditions for `--fail-on`
 
 | Condition | Present when |
 |---|---|
-| `change` | the plan creates, updates, destroys, replaces, imports, moves, forgets or reads anything |
+| `change` | the plan creates, updates, destroys, replaces, imports, moves, forgets or reads anything, or has a resource with unknown actions |
 | `check` | a check failed or errored |
 | `deferred` | a resource change or an action invocation was deferred |
 | `destroy` | a resource is deleted or replaced by destroying it |
@@ -119,14 +121,14 @@ Attribute symbols:
 `data` in the `--output json` envelope holds:
 
 - `tool`, `tool_version`.
-- `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `drift`, `drift_ignored`, `deferred`, `deferred_actions`, `actions`, `outputs`, `checks_failed`, `errored`, `complete`.
-- `changes` and `drift`: each with `address`, `action` and, when set, `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `generated_config_lines`, `generated_config` (the HCL, left out with `--no-values`), `replaced_by`, `attrs`, `attrs_omitted`.
+- `summary`: `import`, `add`, `change`, `destroy` with Terraform's semantics, then `replace`, `forget`, `move`, `read`, `noop`, `unknown`, `drift`, `drift_ignored`, `deferred`, `deferred_actions`, `actions`, `outputs`, `checks_failed`, `errored`, `complete`.
+- `changes` and `drift`: each with `address`, `action` (`unknown` for an `actions` list outside Terraform's set) and, when set, `actions` (that list), `previous_address`, `deposed`, `importing`, `reason`, `irrelevant`, `generated_config_lines`, `generated_config` (the HCL, left out with `--no-values`), `replaced_by`, `attrs`, `attrs_omitted`.
 - `attrs`: `path`, `kind` (`update`, `add`, `remove`) and, when set, `before`, `after`, `unknown`, `sensitive`, `forces_replacement`, `reordered`. `before` and `after` are the scalar values with their JSON types and are never shortened; the 48-byte limit applies to text only.
-- `resources_omitted`, `noop_hidden`, `drift_omitted`, `deferred` (`address`, `action`, `reason`), `deferred_actions` (the `actions` keys plus `reason`), `actions` (`address`, `event`, `resource`, `invoked`), `outputs` (`name`, `action` and, when set, `unknown`, `sensitive`) and `checks` (`address`, `kind`, `status` and, when set, `problems`), with the same failed instances the text lists.
+- `resources_omitted`, `noop_hidden`, `drift_omitted` (drifted resources `--max-resources` cut), `drift_hidden` (drift that does not affect the plan, left out without `--all`), `deferred` (`address`, `action`, `reason` and, for an unknown action, `actions`), `deferred_omitted` (deferred resources `--max-resources` cut), `deferred_actions` (the `actions` keys plus `reason`), `actions` (`address`, `event`, `resource`, `invoked`), `outputs` (`name`, `action` and, when set, `actions`, `unknown`, `sensitive`) and `checks` (`address`, `kind`, `status` and, when set, `problems`), with the same failed instances the text lists.
 - `diagnostics` (`severity`, `summary`, `count`), present only when lines after the JSON read as errors or warnings.
 
 ## Limitations
 
 - The plan JSON carries no provider schema, so squeeze cannot tell a set from a list. Unmatched objects in a set are paired as in a list: Terraform would show the old element removed and the new one added, squeeze shows the attributes that differ between them, with both indices when they differ.
 - The plan JSON does not say whether the plan is refresh-only. Terraform shows all drift for those plans; squeeze counts the drift and points to `--all`.
-- An `actions` list outside Terraform's published set fails with exit code 1 and names it.
+- An `actions` list outside Terraform's published set has no known meaning: squeeze prints it with `?` and does not count it in `to add`, `to change` or `to destroy`, nor set `destroy` or `replace` from it.

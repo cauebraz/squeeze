@@ -7,6 +7,12 @@ fail test_cart test_total_two_items: assert 10 == 11  +  where 10 = total([(3, 2
   E       assert 10 == 11
   E        +  where 10 = total([(3, 2), (4, 1)])
   test_cart.py:21: AssertionError
+error test_cart test_checkout_uses_db: failed on setup with "ConnectionError: database at localhost:5432 refused the connection"
+  @pytest.fixture
+      def db():
+  >       raise ConnectionError("database at localhost:5432 refused the connection")
+  E       ConnectionError: database at localhost:5432 refused the connection
+  test_cart.py:11: ConnectionError
 fail test_cart test_strict_xpass: [XPASS(strict)] should fail
 fail test_cart.TestDiscount test_negative: Failed: DID NOT RAISE <class 'ValueError'>
   self = <test_cart.TestDiscount object at 0x10af62490>
@@ -23,12 +29,6 @@ fail test_cart test_order_export: AssertionError: assert False  +  where False =
   E        +  where False = <built-in method endswith of str object at 0x10afc3270>('.json')
   E        +    where <built-in method endswith of str object at 0x10afc3270> = 'orders.csv'.endswith
   test_cart.py:59: AssertionError
-error test_cart test_checkout_uses_db: failed on setup with "ConnectionError: database at localhost:5432 refused the connection"
-  @pytest.fixture
-      def db():
-  >       raise ConnectionError("database at localhost:5432 refused the connection")
-  E       ConnectionError: database at localhost:5432 refused the connection
-  test_cart.py:11: ConnectionError
 error test_cart test_order_export: failed on teardown with "RuntimeError: could not remove orders.csv"
   @pytest.fixture
       def order_file():

@@ -13,7 +13,7 @@ just commits        # commit messages and branch name since origin/main
 just check-each     # just check on every commit since origin/main
 ```
 
-Linters are pinned with the `tool` directive in `go.mod` and run through `go tool`; do not install them globally. The module requires Go 1.27; CI runs Go 1.27.2 with `GOTOOLCHAIN=local`.
+Linters (goimports, staticcheck, exhaustive, revive with the rules in `revive.toml`, govulncheck) are pinned with the `tool` directive in `go.mod` and run through `go tool`; do not install them globally. `just fmt` groups imports as standard library, third party, then this module. The module requires Go 1.27; CI runs Go 1.27.2 with `GOTOOLCHAIN=local`.
 
 A change is done when `just check` and `just cover` pass after the last edit.
 
@@ -22,8 +22,10 @@ A change is done when `just check` and `just cover` pass after the last edit.
 ```
 cmd/squeeze/            main: wires os.Args and stdio to internal/cli
 internal/cli/           subcommands, common flags, exit codes, --raw-dir
-internal/core/          Format interface, Registry, Result, conditions, JSON envelope: knows no tool
-internal/tfdiag/        Terraform diagnostics shared by tfvalidate, tfjson and tflint
+internal/core/          Format interface, Registry, Result, conditions, JSON envelope, report helpers: knows no tool
+internal/sanitize/      strips control characters, escape sequences and invisible runes from input text
+internal/logscan/       error and warning line detection, lines around a JSON document, tail cuts
+internal/tfdiag/        diagnostics with file and line, shared by the Terraform formats, checkov and trivy
 internal/jsonl/         line-delimited JSON input shared by tfjson and gotest
 internal/formattest/    contract suite every format runs
 internal/formats/<name>/ one package per format; testdata/<case>/ holds input, args, want.txt, want.json
@@ -33,7 +35,7 @@ scripts/                check-commits.sh, behind just commits
 bench/                  agent measurement: tasks with verifiers and a runner for the Anthropic, OpenAI and OpenRouter APIs; bench/README.md and bench/results.svg hold the last results
 ```
 
-`internal/core` imports no format. `internal/cli` names a format in one place only, `DefaultRegistry`. Tool knowledge lives under `internal/formats/<name>/` and `docs/formats/<name>.md`.
+`internal/core`, `internal/sanitize` and `internal/logscan` import no format; `internal/sanitize` imports nothing from this module. A format package exports only `Format`; everything else, including raw input types named `raw<Thing>`, stays unexported. `internal/cli` names a format in one place only, `DefaultRegistry`. Tool knowledge lives under `internal/formats/<name>/` and `docs/formats/<name>.md`.
 
 ## Commits, branches and pull requests
 
@@ -55,7 +57,7 @@ bench/                  agent measurement: tasks with verifiers and a runner for
 - Fixtures come from public, permissively licensed sources or are written from the tool's published schema. Terraform's own testdata is BUSL-1.1: run squeeze against it locally if useful, never copy it into this repository. Real or private output goes in `internal/formats/<name>/testdata/real/`, which git ignores.
 - A format follows the tool's own semantics where the tool defines them (counts, symbols, which drift to show). Check the tool's source or docs, cite it in the PR, and add a fixture that exercises it.
 - A format's parser accepts every value the tool documents. When the tool adds a value (an action, a field), add a fixture that contains it.
-- Every `switch` over an enum lists all values; `go tool exhaustive` enforces it.
+- A string with a fixed set of values is a named type with constants, and every `switch` over it lists all values; `go tool exhaustive` enforces it.
 - Tests compare structures with `cmp.Diff`. Fuzz targets assert properties, not only the absence of a crash. A test that guards an invariant must fail when the invariant is broken; check it once by breaking the code.
 - Standard library only in non-test code. `github.com/google/go-cmp` is the test-only dependency; another one needs a reason in the PR.
 - No comments in code. Explanations go in the PR description or in `docs/`.

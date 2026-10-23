@@ -7,106 +7,115 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 var (
-	ErrNotObject        = errors.New("not a JSON object of outputs")
-	ErrMissingSensitive = errors.New("missing sensitive")
+	errNotObject        = errors.New("not a JSON object of outputs")
+	errMissingSensitive = errors.New("missing sensitive")
 )
 
-type RawOutput struct {
+type rawOutput struct {
 	Sensitive *bool           `json:"sensitive"`
 	Type      json.RawMessage `json:"type"`
 	Value     json.RawMessage `json:"value"`
 }
 
-type RawState struct {
+type rawState struct {
 	FormatVersion    string `json:"format_version"`
 	TerraformVersion string `json:"terraform_version"`
 	Values           *struct {
-		Outputs    map[string]RawOutput `json:"outputs"`
-		RootModule RawModule            `json:"root_module"`
+		Outputs    map[string]rawOutput `json:"outputs"`
+		RootModule rawModule            `json:"root_module"`
 	} `json:"values"`
 }
 
-type RawModule struct {
-	Resources    []RawResource `json:"resources"`
-	ChildModules []RawModule   `json:"child_modules"`
+type rawModule struct {
+	Resources    []rawResource `json:"resources"`
+	ChildModules []rawModule   `json:"child_modules"`
 }
 
-type RawResource struct {
+type rawResource struct {
 	Address    string `json:"address"`
 	Mode       string `json:"mode"`
 	Tainted    bool   `json:"tainted"`
 	DeposedKey string `json:"deposed_key"`
 }
 
-type Input struct {
-	State    *RawState
-	Show     *RawShow
-	Outputs  map[string]RawOutput
-	Trailing []core.FlaggedLine
+type document struct {
+	State    *rawState
+	Show     *rawShow
+	Outputs  map[string]rawOutput
+	Trailing []logscan.FlaggedLine
 }
 
-type Output struct {
+type output struct {
 	Name      string          `json:"name"`
 	Sensitive bool            `json:"sensitive"`
 	Type      json.RawMessage `json:"type,omitempty"`
 	Value     json.RawMessage `json:"value,omitempty"`
 }
 
-type Resource struct {
+type resource struct {
 	Address    string `json:"address"`
 	Mode       string `json:"mode"`
 	Tainted    bool   `json:"tainted,omitempty"`
 	DeposedKey string `json:"deposed_key,omitempty"`
 }
 
-type Report struct {
+type report struct {
 	Tool        string              `json:"tool"`
 	ToolVersion string              `json:"tool_version"`
-	Source      string              `json:"source"`
+	Source      source              `json:"source"`
 	Total       int                 `json:"total"`
 	Sensitive   int                 `json:"sensitive"`
 	Omitted     int                 `json:"outputs_omitted"`
-	Outputs     []Output            `json:"outputs"`
-	State       *State              `json:"state,omitempty"`
-	Resource    *Instance           `json:"resource,omitempty"`
+	Outputs     []output            `json:"outputs"`
+	State       *state              `json:"state,omitempty"`
+	Resource    *instance           `json:"resource,omitempty"`
 	Errors      int                 `json:"errors,omitempty"`
 	Warnings    int                 `json:"warnings,omitempty"`
 	Diagnostics []tfdiag.Diagnostic `json:"diagnostics,omitempty"`
 }
 
-type State struct {
+type source string
+
+const (
+	sourceOutput   source = "output"
+	sourceState    source = "state"
+	sourceResource source = "resource"
+)
+
+type state struct {
 	Managed          int        `json:"managed"`
 	DataSources      int        `json:"data_sources"`
 	Tainted          int        `json:"tainted"`
 	Deposed          int        `json:"deposed"`
 	ResourcesOmitted int        `json:"resources_omitted"`
-	Resources        []Resource `json:"resources"`
+	Resources        []resource `json:"resources"`
 }
 
-func Parse(input []byte) (Input, error) {
+func parse(input []byte) (document, error) {
 	var top map[string]json.RawMessage
 	rest, err := core.DecodeJSON(input, &top)
 	if err != nil {
-		return Input{}, fmt.Errorf("decode: %w", err)
+		return document{}, fmt.Errorf("decode: %w", err)
 	}
 	in, err := parseDocument(input[:len(input)-len(rest)], top)
 	if err != nil {
-		return Input{}, err
+		return document{}, err
 	}
-	in.Trailing = core.FlaggedLines(rest)
+	in.Trailing = logscan.FlaggedLines(rest)
 	return in, nil
 }
 
-func parseDocument(input []byte, top map[string]json.RawMessage) (Input, error) {
+func parseDocument(input []byte, top map[string]json.RawMessage) (document, error) {
 	if top == nil {
-		return Input{}, ErrNotObject
+		return document{}, errNotObject
 	}
 	if v, ok := top["format_version"]; ok && bytes.HasPrefix(v, []byte(`"`)) {
 		if _, ok := top["resource"]; ok {
@@ -114,55 +123,55 @@ func parseDocument(input []byte, top map[string]json.RawMessage) (Input, error) 
 		}
 		return parseState(input)
 	}
-	var outputs map[string]RawOutput
+	var outputs map[string]rawOutput
 	if err := json.Unmarshal(input, &outputs); err != nil {
-		return Input{}, fmt.Errorf("decode: %w", err)
+		return document{}, fmt.Errorf("decode: %w", err)
 	}
 	if err := checkOutputs(outputs); err != nil {
-		return Input{}, err
+		return document{}, err
 	}
-	return Input{Outputs: outputs}, nil
+	return document{Outputs: outputs}, nil
 }
 
-func parseState(input []byte) (Input, error) {
-	var s RawState
+func parseState(input []byte) (document, error) {
+	var s rawState
 	if err := json.NewDecoder(bytes.NewReader(input)).Decode(&s); err != nil {
-		return Input{}, fmt.Errorf("decode: %w", err)
+		return document{}, fmt.Errorf("decode: %w", err)
 	}
-	if major, _, _ := strings.Cut(s.FormatVersion, "."); major != "1" {
-		return Input{}, fmt.Errorf("unsupported format_version %q", s.FormatVersion)
+	if err := tfdiag.CheckFormatVersion(s.FormatVersion); err != nil {
+		return document{}, err
 	}
 	if s.Values != nil {
 		if err := checkOutputs(s.Values.Outputs); err != nil {
-			return Input{}, err
+			return document{}, err
 		}
 	}
-	return Input{State: &s}, nil
+	return document{State: &s}, nil
 }
 
-func checkOutputs(outputs map[string]RawOutput) error {
+func checkOutputs(outputs map[string]rawOutput) error {
 	for _, name := range slices.Sorted(maps.Keys(outputs)) {
 		if outputs[name].Sensitive == nil {
-			return fmt.Errorf("output %q: %w", name, ErrMissingSensitive)
+			return fmt.Errorf("output %q: %w", name, errMissingSensitive)
 		}
 	}
 	return nil
 }
 
-func Build(in Input, o Options) Report {
-	r := Report{Tool: "terraform", Source: "output"}
+func build(in document, o options) report {
+	r := report{Tool: "terraform", Source: sourceOutput}
 	if in.Show != nil {
 		buildShow(&r, in.Show, in.Trailing)
-		r.Outputs = []Output{}
+		r.Outputs = []output{}
 		return r
 	}
 	r.Diagnostics = trailing(nil, in.Trailing)
 	r.Errors, r.Warnings = tfdiag.Count(r.Diagnostics)
 	outputs := in.Outputs
 	if in.State != nil {
-		r.Source = "state"
-		r.ToolVersion = core.Clean(in.State.TerraformVersion)
-		s := &State{Resources: []Resource{}}
+		r.Source = sourceState
+		r.ToolVersion = sanitize.Clean(in.State.TerraformVersion)
+		s := &state{Resources: []resource{}}
 		if v := in.State.Values; v != nil {
 			outputs = v.Outputs
 			walk(s, v.RootModule)
@@ -175,23 +184,17 @@ func Build(in Input, o Options) Report {
 	return r
 }
 
-func trailing(ds []tfdiag.Diagnostic, lines []core.FlaggedLine) []tfdiag.Diagnostic {
-	for _, l := range lines {
-		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
-		if l.Error {
-			d.Severity = "error"
-		}
-		ds = append(ds, d)
-	}
+func trailing(ds []tfdiag.Diagnostic, lines []logscan.FlaggedLine) []tfdiag.Diagnostic {
+	ds = append(ds, tfdiag.FromLines(lines, "")...)
 	if len(ds) == 0 {
 		return nil
 	}
 	return tfdiag.Normalize(ds)
 }
 
-func walk(r *State, m RawModule) {
+func walk(r *state, m rawModule) {
 	for _, raw := range m.Resources {
-		res := Resource{Address: core.Line(raw.Address), Mode: core.Clean(raw.Mode), Tainted: raw.Tainted, DeposedKey: core.Clean(raw.DeposedKey)}
+		res := resource{Address: sanitize.Clean(raw.Address), Mode: sanitize.Clean(raw.Mode), Tainted: raw.Tainted, DeposedKey: sanitize.Clean(raw.DeposedKey)}
 		switch {
 		case res.DeposedKey != "":
 			r.Deposed++
@@ -210,13 +213,13 @@ func walk(r *State, m RawModule) {
 	}
 }
 
-func buildOutputs(r *Report, raw map[string]RawOutput) []Output {
+func buildOutputs(r *report, raw map[string]rawOutput) []output {
 	names := slices.Sorted(maps.Keys(raw))
 	r.Total = len(names)
-	out := []Output{}
+	out := []output{}
 	for _, name := range names {
 		ro := raw[name]
-		o := Output{Name: name, Sensitive: *ro.Sensitive, Type: compact(ro.Type)}
+		o := output{Name: name, Sensitive: *ro.Sensitive, Type: compact(ro.Type)}
 		if o.Sensitive {
 			r.Sensitive++
 		} else {

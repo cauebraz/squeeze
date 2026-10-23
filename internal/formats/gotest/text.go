@@ -2,12 +2,12 @@ package gotest
 
 import (
 	"fmt"
-	"github.com/cauebraz/squeeze/internal/core"
-	"sort"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
-func Text(r Report, o Options) string {
+func render(r report, o options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -35,8 +35,8 @@ func Text(r Report, o Options) string {
 		}
 		writeOutput(&b, f.Output)
 	}
-	if r.FailuresOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more failed %s (--max-tests 0)\n", r.FailuresOmitted, core.Plural(r.FailuresOmitted, "test", "tests"))
+	if r.TestsOmitted > 0 {
+		fmt.Fprintf(&b, "... %d more failed %s (--max-tests 0)\n", r.TestsOmitted, core.Plural(r.TestsOmitted, "test", "tests"))
 	}
 	for _, p := range r.PackageFailures {
 		fmt.Fprintf(&b, "fail %s", p.Package)
@@ -57,7 +57,7 @@ func Text(r Report, o Options) string {
 	for _, bm := range r.Benchmarks {
 		fmt.Fprintf(&b, "bench %s %s\n", bm.Package, bm.Result)
 	}
-	for _, w := range r.Warnings {
+	for _, w := range r.WarningMessages {
 		fmt.Fprintf(&b, "warning %s\n", w)
 	}
 	for _, c := range r.Coverage {
@@ -71,102 +71,67 @@ func Text(r Report, o Options) string {
 		writeOutput(&b, r.Text)
 	}
 	if !o.All {
-		passingNotice := len(r.Passing)
+		passingNotice := len(r.PassingPackages)
 		if unlisted(r) {
 			passingNotice = 0
 		}
-		var items []string
-		for _, c := range []struct {
-			n          int
-			what, many string
-		}{{len(r.Skipped), "skipped test", "skipped tests"}, {passingNotice, "passing package", "passing packages"}, {len(r.NoTests), "package without tests", "packages without tests"}, {hiddenSeeds, "shuffle seed", "shuffle seeds"}} {
-			if c.n > 0 {
-				items = append(items, fmt.Sprintf("%d %s", c.n, core.Plural(c.n, c.what, c.many)))
-			}
-		}
-		if len(items) > 0 {
-			fmt.Fprintf(&b, "... %s (--all)\n", strings.Join(items, ", "))
+		if items := core.JoinCounts(
+			core.Part{N: len(r.Skipped), One: "skipped test", Many: "skipped tests"},
+			core.Part{N: passingNotice, One: "passing package", Many: "passing packages"},
+			core.Part{N: len(r.PackagesWithoutTests), One: "package without tests", Many: "packages without tests"},
+			core.Part{N: hiddenSeeds, One: "shuffle seed", Many: "shuffle seeds"},
+		); items != "" {
+			fmt.Fprintf(&b, "... %s (--all)\n", items)
 		}
 	}
 	if o.All {
 		for _, s := range r.Skipped {
 			fmt.Fprintf(&b, "skip %s %s\n", s.Package, s.Test)
 		}
-		for _, p := range r.Passing {
+		for _, p := range r.PassingPackages {
 			fmt.Fprintf(&b, "ok %s", p.Package)
 			if p.Elapsed > 0 {
 				b.WriteString(" " + core.Seconds(p.Elapsed))
 			}
 			b.WriteByte('\n')
 		}
-		for _, p := range r.NoTests {
+		for _, p := range r.PackagesWithoutTests {
 			fmt.Fprintf(&b, "no tests %s\n", p)
 		}
 	}
-	writeOther(&b, r.Other)
+	if notice := core.UnknownNotice(r.Other, "event", "events", "action"); notice != "" {
+		b.WriteString(notice + "\n")
+	}
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	t, p := r.Tests, r.Packages
 	total := t.Passed + t.Failed + t.Skipped
-	line := fmt.Sprintf("go test: %s; %d %s: %d passed, %d failed, %d skipped", r.Status, total, core.Plural(total, "test", "tests"), t.Passed, t.Failed, t.Skipped)
+	head := fmt.Sprintf("go test: %s; %d %s: %d passed, %d failed, %d skipped", r.Status, total, core.Plural(total, "test", "tests"), t.Passed, t.Failed, t.Skipped)
 	pkgs := p.OK + p.Failed + p.BuildFailed + p.NoTests
 	if pkgs == 0 {
-		return line
+		return head
 	}
 	suffix := ""
 	if unlisted(r) {
-		line = "go test: " + r.Status
+		head = "go test: " + string(r.Status)
 		suffix = " (tests not listed without -v or -json)"
 	}
-	var parts []string
-	for _, c := range []struct {
-		n    int
-		what string
-	}{{p.OK, "ok"}, {p.Failed, "failed"}, {p.BuildFailed, "build failed"}, {p.NoTests, "without tests"}} {
-		if c.n > 0 {
-			parts = append(parts, fmt.Sprintf("%d %s", c.n, c.what))
-		}
-	}
-	return fmt.Sprintf("%s; %d %s: %s%s", line, pkgs, core.Plural(pkgs, "package", "packages"), strings.Join(parts, ", "), suffix)
+	parts := core.JoinCounts(core.Part{N: p.OK, One: "ok"}, core.Part{N: p.Failed, One: "failed"}, core.Part{N: p.BuildFailed, One: "build failed"}, core.Part{N: p.NoTests, One: "without tests"})
+	return fmt.Sprintf("%s; %d %s: %s%s", head, pkgs, core.Plural(pkgs, "package", "packages"), parts, suffix)
 }
 
-func unlisted(r Report) bool {
+func unlisted(r report) bool {
 	return r.testsUnlisted && r.Tests.Passed+r.Tests.Failed+r.Tests.Skipped == 0 && r.Packages.OK+r.Packages.Failed > 0
 }
 
-func writeOutput(b *strings.Builder, o Output) {
-	for _, l := range o.Lines {
-		b.WriteString("  ")
-		b.WriteString(l)
-		b.WriteByte('\n')
+func writeOutput(b *strings.Builder, o output) {
+	o.Write(b, "  ", "--max-output")
+	if o.LogsHidden > 0 {
+		fmt.Fprintf(b, "  ... %d log %s (--full)\n", o.LogsHidden, core.Plural(o.LogsHidden, "line", "lines"))
 	}
-	if o.Omitted > 0 {
-		fmt.Fprintf(b, "  ... %d more %s (--max-output 0)\n", o.Omitted, core.Plural(o.Omitted, "line", "lines"))
+	if o.StackHidden > 0 {
+		fmt.Fprintf(b, "  ... %d runtime and testing stack %s (--full)\n", o.StackHidden, core.Plural(o.StackHidden, "line", "lines"))
 	}
-	if o.Logs > 0 {
-		fmt.Fprintf(b, "  ... %d log %s (--full)\n", o.Logs, core.Plural(o.Logs, "line", "lines"))
-	}
-	if o.Stack > 0 {
-		fmt.Fprintf(b, "  ... %d runtime and testing stack %s (--full)\n", o.Stack, core.Plural(o.Stack, "line", "lines"))
-	}
-}
-
-func writeOther(b *strings.Builder, other map[string]int) {
-	if len(other) == 0 {
-		return
-	}
-	keys := make([]string, 0, len(other))
-	total := 0
-	for k, n := range other {
-		keys = append(keys, k)
-		total += n
-	}
-	sort.Strings(keys)
-	items := make([]string, 0, len(keys))
-	for _, k := range keys {
-		items = append(items, fmt.Sprintf("%s %d", core.NoticeName(k), other[k]))
-	}
-	fmt.Fprintf(b, "... %d %s with an unknown action: %s (--raw-dir)\n", total, core.Plural(total, "event", "events"), strings.Join(items, ", "))
 }

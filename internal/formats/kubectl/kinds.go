@@ -1,18 +1,34 @@
 package kubectl
 
-import (
-	"encoding/json"
-	"sort"
+import "encoding/json"
+
+type conditionStatus string
+
+const (
+	conditionTrue    conditionStatus = "True"
+	conditionFalse   conditionStatus = "False"
+	conditionUnknown conditionStatus = "Unknown"
 )
 
-type condition struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Reason  string `json:"reason"`
-	Message string `json:"message"`
+type volumePhase string
+
+const (
+	volumePending   volumePhase = "Pending"
+	volumeAvailable volumePhase = "Available"
+	volumeBound     volumePhase = "Bound"
+	volumeReleased  volumePhase = "Released"
+	volumeFailed    volumePhase = "Failed"
+	volumeLost      volumePhase = "Lost"
+)
+
+type rawCondition struct {
+	Type    string          `json:"type"`
+	Status  conditionStatus `json:"status"`
+	Reason  string          `json:"reason"`
+	Message string          `json:"message"`
 }
 
-func find(conds []condition, typ string) *condition {
+func find(conds []rawCondition, typ string) *rawCondition {
 	for i := range conds {
 		if conds[i].Type == typ {
 			return &conds[i]
@@ -21,9 +37,15 @@ func find(conds []condition, typ string) *condition {
 	return nil
 }
 
-func isTrue(conds []condition, typ string) bool {
-	c := find(conds, typ)
-	return c != nil && c.Status == "True"
+func trueCondition(conds []rawCondition, typ string) *rawCondition {
+	if c := find(conds, typ); c != nil && c.Status == conditionTrue {
+		return c
+	}
+	return nil
+}
+
+func isTrue(conds []rawCondition, typ string) bool {
+	return trueCondition(conds, typ) != nil
 }
 
 func orUnknown(s string) string {
@@ -33,41 +55,41 @@ func orUnknown(s string) string {
 	return s
 }
 
-func failing(o *Object, conds []condition, typ, bad string) {
+func failing(o *object, conds []rawCondition, typ string, bad conditionStatus) {
 	if c := find(conds, typ); c != nil && c.Status == bad {
 		o.Unhealthy = true
-		o.Details = append(o.Details, typ+" "+bad+" "+orUnknown(c.Reason))
+		o.Details = append(o.Details, typ+" "+string(bad)+" "+orUnknown(c.Reason))
 		if o.Message == "" {
 			o.Message = c.Message
 		}
 	}
 }
 
-func volume(r Raw, o *Object) error {
+func volume(r rawObject, o *object) error {
 	var st struct {
-		Phase   string `json:"phase"`
-		Message string `json:"message"`
+		Phase   volumePhase `json:"phase"`
+		Message string      `json:"message"`
 	}
 	if err := r.decode("status", &st); err != nil {
 		return err
 	}
-	o.Status = st.Phase
+	o.Status = string(st.Phase)
 	if r.Meta.DeletionTimestamp != "" {
 		o.Status = "Terminating"
 	}
 	o.Message = st.Message
 	if r.Kind == "PersistentVolumeClaim" {
-		o.Unhealthy = st.Phase != "Bound"
+		o.Unhealthy = st.Phase != volumeBound
 	} else {
-		o.Unhealthy = st.Phase == "Failed"
+		o.Unhealthy = st.Phase == volumeFailed
 	}
 	return nil
 }
 
-func generic(r Raw, o *Object) {
+func generic(r rawObject, o *object) {
 	var st struct {
-		Phase      string      `json:"phase"`
-		Conditions []condition `json:"conditions"`
+		Phase      string         `json:"phase"`
+		Conditions []rawCondition `json:"conditions"`
 	}
 	if json.Unmarshal(r.Fields["status"], &st) != nil {
 		return
@@ -75,12 +97,12 @@ func generic(r Raw, o *Object) {
 	o.Status = st.Phase
 	o.Unhealthy = st.Phase == "Failed"
 	for _, typ := range []string{"Ready", "Available"} {
-		failing(o, st.Conditions, typ, "False")
+		failing(o, st.Conditions, typ, conditionFalse)
 	}
 }
 
-func object(r Raw) (Object, error) {
-	o := Object{Kind: r.Kind, Namespace: r.Meta.Namespace, Name: r.Meta.Name, Details: []string{}}
+func toObject(r rawObject) (object, error) {
+	o := object{Kind: r.Kind, Namespace: r.Meta.Namespace, Name: r.Meta.Name, Details: []string{}}
 	var err error
 	switch r.Kind {
 	case "Pod":
@@ -98,7 +120,7 @@ func object(r Raw) (Object, error) {
 	case "Service":
 		err = service(r, &o)
 	case "Secret":
-		o.Status = text(r.Fields["type"])
+		o.Status = jsonString(r.Fields["type"])
 		o.Keys = r.keys("data", "stringData")
 	case "ConfigMap":
 		o.Keys = r.keys("data", "binaryData")
@@ -106,11 +128,10 @@ func object(r Raw) (Object, error) {
 		generic(r, &o)
 	}
 	if err != nil {
-		return Object{}, err
+		return object{}, err
 	}
 	if r.Meta.DeletionTimestamp != "" && o.Status != "Terminating" {
 		o.Details = append(o.Details, "terminating")
 	}
-	sort.Strings(o.Keys)
 	return o, nil
 }

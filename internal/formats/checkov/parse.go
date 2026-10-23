@@ -6,29 +6,30 @@ import (
 	"fmt"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
 )
 
-var ErrNotCheckov = errors.New("input has no checkov report or summary")
+var errNotCheckov = errors.New("input has no checkov report or summary")
 
-type CheckResult struct {
+type rawCheckResult struct {
 	Result          string `json:"result"`
 	SuppressComment string `json:"suppress_comment"`
 }
 
-type Record struct {
-	CheckID             string      `json:"check_id"`
-	CheckName           string      `json:"check_name"`
-	CheckResult         CheckResult `json:"check_result"`
-	FilePath            string      `json:"file_path"`
-	FileLineRange       []int       `json:"file_line_range"`
-	Resource            string      `json:"resource"`
-	Severity            *string     `json:"severity"`
-	Guideline           *string     `json:"guideline"`
-	CallerFilePath      *string     `json:"caller_file_path"`
-	CallerFileLineRange []int       `json:"caller_file_line_range"`
+type rawRecord struct {
+	CheckID             string         `json:"check_id"`
+	CheckName           string         `json:"check_name"`
+	CheckResult         rawCheckResult `json:"check_result"`
+	FilePath            string         `json:"file_path"`
+	FileLineRange       []int          `json:"file_line_range"`
+	Resource            string         `json:"resource"`
+	Severity            *string        `json:"severity"`
+	Guideline           *string        `json:"guideline"`
+	CallerFilePath      *string        `json:"caller_file_path"`
+	CallerFileLineRange []int          `json:"caller_file_line_range"`
 }
 
-type Summary struct {
+type rawSummary struct {
 	Passed         int    `json:"passed"`
 	Failed         int    `json:"failed"`
 	Skipped        int    `json:"skipped"`
@@ -37,68 +38,68 @@ type Summary struct {
 	CheckovVersion string `json:"checkov_version"`
 }
 
-type Results struct {
-	PassedChecks  []Record `json:"passed_checks"`
-	FailedChecks  []Record `json:"failed_checks"`
-	SkippedChecks []Record `json:"skipped_checks"`
-	ParsingErrors []string `json:"parsing_errors"`
+type rawResults struct {
+	PassedChecks  []rawRecord `json:"passed_checks"`
+	FailedChecks  []rawRecord `json:"failed_checks"`
+	SkippedChecks []rawRecord `json:"skipped_checks"`
+	ParsingErrors []string    `json:"parsing_errors"`
 }
 
-type RawReport struct {
-	CountsOnly bool     `json:"-"`
-	CheckType  string   `json:"check_type"`
-	Results    *Results `json:"results"`
-	Summary    *Summary `json:"summary"`
+type rawReport struct {
+	CountsOnly bool        `json:"-"`
+	CheckType  string      `json:"check_type"`
+	Results    *rawResults `json:"results"`
+	Summary    *rawSummary `json:"summary"`
 }
 
-type Input struct {
-	Reports  []RawReport
-	Trailing []core.FlaggedLine
+type parsed struct {
+	Reports  []rawReport
+	Trailing []logscan.FlaggedLine
 }
 
-func Parse(input []byte) (Input, error) {
+func parse(input []byte) (parsed, error) {
 	reports, rest, err := parseReports(input)
 	if err != nil {
-		return Input{}, err
+		return parsed{}, err
 	}
-	return Input{Reports: reports, Trailing: core.FlaggedLines(rest)}, nil
+	return parsed{Reports: reports, Trailing: logscan.FlaggedLines(rest)}, nil
 }
 
-func parseReports(input []byte) ([]RawReport, []byte, error) {
+func parseReports(input []byte) ([]rawReport, []byte, error) {
 	trimmed := bytes.TrimLeft(input, " \t\r\n")
 	if len(trimmed) == 0 {
-		return nil, nil, ErrNotCheckov
+		return nil, nil, errNotCheckov
 	}
 	if trimmed[0] == '[' {
-		var reports []RawReport
+		var reports []rawReport
 		rest, err := core.DecodeJSON(trimmed, &reports)
 		if err != nil {
 			return nil, nil, fmt.Errorf("decode: %w", err)
 		}
 		for i := range reports {
 			if reports[i].Summary == nil {
-				return nil, nil, ErrNotCheckov
+				return nil, nil, errNotCheckov
 			}
 			if reports[i].Results == nil {
-				reports[i].Results = &Results{}
+				reports[i].Results = &rawResults{}
 			}
 		}
 		return reports, rest, nil
 	}
-	var probe struct {
-		RawReport
-		Summary
-	}
-	rest, err := core.DecodeJSON(trimmed, &probe)
+	var report rawReport
+	rest, err := core.DecodeJSON(trimmed, &report)
 	if err != nil {
 		return nil, nil, fmt.Errorf("decode: %w", err)
 	}
-	if probe.Results != nil && probe.RawReport.Summary != nil {
-		return []RawReport{probe.RawReport}, rest, nil
+	if report.Results != nil && report.Summary != nil {
+		return []rawReport{report}, rest, nil
 	}
-	if probe.Summary.CheckovVersion != "" {
-		s := probe.Summary
-		return []RawReport{{Summary: &s, Results: &Results{}, CountsOnly: true}}, rest, nil
+	var counts rawSummary
+	if _, err := core.DecodeJSON(trimmed, &counts); err != nil {
+		return nil, nil, fmt.Errorf("decode: %w", err)
 	}
-	return nil, nil, ErrNotCheckov
+	if counts.CheckovVersion != "" {
+		return []rawReport{{Summary: &counts, Results: &rawResults{}, CountsOnly: true}}, rest, nil
+	}
+	return nil, nil, errNotCheckov
 }

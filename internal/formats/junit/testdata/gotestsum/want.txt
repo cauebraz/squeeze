@@ -26,4 +26,4 @@ fail example.com/shop TestNil: Failed
       /usr/local/go/src/testing/testing.go:2128 +0x2c8
   panic({0x100b984c0?, 0x5fcaafe2a180?})
       /usr/local/go/src/runtime/panic.go:859 +0x120
-  ... 8 more lines (--max-lines 0)
+  ... 8 more lines (--max-output 0)

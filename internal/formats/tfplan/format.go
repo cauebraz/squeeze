@@ -3,11 +3,12 @@ package tfplan
 import (
 	"bytes"
 	"flag"
+	"slices"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-type Options struct {
+type options struct {
 	MaxAttrs     int
 	MaxResources int
 	IncludeNoop  bool
@@ -15,8 +16,8 @@ type Options struct {
 	ListDrift    bool
 }
 
-func DefaultOptions() Options {
-	return Options{MaxAttrs: 8, MaxResources: 200}
+func defaultOptions() options {
+	return options{MaxAttrs: 8, MaxResources: 200}
 }
 
 type Format struct{}
@@ -27,7 +28,7 @@ func (Format) Description() string { return "Terraform plan JSON from terraform 
 
 var conditionNames = []string{"change", "check", "deferred", "destroy", "drift", "error", "fail", "forget", "import", "incomplete", "move", "replace", "warning"}
 
-func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+func (Format) Conditions() []string { return slices.Clone(conditionNames) }
 
 func (Format) Detect(head []byte) bool {
 	trimmed := bytes.TrimLeft(head, " \t\r\n")
@@ -41,25 +42,22 @@ func (Format) Detect(head []byte) bool {
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
-	o := DefaultOptions()
+	o := defaultOptions()
 	core.CountFlag(fs, &o.MaxAttrs, "max-attrs", "attributes per resource listed, 0 for all")
-	core.CountFlag(fs, &o.MaxResources, "max-resources", "resources listed, 0 for all")
+	core.CountFlag(fs, &o.MaxResources, "max-resources", "resources, drifted and deferred resources listed, each, 0 for all")
 	fs.BoolVar(&o.IncludeNoop, "all", false, "include resources and outputs without changes, and drift that does not affect the plan")
 	fs.BoolVar(&o.NoValues, "no-values", false, "print attribute paths only")
 	fs.BoolVar(&o.ListDrift, "drift", false, "list drifted resources instead of counting them")
 	return func(input []byte) (core.Result, error) {
-		return Squeeze(input, o)
+		return squeeze(input, o)
 	}
 }
 
-func Squeeze(input []byte, o Options) (core.Result, error) {
-	p, err := Parse(input)
+func squeeze(input []byte, o options) (core.Result, error) {
+	p, err := parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r, err := Build(p, o)
-	if err != nil {
-		return core.Result{}, err
-	}
-	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}, nil
+	r := build(p, o)
+	return core.Result{Text: text(r, o), Data: r, Conditions: conditions(r)}, nil
 }

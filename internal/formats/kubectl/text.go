@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const (
@@ -14,20 +15,23 @@ const (
 )
 
 func name(kind, namespace, n string) string {
-	id := core.Clean(n)
+	id := n
 	if namespace != "" {
-		id = core.Clean(namespace) + "/" + id
+		id = namespace + "/" + id
 	}
 	if kind == "" {
 		return id
 	}
-	return core.Clean(kind) + " " + id
+	return kind + " " + id
 }
 
-func Text(r Report) string {
+func text(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
+	for _, d := range r.Diagnostics {
+		tfdiag.Write(&b, d, tfdiag.WriteOptions{})
+	}
 	for _, o := range r.Objects {
 		b.WriteString(line(o))
 		b.WriteByte('\n')
@@ -44,9 +48,9 @@ func Text(r Report) string {
 		if about := name(e.Kind, e.Namespace, e.Name); about != "" {
 			b.WriteString(about + " ")
 		}
-		b.WriteString(core.Clean(first(e.Reason, "no reason")))
+		b.WriteString(first(e.Reason, "no reason"))
 		if e.Message != "" {
-			fmt.Fprintf(&b, ": %s", core.Ellipsis(core.Clean(e.Message), maxMessage))
+			fmt.Fprintf(&b, ": %s", core.Ellipsis(e.Message, maxMessage))
 		}
 		if e.Count > 1 {
 			fmt.Fprintf(&b, " (x%d)", e.Count)
@@ -59,7 +63,7 @@ func Text(r Report) string {
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	var parts []string
 	if r.ObjectsTotal > 0 || r.EventsTotal == 0 {
 		objects := fmt.Sprintf("%d %s", r.ObjectsTotal, core.Plural(r.ObjectsTotal, "object", "objects"))
@@ -74,7 +78,7 @@ func header(r Report) string {
 	return "kubectl: " + strings.Join(parts, "; ")
 }
 
-func line(o Object) string {
+func line(o object) string {
 	var b strings.Builder
 	if o.Unhealthy {
 		b.WriteString("unhealthy ")
@@ -82,17 +86,11 @@ func line(o Object) string {
 	b.WriteString(name(o.Kind, o.Namespace, o.Name))
 	var parts []string
 	if o.Status != "" {
-		parts = append(parts, core.Clean(o.Status))
+		parts = append(parts, o.Status)
 	}
-	for _, d := range o.Details {
-		parts = append(parts, core.Clean(d))
-	}
+	parts = append(parts, o.Details...)
 	if len(o.Keys) > 0 {
-		keys := make([]string, len(o.Keys))
-		for i, k := range o.Keys {
-			keys[i] = core.Clean(k)
-		}
-		parts = append(parts, "keys "+strings.Join(keys, " "))
+		parts = append(parts, "keys "+strings.Join(o.Keys, " "))
 	}
 	if len(parts) > 0 {
 		b.WriteString(": ")
@@ -100,11 +98,11 @@ func line(o Object) string {
 	}
 	for _, c := range o.Containers {
 		b.WriteString("; ")
-		b.WriteString(core.Clean(c))
+		b.WriteString(c)
 	}
 	if o.Message != "" {
 		b.WriteString("; ")
-		b.WriteString(core.Ellipsis(core.Clean(o.Message), maxMessage))
+		b.WriteString(core.Ellipsis(o.Message, maxMessage))
 	}
 	return b.String()
 }
@@ -112,7 +110,7 @@ func line(o Object) string {
 func clean(counts []core.Count) []core.Count {
 	out := make([]core.Count, len(counts))
 	for i, c := range counts {
-		out[i] = core.Count{Name: core.NoticeName(core.Clean(c.Name)), Count: c.Count}
+		out[i] = core.Count{Name: core.NoticeName(c.Name), Count: c.Count}
 	}
 	return out
 }

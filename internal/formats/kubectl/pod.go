@@ -7,49 +7,67 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-type terminated struct {
+type rawTerminated struct {
 	Reason   string `json:"reason"`
 	ExitCode int    `json:"exitCode"`
 	Signal   int    `json:"signal"`
 }
 
-type containerState struct {
+type rawContainerState struct {
 	Waiting *struct {
 		Reason string `json:"reason"`
 	} `json:"waiting"`
-	Running    *struct{}   `json:"running"`
-	Terminated *terminated `json:"terminated"`
+	Running    *struct{}      `json:"running"`
+	Terminated *rawTerminated `json:"terminated"`
 }
 
-type containerStatus struct {
-	Name         string         `json:"name"`
-	Ready        bool           `json:"ready"`
-	RestartCount int            `json:"restartCount"`
-	Started      *bool          `json:"started"`
-	State        containerState `json:"state"`
-	LastState    containerState `json:"lastState"`
+type rawContainerStatus struct {
+	Name         string            `json:"name"`
+	Ready        bool              `json:"ready"`
+	RestartCount int               `json:"restartCount"`
+	Started      *bool             `json:"started"`
+	State        rawContainerState `json:"state"`
+	LastState    rawContainerState `json:"lastState"`
 }
 
-type container struct {
-	Name          string `json:"name"`
-	RestartPolicy string `json:"restartPolicy"`
+type podPhase string
+
+const (
+	podPending   podPhase = "Pending"
+	podRunning   podPhase = "Running"
+	podSucceeded podPhase = "Succeeded"
+	podFailed    podPhase = "Failed"
+	podUnknown   podPhase = "Unknown"
+)
+
+type restartPolicy string
+
+const (
+	restartAlways    restartPolicy = "Always"
+	restartOnFailure restartPolicy = "OnFailure"
+	restartNever     restartPolicy = "Never"
+)
+
+type rawContainer struct {
+	Name          string        `json:"name"`
+	RestartPolicy restartPolicy `json:"restartPolicy"`
 }
 
-type podSpec struct {
-	Containers     []container `json:"containers"`
-	InitContainers []container `json:"initContainers"`
+type rawPodSpec struct {
+	Containers     []rawContainer `json:"containers"`
+	InitContainers []rawContainer `json:"initContainers"`
 }
 
-type podStatus struct {
-	Phase                 string            `json:"phase"`
-	Reason                string            `json:"reason"`
-	Message               string            `json:"message"`
-	Conditions            []condition       `json:"conditions"`
-	ContainerStatuses     []containerStatus `json:"containerStatuses"`
-	InitContainerStatuses []containerStatus `json:"initContainerStatuses"`
+type rawPodStatus struct {
+	Phase                 podPhase             `json:"phase"`
+	Reason                string               `json:"reason"`
+	Message               string               `json:"message"`
+	Conditions            []rawCondition       `json:"conditions"`
+	ContainerStatuses     []rawContainerStatus `json:"containerStatuses"`
+	InitContainerStatuses []rawContainerStatus `json:"initContainerStatuses"`
 }
 
-func exit(t *terminated) string {
+func exit(t *rawTerminated) string {
 	reason := t.Reason
 	switch {
 	case reason == "" && t.Signal != 0:
@@ -62,7 +80,7 @@ func exit(t *terminated) string {
 	return fmt.Sprintf("%s exit %d", reason, t.ExitCode)
 }
 
-func containerProblem(c containerStatus, init bool, podRestarts int) string {
+func containerProblem(c rawContainerStatus, init bool, podRestarts int) string {
 	var parts []string
 	switch {
 	case c.State.Waiting != nil:
@@ -96,9 +114,9 @@ func containerProblem(c containerStatus, init bool, podRestarts int) string {
 	return prefix + " " + strings.Join(parts, ", ")
 }
 
-func pod(r Raw, o *Object) error {
-	var spec podSpec
-	var st podStatus
+func pod(r rawObject, o *object) error {
+	var spec rawPodSpec
+	var st rawPodStatus
 	if err := r.decode("spec", &spec); err != nil {
 		return err
 	}
@@ -108,12 +126,12 @@ func pod(r Raw, o *Object) error {
 	restartable := map[string]bool{}
 	total := len(spec.Containers)
 	for _, c := range spec.InitContainers {
-		if c.RestartPolicy == "Always" {
+		if c.RestartPolicy == restartAlways {
 			restartable[c.Name] = true
 			total++
 		}
 	}
-	reason := st.Phase
+	reason := string(st.Phase)
 	if st.Reason != "" {
 		reason = st.Reason
 	}
@@ -176,7 +194,7 @@ func pod(r Raw, o *Object) error {
 	}
 	if r.Meta.DeletionTimestamp != "" && st.Reason == "NodeLost" {
 		reason = "Unknown"
-	} else if r.Meta.DeletionTimestamp != "" && st.Phase != "Succeeded" && st.Phase != "Failed" {
+	} else if r.Meta.DeletionTimestamp != "" && st.Phase != podSucceeded && st.Phase != podFailed {
 		reason = "Terminating"
 	}
 	o.Status = reason
@@ -196,14 +214,16 @@ func pod(r Raw, o *Object) error {
 		}
 	}
 	switch st.Phase {
-	case "Succeeded":
-	case "Running":
+	case podSucceeded:
+	case podRunning:
 		o.Unhealthy = ready < total
+	case podPending, podFailed, podUnknown:
+		o.Unhealthy = true
 	default:
 		o.Unhealthy = true
 	}
 	o.Message = st.Message
-	if c := find(st.Conditions, "PodScheduled"); c != nil && c.Status == "False" {
+	if c := find(st.Conditions, "PodScheduled"); c != nil && c.Status == conditionFalse {
 		o.Details = append(o.Details, orUnknown(c.Reason))
 		if o.Message == "" {
 			o.Message = c.Message

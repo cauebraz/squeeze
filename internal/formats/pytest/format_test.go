@@ -7,10 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cauebraz/squeeze/internal/core"
-	"github.com/cauebraz/squeeze/internal/formattest"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/formattest"
 )
 
 const fixtureDir = "testdata"
@@ -28,13 +29,13 @@ func lines(s ...string) []byte {
 	return []byte(strings.Join(s, "\n") + "\n")
 }
 
-func report(t *testing.T, input []byte, o Options) Report {
+func mustReport(t *testing.T, input []byte, o options) report {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r.Data.(Report)
+	return r.Data.(report)
 }
 
 func TestContract(t *testing.T) {
@@ -76,7 +77,7 @@ func TestDetect(t *testing.T) {
 
 func TestParseRejectsOtherInput(t *testing.T) {
 	t.Parallel()
-	if _, err := Squeeze([]byte("collected nothing\n"), DefaultOptions()); err == nil {
+	if _, err := squeeze([]byte("collected nothing\n"), defaultOptions()); err == nil {
 		t.Error("Squeeze() returned no error")
 	}
 }
@@ -97,7 +98,7 @@ func TestConditions(t *testing.T) {
 		"internalerror": {"fail", "internal_error", "no_tests"},
 	}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -109,8 +110,8 @@ func TestConditions(t *testing.T) {
 
 func TestSummaryLine(t *testing.T) {
 	t.Parallel()
-	r := report(t, lines("1 failed, 2 subtests passed, 3 rerun, 1 warning in 0.10s"), DefaultOptions())
-	want := Summary{Failed: 1, Warnings: 1, Other: map[string]int{"subtests passed": 2, "rerun": 3}, Duration: "0.10s", Line: "1 failed, 2 subtests passed, 3 rerun, 1 warning in 0.10s"}
+	r := mustReport(t, lines("1 failed, 2 subtests passed, 3 rerun, 1 warning in 0.10s"), defaultOptions())
+	want := summary{Failed: 1, Warnings: 1, Other: map[string]int{"subtests passed": 2, "rerun": 3}, Duration: "0.10s", Line: "1 failed, 2 subtests passed, 3 rerun, 1 warning in 0.10s"}
 	if diff := cmp.Diff(want, r.Summary); diff != "" {
 		t.Errorf("summary (-want +got):\n%s", diff)
 	}
@@ -137,10 +138,10 @@ func TestFailuresGetTheirNodeIDs(t *testing.T) {
 		"FAILED d.py::test_only_in_summary - KeyError",
 		"=== 4 failed, 1 error in 0.01s ===",
 	)
-	r := report(t, input, DefaultOptions())
+	r := mustReport(t, input, defaultOptions())
 	var got []string
 	for _, f := range r.Failures {
-		got = append(got, f.Kind+" "+f.Test+" "+f.When)
+		got = append(got, string(f.Kind)+" "+f.Test+" "+f.When)
 	}
 	want := []string{
 		"failed a/test_one.py::test_same ",
@@ -152,7 +153,7 @@ func TestFailuresGetTheirNodeIDs(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("failures (-want +got):\n%s", diff)
 	}
-	if last := r.Failures[4]; !last.Untracked || last.Message != "KeyError" {
+	if last := r.Failures[4]; !last.FromSummaryOnly || last.Message != "KeyError" {
 		t.Errorf("summary-only failure = %+v", last)
 	}
 }
@@ -211,18 +212,18 @@ func TestWarnings(t *testing.T) {
 		"-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
 		"=== 1 passed, 16 warnings in 0.01s ===",
 	)
-	r := report(t, input, DefaultOptions())
-	want := []Warning{
+	r := mustReport(t, input, defaultOptions())
+	want := []warningMessage{
 		{Message: "a.py:3: DeprecationWarning: old", Count: 3},
 		{Message: "b.py:9: FutureWarning: soon", Count: 12},
 		{Message: "PytestConfigWarning: Unknown config option: foo"},
 	}
-	if diff := cmp.Diff(want, r.Warnings); diff != "" {
+	if diff := cmp.Diff(want, r.WarningMessages); diff != "" {
 		t.Errorf("warnings (-want +got):\n%s", diff)
 	}
-	limited := report(t, input, Options{MaxWarnings: 1})
-	if len(limited.Warnings) != 1 || limited.WarningsOmitted != 2 {
-		t.Errorf("limited = %+v, omitted %d", limited.Warnings, limited.WarningsOmitted)
+	limited := mustReport(t, input, options{MaxWarnings: 1})
+	if len(limited.WarningMessages) != 1 || limited.WarningsOmitted != 2 {
+		t.Errorf("limited = %+v, omitted %d", limited.WarningMessages, limited.WarningsOmitted)
 	}
 }
 
@@ -242,13 +243,13 @@ func TestNotesKeepUnexpectedLines(t *testing.T) {
 		"INTERNALERROR>   File \"/home/dev/shop/plugin.py\", line 3",
 		"===== 3 passed in 0.10s =====",
 	)
-	r := report(t, input, DefaultOptions())
+	r := mustReport(t, input, defaultOptions())
 	want := []string{"INTERNALERROR> Traceback (most recent call last):", "INTERNALERROR>   File \"plugin.py\", line 3"}
 	if diff := cmp.Diff(want, r.Notes); diff != "" {
 		t.Errorf("notes (-want +got):\n%s", diff)
 	}
-	if r.Version != "9.1.1" {
-		t.Errorf("version = %q", r.Version)
+	if r.ToolVersion != "9.1.1" {
+		t.Errorf("version = %q", r.ToolVersion)
 	}
 }
 
@@ -263,8 +264,8 @@ func TestInputCannotForgeLines(t *testing.T) {
 		"FAILED t.py::test_a - x\x1b]0;title\x07",
 		"=== 1 failed in 0.01s ===",
 	)
-	for _, o := range []Options{DefaultOptions(), {Full: true, All: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {Full: true, All: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -291,16 +292,16 @@ func TestCapturedOutputIsKeptForFull(t *testing.T) {
 		"FAILED sub/test_sub.py::test_child - subprocess.CalledProcessError",
 		"=== 1 failed in 0.01s ===",
 	)
-	r := report(t, input, DefaultOptions())
-	want := []Captured{{Name: "stderr call", Lines: []string{"fatal: config.yaml missing key db"}}, {Name: "log call", Lines: []string{"WARNING  shop:app.py:3 retrying"}}}
+	r := mustReport(t, input, defaultOptions())
+	want := []capturedSection{{Name: "stderr call", Block: core.Block{Lines: []string{"fatal: config.yaml missing key db"}}}, {Name: "log call", Block: core.Block{Lines: []string{"WARNING  shop:app.py:3 retrying"}}}}
 	if diff := cmp.Diff(want, r.Failures[0].Captured); diff != "" {
 		t.Errorf("captured (-want +got):\n%s", diff)
 	}
-	text, _ := Squeeze(input, DefaultOptions())
+	text, _ := squeeze(input, defaultOptions())
 	if strings.Contains(text.Text, "fatal:") || !strings.Contains(text.Text, "... 2 captured lines in stderr call and log call (--full)") {
 		t.Errorf("default text:\n%s", text.Text)
 	}
-	full, _ := Squeeze(input, Options{Full: true})
+	full, _ := squeeze(input, options{Full: true})
 	if !strings.Contains(full.Text, "  captured stderr call:\n    fatal: config.yaml missing key db\n") {
 		t.Errorf("--full text:\n%s", full.Text)
 	}
@@ -324,7 +325,7 @@ func TestReportLikeLinesInsideCapturedOutput(t *testing.T) {
 		"FAILED t.py::test_b - assert 2 == 3",
 		"=== 2 failed in 0.01s ===",
 	)
-	r := report(t, input, DefaultOptions())
+	r := mustReport(t, input, defaultOptions())
 	var names []string
 	for _, f := range r.Failures {
 		names = append(names, f.Test)
@@ -332,11 +333,51 @@ func TestReportLikeLinesInsideCapturedOutput(t *testing.T) {
 	if diff := cmp.Diff([]string{"t.py::test_a", "t.py::test_b"}, names); diff != "" {
 		t.Errorf("failures (-want +got):\n%s", diff)
 	}
-	if r.Interrupted != "" || r.Stopped != "" || len(r.Sections) != 0 || r.Summary.Line != "2 failed in 0.01s" {
+	if r.Interrupted != "" || r.Stopped != "" || len(r.OtherSections) != 0 || r.Summary.Line != "2 failed in 0.01s" {
 		t.Errorf("report = %+v", r)
 	}
 	if got := r.Failures[0].Captured[0].Lines; len(got) != 3 {
 		t.Errorf("captured lines = %v", got)
+	}
+}
+
+func TestCountsOutOfRange(t *testing.T) {
+	t.Parallel()
+	big := strings.Repeat("9", 30)
+	input := "============ warnings summary ============\n" +
+		"a.py: " + big + " warnings\n" +
+		"b.py: " + big + " warnings\n" +
+		"  a.py:1: DeprecationWarning: old\n" +
+		"-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n" +
+		"==== " + big + " failed, " + big + " passed, " + big + " skipped, " + big + " xfailed, " + big + " xpassed, " + big + " errors in 0.1s ====\n"
+	res, err := squeeze([]byte(input), defaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := res.Data.(report)
+	s := r.Summary
+	if s.Failed <= 0 || s.Failed+s.Passed+s.Skipped+s.XFailed+s.XPassed+s.Errors <= 0 || len(r.WarningMessages) != 1 || r.WarningMessages[0].Count <= 1 {
+		t.Errorf("summary %+v, warnings %+v", s, r.WarningMessages)
+	}
+}
+
+func TestOtherSectionLinesInData(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{"coverage", "warn"} {
+		res, err := squeeze(fixture(t, name), options{All: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+		r := res.Data.(report)
+		if len(r.OtherSectionLines) == 0 {
+			t.Fatalf("%s: no other section lines in data", name)
+		}
+		for _, sec := range r.OtherSectionLines {
+			want := "section " + sec.Name + ":\n  " + strings.Join(sec.Lines, "\n  ") + "\n"
+			if !strings.Contains(res.Text, want) || r.OtherSections[sec.Name] != len(sec.Lines) {
+				t.Errorf("%s: text lacks the data of section %q (%d counted, %d lines):\n%s", name, sec.Name, r.OtherSections[sec.Name], len(sec.Lines), res.Text)
+			}
+		}
 	}
 }
 
@@ -356,7 +397,7 @@ func TestReportSectionsEndCapturedOutput(t *testing.T) {
 			"FAILED t.py::test_print - AssertionError: boom",
 			"=== 1 failed in 0.01s ===",
 		)
-		r := report(t, input, DefaultOptions())
+		r := mustReport(t, input, defaultOptions())
 		var names []string
 		for _, f := range r.Failures {
 			names = append(names, f.Test)
@@ -383,7 +424,7 @@ func TestNodeIDsWithSeparatorsInParameters(t *testing.T) {
 		"FAILED t.py::TestX::test_q[c::d] - assert 2 == 1",
 		"=== 2 failed in 0.01s ===",
 	)
-	r := report(t, input, DefaultOptions())
+	r := mustReport(t, input, defaultOptions())
 	var got []string
 	for _, f := range r.Failures {
 		got = append(got, f.Test+" | "+f.Message)
@@ -410,7 +451,7 @@ func TestTracebackLineStyle(t *testing.T) {
 		"FAILED tests/test_calc.py::test_add_param[2-3-6] - assert 5 == 6",
 		"=== 2 failed in 0.01s ===",
 	)
-	r := report(t, input, DefaultOptions())
+	r := mustReport(t, input, defaultOptions())
 	if len(r.Failures) != 2 {
 		t.Fatalf("failures = %+v", r.Failures)
 	}
@@ -423,7 +464,7 @@ func TestTracebackLineStyle(t *testing.T) {
 	if got := r.Failures[0].Captured; len(got) != 1 || len(got[0].Lines) != 1 {
 		t.Errorf("captured = %+v", got)
 	}
-	if r.Failures[1].Untracked {
+	if r.Failures[1].FromSummaryOnly {
 		t.Error("second failure fell back to the summary")
 	}
 }
@@ -442,13 +483,13 @@ func TestInternalErrorKeepsTheLastLines(t *testing.T) {
 		"INTERNALERROR> Traceback (most recent call last):"},
 		body...),
 		"INTERNALERROR> RuntimeError: plugin xyz: cannot reach license server")...)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if last := report.Notes[len(report.Notes)-1]; !strings.HasSuffix(last, "cannot reach license server") || report.NotesOmitted != 12 {
-		t.Errorf("notes = %v, omitted %d", report.Notes, report.NotesOmitted)
+	data := r.Data.(report)
+	if last := data.Notes[len(data.Notes)-1]; !strings.HasSuffix(last, "cannot reach license server") || data.NotesOmitted != 12 {
+		t.Errorf("notes = %v, omitted %d", data.Notes, data.NotesOmitted)
 	}
 	if diff := cmp.Diff([]string{"fail", "internal_error"}, r.Conditions); diff != "" {
 		t.Errorf("conditions (-want +got):\n%s", diff)
@@ -474,7 +515,7 @@ func TestSubtests(t *testing.T) {
 		"FAILED sub/test_sub.py::test_sub - contains 1 failed subtest",
 		"=== 2 failed in 0.03s ===",
 	)
-	r := report(t, input, DefaultOptions())
+	r := mustReport(t, input, defaultOptions())
 	var got []string
 	for _, f := range r.Failures {
 		got = append(got, f.Test+" | "+f.Subtest+" | "+f.Message)
@@ -486,7 +527,7 @@ func TestSubtests(t *testing.T) {
 	if len(r.Notes) != 0 {
 		t.Errorf("progress line kept as a note: %v", r.Notes)
 	}
-	text, _ := Squeeze(input, DefaultOptions())
+	text, _ := squeeze(input, defaultOptions())
 	if !strings.Contains(text.Text, "FAILED sub/test_sub.py::test_sub [case] (i=1)\n") {
 		t.Errorf("text:\n%s", text.Text)
 	}
@@ -509,38 +550,78 @@ func TestWarningMessagesSpanLines(t *testing.T) {
 		"-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
 		"=== 1 passed, 2 warnings in 0.01s ===",
 	)
-	r := report(t, input, DefaultOptions())
-	want := []Warning{
+	r := mustReport(t, input, defaultOptions())
+	want := []warningMessage{
 		{Message: "/home/dev/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py:1464: PytestConfigWarning: Unknown config option: foo", Count: 1},
 		{Message: "a.py:3: UserWarning: first line second line", Count: 1},
 	}
-	if diff := cmp.Diff(want, r.Warnings); diff != "" {
+	if diff := cmp.Diff(want, r.WarningMessages); diff != "" {
 		t.Errorf("warnings (-want +got):\n%s", diff)
 	}
 }
 
 func TestOmittedFailuresPlural(t *testing.T) {
 	t.Parallel()
-	r, _ := Squeeze(fixture(t, "more"), Options{MaxTests: 9, NoFold: true})
+	r, _ := squeeze(fixture(t, "more"), options{MaxTests: 9, NoFold: true})
 	if !strings.Contains(r.Text, "... 1 more failed or errored test (--max-tests 0)\n") {
 		t.Errorf("text:\n%s", r.Text)
 	}
 }
 
+func TestRecordIndexMatchesInOrder(t *testing.T) {
+	t.Parallel()
+	newRecords := func() []*record {
+		return []*record{
+			{kind: kindFailed, test: "t.py::a"},
+			{kind: kindError, test: "t.py::a"},
+			{kind: kindFailed, test: "t.py::C::b[1]"},
+			{kind: kindFailed, test: "t.py::a"},
+			{kind: kindFailed, test: "t.py::d", label: "[sub]"},
+			{kind: kindFailed, test: "t.py"},
+		}
+	}
+	naive := func(records []*record, f failure) *record {
+		for _, rec := range records {
+			short := domain(rec.test)
+			if rec.label != "" {
+				short += " " + rec.label
+			}
+			if !rec.used && rec.kind == f.Kind && (f.Test == "" || rec.test == f.Test || short == f.Test) {
+				rec.used = true
+				return rec
+			}
+		}
+		return nil
+	}
+	queries := []failure{
+		{Kind: kindFailed, Test: "a"}, {Kind: kindFailed, Test: "t.py::a"}, {Kind: kindFailed, Test: "a"},
+		{Kind: kindError, Test: "t.py::a"}, {Kind: kindFailed, Test: "C.b[1]"}, {Kind: kindFailed, Test: "d [sub]"},
+		{Kind: kindFailed, Test: "t.py"}, {Kind: kindFailed, Test: ""}, {Kind: kindError, Test: ""}, {Kind: kindFailed, Test: "missing"},
+	}
+	want, got := newRecords(), newRecords()
+	idx := indexRecords(got)
+	for i, f := range queries {
+		w, g := naive(want, f), idx.match(f)
+		if (w == nil) != (g == nil) || (w != nil && *w != *g) {
+			t.Errorf("query %d %+v: index matched %+v, want %+v", i, f, g, w)
+		}
+	}
+}
+
 func TestFoldFailures(t *testing.T) {
 	t.Parallel()
-	at := func(kind, when, test, src, loc string) Failure {
-		return Failure{Kind: kind, When: when, Test: test, Lines: []string{"> " + src, "E boom", loc + ": AssertionError"}, Location: loc}
+	at := func(kind failureKind, when, test, src, loc string) failure {
+		return failure{Kind: kind, When: when, Test: test, Lines: []string{"> " + src, "E boom", loc + ": AssertionError"}, Location: loc}
 	}
-	in := []Failure{
+	in := []failure{
 		at("failed", "", "t.py::p[1]", "assert f(x)", "t.py:8"),
 		at("failed", "", "t.py::p[2]", "assert f(x)", "t.py:8"),
 		at("failed", "", "t.py::q", "assert g(x)", "t.py:8"),
 		at("failed", "", "t.py::p[3]", "assert f(x)", "t.py:9"),
 		at("error", "setup", "t.py::r", "assert f(x)", "t.py:8"),
 		at("error", "teardown", "t.py::s", "assert f(x)", "t.py:8"),
-		{Kind: "failed", Test: "t.py::u", Lines: []string{}, Untracked: true},
-		{Kind: "failed", Test: "t.py::v", Lines: []string{}, Untracked: true},
+		{Kind: "failed", Test: "t.py::u", Lines: []string{}, FromSummaryOnly: true},
+		{Kind: "failed", Test: "t.py::v", Lines: []string{}, FromSummaryOnly: true},
 		at("failed", "", "t.py::p[4]", "assert f(x)", "t.py:8"),
 	}
 	out, folded := foldFailures(in)
@@ -555,10 +636,10 @@ func TestFoldFailures(t *testing.T) {
 	if diff := cmp.Diff(want, names); diff != "" {
 		t.Errorf("kept failures (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff([]string{"t.py::p[2]", "t.py::p[4]"}, out[0].Same); diff != "" {
+	if diff := cmp.Diff([]string{"t.py::p[2]", "t.py::p[4]"}, out[0].SameLocationTests); diff != "" {
 		t.Errorf("folded into the first (-want +got):\n%s", diff)
 	}
-	text := Text(Report{Failures: out, Complete: true, Tool: "pytest"}, DefaultOptions())
+	text := render(report{Failures: out, SummaryFound: true, Tool: "pytest"}, defaultOptions())
 	if !strings.Contains(text, "  ... 2 more failures from t.py:8 (--no-fold)\n") {
 		t.Errorf("text:\n%s", text)
 	}
@@ -566,9 +647,9 @@ func TestFoldFailures(t *testing.T) {
 
 func TestLimits(t *testing.T) {
 	t.Parallel()
-	r := report(t, fixture(t, "more"), Options{MaxTests: 3, MaxOutput: 2, NoFold: true})
-	if len(r.Failures) != 3 || r.FailuresOmitted != 7 {
-		t.Errorf("failures = %d, omitted %d", len(r.Failures), r.FailuresOmitted)
+	r := mustReport(t, fixture(t, "more"), options{MaxTests: 3, MaxOutput: 2, NoFold: true})
+	if len(r.Failures) != 3 || r.TestsOmitted != 7 {
+		t.Errorf("failures = %d, omitted %d", len(r.Failures), r.TestsOmitted)
 	}
 	for _, f := range r.Failures {
 		if len(f.Lines) > 2 {
@@ -578,16 +659,16 @@ func TestLimits(t *testing.T) {
 	if first := r.Failures[0]; first.Omitted == 0 || !strings.HasPrefix(first.Lines[0], "E ") {
 		t.Errorf("the cut kept %v, want the error line", first.Lines)
 	}
-	if diff := cmp.Diff(r.Summary.Failed, len(r.Failures)+r.FailuresOmitted, cmpopts.EquateEmpty()); diff != "" {
+	if diff := cmp.Diff(r.Summary.Failed, len(r.Failures)+r.TestsOmitted, cmpopts.EquateEmpty()); diff != "" {
 		t.Errorf("failure count (-want +got):\n%s", diff)
 	}
-	r = report(t, fixture(t, "more"), Options{MaxTests: 3, MaxOutput: 2})
+	r = mustReport(t, fixture(t, "more"), options{MaxTests: 3, MaxOutput: 2})
 	same := 0
 	for _, f := range r.Failures {
-		same += len(f.Same)
+		same += len(f.SameLocationTests)
 	}
-	if r.FailuresFolded != 8 || same != 8 || len(r.Failures)+r.FailuresOmitted+r.FailuresFolded != r.Summary.Failed {
-		t.Errorf("folded %d, same %d, failures %d, omitted %d, want %d in total", r.FailuresFolded, same, len(r.Failures), r.FailuresOmitted, r.Summary.Failed)
+	if r.FailuresFolded != 8 || same != 8 || len(r.Failures)+r.TestsOmitted+r.FailuresFolded != r.Summary.Failed {
+		t.Errorf("folded %d, same %d, failures %d, omitted %d, want %d in total", r.FailuresFolded, same, len(r.Failures), r.TestsOmitted, r.Summary.Failed)
 	}
 }
 
@@ -597,14 +678,14 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add(lines("=== FAILURES ===", "___ ___", "E", "=== warnings summary ===", "x: 3 warnings", "", "=== 1 failed in 0s ==="))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		for _, o := range []Options{DefaultOptions(), {MaxTests: 1, MaxOutput: 1, MaxWarnings: 1, Full: true, All: true}} {
-			res, err := Squeeze(input, o)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		for _, o := range []options{defaultOptions(), {MaxTests: 1, MaxOutput: 1, MaxWarnings: 1, Full: true, All: true}} {
+			res, err := squeeze(input, o)
 			if err != nil {
 				return
 			}
 			formattest.CheckText(t, res.Text)
-			r := res.Data.(Report)
+			r := res.Data.(report)
 			if o.MaxTests > 0 && len(r.Failures) > o.MaxTests {
 				t.Fatalf("%d failures over the limit %d", len(r.Failures), o.MaxTests)
 			}
@@ -613,10 +694,10 @@ func FuzzSqueeze(f *testing.F) {
 					t.Fatalf("%d lines over the limit %d", len(fl.Lines), o.MaxOutput)
 				}
 			}
-			if r.FailuresOmitted > 0 && !strings.Contains(res.Text, "(--max-tests 0)") {
+			if r.TestsOmitted > 0 && !strings.Contains(res.Text, "(--max-tests 0)") {
 				t.Fatalf("failures cut without a notice:\n%s", res.Text)
 			}
-			if again, _ := Squeeze(input, o); again.Text != res.Text {
+			if again, _ := squeeze(input, o); again.Text != res.Text {
 				t.Fatal("output differs between runs")
 			}
 			if _, err := core.Envelope("pytest", len(input), res, nil); err != nil {

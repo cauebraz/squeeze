@@ -8,7 +8,7 @@ import (
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-func Text(r Report, o Options) string {
+func text(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -18,12 +18,12 @@ func Text(r Report, o Options) string {
 	for _, p := range r.ParseErrorPath {
 		fmt.Fprintf(&b, "parse error: %s\n", p)
 	}
-	writeGroups(&b, r.FailedChecks, r.failedPerResource(), false)
+	writeGroups(&b, r.FailedChecks, r.perResource, false)
 	if r.ChecksOmitted > 0 {
 		fmt.Fprintf(&b, "... %d more failed %s, %s (--max-checks 0)\n", r.ChecksOmitted, core.Plural(r.ChecksOmitted, "check", "checks"), core.TopCounts(r.OmittedChecks, maxChecksInNotice, "check", "checks"))
 	}
 	switch {
-	case o.All && len(r.SkippedChecks) > 0:
+	case r.all && len(r.SkippedChecks) > 0:
 		b.WriteString("skipped:\n")
 		writeGroups(&b, r.SkippedChecks, nil, true)
 	case r.Skipped > 0:
@@ -32,7 +32,7 @@ func Text(r Report, o Options) string {
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	tool := core.ToolLabel(r.Tool, r.ToolVersion)
 	if r.Passed+r.Failed+r.Skipped+r.ParsingErrors == 0 {
 		return tool + ": nothing scanned"
@@ -55,11 +55,7 @@ func header(r Report) string {
 	return line
 }
 
-func (r Report) failedPerResource() map[string]int {
-	return r.PerResource
-}
-
-func writeGroups(b *strings.Builder, checks []Check, totals map[string]int, skipped bool) {
+func writeGroups(b *strings.Builder, checks []check, totals map[string]int, skipped bool) {
 	last := ""
 	for _, c := range checks {
 		if k := c.key(); k != last {

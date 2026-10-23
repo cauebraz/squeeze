@@ -5,7 +5,6 @@ import (
 	"maps"
 	"reflect"
 	"slices"
-	"sort"
 )
 
 type node struct {
@@ -13,7 +12,7 @@ type node struct {
 	hasBefore, hasAfter                           bool
 }
 
-func rootNode(c PlanChange) node {
+func rootNode(c rawChange) node {
 	return node{
 		before: c.Before, after: c.After, unknown: c.AfterUnknown,
 		beforeSens: c.BeforeSensitive, afterSens: c.AfterSensitive,
@@ -66,14 +65,14 @@ func marked(v any) bool {
 	return true
 }
 
-func (n node) kind() AttrKind {
+func (n node) kind() attrKind {
 	switch {
 	case !n.hasBefore:
-		return Added
+		return attrAdded
 	case !n.hasAfter && !isTrue(n.unknown):
-		return Removed
+		return attrRemoved
 	default:
-		return Modified
+		return attrModified
 	}
 }
 
@@ -139,10 +138,10 @@ func (w where) with(at, before step) where {
 type differ struct {
 	values  bool
 	replace []path
-	out     []AttrChange
+	out     []attrChange
 }
 
-func diffAttrs(c PlanChange, values bool) ([]AttrChange, []string) {
+func diffAttrs(c rawChange, values bool) ([]attrChange, []string) {
 	d := differ{values: values}
 	var replacedBy []string
 	for _, raw := range c.ReplacePaths {
@@ -153,8 +152,15 @@ func diffAttrs(c PlanChange, values bool) ([]AttrChange, []string) {
 		}
 	}
 	d.walk(where{}, rootNode(c))
-	sort.SliceStable(d.out, func(i, j int) bool {
-		return d.out[i].ForcesReplacement && !d.out[j].ForcesReplacement
+	slices.SortStableFunc(d.out, func(a, b attrChange) int {
+		switch {
+		case a.ForcesReplacement == b.ForcesReplacement:
+			return 0
+		case a.ForcesReplacement:
+			return -1
+		default:
+			return 1
+		}
 	})
 	return d.out, replacedBy
 }
@@ -165,12 +171,12 @@ func (d *differ) walk(w where, n node) {
 	}
 	if n.sensitive() {
 		if isTrue(n.unknown) || n.hasBefore != n.hasAfter || !reflect.DeepEqual(n.before, n.after) || n.sensitiveBefore() != n.sensitiveAfter() {
-			d.emit(w, AttrChange{Kind: n.kind(), Sensitive: true, Unknown: isTrue(n.unknown)})
+			d.emit(w, attrChange{Kind: n.kind(), Sensitive: true, Unknown: isTrue(n.unknown)})
 		}
 		return
 	}
 	if isTrue(n.unknown) {
-		a := AttrChange{Kind: n.kind(), Unknown: true}
+		a := attrChange{Kind: n.kind(), Unknown: true}
 		if n.hasBefore && n.before != nil {
 			a.Before = d.scalar(n.before)
 		}
@@ -195,13 +201,13 @@ func (d *differ) walk(w where, n node) {
 	if n.hasBefore && n.hasAfter && reflect.DeepEqual(n.before, n.after) {
 		return
 	}
-	a := AttrChange{Kind: n.kind()}
+	a := attrChange{Kind: n.kind()}
 	switch a.Kind {
-	case Added:
+	case attrAdded:
 		a.After = d.scalar(n.after)
-	case Removed:
+	case attrRemoved:
 		a.Before = d.scalar(n.before)
-	case Modified:
+	case attrModified:
 		before, after := d.scalar(n.before), d.scalar(n.after)
 		if before != nil && after != nil {
 			a.Before, a.After = before, after
@@ -255,7 +261,7 @@ func (d *differ) walkList(w where, n node, before, after []any) {
 		}
 	}
 	if reordered {
-		d.emit(w, AttrChange{Kind: Modified, Reordered: true})
+		d.emit(w, attrChange{Kind: attrModified, Reordered: true})
 	}
 	paired := min(len(removed), len(added))
 	for k := range paired {
@@ -277,14 +283,14 @@ func (d *differ) walkList(w where, n node, before, after []any) {
 	}
 }
 
-func (d *differ) scalar(v any) *Scalar {
+func (d *differ) scalar(v any) *scalar {
 	if !d.values || !isScalar(v) {
 		return nil
 	}
-	return &Scalar{Value: v}
+	return &scalar{Value: v}
 }
 
-func (d *differ) emit(w where, a AttrChange) {
+func (d *differ) emit(w where, a attrChange) {
 	p := w.at
 	a.Path = render(p, w.before)
 	a.at = p

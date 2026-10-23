@@ -3,6 +3,7 @@ package tfplan
 import (
 	"encoding/json"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -91,7 +92,7 @@ func withoutIndices(p path) path {
 }
 
 func resolveWild(p path, values ...any) path {
-	out := append(path(nil), p...)
+	out := slices.Clone(p)
 	for i, s := range out {
 		if s.isIndex {
 			for v := range values {

@@ -1,0 +1,3 @@
+npm audit: 0 vulnerabilities in 1 dependency
+error: npm error audit endpoint returned an error
+warning: npm warn config production Use `--omit=dev` instead. (x2)

@@ -1,0 +1,6 @@
+trivy 0.75.0: infra (filesystem): 1 misconfiguration; 1 LOW; 3 misconfiguration checks passed
+main.tf (terraform):
+  LOW AWS-0099 aws_security_group.bastion lines 1-6: Missing description for security group.
+... 1 misconfiguration exception (--all)
+fixes:
+  AWS-0099: Add descriptions for all security groups

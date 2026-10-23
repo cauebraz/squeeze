@@ -8,17 +8,17 @@ import (
 	"github.com/cauebraz/squeeze/internal/jsonl"
 )
 
-var ErrNoStream = errors.New("no Terraform JSON stream lines in the input")
+var errNoStream = errors.New("no Terraform JSON stream lines in the input")
 
-type Line struct {
-	lineHeader
-	linePayload
+type inputLine struct {
+	rawHeader
+	rawPayload
 	Text      string
 	Malformed bool
 }
 
-func Parse(input []byte) ([]Line, error) {
-	var lines []Line
+func parse(input []byte) ([]inputLine, error) {
+	var lines []inputLine
 	stream := 0
 	for _, raw := range jsonl.Lines(input) {
 		l := parseLine(raw)
@@ -28,25 +28,31 @@ func Parse(input []byte) ([]Line, error) {
 		lines = append(lines, l)
 	}
 	if stream == 0 {
-		return nil, ErrNoStream
+		return nil, errNoStream
 	}
 	return lines, nil
 }
 
-func parseLine(raw []byte) Line {
+func parseLine(raw []byte) inputLine {
 	if raw[0] != '{' {
-		return Line{Text: string(raw)}
+		return inputLine{Text: string(raw)}
 	}
-	var h lineHeader
-	if err := json.Unmarshal(raw, &h); err != nil || h.Type == "" {
-		return Line{Text: string(raw)}
+	var l inputLine
+	err := json.Unmarshal(raw, &struct {
+		*rawHeader
+		*rawPayload
+	}{&l.rawHeader, &l.rawPayload})
+	if err == nil {
+		if l.Type == "" {
+			return inputLine{Text: string(raw)}
+		}
+		return l
 	}
-	l := Line{lineHeader: h}
-	if err := json.Unmarshal(raw, &l.linePayload); err != nil {
-		l.linePayload = linePayload{}
-		l.Malformed = true
+	var h rawHeader
+	if json.Unmarshal(raw, &h) != nil || h.Type == "" {
+		return inputLine{Text: string(raw)}
 	}
-	return l
+	return inputLine{rawHeader: h, Malformed: true}
 }
 
 func isStreamLine(raw []byte) bool {
@@ -54,6 +60,6 @@ func isStreamLine(raw []byte) bool {
 	if len(raw) == 0 || raw[0] != '{' {
 		return false
 	}
-	var h lineHeader
+	var h rawHeader
 	return json.Unmarshal(raw, &h) == nil && h.Type != "" && h.Level != ""
 }

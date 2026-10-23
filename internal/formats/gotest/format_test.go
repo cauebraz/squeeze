@@ -2,7 +2,6 @@ package gotest
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 const fixtureDir = "testdata"
@@ -71,24 +71,42 @@ func TestDetect(t *testing.T) {
 func TestParseRejectsInputWithoutEvents(t *testing.T) {
 	t.Parallel()
 	for _, input := range []string{"hello\n", "=== RUNNING tests\n", ""} {
-		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
-			t.Errorf("Squeeze(%q) returned no error", input)
+		_, err := squeeze([]byte(input), defaultOptions())
+		if err == nil || err.Error() != "no go test -json event and no go test text output in the input" {
+			t.Errorf("Squeeze(%q) error = %v", input, err)
+		}
+	}
+}
+
+func TestPlainElapsedOutOfRange(t *testing.T) {
+	t.Parallel()
+	big := strings.Repeat("9", 400)
+	for _, input := range []string{
+		"=== RUN   TestA\n--- FAIL: TestA (" + big + "s)\nFAIL\nFAIL\texample.com/a\t0.1s\n",
+		"=== RUN   TestA\n--- PASS: TestA (1.2.3s)\nPASS\nok  \texample.com/a\t" + big + "s\n",
+	} {
+		r, err := squeeze([]byte(input), options{All: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := core.Envelope("gotest", len(input), r, nil); err != nil || strings.Contains(r.Text, "Inf") {
+			t.Errorf("Envelope() error %v, text:\n%s", err, r.Text)
 		}
 	}
 }
 
 func TestPlainTextMatchesJSON(t *testing.T) {
 	t.Parallel()
-	summary := func(name string, o Options) map[string]any {
+	summary := func(name string, o options) map[string]any {
 		data, err := os.ReadFile(filepath.Join(fixtureDir, name, map[bool]string{true: "input.txt", false: "input.jsonl"}[name == "plain-verbose"]))
 		if err != nil {
 			t.Fatal(err)
 		}
-		r, err := Squeeze(data, o)
+		r, err := squeeze(data, o)
 		if err != nil {
 			t.Fatal(err)
 		}
-		rep := r.Data.(Report)
+		rep := r.Data.(report)
 		var failures, builds []string
 		for _, f := range rep.Failures {
 			failures = append(failures, f.Package+" "+f.Test+" "+f.Output.Lines[len(f.Output.Lines)-1])
@@ -98,10 +116,10 @@ func TestPlainTextMatchesJSON(t *testing.T) {
 		}
 		return map[string]any{
 			"status": rep.Status, "tests": rep.Tests, "packages": rep.Packages, "failures": failures,
-			"builds": builds, "skipped": rep.Skipped, "no_tests": rep.NoTests, "panics": rep.Panics, "conditions": r.Conditions,
+			"builds": builds, "skipped": rep.Skipped, "no_tests": rep.PackagesWithoutTests, "panics": rep.Panics, "conditions": r.Conditions,
 		}
 	}
-	for _, o := range []Options{DefaultOptions(), {All: true, Full: true}} {
+	for _, o := range []options{defaultOptions(), {All: true, Full: true}} {
 		if diff := cmp.Diff(summary("plain-twin", o), summary("plain-verbose", o)); diff != "" {
 			t.Errorf("text and JSON of the same run differ (-json +text):\n%s", diff)
 		}
@@ -118,7 +136,7 @@ func TestPlainTextWithoutTests(t *testing.T) {
 		"--- SKIP: TestA (0.00s)\nok  \ta\t0.1s\n": "go test: pass; 1 test: 0 passed, 0 failed, 1 skipped; 1 package: 1 ok\n... 1 skipped test, 1 passing package (--all)\n",
 	}
 	for input, want := range tests {
-		r, err := Squeeze([]byte(input), DefaultOptions())
+		r, err := squeeze([]byte(input), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -140,11 +158,11 @@ func TestPlainTextEdges(t *testing.T) {
 		"=== RUN   TestD",
 		"    d_test.go:1: still running",
 	}, "\n"))
-	r, err := Squeeze(input, Options{All: true})
+	r, err := squeeze(input, options{All: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	rep := r.Data.(Report)
+	rep := r.Data.(report)
 	if rep.Packages.OK != 1 || rep.Packages.Failed != 2 || len(rep.Coverage) != 1 || rep.Coverage[0].Coverage != "50.0% of statements" {
 		t.Errorf("packages = %+v, coverage = %+v", rep.Packages, rep.Coverage)
 	}
@@ -169,7 +187,7 @@ func TestConditions(t *testing.T) {
 		"unfinished": {"error", "fail"},
 	}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -181,19 +199,19 @@ func TestConditions(t *testing.T) {
 
 func TestCounts(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "mixed"), DefaultOptions())
+	r, err := squeeze(fixture(t, "mixed"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if diff := cmp.Diff(Counts{Passed: 4, Failed: 3, Skipped: 1}, report.Tests); diff != "" {
+	data := r.Data.(report)
+	if diff := cmp.Diff(testCounts{Passed: 4, Failed: 3, Skipped: 1}, data.Tests); diff != "" {
 		t.Errorf("tests (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff(PackageCounts{OK: 1, Failed: 1, BuildFailed: 1, NoTests: 1}, report.Packages); diff != "" {
+	if diff := cmp.Diff(packageCounts{OK: 1, Failed: 1, BuildFailed: 1, NoTests: 1}, data.Packages); diff != "" {
 		t.Errorf("packages (-want +got):\n%s", diff)
 	}
 	var names []string
-	for _, f := range report.Failures {
+	for _, f := range data.Failures {
 		names = append(names, f.Test)
 	}
 	if diff := cmp.Diff([]string{"TestAddNegative", "TestDivByZero", "TestTable/one"}, names); diff != "" {
@@ -213,12 +231,12 @@ func TestParentWithOwnOutputIsListed(t *testing.T) {
 		`{"Action":"fail","Package":"p","Test":"TestAB"}`,
 		`{"Action":"fail","Package":"p"}`,
 	)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
 	var names []string
-	for _, f := range r.Data.(Report).Failures {
+	for _, f := range r.Data.(report).Failures {
 		names = append(names, f.Test)
 	}
 	if diff := cmp.Diff([]string{"TestA", "TestA/x", "TestAB"}, names); diff != "" {
@@ -236,19 +254,19 @@ func TestErrorLinesHideLogsButKeepPanics(t *testing.T) {
 		`{"Action":"fail","Package":"p","Test":"TestA"}`,
 		`{"Action":"fail","Package":"p"}`,
 	)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	got := r.Data.(Report).Failures[0].Output
-	if diff := cmp.Diff(Output{Lines: []string{"    a_test.go:4: got 1", "panic: boom"}, Logs: 1}, got); diff != "" {
+	got := r.Data.(report).Failures[0].Output
+	if diff := cmp.Diff(output{Block: core.Block{Lines: []string{"    a_test.go:4: got 1", "panic: boom"}}, LogsHidden: 1}, got); diff != "" {
 		t.Errorf("output (-want +got):\n%s", diff)
 	}
-	logs, err := Squeeze(input, Options{Full: true})
+	logs, err := squeeze(input, options{Full: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := logs.Data.(Report).Failures[0].Output; len(got.Lines) != 3 || got.Logs != 0 {
+	if got := logs.Data.(report).Failures[0].Output; len(got.Lines) != 3 || got.LogsHidden != 0 {
 		t.Errorf("--full output = %+v", got)
 	}
 }
@@ -263,16 +281,16 @@ func TestEveryRunOfARepeatedTestIsCounted(t *testing.T) {
 		`{"Action":"pass","Package":"p","Test":"TestFlaky"}`,
 		`{"Action":"fail","Package":"p"}`,
 	)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if diff := cmp.Diff(Counts{Passed: 1, Failed: 1}, report.Tests); diff != "" {
+	data := r.Data.(report)
+	if diff := cmp.Diff(testCounts{Passed: 1, Failed: 1}, data.Tests); diff != "" {
 		t.Errorf("tests (-want +got):\n%s", diff)
 	}
-	if len(report.Failures) != 1 || report.Failures[0].Run != 1 || len(report.Failures[0].Output.Lines) != 1 {
-		t.Fatalf("failures = %+v", report.Failures)
+	if len(data.Failures) != 1 || data.Failures[0].Run != 1 || len(data.Failures[0].Output.Lines) != 1 {
+		t.Fatalf("failures = %+v", data.Failures)
 	}
 	if !strings.Contains(r.Text, "fail p TestFlaky (run 1 of 2)\n  f_test.go:9: boom\n") {
 		t.Errorf("text:\n%s", r.Text)
@@ -289,12 +307,12 @@ func TestTypedErrorLinesAreNeverFraming(t *testing.T) {
 		`{"Action":"fail","Package":"p","Test":"TestA"}`,
 		`{"Action":"fail","Package":"p"}`,
 	)
-	for _, o := range []Options{DefaultOptions(), {Full: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {Full: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
-		got := r.Data.(Report).Failures[0].Output.Lines
+		got := r.Data.(report).Failures[0].Output.Lines
 		if diff := cmp.Diff([]string{"a_test.go:9: child go test failed:", "    --- FAIL: TestInner (0.00s)"}, got); diff != "" {
 			t.Errorf("full=%v lines (-want +got):\n%s", o.Full, diff)
 		}
@@ -310,11 +328,11 @@ func TestGoWarningsAreKept(t *testing.T) {
 		`{"Action":"output","Package":"p","Output":"ok  \tp\t0.01s\n"}`,
 		`{"Action":"pass","Package":"p"}`,
 	)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff([]string{"p: testing: warning: no tests to run"}, r.Data.(Report).Warnings); diff != "" {
+	if diff := cmp.Diff([]string{"p: testing: warning: no tests to run"}, r.Data.(report).WarningMessages); diff != "" {
 		t.Errorf("warnings (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff([]string{"warning"}, r.Conditions); diff != "" {
@@ -336,12 +354,12 @@ func TestCoverageIsKept(t *testing.T) {
 		`{"Action":"output","Package":"c","Output":"ok  \tc\t0.1s\n"}`,
 		`{"Action":"pass","Package":"c"}`,
 	)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []PackageCoverage{{Package: "a", Coverage: "45.0% of statements in ./..."}, {Package: "b", Coverage: "[no statements]"}}
-	if diff := cmp.Diff(want, r.Data.(Report).Coverage); diff != "" {
+	want := []packageCoverage{{Package: "a", Coverage: "45.0% of statements in ./..."}, {Package: "b", Coverage: "[no statements]"}}
+	if diff := cmp.Diff(want, r.Data.(report).Coverage); diff != "" {
 		t.Errorf("coverage (-want +got):\n%s", diff)
 	}
 	if !strings.Contains(r.Text, "coverage a: 45.0% of statements in ./...\ncoverage b: [no statements]\n") {
@@ -352,18 +370,18 @@ func TestCoverageIsKept(t *testing.T) {
 		p := fmt.Sprintf("p%02d", i)
 		many = append(many, `{"Action":"output","Package":"`+p+`","Output":"coverage: 10.0% of statements\n"}`, `{"Action":"pass","Package":"`+p+`"}`)
 	}
-	r, err = Squeeze(stream(many...), DefaultOptions())
+	r, err = squeeze(stream(many...), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := r.Data.(Report); len(got.Coverage) != maxCoverage || got.CoverageOmitted != 3 || !strings.Contains(r.Text, "... 3 more packages with coverage (--all)\n") {
+	if got := r.Data.(report); len(got.Coverage) != maxCoverage || got.CoverageOmitted != 3 || !strings.Contains(r.Text, "... 3 more packages with coverage (--all)\n") {
 		t.Errorf("coverage = %d, omitted = %d, text:\n%s", len(got.Coverage), got.CoverageOmitted, r.Text)
 	}
-	r, err = Squeeze(stream(many...), Options{All: true})
+	r, err = squeeze(stream(many...), options{All: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := r.Data.(Report); len(got.Coverage) != maxCoverage+3 || got.CoverageOmitted != 0 {
+	if got := r.Data.(report); len(got.Coverage) != maxCoverage+3 || got.CoverageOmitted != 0 {
 		t.Errorf("--all coverage = %d, omitted = %d", len(got.Coverage), got.CoverageOmitted)
 	}
 }
@@ -381,12 +399,12 @@ func TestShuffleSeedIsKeptPerPackage(t *testing.T) {
 		`{"Action":"output","Package":"c","Output":"-test.shuffle 5\n"}`,
 		`{"Action":"output","Package":"c","Output":"panic: boom\n"}`,
 	)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	rep := r.Data.(Report)
-	want := []PackageSeed{{Package: "a", Seed: "-7", Failed: true}, {Package: "b", Seed: "1792025410586078000"}, {Package: "c", Seed: "5", Failed: true}}
+	rep := r.Data.(report)
+	want := []packageSeed{{Package: "a", Seed: "-7", Failed: true}, {Package: "b", Seed: "1792025410586078000"}, {Package: "c", Seed: "5", Failed: true}}
 	if diff := cmp.Diff(want, rep.Shuffle); diff != "" {
 		t.Errorf("shuffle (-want +got):\n%s", diff)
 	}
@@ -404,7 +422,7 @@ func TestShuffleSeedIsKeptPerPackage(t *testing.T) {
 	if strings.Contains(r.Text, "shuffle b:") {
 		t.Errorf("seed of a passing package printed without --all:\n%s", r.Text)
 	}
-	r, err = Squeeze(input, Options{All: true})
+	r, err = squeeze(input, options{All: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -424,12 +442,12 @@ func TestSplitOutputIsJoined(t *testing.T) {
 		`{"Action":"fail","Package":"p","Test":"TestA"}`,
 		`{"Action":"fail","Package":"p"}`,
 	)
-	r, err := Squeeze(input, Options{})
+	r, err := squeeze(input, options{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []string{"    a_test.go:3: " + long, "next", "tail without newline"}
-	if diff := cmp.Diff(want, r.Data.(Report).Failures[0].Output.Lines); diff != "" {
+	if diff := cmp.Diff(want, r.Data.(report).Failures[0].Output.Lines); diff != "" {
 		t.Errorf("lines (-want +got):\n%s", diff)
 	}
 }
@@ -490,8 +508,8 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`{"Action":"fail","Package":"p\nfail forged","Test":"T\nfail forged"}`,
 		`{"Action":"bench\nfail forged","Package":"p"}`,
 	)
-	for _, o := range []Options{DefaultOptions(), {All: true, Full: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {All: true, Full: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -506,7 +524,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 
 func TestDataPayload(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "pass"), DefaultOptions())
+	r, err := squeeze(fixture(t, "pass"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -538,6 +556,23 @@ func checkFlagNotices(t *testing.T, text string) {
 	formattest.CheckNotices(t, strings.Join(notices, "\n"))
 }
 
+func TestBuildMatchesSqueeze(t *testing.T) {
+	t.Parallel()
+	for name, input := range formattest.Inputs(t, fixtureDir) {
+		events, plain, err := parseInput(input)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		want, err := squeeze(input, defaultOptions())
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if diff := cmp.Diff(want.Text, render(build(events, defaultOptions(), plain), defaultOptions())); diff != "" {
+			t.Errorf("%s: Build and Text differ from Squeeze (-squeeze +build):\n%s", name, diff)
+		}
+	}
+}
+
 func FuzzSqueeze(f *testing.F) {
 	for _, data := range formattest.Inputs(f, fixtureDir) {
 		f.Add(data)
@@ -545,11 +580,8 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add(stream(`{"Action":"run","Package":"a/b","Test":"T/x"}`, `{"Action":"output","Package":"a/b","Test":"T/x","Output":"goroutine 1 [x]:\nf(\n\tg.go:1\n"}`, `{"Action":"fail","Package":"a/b"}`))
 	f.Add(stream(`{"Action":"weird (x)","Package":"a/b"}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		events, err := Parse(input)
-		if errors.Is(err, ErrNoEvents) {
-			events, err = ParseText(input)
-		}
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		events, plain, err := parseInput(input)
 		if err != nil {
 			return
 		}
@@ -559,15 +591,18 @@ func FuzzSqueeze(f *testing.F) {
 				failedEvents++
 			}
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxTests: 1, MaxOutput: 1, All: true}, {Full: true}} {
-			r := Build(events, o)
-			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {MaxTests: 1, MaxOutput: 1, All: true}, {Full: true}} {
+			r := build(events, o, plain)
+			res := core.Result{Text: render(r, o), Data: r, Conditions: conditions(r)}
+			if want, err := squeeze(input, o); err != nil || want.Text != res.Text {
+				t.Fatalf("Build and Text differ from Squeeze (error %v):\n%s\nwant:\n%s", err, res.Text, want.Text)
+			}
 			formattest.CheckText(t, res.Text)
 			checkFlagNotices(t, res.Text)
 			if failedEvents > 0 && r.Status != "fail" {
 				t.Fatalf("%d fail events but status %q", failedEvents, r.Status)
 			}
-			if got := len(r.Failures) + r.FailuresOmitted; got != r.Tests.Failed {
+			if got := len(r.Failures) + r.TestsOmitted; got != r.Tests.Failed {
 				t.Fatalf("%d failures listed or omitted, %d counted", got, r.Tests.Failed)
 			}
 			for _, p := range r.PackageFailures {

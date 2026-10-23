@@ -57,7 +57,7 @@ func unknownFlag(name string, current core.Format, reg *core.Registry) string {
 		if f.Name() == current.Name() {
 			continue
 		}
-		if fs, _ := formatFlags(f); fs.Lookup(name) != nil {
+		if flags, _ := formatFlags(f); flags.Lookup(name) != nil {
 			owners = append(owners, f.Name())
 		}
 	}

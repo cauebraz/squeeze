@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="pytest" tests="4" failures="4" errors="0" skipped="0">
+    <testcase classname="tests.test_client" name="test_timeout_handling">
+      <failure message="timeout">AssertionError: request did not finish</failure>
+    </testcase>
+    <testcase classname="tests.test_client" name="test_handle_timeout">
+      <failure message="timeout">AssertionError: request did not finish</failure>
+    </testcase>
+    <testcase classname="tests.test_client" name="test_retry">
+      <failure message="test_retry">AssertionError: no retry</failure>
+    </testcase>
+    <testcase classname="lint" name="[HIGH][CHK_1] Ensure the client sets a timeout">
+      <failure message="Ensure the client sets a timeout">File: client.py: 3-9</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

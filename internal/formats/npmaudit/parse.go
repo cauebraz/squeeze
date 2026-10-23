@@ -1,18 +1,19 @@
 package npmaudit
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
-var ErrNotAudit = errors.New("input has no npm audit auditReportVersion and vulnerabilities")
+var errNotAudit = errors.New("input has no npm audit auditReportVersion and vulnerabilities")
 
-type Advisory struct {
+type rawAdvisory struct {
 	Source   int      `json:"source"`
 	Name     string   `json:"name"`
 	Title    string   `json:"title"`
@@ -25,63 +26,61 @@ type Advisory struct {
 	Range string `json:"range"`
 }
 
-type Via struct {
+type rawVia struct {
 	Package  string
-	Advisory *Advisory
+	Advisory *rawAdvisory
 }
 
-func (v *Via) UnmarshalJSON(b []byte) error {
+func (v *rawVia) UnmarshalJSON(b []byte) error {
 	switch {
 	case string(b) == "null":
 		return nil
 	case b[0] == '"':
 		return json.Unmarshal(b, &v.Package)
 	}
-	v.Advisory = &Advisory{}
+	v.Advisory = &rawAdvisory{}
 	return json.Unmarshal(b, v.Advisory)
 }
 
-type Fix struct {
-	Available   bool   `json:"available"`
-	Force       bool   `json:"force,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Version     string `json:"version,omitempty"`
-	SemVerMajor bool   `json:"semver_major,omitempty"`
+type rawFix struct {
+	Available     bool   `json:"-"`
+	Force         bool   `json:"-"`
+	Name          string `json:"name"`
+	Version       string `json:"version"`
+	IsSemVerMajor bool   `json:"isSemVerMajor"`
 }
 
-func (f *Fix) UnmarshalJSON(b []byte) error {
+func (f *rawFix) UnmarshalJSON(b []byte) error {
 	switch string(b) {
 	case "true":
-		*f = Fix{Available: true}
+		*f = rawFix{Available: true}
 		return nil
 	case "false", "null":
-		*f = Fix{}
+		*f = rawFix{}
 		return nil
 	}
-	var o struct {
-		Name          string `json:"name"`
-		Version       string `json:"version"`
-		IsSemVerMajor bool   `json:"isSemVerMajor"`
-	}
+	type object rawFix
+	var o object
 	if err := json.Unmarshal(b, &o); err != nil {
 		return err
 	}
-	*f = Fix{Available: true, Force: true, Name: o.Name, Version: o.Version, SemVerMajor: o.IsSemVerMajor}
+	*f = rawFix(o)
+	f.Available, f.Force = true, true
 	return nil
 }
 
-type Vulnerability struct {
+type rawVulnerability struct {
 	Name         string   `json:"name"`
 	Severity     string   `json:"severity"`
 	IsDirect     bool     `json:"isDirect"`
-	Via          []Via    `json:"via"`
+	Via          []rawVia `json:"via"`
 	Effects      []string `json:"effects"`
 	Range        string   `json:"range"`
 	Nodes        []string `json:"nodes"`
-	FixAvailable Fix      `json:"fixAvailable"`
+	FixAvailable rawFix   `json:"fixAvailable"`
 }
 
-type Dependencies struct {
+type dependencies struct {
 	Prod         int `json:"prod"`
 	Dev          int `json:"dev"`
 	Optional     int `json:"optional"`
@@ -90,22 +89,23 @@ type Dependencies struct {
 	Total        int `json:"total"`
 }
 
-type Audit struct {
+type audit struct {
 	Version         int
-	Vulnerabilities map[string]Vulnerability
-	Dependencies    Dependencies
+	Vulnerabilities map[string]rawVulnerability
+	Dependencies    dependencies
+	Trailing        []logscan.FlaggedLine
 }
 
-type npmError struct {
+type rawError struct {
 	Code    string `json:"code"`
 	Summary string `json:"summary"`
 	Detail  string `json:"detail"`
 }
 
-func Parse(input []byte) (*Audit, error) {
+func parse(input []byte) (*audit, error) {
 	var doc struct {
-		AuditReportVersion *int                     `json:"auditReportVersion"`
-		Vulnerabilities    map[string]Vulnerability `json:"vulnerabilities"`
+		AuditReportVersion *int                        `json:"auditReportVersion"`
+		Vulnerabilities    map[string]rawVulnerability `json:"vulnerabilities"`
 		Metadata           struct {
 			Dependencies struct {
 				Prod, Dev, Optional, Peer, Total int
@@ -113,27 +113,29 @@ func Parse(input []byte) (*Audit, error) {
 			} `json:"dependencies"`
 		} `json:"metadata"`
 		Message string    `json:"message"`
-		Error   *npmError `json:"error"`
+		Error   *rawError `json:"error"`
 	}
-	if err := json.Unmarshal(bytes.TrimSpace(input), &doc); err != nil {
+	lead, body := logscan.LeadingLines(input)
+	rest, err := core.DecodeJSON(body, &doc)
+	if err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	if doc.Error != nil {
 		var parts []string
 		for _, s := range []string{doc.Error.Code, doc.Error.Summary, doc.Error.Detail, doc.Message} {
-			if s = core.Clean(s); s != "" {
+			if s = sanitize.Clean(s); s != "" {
 				parts = append(parts, s)
 			}
 		}
 		return nil, fmt.Errorf("npm reported an error: %s", strings.Join(parts, "; "))
 	}
 	if doc.AuditReportVersion == nil || doc.Vulnerabilities == nil {
-		return nil, ErrNotAudit
+		return nil, errNotAudit
 	}
 	if *doc.AuditReportVersion != 2 {
 		return nil, fmt.Errorf("unsupported auditReportVersion %d", *doc.AuditReportVersion)
 	}
 	d := doc.Metadata.Dependencies
-	deps := Dependencies{Prod: d.Prod, Dev: d.Dev, Optional: d.Optional, Peer: d.Peer, PeerOptional: d.PeerOptional, Total: d.Total}
-	return &Audit{Version: 2, Vulnerabilities: doc.Vulnerabilities, Dependencies: deps}, nil
+	deps := dependencies{Prod: d.Prod, Dev: d.Dev, Optional: d.Optional, Peer: d.Peer, PeerOptional: d.PeerOptional, Total: d.Total}
+	return &audit{Version: 2, Vulnerabilities: doc.Vulnerabilities, Dependencies: deps, Trailing: append(logscan.FlaggedLines(lead), logscan.FlaggedLines(rest)...)}, nil
 }

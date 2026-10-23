@@ -92,7 +92,7 @@ test/cart.test.js
 
 ## JSON data
 
-`data` holds `tool` (`jest` or `vitest`), `tool_version` (empty: neither report carries one), `status`, `root`, `interrupted`, `tests` (`total`, `passed`, `failed`, `skipped`, `todo`), `files` (`total`, `passed`, `failed`, `failed_to_run`, `skipped`), `snapshots` (`total`, `failed`, `obsolete`, `written`, `updated`, `files_removed`, `failure`), `run_error`, `file_errors` (`file`, `output`), `failures` (`file`, `test`, `line` and `column` of the test when Jest ran with `--testLocationInResults`, `output`), `failures_omitted`, `open_handles` (`name`, `message`, `output`), `not_run` (`file`, `test`, `status`), `passing_files`, `unknown_status` and `trailing`. Each `output` has `lines`, the printed lines, `omitted`, the lines past `--max-output`, and `hidden`, the frames and code frame lines dropped without `--full`.
+`data` holds `tool` (`jest` or `vitest`), `tool_version` (empty: neither report carries one), `status`, `root`, `interrupted`, `tests` (`total`, `passed`, `failed`, `skipped`, `todo`), `files` (`total`, `passed`, `failed`, `failed_to_run`, `skipped`), `snapshots` (`total`, `failed`, `obsolete`, `written`, `updated`, `files_removed`, `failure`), `run_error`, `file_errors` (`file`, `output`), `failures` (`file`, `test`, `line` and `column` of the test when Jest ran with `--testLocationInResults`, `output`), `tests_omitted`, `open_handles` (`name`, `message`, `output`), `not_run` (`file`, `test`, `status`), `passing_files`, `unknown_status` and `trailing`. Each `output`, `run_error` and `trailing` has `lines`, the printed lines, `lines_omitted`, the lines past `--max-output`, and, when set, `hidden`, the frames and code frame lines dropped without `--full`.
 
 ## Limitations
 

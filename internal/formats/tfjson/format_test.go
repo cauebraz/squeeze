@@ -9,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestContract(t *testing.T) {
@@ -71,7 +72,7 @@ func TestConditions(t *testing.T) {
 	}
 	seen := map[string]bool{}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
@@ -92,24 +93,24 @@ func TestConditions(t *testing.T) {
 func TestHeader(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
-		r    Report
+		r    report
 		want string
 	}{
-		"bare": {Report{Tool: "terraform"}, "terraform"},
-		"init": {Report{Tool: "terraform", ToolVersion: "1.9.5", Operation: "init", Providers: 1}, "terraform 1.9.5 init: 1 provider installed"},
-		"plan import actions": {Report{Tool: "terraform", Operation: "plan", Summary: &Summary{Operation: "plan", Import: 1, Add: 2, ActionInvocation: 2}},
+		"bare": {report{Tool: "terraform"}, "terraform"},
+		"init": {report{Tool: "terraform", ToolVersion: "1.9.5", Operation: "init", Providers: 1}, "terraform 1.9.5 init: 1 provider installed"},
+		"plan import actions": {report{Tool: "terraform", Operation: "plan", Summary: &summary{Operation: "plan", Import: 1, Add: 2, ActionInvocation: 2}},
 			"terraform plan: 1 to import, 2 to add, 0 to change, 0 to destroy, 2 actions to invoke"},
-		"apply import actions": {Report{Tool: "terraform", Operation: "apply", Summary: &Summary{Operation: "apply", Import: 1, Add: 1, ActionInvocation: 1, ActionFail: 1}},
+		"apply import actions": {report{Tool: "terraform", Operation: "apply", Summary: &summary{Operation: "apply", Import: 1, Add: 1, ActionInvocation: 1, ActionFail: 1}},
 			"terraform apply: 1 imported, 1 added, 0 changed, 0 destroyed, 1 action invoked, 1 action failed"},
-		"destroy": {Report{Tool: "terraform", Operation: "destroy", Summary: &Summary{Operation: "destroy", Remove: 3}},
+		"destroy": {report{Tool: "terraform", Operation: "destroy", Summary: &summary{Operation: "destroy", Remove: 3}},
 			"terraform destroy: 3 destroyed"},
-		"unknown operation": {Report{Tool: "terraform", Operation: "refresh", Summary: &Summary{Operation: "refresh", Add: 1}},
+		"unknown operation": {report{Tool: "terraform", Operation: "refresh", Summary: &summary{Operation: "refresh", Add: 1}},
 			"terraform refresh: 1 add, 0 change, 0 destroy"},
-		"interrupted apply": {Report{Tool: "terraform", Operation: "apply", Summary: &Summary{Operation: "plan", Add: 2}, Errors: 1},
+		"interrupted apply": {report{Tool: "terraform", Operation: "apply", Summary: &summary{Operation: "plan", Add: 2}, Errors: 1},
 			"terraform apply: no apply summary; plan was 2 to add, 0 to change, 0 to destroy; 1 error"},
-		"tests": {Report{Tool: "terraform", Operation: "test", Tests: &Tests{Status: "fail", Passed: 1, Failed: 1}},
+		"tests": {report{Tool: "terraform", Operation: "test", Tests: &tests{Status: "fail", Passed: 1, Failed: 1}},
 			"terraform test: fail, 1 passed, 1 failed, 0 errored, 0 skipped"},
-		"diagnostics only": {Report{Tool: "terraform", ToolVersion: "1.9.5", Errors: 2, Warnings: 1}, "terraform 1.9.5: 2 errors, 1 warning"},
+		"diagnostics only": {report{Tool: "terraform", ToolVersion: "1.9.5", Errors: 2, Warnings: 1}, "terraform 1.9.5: 2 errors, 1 warning"},
 	}
 	for name, tt := range tests {
 		if got := header(tt.r); got != tt.want {
@@ -121,7 +122,7 @@ func TestHeader(t *testing.T) {
 func TestOutputsText(t *testing.T) {
 	t.Parallel()
 	var b strings.Builder
-	writeOutputs(&b, []Output{
+	writeOutputs(&b, []output{
 		{Name: "a", Action: "create", Value: json.RawMessage(`"x"`)},
 		{Name: "b", Action: "noop", Value: json.RawMessage(`"` + strings.Repeat("y", 60) + `"`)},
 		{Name: "c", Sensitive: true, Value: json.RawMessage(`"secret"`)},
@@ -134,7 +135,7 @@ func TestOutputsText(t *testing.T) {
 
 func TestOtherMessagesTruncated(t *testing.T) {
 	t.Parallel()
-	r := Report{Other: map[string]int{"log": 1}, otherMessages: []string{strings.Repeat("é", 150)}}
+	r := report{Other: map[string]int{"log": 1}, otherMessages: []string{strings.Repeat("é", 150)}}
 	var b strings.Builder
 	writeOther(&b, r, true)
 	line := strings.TrimPrefix(strings.TrimSuffix(b.String(), "\n"), "other:\n  ")
@@ -151,7 +152,7 @@ func TestPassingRunDiagnosticsArePrinted(t *testing.T) {
 		`{"@level":"error","@message":"Error: Failed to destroy resources","@testfile":"main.tftest.hcl","@testrun":"setup","type":"diagnostic","diagnostic":{"severity":"error","summary":"Failed to destroy resources","detail":"bucket not empty"}}`,
 		`{"@level":"info","@message":"  \"check\"... pass","@testfile":"main.tftest.hcl","@testrun":"check","type":"test_run","test_run":{"path":"main.tftest.hcl","run":"check","progress":"complete","status":"pass"}}`,
 	)
-	r, err := Squeeze(input, DefaultOptions())
+	r, err := squeeze(input, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,7 +190,7 @@ func TestConfigureFlags(t *testing.T) {
 
 func TestSqueezeError(t *testing.T) {
 	t.Parallel()
-	if _, err := Squeeze([]byte("plain text\n"), DefaultOptions()); err == nil {
+	if _, err := squeeze([]byte("plain text\n"), defaultOptions()); err == nil {
 		t.Error("Squeeze(plain text) returned no error")
 	}
 }
@@ -200,7 +201,7 @@ func TestSensitiveOutputsNeverPrinted(t *testing.T) {
 		`{"@level":"info","type":"version","terraform":"1.9.5"}`,
 		`{"@level":"info","@message":"Outputs: 1","type":"outputs","outputs":{"token":{"sensitive":true,"type":"string","value":"s3cr3t-value"}}}`,
 	)
-	r, err := Squeeze(input, Options{All: true})
+	r, err := squeeze(input, options{All: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +252,8 @@ func onlyHiddenCanaries(input []byte) bool {
 		}
 		outputs, _ := top["outputs"].(map[string]any)
 		for _, o := range outputs {
-			if out, _ := o.(map[string]any); out["sensitive"] == true {
+			out, _ := o.(map[string]any)
+			if sensitive, _ := out["sensitive"].(bool); sensitive {
 				hidden += canaries(out["value"])
 			}
 		}
@@ -301,8 +303,8 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add(stream(`{"@level":"info","@message":"m","type":"future (x)"}`))
 	f.Add(stream(`{"@level":"info","@message":"Outputs: 2","type":"outputs","outputs":{"token":{"sensitive":true,"type":"string","value":"s3cret"},"obj":{"sensitive":true,"value":{"k":["s3cret"]}},"plain":{"sensitive":false,"value":"x"}}}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		lines, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		lines, err := parse(input)
 		if err != nil {
 			return
 		}
@@ -312,12 +314,12 @@ func FuzzSqueeze(f *testing.F) {
 				flagged++
 			}
 		}
-		for _, o := range []Options{DefaultOptions(), {All: true, ListDrift: true, MaxResources: 1, MaxDiagnostics: 1}} {
-			r := Build(lines, o)
+		for _, o := range []options{defaultOptions(), {All: true, ListDrift: true, MaxResources: 1, MaxDiagnostics: 1}} {
+			r := build(lines, o)
 			if r.Errors+r.Warnings < flagged {
 				t.Fatalf("%d error or warn lines but %d errors and %d warnings", flagged, r.Errors, r.Warnings)
 			}
-			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r, lines)}
+			res := core.Result{Text: text(r, o), Data: r, Conditions: conditions(r, lines)}
 			formattest.CheckText(t, res.Text)
 			checkFlagNotices(t, res.Text)
 			envelope, err := core.Envelope("tfjson", len(input), res, nil)
@@ -341,8 +343,8 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`{"@level":"info","type":"change_summary","changes":{"add":1,"operation":"plan\nerror: forged\u001b"}}`,
 		"text line \x00\x1b[31m",
 	)
-	for _, o := range []Options{DefaultOptions(), {All: true}} {
-		r, err := Squeeze(input, o)
+	for _, o := range []options{defaultOptions(), {All: true}} {
+		r, err := squeeze(input, o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -352,5 +354,20 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 				t.Errorf("input forged a line: %q\n%s", line, r.Text)
 			}
 		}
+	}
+}
+
+func TestOutputValueControlCharacters(t *testing.T) {
+	t.Parallel()
+	input := stream(
+		`{"@level":"info","type":"outputs","outputs":{"o":{"sensitive":false,"value":"a` + "\u2028" + `b` + "\x7f" + `c` + "\xc2\x9b" + `31md"}}}`,
+	)
+	r, err := squeeze(input, defaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	formattest.CheckText(t, r.Text)
+	if want := "outputs: o = \"a bcd\"\n"; !strings.Contains(r.Text, want) {
+		t.Errorf("text does not contain %q:\n%s", want, r.Text)
 	}
 }

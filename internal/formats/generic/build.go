@@ -1,22 +1,18 @@
 package generic
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
+	"slices"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
 const minRun = 3
 
-func isFlagged(line string) bool { return core.ErrorLine(line) || core.WarningLine(line) }
-
 var digits = regexp.MustCompile(`[0-9]+`)
 
-type Report struct {
+type report struct {
 	Tool         string `json:"tool"`
 	Lines        int    `json:"lines"`
 	Printed      int    `json:"printed"`
@@ -28,6 +24,7 @@ type Report struct {
 	ErrorLines   int    `json:"error_lines"`
 	WarningLines int    `json:"warning_lines"`
 	JSONIndented bool   `json:"json_indented"`
+	out          []string
 }
 
 type entry struct {
@@ -44,104 +41,67 @@ type group struct {
 	flagged bool
 }
 
-func Build(input []byte, o Options) (Report, string) {
-	r := Report{Tool: "text"}
-	if indented, ok := indentJSON(input, o.MaxLineBytes); ok {
-		input, r.JSONIndented = indented, true
-	}
-	lines := splitLines(string(input))
-	r.Lines = len(lines)
-	for _, l := range lines {
-		if core.ErrorLine(l) {
+func build(p parsed, o options) report {
+	r := report{Tool: "text", Lines: len(p.lines), JSONIndented: p.jsonIndented}
+	for _, l := range p.lines {
+		if l.isError {
 			r.ErrorLines++
 		}
-		if core.WarningLine(l) {
+		if l.warning {
 			r.WarningLines++
 		}
 	}
-	cleaned := dropBlanks(lines, &r)
+	cleaned := dropBlanks(p.lines, &r)
 	groups := fold(cleaned, o.NoFold, &r)
 	groups = cut(groups, o.MaxLines, &r)
-	return r, render(groups, o.MaxLineBytes, &r)
+	r.out, r.Printed, r.LongLines = flatten(groups, o.MaxLineBytes)
+	return r
 }
 
-func indentJSON(input []byte, maxBytes int) ([]byte, bool) {
-	trimmed := bytes.TrimSpace(input)
-	if maxBytes <= 0 || len(trimmed) <= maxBytes || (trimmed[0] != '{' && trimmed[0] != '[') || bytes.IndexByte(trimmed, '\n') >= 0 || !json.Valid(trimmed) {
-		return nil, false
-	}
-	var b bytes.Buffer
-	if err := json.Indent(&b, trimmed, "", ""); err != nil {
-		return nil, false
-	}
-	return b.Bytes(), true
-}
-
-func splitLines(s string) []string {
-	s = strings.TrimSuffix(s, "\n")
-	if s == "" {
-		return nil
-	}
-	raw := strings.Split(s, "\n")
-	out := make([]string, len(raw))
-	for i, l := range raw {
-		frames := strings.Split(strings.TrimSuffix(l, "\r"), "\r")
-		for j := len(frames) - 1; j >= 0; j-- {
-			if out[i] = core.NarrowLine(frames[j]); strings.TrimSpace(out[i]) != "" {
-				break
-			}
-		}
-		if strings.TrimSpace(out[i]) == "" {
-			out[i] = ""
-		}
-	}
-	return out
-}
-
-func dropBlanks(lines []string, r *Report) []string {
-	out := make([]string, 0, len(lines))
+func dropBlanks(lines []line, r *report) []line {
+	out := make([]line, 0, len(lines))
 	for _, l := range lines {
-		if l == "" && (len(out) == 0 || out[len(out)-1] == "") {
+		if l.text == "" && (len(out) == 0 || out[len(out)-1].text == "") {
 			r.BlankDropped++
 			continue
 		}
 		out = append(out, l)
 	}
-	if len(out) > 0 && out[len(out)-1] == "" {
+	if len(out) > 0 && out[len(out)-1].text == "" {
 		out = out[:len(out)-1]
 		r.BlankDropped++
 	}
 	return out
 }
 
-func similar(a, b string) bool {
-	if a == b {
+func similar(a, b line) bool {
+	if a.text == b.text {
 		return true
 	}
-	if a == "" || b == "" || core.ErrorLine(a) || core.ErrorLine(b) {
+	if a.text == "" || b.text == "" || a.isError || b.isError {
 		return false
 	}
-	return digits.ReplaceAllString(a, "0") == digits.ReplaceAllString(b, "0")
+	return digits.ReplaceAllString(a.text, "0") == digits.ReplaceAllString(b.text, "0")
 }
 
-func single(text string) group {
-	g := group{entries: []entry{{text: text}}, content: 1, lines: 1}
-	if isFlagged(text) {
+func single(l line) group {
+	g := group{entries: []entry{{text: l.text}}, content: 1, lines: 1}
+	if l.flagged() {
 		g.flagged, g.flags = true, 1
 	}
-	if core.ErrorLine(text) {
+	if l.isError {
 		g.errors = 1
 	}
 	return g
 }
 
-func fold(lines []string, off bool, r *Report) []group {
+func fold(lines []line, off bool, r *report) []group {
 	out := make([]group, 0, len(lines))
 	for i := 0; i < len(lines); {
 		j := i + 1
 		identical := true
 		for !off && j < len(lines) && similar(lines[i], lines[j]) {
-			identical = identical && lines[i] == lines[j]
+			identical = identical && lines[i].text == lines[j].text
 			j++
 		}
 		n := j - i
@@ -163,7 +123,7 @@ func fold(lines []string, off bool, r *Report) []group {
 			hidden := 0
 			g.flags = 0
 			for k := i; k < j; k++ {
-				if isFlagged(lines[k]) {
+				if lines[k].flagged() {
 					g.flags++
 					if k > i && k < j-1 {
 						hidden++
@@ -171,11 +131,11 @@ func fold(lines []string, off bool, r *Report) []group {
 				}
 			}
 			g.flagged = g.flags > 0
-			text := fmt.Sprintf("... %d similar %s (--no-fold)", n-2, core.Plural(n-2, "line", "lines"))
+			notice := fmt.Sprintf("... %d similar %s (--no-fold)", n-2, core.Plural(n-2, "line", "lines"))
 			if hidden > 0 {
-				text = fmt.Sprintf("... %d similar %s, %d with warning words (--no-fold)", n-2, core.Plural(n-2, "line", "lines"), hidden)
+				notice = fmt.Sprintf("... %d similar %s, %d with warning words (--no-fold)", n-2, core.Plural(n-2, "line", "lines"), hidden)
 			}
-			g.entries = append(g.entries, entry{text: text, marker: true}, entry{text: lines[j-1]})
+			g.entries = append(g.entries, entry{text: notice, marker: true}, entry{text: lines[j-1].text})
 			g.content = 2
 			r.Folded += n - 2
 		}
@@ -185,36 +145,36 @@ func fold(lines []string, off bool, r *Report) []group {
 	return out
 }
 
-func cut(groups []group, max int, r *Report) []group {
+func cut(groups []group, limit int, r *report) []group {
 	total := 0
 	for _, g := range groups {
 		total += g.content
 	}
-	if max <= 0 || total <= max {
+	if limit <= 0 || total <= limit {
 		return groups
 	}
 	head, used := 0, 0
-	for head < len(groups) && used+groups[head].content <= max/4 {
+	for head < len(groups) && used+groups[head].content <= limit/4 {
 		used += groups[head].content
 		head++
 	}
 	tail, usedTail := len(groups), 0
-	for tail > head && usedTail+groups[tail-1].content <= max/2 {
+	for tail > head && usedTail+groups[tail-1].content <= limit/2 {
 		tail--
 		usedTail += groups[tail].content
 	}
-	budget := max - used - usedTail
-	out := append([]group(nil), groups[:head]...)
+	budget := limit - used - usedTail
+	out := slices.Clone(groups[:head])
 	var gap group
 	flush := func() {
 		if gap.lines == 0 {
 			return
 		}
-		text := fmt.Sprintf("... %d %s cut (--max-lines 0)", gap.lines, core.Plural(gap.lines, "line", "lines"))
+		notice := fmt.Sprintf("... %d %s cut (--max-lines 0)", gap.lines, core.Plural(gap.lines, "line", "lines"))
 		if gap.flags > 0 {
-			text = fmt.Sprintf("... %d %s cut, %d with error or warning words (--max-lines 0)", gap.lines, core.Plural(gap.lines, "line", "lines"), gap.flags)
+			notice = fmt.Sprintf("... %d %s cut, %d with error or warning words (--max-lines 0)", gap.lines, core.Plural(gap.lines, "line", "lines"), gap.flags)
 		}
-		out = append(out, group{entries: []entry{{text: text, marker: true}}})
+		out = append(out, group{entries: []entry{{text: notice, marker: true}}})
 		r.Cut += gap.lines
 		r.CutFlagged += gap.flags
 		gap = group{}
@@ -256,25 +216,22 @@ func cut(groups []group, max int, r *Report) []group {
 	return append(out, groups[tail:]...)
 }
 
-func render(groups []group, maxBytes int, r *Report) string {
-	if len(groups) == 0 {
-		return "(no printable text)\n"
-	}
-	var b strings.Builder
+func flatten(groups []group, maxBytes int) ([]string, int, int) {
+	var out []string
+	printed, long := 0, 0
 	for _, g := range groups {
 		for _, e := range g.entries {
-			text := e.text
+			s := e.text
 			if !e.marker {
-				r.Printed++
-				if maxBytes > 0 && len(text) > maxBytes {
-					short := core.Truncate(text, maxBytes)
-					text = fmt.Sprintf("%s ... %d more bytes (--max-line-bytes 0)", short, len(text)-len(short))
-					r.LongLines++
+				printed++
+				if maxBytes > 0 && len(s) > maxBytes {
+					short := core.Truncate(s, maxBytes)
+					s = fmt.Sprintf("%s ... %d more bytes (--max-line-bytes 0)", short, len(s)-len(short))
+					long++
 				}
 			}
-			b.WriteString(text)
-			b.WriteByte('\n')
+			out = append(out, s)
 		}
 	}
-	return b.String()
+	return out, printed, long
 }

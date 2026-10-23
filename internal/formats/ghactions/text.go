@@ -7,7 +7,7 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-func Text(r Report) string {
+func text(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -35,14 +35,14 @@ func Text(r Report) string {
 	return b.String()
 }
 
-func label(job string) string {
-	if job == "" {
+func label(name string) string {
+	if name == "" {
 		return "job"
 	}
-	return job
+	return name
 }
 
-func header(r Report) string {
+func header(r report) string {
 	failed := []string{}
 	for _, j := range r.Jobs {
 		if j.Failed {

@@ -10,4 +10,4 @@ fail total applies quantity: Error: expect(received).toBe(expected) // Object.is
       at processTicksAndRejections (node:internal/process/task_queues:103:5)
       at _runTest (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:949:3)
       at _runTestsForDescribeBlock (/home/dev/shop/node_modules/jest-circus/build/jestAdapterInit.js:839:13)
-  ... 6 more lines (--max-lines 0)
+  ... 6 more lines (--max-output 0)

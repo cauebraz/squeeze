@@ -7,20 +7,20 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func nestedFailures(n int) []Event {
-	events := make([]Event, 0, 5*n+1)
+func nestedFailures(n int) []rawEvent {
+	events := make([]rawEvent, 0, 5*n+1)
 	for i := range n {
 		parent := fmt.Sprintf("TestCase%d", i)
 		child := parent + "/sub"
 		events = append(events,
-			Event{Action: "run", Package: "p", Test: parent},
-			Event{Action: "run", Package: "p", Test: child},
-			Event{Action: "output", Package: "p", Test: child, Output: "    x_test.go:1: boom\n"},
-			Event{Action: "fail", Package: "p", Test: child},
-			Event{Action: "fail", Package: "p", Test: parent},
+			rawEvent{Action: "run", Package: "p", Test: parent},
+			rawEvent{Action: "run", Package: "p", Test: child},
+			rawEvent{Action: "output", Package: "p", Test: child, Output: "    x_test.go:1: boom\n"},
+			rawEvent{Action: "fail", Package: "p", Test: child},
+			rawEvent{Action: "fail", Package: "p", Test: parent},
 		)
 	}
-	return append(events, Event{Action: "fail", Package: "p"})
+	return append(events, rawEvent{Action: "fail", Package: "p"})
 }
 
 func BenchmarkBuildNestedFailures(b *testing.B) {
@@ -28,7 +28,7 @@ func BenchmarkBuildNestedFailures(b *testing.B) {
 		events := nestedFailures(n)
 		b.Run(fmt.Sprint(n), func(b *testing.B) {
 			for b.Loop() {
-				Build(events, DefaultOptions())
+				build(events, defaultOptions(), false)
 			}
 		})
 	}
@@ -36,7 +36,7 @@ func BenchmarkBuildNestedFailures(b *testing.B) {
 
 func TestNestedFailuresListOnlyTheChild(t *testing.T) {
 	t.Parallel()
-	r := Build(nestedFailures(3), DefaultOptions())
+	r := build(nestedFailures(3), defaultOptions(), false)
 	var got []string
 	for _, f := range r.Failures {
 		got = append(got, f.Test)

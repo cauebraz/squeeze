@@ -1,13 +1,15 @@
 package gotest
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
 func splitOutput(s string) []string {
-	return strings.Split(strings.TrimSuffix(s, "\n"), "\n")
+	return slices.Collect(core.SplitLines(strings.TrimSuffix(s, "\n")))
 }
 
 func (b *builder) isFrame(l line) bool {
@@ -17,7 +19,7 @@ func (b *builder) isFrame(l line) bool {
 	return frameLine.MatchString(l.text)
 }
 
-func (b *builder) testOutput(t *testState) Output {
+func (b *builder) testOutput(t *testState) output {
 	var all []line
 	errorLines := false
 	for _, l := range t.lines {
@@ -56,7 +58,7 @@ func (b *builder) testOutput(t *testState) Output {
 		}
 	}
 	out := b.output(kept, t.pkg)
-	out.Logs = logs
+	out.LogsHidden = logs
 	return out
 }
 
@@ -68,24 +70,22 @@ func isPanicStart(s string) bool {
 	return strings.HasPrefix(s, "panic: ") || strings.HasPrefix(s, "fatal error: ")
 }
 
-func (b *builder) output(lines []line, pkg string) Output {
+func (b *builder) output(lines []line, pkg string) output {
 	raw := make([]string, 0, len(lines))
 	for _, l := range lines {
 		raw = append(raw, l.text)
 	}
-	out := Output{Lines: []string{}}
+	var out output
 	if !b.o.Full {
-		raw, out.Stack = filterStack(raw, pkg)
+		raw, out.StackHidden = filterStack(raw, pkg)
 	}
 	var cleaned []string
 	for _, l := range raw {
-		if c := core.Line(l); strings.TrimSpace(c) != "" {
+		if c := sanitize.Line(l); strings.TrimSpace(c) != "" {
 			cleaned = append(cleaned, c)
 		}
 	}
-	cleaned = core.Dedent(cleaned)
-	cleaned, out.Omitted = core.Limit(cleaned, b.o.MaxOutput)
-	out.Lines = append(out.Lines, cleaned...)
+	out.Block = core.HeadBlock(core.Dedent(cleaned), b.o.MaxOutput)
 	return out
 }
 

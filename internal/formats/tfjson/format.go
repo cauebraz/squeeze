@@ -2,6 +2,8 @@ package tfjson
 
 import (
 	"flag"
+	"slices"
+
 	"github.com/cauebraz/squeeze/internal/jsonl"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -9,7 +11,7 @@ import (
 
 const detectLines = 5
 
-type Options struct {
+type options struct {
 	MaxResources   int
 	MaxDiagnostics int
 	All            bool
@@ -17,8 +19,8 @@ type Options struct {
 	NoDetail       bool
 }
 
-func DefaultOptions() Options {
-	return Options{MaxResources: 200, MaxDiagnostics: 20}
+func defaultOptions() options {
+	return options{MaxResources: 200, MaxDiagnostics: 20}
 }
 
 type Format struct{}
@@ -31,40 +33,40 @@ func (Format) Description() string {
 
 var conditionNames = []string{"apply_errored", "change", "deferred", "destroy", "drift", "error", "fail", "forget", "policy_failed", "replace", "test_failed", "warning"}
 
-func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+func (Format) Conditions() []string { return slices.Clone(conditionNames) }
 
 func (Format) Detect(head []byte) bool {
 	return jsonl.Detect(head, detectLines, nil, isStreamLine)
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
-	o := DefaultOptions()
-	core.CountFlag(fs, &o.MaxResources, "max-resources", "planned changes and found resources listed, 0 for all")
+	o := defaultOptions()
+	core.CountFlag(fs, &o.MaxResources, "max-resources", "planned changes, found, drifted and deferred resources listed, each, 0 for all")
 	core.CountFlag(fs, &o.MaxDiagnostics, "max-diagnostics", "diagnostics listed, 0 for all")
 	fs.BoolVar(&o.All, "all", false, "include no-op resources, passing tests and every other message")
 	fs.BoolVar(&o.ListDrift, "drift", false, "list drifted resources instead of counting them")
 	fs.BoolVar(&o.NoDetail, "no-detail", false, "print diagnostic summary, location and code only")
 	return func(input []byte) (core.Result, error) {
-		return Squeeze(input, o)
+		return squeeze(input, o)
 	}
 }
 
-func Squeeze(input []byte, o Options) (core.Result, error) {
-	lines, err := Parse(input)
+func squeeze(input []byte, o options) (core.Result, error) {
+	lines, err := parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r := Build(lines, o)
-	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r, lines)}, nil
+	r := build(lines, o)
+	return core.Result{Text: text(r, o), Data: r, Conditions: conditions(r, lines)}, nil
 }
 
-func conditions(r Report, lines []Line) []string {
+func conditions(r report, lines []inputLine) []string {
 	present := map[string]bool{
 		"apply_errored": len(r.Failures) > 0,
 		"deferred":      len(r.Deferred) > 0,
-		"drift":         len(r.Drift) > 0,
-		"error":         r.Errors > 0 || len(r.Failures) > 0 || hasPolicyOutcome(r, "error"),
-		"policy_failed": hasPolicyOutcome(r, "fail"),
+		"drift":         len(r.Drift)+r.DriftOmitted > 0,
+		"error":         r.Errors > 0 || len(r.Failures) > 0 || hasPolicyOutcome(r, outcomeError),
+		"policy_failed": hasPolicyOutcome(r, outcomeFail),
 		"warning":       r.Warnings > 0,
 	}
 	if s := r.Summary; s != nil {
@@ -103,9 +105,9 @@ func conditions(r Report, lines []Line) []string {
 	return core.Conditions(present)
 }
 
-func hasPolicyOutcome(r Report, outcome string) bool {
+func hasPolicyOutcome(r report, o outcome) bool {
 	for _, p := range r.Policies {
-		if p.Outcome == outcome {
+		if p.Outcome == o {
 			return true
 		}
 	}

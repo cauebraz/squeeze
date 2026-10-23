@@ -41,18 +41,18 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func build(t testing.TB, input []byte, o Options) (Report, error) {
+func buildInput(t testing.TB, input []byte, o options) (report, error) {
 	t.Helper()
-	p, err := Parse(input)
+	p, err := parse(input)
 	if err != nil {
-		return Report{}, err
+		return report{}, err
 	}
-	return Build(p, o)
+	return build(p, o), nil
 }
 
-func mustBuild(t testing.TB, name string, o Options) Report {
+func mustBuild(t testing.TB, name string, o options) report {
 	t.Helper()
-	r, err := build(t, fixture(t, name), o)
+	r, err := buildInput(t, fixture(t, name), o)
 	if err != nil {
 		t.Fatalf("Build(%s) error = %v", name, err)
 	}
@@ -61,16 +61,16 @@ func mustBuild(t testing.TB, name string, o Options) Report {
 
 func sensitiveStrings(t testing.TB, input []byte) []string {
 	t.Helper()
-	p, err := Parse(input)
+	p, err := parse(input)
 	if err != nil {
 		t.Fatal(err)
 	}
 	var out []string
-	collect := func(c PlanChange) {
+	collect := func(c rawChange) {
 		out = append(out, sensitiveLeaves(c.Before, c.BeforeSensitive, false)...)
 		out = append(out, sensitiveLeaves(c.After, c.AfterSensitive, false)...)
 	}
-	for _, list := range [][]PlanResource{p.ResourceChanges, p.ResourceDrift} {
+	for _, list := range [][]rawResource{p.ResourceChanges, p.ResourceDrift} {
 		for _, rc := range list {
 			collect(rc.Change)
 		}

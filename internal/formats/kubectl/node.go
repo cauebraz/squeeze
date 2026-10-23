@@ -2,12 +2,12 @@ package kubectl
 
 import "strings"
 
-func node(r Raw, o *Object) error {
+func node(r rawObject, o *object) error {
 	var spec struct {
 		Unschedulable bool `json:"unschedulable"`
 	}
 	var st struct {
-		Conditions []condition `json:"conditions"`
+		Conditions []rawCondition `json:"conditions"`
 		NodeInfo   struct {
 			KubeletVersion string `json:"kubeletVersion"`
 		} `json:"nodeInfo"`
@@ -21,10 +21,10 @@ func node(r Raw, o *Object) error {
 	status := []string{"Unknown"}
 	if c := find(st.Conditions, "Ready"); c != nil {
 		status[0] = "NotReady"
-		if c.Status == "True" {
+		if c.Status == conditionTrue {
 			status[0] = "Ready"
 		}
-		if c.Status != "True" {
+		if c.Status != conditionTrue {
 			o.Message = c.Message
 		}
 	}
@@ -34,7 +34,7 @@ func node(r Raw, o *Object) error {
 	}
 	o.Status = strings.Join(status, ",")
 	for _, c := range st.Conditions {
-		if c.Type != "Ready" && c.Status == "True" {
+		if c.Type != "Ready" && c.Status == conditionTrue {
 			o.Unhealthy = true
 			o.Details = append(o.Details, c.Type+" "+orUnknown(c.Reason))
 			if o.Message == "" {

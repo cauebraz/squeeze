@@ -1,0 +1,5 @@
+terraform 1.9.5 plan: 1 to add, 0 to change, 0 to destroy; 2 deferred; incomplete
++ aws_vpc.main
+deferred:
++ aws_subnet.private["*"] (instance_count_unknown)
+... 1 more deferred resource (--max-resources 0)

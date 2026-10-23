@@ -2,6 +2,7 @@ package trivy
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -10,7 +11,7 @@ import (
 
 const maxTitleBytes = 100
 
-func Text(r Report, o Options) string {
+func text(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -34,10 +35,10 @@ func Text(r Report, o Options) string {
 	}
 	listed := r.Findings
 	if len(r.Hidden) > 0 {
-		if o.All {
+		if r.all {
 			b.WriteString("also reported:\n")
 			writeTargets(&b, r, r.Hidden)
-			listed = append(append([]Finding(nil), r.Findings...), r.Hidden...)
+			listed = slices.Concat(r.Findings, r.Hidden)
 		} else {
 			var parts []string
 			if r.Exceptions > 0 {
@@ -53,10 +54,10 @@ func Text(r Report, o Options) string {
 	return b.String()
 }
 
-func writeFixes(b *strings.Builder, findings []Finding) {
+func writeFixes(b *strings.Builder, findings []finding) {
 	seen := map[string]bool{}
 	for _, f := range findings {
-		if f.Kind != "misconfiguration" || f.Fix == "" || seen[f.ID] {
+		if f.Kind != kindMisconfiguration || f.Fix == "" || seen[f.ID] {
 			continue
 		}
 		if len(seen) == 0 {
@@ -67,7 +68,7 @@ func writeFixes(b *strings.Builder, findings []Finding) {
 	}
 }
 
-func header(r Report) string {
+func header(r report) string {
 	line := core.ToolLabel(r.Tool, r.ToolVersion)
 	if r.Cluster != nil {
 		line += ": cluster"
@@ -121,7 +122,7 @@ func header(r Report) string {
 	return line
 }
 
-func writeTargets(b *strings.Builder, r Report, findings []Finding) {
+func writeTargets(b *strings.Builder, r report, findings []finding) {
 	last, resource, indent := -1, "", ""
 	if r.Cluster != nil {
 		indent = "  "
@@ -146,10 +147,10 @@ func writeTargets(b *strings.Builder, r Report, findings []Finding) {
 	}
 }
 
-func writeFinding(b *strings.Builder, indent string, f Finding) {
+func writeFinding(b *strings.Builder, indent string, f finding) {
 	b.WriteString(indent + "  " + f.Severity + " " + f.ID)
 	switch f.Kind {
-	case "vulnerability":
+	case kindVulnerability:
 		b.WriteString(" " + f.Package + " " + f.Installed)
 		if f.Fixed != "" {
 			b.WriteString(" -> " + f.Fixed)
@@ -160,17 +161,17 @@ func writeFinding(b *strings.Builder, indent string, f Finding) {
 			}
 			b.WriteString(" (" + strings.ReplaceAll(status, "_", " ") + ")")
 		}
-	case "misconfiguration":
+	case kindMisconfiguration:
 		if f.Resource != "" {
 			b.WriteString(" " + f.Resource)
 		}
 		b.WriteString(lines(f.StartLine, f.EndLine))
-		if strings.EqualFold(f.Status, "EXCEPTION") {
+		if statusOf(f.Status) == misconfException {
 			b.WriteString(" (exception)")
 		}
-	case "secret":
+	case kindSecret:
 		b.WriteString(lines(f.StartLine, f.EndLine))
-	case "license":
+	case kindLicense:
 		b.WriteString(" " + f.Package)
 	}
 	if f.Title != "" {

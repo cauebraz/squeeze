@@ -3,56 +3,65 @@ package tfjson
 import (
 	"strings"
 
-	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-var policyOutcomes = map[string]string{
-	"AllowResult": "pass", "pass": "pass", "n/a": "pass",
-	"DenyResult": "fail", "fail": "fail",
-	"UnknownResult": "unknown", "unknown": "unknown",
-	"InvalidResult": "error", "PolicyErrorResult": "error", "SetupErrorResult": "error", "error": "error",
+type outcome string
+
+const (
+	outcomePass    outcome = "pass"
+	outcomeFail    outcome = "fail"
+	outcomeUnknown outcome = "unknown"
+	outcomeError   outcome = "error"
+)
+
+var policyOutcomes = map[string]outcome{
+	"AllowResult": outcomePass, "pass": outcomePass, "n/a": outcomePass,
+	"DenyResult": outcomeFail, "fail": outcomeFail,
+	"UnknownResult": outcomeUnknown, "unknown": outcomeUnknown,
+	"InvalidResult": outcomeError, "PolicyErrorResult": outcomeError, "SetupErrorResult": outcomeError, "error": outcomeError,
 }
 
-func policyOutcome(result string) string {
+func policyOutcome(result string) outcome {
 	if o, ok := policyOutcomes[result]; ok {
 		return o
 	}
-	return "error"
+	return outcomeError
 }
 
 func policyDiagnostic(raw tfdiag.Raw, target string) tfdiag.Diagnostic {
 	d := tfdiag.Convert(raw)
 	if d.Address == "" {
-		d.Address = core.Clean(target)
+		d.Address = sanitize.Clean(target)
 	}
 	return d
 }
 
 func (b *builder) policy(name, target, result, enforcement string) bool {
-	outcome := policyOutcome(result)
-	if outcome == "pass" {
+	o := policyOutcome(result)
+	if o == outcomePass {
 		return false
 	}
-	b.r.Policies = append(b.r.Policies, PolicyResult{
-		Policy: core.Clean(name), Target: core.Clean(target), Result: core.Clean(result),
-		Outcome: outcome, Enforcement: core.Clean(enforcement),
+	b.r.Policies = append(b.r.Policies, policyResult{
+		Policy: sanitize.Clean(name), Target: sanitize.Clean(target), Result: sanitize.Clean(result),
+		Outcome: o, Enforcement: sanitize.Clean(enforcement),
 	})
 	return true
 }
 
-func policyInfo(l Line) string {
+func policyInfo(l inputLine) string {
 	parts := []string{"policy info:"}
 	if l.PolicyMeta != nil && l.PolicyMeta.PolicyName != "" {
-		parts = append(parts, core.Clean(l.PolicyMeta.PolicyName))
+		parts = append(parts, sanitize.Clean(l.PolicyMeta.PolicyName))
 	}
 	if l.Target != "" {
-		parts = append(parts, "for "+core.Clean(l.Target))
+		parts = append(parts, "for "+sanitize.Clean(l.Target))
 	}
-	return strings.Join(parts, " ") + ": " + core.Clean(l.PolicyInfo.Message)
+	return strings.Join(parts, " ") + ": " + sanitize.Clean(l.PolicyInfo.Message)
 }
 
-func (b *builder) querySummary(results []streamQueryResult) {
+func (b *builder) querySummary(results []rawQueryResult) {
 	for _, r := range results {
 		listed := false
 		for _, p := range r.Policies {

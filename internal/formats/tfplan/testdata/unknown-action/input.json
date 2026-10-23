@@ -1,0 +1,161 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "planned_values": {
+    "outputs": {},
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.logs",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "logs",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "acme-logs",
+            "force_destroy": false,
+            "tags": {
+              "Environment": "staging",
+              "ManagedBy": "terraform",
+              "Team": "platform"
+            }
+          },
+          "sensitive_values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.logs",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "logs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "bucket": "acme-logs",
+          "force_destroy": false,
+          "object_lock_enabled": false,
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Team": "platform"
+          },
+          "tags_all": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Team": "platform"
+          },
+          "region": "us-east-1"
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_s3_bucket.archive",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "archive",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "archive",
+          "delete"
+        ],
+        "before": {
+          "bucket": "acme-archive",
+          "force_destroy": false,
+          "object_lock_enabled": false,
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Team": "platform"
+          },
+          "tags_all": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Team": "platform"
+          },
+          "region": "us-east-1"
+        },
+        "after": {
+          "bucket": "acme-archive",
+          "force_destroy": false,
+          "object_lock_enabled": false,
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Team": "platform"
+          },
+          "tags_all": {
+            "Environment": "staging",
+            "ManagedBy": "terraform",
+            "Team": "platform"
+          },
+          "region": "us-east-1"
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "deferred_changes": [
+    {
+      "reason": "provider_config_unknown",
+      "resource_change": {
+        "address": "aws_s3_bucket.later",
+        "mode": "managed",
+        "type": "aws_s3_bucket",
+        "name": "later",
+        "provider_name": "registry.terraform.io/hashicorp/aws",
+        "change": {
+          "actions": [
+            "archive"
+          ],
+          "before": null,
+          "after": {},
+          "after_unknown": {},
+          "before_sensitive": false,
+          "after_sensitive": {}
+        }
+      }
+    }
+  ],
+  "output_changes": {
+    "bucket": {
+      "actions": [
+        "archive"
+      ],
+      "before": "a",
+      "after": "a",
+      "after_unknown": false,
+      "before_sensitive": false,
+      "after_sensitive": false
+    }
+  },
+  "complete": false,
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "expressions": {
+          "region": {
+            "constant_value": "us-east-1"
+          }
+        }
+      }
+    }
+  }
+}

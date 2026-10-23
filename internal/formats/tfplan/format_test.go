@@ -21,7 +21,7 @@ func TestRealInputs(t *testing.T) {
 	t.Parallel()
 	formattest.Real(t, Format{}, "testdata/real")
 	for name, input := range formattest.RealInputs(t, Format{}, "testdata/real") {
-		r, err := Squeeze(input, Options{IncludeNoop: true, ListDrift: true, MaxAttrs: 0, MaxResources: 0})
+		r, err := squeeze(input, options{IncludeNoop: true, ListDrift: true, MaxAttrs: 0, MaxResources: 0})
 		if err != nil {
 			continue
 		}
@@ -93,7 +93,7 @@ func TestConfigureUsageShowsDefaults(t *testing.T) {
 
 func TestDataPayload(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "noop-only"), DefaultOptions())
+	r, err := squeeze(fixture(t, "noop-only"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +106,7 @@ func TestDataPayload(t *testing.T) {
 			t.Errorf("data lacks %s: %s", key, out)
 		}
 	}
-	created, err := Squeeze(fixture(t, "create-only"), DefaultOptions())
+	created, err := squeeze(fixture(t, "create-only"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func TestDataPayload(t *testing.T) {
 			t.Errorf("data contains empty %s: %s", key, out)
 		}
 	}
-	nested, err := Squeeze(fixture(t, "update-nested"), Options{})
+	nested, err := squeeze(fixture(t, "update-nested"), options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,10 +130,10 @@ func TestDataPayload(t *testing.T) {
 
 func TestDataPayloadInvalidEnums(t *testing.T) {
 	t.Parallel()
-	if _, err := json.Marshal(Report{Changes: []ResourceChange{{Address: "a", Action: Action(99)}}}); err == nil {
+	if _, err := json.Marshal(report{Changes: []resourceChange{{Address: "a", Action: action(99)}}}); err == nil {
 		t.Error("Marshal() with an invalid action returned no error")
 	}
-	if _, err := json.Marshal(AttrChange{Kind: AttrKind(9)}); err == nil {
+	if _, err := json.Marshal(attrChange{Kind: attrKind(9)}); err == nil {
 		t.Error("Marshal() with an invalid kind returned no error")
 	}
 }
@@ -155,7 +155,7 @@ func TestConditions(t *testing.T) {
 		"trailing-errors":  {"change", "error", "fail", "warning"},
 	}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}

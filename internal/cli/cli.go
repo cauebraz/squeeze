@@ -44,7 +44,24 @@ const (
 )
 
 func DefaultRegistry() *core.Registry {
-	return core.NewRegistry(tfplan.Format{}, tfstate.Format{}, tfvalidate.Format{}, tflint.Format{}, ghactions.Format{}, buildkit.Format{}, jest.Format{}, junit.Format{}, kubectl.Format{}, npmaudit.Format{}, precommit.Format{}, checkov.Format{}, trivy.Format{}, pytest.Format{}, tfjson.Format{}, gotest.Format{}).WithFallback(generic.Format{})
+	return core.NewRegistry(
+		tfplan.Format{},
+		tfstate.Format{},
+		tfvalidate.Format{},
+		tflint.Format{},
+		ghactions.Format{},
+		buildkit.Format{},
+		jest.Format{},
+		junit.Format{},
+		kubectl.Format{},
+		npmaudit.Format{},
+		precommit.Format{},
+		checkov.Format{},
+		trivy.Format{},
+		pytest.Format{},
+		tfjson.Format{},
+		gotest.Format{},
+	).WithFallback(generic.Format{})
 }
 
 type invocation struct {
@@ -195,7 +212,6 @@ func (l listFlag) Set(s string) error {
 
 func parse(args []string, stdout, stderr io.Writer, reg *core.Registry) (invocation, int, bool) {
 	var inv invocation
-	name := "squeeze"
 	args = aliases(args, reg)
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		f, ok := reg.Lookup(args[0])
@@ -204,61 +220,63 @@ func parse(args []string, stdout, stderr io.Writer, reg *core.Registry) (invocat
 			return inv, ExitUsage, false
 		}
 		inv.format = f
-		name += " " + f.Name()
 		args = args[1:]
 	}
-	fs := flag.NewFlagSet(name, flag.ContinueOnError)
-	fs.SetOutput(io.Discard)
-	fs.StringVar(&inv.output, "output", "text", "output `format`: text, or json for the envelope with the format's data")
-	fs.StringVar(&inv.rawDir, "raw-dir", "", "save the unmodified input to this `dir` and print its path on stderr")
-	where := "names in squeeze <format> -h"
-	if inv.format != nil {
-		where = "names listed below"
-	}
-	fs.Var(listFlag{&inv.failOn}, "fail-on", "exit 3 when the input has any of these comma-separated `conditions`; "+where)
-	if inv.format == nil {
-		fs.BoolVar(&inv.version, "version", false, "print the version and exit")
-	} else {
-		inv.squeeze = inv.format.Configure(fs)
-	}
-	usage := fs
-	if inv.format == nil {
-		parsing := flag.NewFlagSet(name, flag.ContinueOnError)
-		parsing.SetOutput(io.Discard)
-		fs.VisitAll(func(fl *flag.Flag) { parsing.Var(fl.Value, fl.Name, fl.Usage) })
-		addFormatFlags(parsing, reg, &inv.deferred)
-		fs = parsing
-	}
-	if err := fs.Parse(args); err != nil {
+	usage, parsing := flagSets(&inv, reg)
+	if err := parsing.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			usage.SetOutput(stdout)
 			if inv.format == nil {
 				rootUsage(stdout, usage, reg)
 			} else {
-				formatUsage(stdout, fs, inv.format)
+				formatUsage(stdout, usage, inv.format)
 			}
 			return inv, ExitOK, false
 		}
 		fmt.Fprintf(stderr, "squeeze: %s\n", flagError(err, inv.format, reg))
 		return inv, ExitUsage, false
 	}
-	if fs.NArg() > 0 {
-		fmt.Fprintf(stderr, "squeeze: %s\n", unexpectedArgument(fs.Arg(0), name))
+	if parsing.NArg() > 0 {
+		fmt.Fprintf(stderr, "squeeze: %s\n", unexpectedArgument(parsing.Arg(0), command(inv.format)))
 		return inv, ExitUsage, false
 	}
-	if inv.output != "text" && inv.output != "json" {
-		fmt.Fprintf(stderr, "squeeze: --output must be text or json, got %q\n", inv.output)
-		return inv, ExitUsage, false
-	}
-	check := func() error { return checkAnyConditions(reg, inv.failOn) }
-	if inv.format != nil {
-		check = func() error { return checkConditions(inv.format, inv.failOn) }
-	}
-	if err := check(); err != nil {
+	if err := validate(inv, reg); err != nil {
 		fmt.Fprintf(stderr, "squeeze: %v\n", err)
 		return inv, ExitUsage, false
 	}
 	return inv, ExitOK, true
+}
+
+func flagSets(inv *invocation, reg *core.Registry) (usage, parsing *flag.FlagSet) {
+	usage = flag.NewFlagSet(command(inv.format), flag.ContinueOnError)
+	usage.SetOutput(io.Discard)
+	usage.StringVar(&inv.output, "output", "text", "output `format`: text, or json for the envelope with the format's data")
+	usage.StringVar(&inv.rawDir, "raw-dir", "", "save the unmodified input to this `dir` and print its path on stderr")
+	where := "names in squeeze <format> -h"
+	if inv.format != nil {
+		where = "names listed below"
+	}
+	usage.Var(listFlag{&inv.failOn}, "fail-on", "exit 3 when the input has any of these comma-separated `conditions`; "+where)
+	if inv.format != nil {
+		inv.squeeze = inv.format.Configure(usage)
+		return usage, usage
+	}
+	usage.BoolVar(&inv.version, "version", false, "print the version and exit")
+	parsing = flag.NewFlagSet(command(nil), flag.ContinueOnError)
+	parsing.SetOutput(io.Discard)
+	usage.VisitAll(func(fl *flag.Flag) { parsing.Var(fl.Value, fl.Name, fl.Usage) })
+	addFormatFlags(parsing, reg, &inv.deferred)
+	return usage, parsing
+}
+
+func validate(inv invocation, reg *core.Registry) error {
+	if inv.output != "text" && inv.output != "json" {
+		return fmt.Errorf("--output must be text or json, got %q", inv.output)
+	}
+	if inv.format != nil {
+		return checkConditions(inv.format, inv.failOn)
+	}
+	return checkAnyConditions(reg, inv.failOn)
 }
 
 func aliases(args []string, reg *core.Registry) []string {

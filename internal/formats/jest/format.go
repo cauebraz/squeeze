@@ -3,19 +3,20 @@ package jest
 import (
 	"bytes"
 	"flag"
+	"slices"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-type Options struct {
+type options struct {
 	MaxTests  int
 	MaxOutput int
 	Full      bool
 	All       bool
 }
 
-func DefaultOptions() Options {
-	return Options{MaxTests: 50, MaxOutput: 20}
+func defaultOptions() options {
+	return options{MaxTests: 50, MaxOutput: 20}
 }
 
 type Format struct{}
@@ -28,7 +29,7 @@ func (Format) Description() string {
 
 var conditionNames = []string{"error", "fail", "skip", "snapshot", "todo", "warning"}
 
-func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+func (Format) Conditions() []string { return slices.Clone(conditionNames) }
 
 func (Format) Detect(head []byte) bool {
 	trimmed := bytes.TrimLeft(head, " \t\r\n")
@@ -48,29 +49,29 @@ func (Format) Detect(head []byte) bool {
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
-	o := DefaultOptions()
+	o := defaultOptions()
 	core.CountFlag(fs, &o.MaxTests, "max-tests", "failed tests listed, 0 for all")
 	core.CountFlag(fs, &o.MaxOutput, "max-output", "message lines per failed test, file error or open handle, 0 for all")
 	fs.BoolVar(&o.Full, "full", false, "keep node_modules and node internal stack frames and code frame context")
 	fs.BoolVar(&o.All, "all", false, "also list skipped and todo tests and passing files")
 	return func(input []byte) (core.Result, error) {
-		return Squeeze(input, o)
+		return squeeze(input, o)
 	}
 }
 
-func Squeeze(input []byte, o Options) (core.Result, error) {
-	out, err := Parse(input)
+func squeeze(input []byte, o options) (core.Result, error) {
+	out, err := parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r := Build(out, o)
-	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}, nil
+	r := build(out, o)
+	return core.Result{Text: render(r, o), Data: r, Conditions: conditions(r)}, nil
 }
 
-func conditions(r Report) []string {
+func conditions(r report) []string {
 	return core.Conditions(map[string]bool{
 		"error":    len(r.FileErrors) > 0 || r.RunError != nil,
-		"fail":     r.Status == "fail",
+		"fail":     r.Status == statusFail,
 		"skip":     r.Tests.Skipped > 0,
 		"snapshot": r.Snapshots.Failed > 0 || r.Snapshots.Failure,
 		"todo":     r.Tests.Todo > 0,

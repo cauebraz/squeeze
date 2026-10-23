@@ -2,11 +2,11 @@ package pytest
 
 import "strings"
 
-func signature(f Failure) string {
+func signature(f failure) string {
 	if f.Location == "" {
 		return ""
 	}
-	parts := []string{f.Kind, f.When, f.Location}
+	parts := []string{string(f.Kind), f.When, f.Location}
 	for _, l := range f.Lines {
 		if strings.HasPrefix(l, ">") || location.MatchString(l) {
 			parts = append(parts, l)
@@ -15,7 +15,7 @@ func signature(f Failure) string {
 	return strings.Join(parts, "\n")
 }
 
-func foldFailures(failures []Failure) ([]Failure, int) {
+func foldFailures(failures []failure) ([]failure, int) {
 	first := map[string]int{}
 	out := failures[:0:0]
 	folded := 0
@@ -26,7 +26,7 @@ func foldFailures(failures []Failure) ([]Failure, int) {
 			if f.Subtest != "" {
 				name += " " + f.Subtest
 			}
-			out[i].Same = append(out[i].Same, name)
+			out[i].SameLocationTests = append(out[i].SameLocationTests, name)
 			folded++
 			continue
 		}

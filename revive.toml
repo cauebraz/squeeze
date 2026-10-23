@@ -1,0 +1,36 @@
+ignoreGeneratedHeader = false
+severity = "error"
+confidence = 0.8
+errorCode = 1
+warningCode = 1
+
+[rule.blank-imports]
+[rule.bool-literal-in-expr]
+[rule.constant-logical-expr]
+[rule.context-as-argument]
+[rule.datarace]
+[rule.defer]
+[rule.dot-imports]
+[rule.duplicated-imports]
+[rule.early-return]
+[rule.empty-block]
+[rule.error-naming]
+[rule.error-return]
+[rule.error-strings]
+[rule.errorf]
+[rule.identical-branches]
+[rule.import-shadowing]
+[rule.increment-decrement]
+[rule.indent-error-flow]
+[rule.modifies-value-receiver]
+[rule.range]
+[rule.receiver-naming]
+[rule.redefines-builtin-id]
+[rule.superfluous-else]
+[rule.time-naming]
+[rule.unconditional-recursion]
+[rule.unexported-return]
+[rule.unnecessary-stmt]
+[rule.unreachable-code]
+[rule.use-any]
+[rule.var-naming]

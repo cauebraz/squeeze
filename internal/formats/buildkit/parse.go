@@ -5,15 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/jsonl"
+	"github.com/cauebraz/squeeze/internal/logscan"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
-var ErrNoBuild = errors.New("no BuildKit progress output in the input")
+var errNoBuild = errors.New("no BuildKit progress output in the input")
 
 var (
 	plainStart = regexp.MustCompile(`^#0 building with "|^#\d+ \[([^\]]* )?internal\] load (build definition|\.dockerignore|metadata for|remote build context|git source)`)
@@ -40,17 +42,17 @@ type vertex struct {
 	raw      []byte
 }
 
-type warning struct {
+type parsedWarning struct {
 	vertex string
-	Warning
+	warning
 }
 
-type build struct {
+type parsed struct {
 	progress string
 	builder  string
 	order    []string
 	byKey    map[string]*vertex
-	warnings []warning
+	warnings []parsedWarning
 	errors   []string
 	location string
 }
@@ -62,7 +64,7 @@ func detect(head []byte) bool {
 	})
 }
 
-func (b *build) vertex(key string) *vertex {
+func (b *parsed) vertexFor(key string) *vertex {
 	v, ok := b.byKey[key]
 	if !ok {
 		v = &vertex{}
@@ -72,20 +74,20 @@ func (b *build) vertex(key string) *vertex {
 	return v
 }
 
-func Parse(input []byte) (*build, error) {
-	b := &build{byKey: map[string]*vertex{}}
-	var text []string
+func parse(input []byte) (*parsed, error) {
+	b := &parsed{byKey: map[string]*vertex{}}
+	var textLines []string
 	events := false
 	for raw := range core.SplitLines(string(input)) {
 		if strings.HasPrefix(strings.TrimSpace(raw), "{") && b.event([]byte(raw)) {
 			events = true
 			continue
 		}
-		text = append(text, raw)
+		textLines = append(textLines, raw)
 	}
-	plain := b.plain(text)
+	plain := b.plain(textLines)
 	if !events && !plain {
-		return nil, ErrNoBuild
+		return nil, errNoBuild
 	}
 	b.progress = "plain"
 	if events {
@@ -123,7 +125,7 @@ type rawStatus struct {
 	} `json:"warnings"`
 }
 
-func (b *build) event(line []byte) bool {
+func (b *parsed) event(line []byte) bool {
 	var s rawStatus
 	if err := json.Unmarshal(line, &s); err != nil {
 		return false
@@ -136,9 +138,9 @@ func (b *build) event(line []byte) bool {
 		if rv.ProgressGroup != nil {
 			key, name = "group:"+rv.ProgressGroup.ID, rv.ProgressGroup.Name
 		}
-		v := b.vertex(key)
+		v := b.vertexFor(key)
 		if name != "" {
-			v.name = core.Clean(name)
+			v.name = sanitize.Clean(name)
 		}
 		if rv.Started != nil && (!v.shown || rv.Started.Before(v.started)) {
 			v.shown, v.started = true, *rv.Started
@@ -149,24 +151,24 @@ func (b *build) event(line []byte) bool {
 		case strings.HasSuffix(rv.Error, "context canceled"):
 			v.canceled = true
 		case rv.Error != "":
-			v.err = core.Clean(rv.Error)
+			v.err = sanitize.Clean(rv.Error)
 		}
 	}
 	for _, l := range s.Logs {
-		v := b.vertex(l.Vertex)
+		v := b.vertexFor(l.Vertex)
 		v.raw = append(v.raw, l.Data...)
 	}
 	for _, w := range s.Warnings {
 		detail := []string{}
 		for _, d := range w.Detail {
-			detail = append(detail, core.Clean(string(d)))
+			detail = append(detail, sanitize.Clean(string(d)))
 		}
-		b.warnings = append(b.warnings, warning{vertex: w.Vertex, Warning: Warning{Message: core.Clean(string(w.Short)), Detail: detail, URL: core.Clean(w.URL)}})
+		b.warnings = append(b.warnings, parsedWarning{vertex: w.Vertex, warning: warning{Message: sanitize.Clean(string(w.Short)), Detail: detail, URL: sanitize.Clean(w.URL)}})
 	}
 	return true
 }
 
-func (b *build) plain(lines []string) bool {
+func (b *parsed) plain(lines []string) bool {
 	seen, blank, trailer := false, true, false
 	tail, source, inSummary := false, 0, false
 	var cur *vertex
@@ -193,7 +195,7 @@ func (b *build) plain(lines []string) bool {
 			continue
 		}
 		blank = false
-		c := core.Clean(raw)
+		c := sanitize.Clean(raw)
 		switch {
 		case c == "------":
 			tail, trailer = true, true
@@ -203,17 +205,17 @@ func (b *build) plain(lines []string) bool {
 			b.errors = append(b.errors, strings.TrimSpace(strings.TrimPrefix(c, "ERROR:")))
 			trailer = true
 		case strings.HasPrefix(c, "WARNING:"):
-			b.warnings = append(b.warnings, warning{Warning: Warning{Message: strings.TrimSpace(strings.TrimPrefix(c, "WARNING:")), Detail: []string{}}})
+			b.warnings = append(b.warnings, parsedWarning{warning: warning{Message: strings.TrimSpace(strings.TrimPrefix(c, "WARNING:")), Detail: []string{}}})
 		case summary.MatchString(c):
 			inSummary, trailer = true, true
 		case inSummary && strings.HasPrefix(c, "- "):
 			listed = append(listed, strings.TrimPrefix(c, "- "))
 		case cur != nil && !trailer:
-			cur.logs = append(cur.logs, core.Line(raw))
-		case core.ErrorLine(c):
+			cur.logs = append(cur.logs, sanitize.Line(raw))
+		case logscan.ErrorLine(c):
 			b.errors = append(b.errors, c)
-		case core.WarningLine(c):
-			b.warnings = append(b.warnings, warning{Warning: Warning{Message: c, Detail: []string{}}})
+		case logscan.WarningLine(c):
+			b.warnings = append(b.warnings, parsedWarning{warning: warning{Message: c, Detail: []string{}}})
 		}
 	}
 	known := map[string]bool{}
@@ -222,27 +224,27 @@ func (b *build) plain(lines []string) bool {
 	}
 	for _, msg := range listed {
 		if !known[msg] {
-			b.warnings = append(b.warnings, warning{Warning: Warning{Message: msg, Detail: []string{}}})
+			b.warnings = append(b.warnings, parsedWarning{warning: warning{Message: msg, Detail: []string{}}})
 		}
 	}
 	return seen
 }
 
-func (b *build) plainStep(id, rest string, blank bool) *vertex {
+func (b *parsed) plainStep(id, rest string, blank bool) *vertex {
 	if id == "0" {
 		if m := builderRe.FindStringSubmatch(rest); m != nil {
-			b.builder = core.Clean(m[1])
+			b.builder = sanitize.Clean(m[1])
 		}
 		return nil
 	}
 	key := "#" + id
 	if _, ok := b.byKey[key]; !ok {
-		v := b.vertex(key)
-		v.name, v.shown = core.Clean(rest), true
+		v := b.vertexFor(key)
+		v.name, v.shown = sanitize.Clean(rest), true
 		return v
 	}
 	v := b.byKey[key]
-	if blank && core.Clean(rest) == v.name {
+	if blank && sanitize.Clean(rest) == v.name {
 		return v
 	}
 	switch {
@@ -253,24 +255,24 @@ func (b *build) plainStep(id, rest string, blank bool) *vertex {
 	case rest == "CANCELED":
 		v.canceled = true
 	case strings.HasPrefix(rest, "ERROR:"):
-		v.err = core.Clean(strings.TrimPrefix(rest, "ERROR:"))
+		v.err = sanitize.Clean(strings.TrimPrefix(rest, "ERROR:"))
 	case strings.HasPrefix(rest, "WARN:"):
-		b.warnings = append(b.warnings, warning{vertex: key, Warning: Warning{Message: core.Clean(strings.TrimPrefix(rest, "WARN:")), Detail: []string{}}})
+		b.warnings = append(b.warnings, parsedWarning{vertex: key, warning: warning{Message: sanitize.Clean(strings.TrimPrefix(rest, "WARN:")), Detail: []string{}}})
 	case logLine.MatchString(rest):
-		v.logs = append(v.logs, core.Line(logLine.FindStringSubmatch(rest)[1]))
+		v.logs = append(v.logs, sanitize.Line(logLine.FindStringSubmatch(rest)[1]))
 	}
 	return v
 }
 
-func (b *build) finish() {
+func (b *parsed) finish() {
 	for _, key := range b.order {
 		v := b.byKey[key]
 		if len(v.raw) == 0 {
 			continue
 		}
-		text := strings.TrimSuffix(string(v.raw), "\n")
-		for _, l := range strings.Split(text, "\n") {
-			v.logs = append(v.logs, core.Line(l))
+		logText := strings.TrimSuffix(string(v.raw), "\n")
+		for _, l := range strings.Split(logText, "\n") {
+			v.logs = append(v.logs, sanitize.Line(l))
 		}
 	}
 	shown := b.order[:0]
@@ -279,8 +281,8 @@ func (b *build) finish() {
 			shown = append(shown, key)
 		}
 	}
-	sort.SliceStable(shown, func(i, j int) bool {
-		return b.byKey[shown[i]].started.Before(b.byKey[shown[j]].started)
+	slices.SortStableFunc(shown, func(x, y string) int {
+		return b.byKey[x].started.Compare(b.byKey[y].started)
 	})
 	b.order = shown
 }

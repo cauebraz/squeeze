@@ -2,13 +2,14 @@ package tfjson
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
@@ -31,16 +32,16 @@ func rank(action string) int {
 }
 
 type builder struct {
-	o        Options
-	r        Report
-	changes  map[Change]bool
-	actions  map[ActionInvocation]bool
+	o        options
+	r        report
+	changes  map[change]bool
+	actions  map[tfdiag.ActionInvocation]bool
 	lists    map[string]int
-	found    map[string][]FoundResource
+	found    map[string][]foundResource
 	runs     map[[2]string]int
 	files    map[string]int
 	diags    []tfdiag.Diagnostic
-	timings  []Timing
+	timings  []timing
 	sawTest  bool
 	sawQuery bool
 	sawInit  bool
@@ -48,28 +49,28 @@ type builder struct {
 	sawApply bool
 }
 
-func Build(lines []Line, o Options) Report {
+func build(lines []inputLine, o options) report {
 	b := builder{
 		o:       o,
-		changes: map[Change]bool{},
-		actions: map[ActionInvocation]bool{},
+		changes: map[change]bool{},
+		actions: map[tfdiag.ActionInvocation]bool{},
 		lists:   map[string]int{},
-		found:   map[string][]FoundResource{},
+		found:   map[string][]foundResource{},
 		runs:    map[[2]string]int{},
 		files:   map[string]int{},
-		r: Report{
+		r: report{
 			Tool:     "terraform",
-			Changes:  []Change{},
-			Drift:    []Change{},
-			Deferred: []Deferred{},
-			Actions:  []ActionInvocation{},
-			Lists:    []ListBlock{},
-			Found:    []FoundResource{},
-			Failures: []Failure{},
-			Policies: []PolicyResult{},
-			Outputs:  []Output{},
+			Changes:  []change{},
+			Drift:    []change{},
+			Deferred: []deferred{},
+			Actions:  []tfdiag.ActionInvocation{},
+			Lists:    []listBlock{},
+			Found:    []foundResource{},
+			Failures: []failure{},
+			Policies: []policyResult{},
+			Outputs:  []output{},
 			Other:    map[string]int{},
-			Applied:  Applied{Slowest: []Timing{}},
+			Applied:  applied{Slowest: []timing{}},
 		},
 	}
 	for _, l := range lines {
@@ -85,9 +86,9 @@ func (b *builder) other(key, message string) {
 	}
 }
 
-func (b *builder) add(l Line) {
+func (b *builder) add(l inputLine) {
 	if l.Type == "" {
-		b.other("text", core.Clean(l.Text))
+		b.other("text", sanitize.Clean(l.Text))
 		return
 	}
 	if strings.HasPrefix(l.Type, "test_") {
@@ -107,9 +108,9 @@ func (b *builder) add(l Line) {
 	switch {
 	case l.Type == "version" && l.Tofu != "":
 		b.r.Tool = "tofu"
-		b.r.ToolVersion = core.Clean(l.Tofu)
+		b.r.ToolVersion = sanitize.Clean(l.Tofu)
 	case l.Type == "version":
-		b.r.ToolVersion = core.Clean(l.Terraform)
+		b.r.ToolVersion = sanitize.Clean(l.Terraform)
 	case l.Type == "diagnostic" && l.Diagnostic != nil:
 		b.diagnostic(tfdiag.Convert(*l.Diagnostic), l.AtTestFile, l.AtTestRun)
 	case l.Type == "policy_diagnostic" && l.PolicyDiag != nil:
@@ -126,9 +127,9 @@ func (b *builder) add(l Line) {
 		b.list(*l.ListStart)
 	case l.Type == "list_resource_found" && l.ListFound != nil:
 		f := l.ListFound
-		b.list(streamList{Address: f.Address})
-		addr := core.Clean(f.Address)
-		b.found[addr] = append(b.found[addr], FoundResource{Address: addr, DisplayName: core.Clean(f.DisplayName), Identity: f.Identity})
+		b.list(rawList{Address: f.Address})
+		addr := sanitize.Clean(f.Address)
+		b.found[addr] = append(b.found[addr], foundResource{Address: addr, DisplayName: sanitize.Clean(f.DisplayName), Identity: f.Identity})
 	case l.Type == "list_complete" && l.ListDone != nil:
 		lb := b.list(*l.ListDone)
 		lb.Total, lb.Complete = l.ListDone.Total, true
@@ -137,12 +138,12 @@ func (b *builder) add(l Line) {
 	case l.Type == "deferred_change" && l.Deferred != nil && l.Deferred.Change != nil:
 		c := convertChange(*l.Deferred.Change)
 		if c.Action != "noop" {
-			b.r.Deferred = append(b.r.Deferred, Deferred{Address: c.Address, Action: c.Action, Reason: core.Clean(l.Deferred.Reason)})
+			b.r.Deferred = append(b.r.Deferred, deferred{Address: c.Address, Action: c.Action, Reason: sanitize.Clean(l.Deferred.Reason)})
 		}
 	case l.Type == "change_summary" && l.Changes != nil:
 		c := l.Changes
-		b.r.Summary = &Summary{
-			Operation: core.Clean(c.Operation), Add: c.Add, Change: c.Change, Remove: c.Remove,
+		b.r.Summary = &summary{
+			Operation: sanitize.Clean(c.Operation), Add: c.Add, Change: c.Change, Remove: c.Remove,
 			Import: c.Import, ActionInvocation: c.ActionInvocation, ActionFail: c.ActionFail,
 		}
 	case l.Type == "apply_complete" && l.Hook != nil:
@@ -151,9 +152,9 @@ func (b *builder) add(l Line) {
 		if l.Type == "apply_errored" {
 			b.sawApply = true
 		}
-		f := Failure{Type: l.Type, Message: core.Clean(l.Message)}
+		f := failure{Type: l.Type, Message: sanitize.Clean(l.Message)}
 		if l.Hook != nil {
-			f.Address = core.Clean(hookAddress(*l.Hook))
+			f.Address = sanitize.Clean(hookAddress(*l.Hook))
 		}
 		b.r.Failures = append(b.r.Failures, f)
 	case l.Type == "outputs" && l.Outputs != nil:
@@ -161,18 +162,18 @@ func (b *builder) add(l Line) {
 	case l.Type == "test_summary" && l.TestSummary != nil:
 		t := b.tests()
 		s := l.TestSummary
-		t.Status, t.Passed, t.Failed, t.Errored, t.Skipped = core.Clean(s.Status), s.Passed, s.Failed, s.Errored, s.Skipped
+		t.Status, t.Passed, t.Failed, t.Errored, t.Skipped = sanitize.Clean(s.Status), s.Passed, s.Failed, s.Errored, s.Skipped
 	case l.Type == "test_run" && l.TestRun != nil:
 		b.testRun(*l.TestRun)
 	case l.Type == "test_file" && l.TestFile != nil:
-		b.testFile(core.Clean(l.TestFile.Path), core.Clean(l.TestFile.Status))
+		b.testFile(sanitize.Clean(l.TestFile.Path), sanitize.Clean(l.TestFile.Status))
 	case l.Type == "policy_result" && l.Result != "":
 		var enforcement string
 		if l.PolicyMeta != nil {
 			enforcement = l.PolicyMeta.EnforcementLevel
 		}
 		if !b.policy(l.Policy, l.Target, l.Result, enforcement) {
-			b.other(l.Type, policyLine(PolicyResult{Policy: core.Clean(l.Policy), Target: core.Clean(l.Target), Result: core.Clean(l.Result)}))
+			b.other(l.Type, policyLine(policyResult{Policy: sanitize.Clean(l.Policy), Target: sanitize.Clean(l.Target), Result: sanitize.Clean(l.Result)}))
 		}
 	case l.Type == "policy_info" && l.PolicyInfo != nil:
 		b.other(l.Type, policyInfo(l))
@@ -185,42 +186,40 @@ func (b *builder) add(l Line) {
 	}
 }
 
-func isDiagnostic(l Line) bool {
+func isDiagnostic(l inputLine) bool {
 	return l.Type == "diagnostic" || (l.Type == "policy_diagnostic" && l.PolicyDiag != nil)
 }
 
-func (b *builder) fallback(l Line) {
+func (b *builder) fallback(l inputLine) {
 	switch l.Level {
 	case "error":
 		b.diagnostic(tfdiag.Diagnostic{Severity: "error", Summary: stripPrefix(l.Message, "Error: ")}, l.AtTestFile, l.AtTestRun)
 	case "warn":
 		b.diagnostic(tfdiag.Diagnostic{Severity: "warning", Summary: stripPrefix(l.Message, "Warning: ")}, l.AtTestFile, l.AtTestRun)
 	default:
-		b.other(core.Clean(l.Type), core.Clean(l.Message))
+		b.other(sanitize.Clean(l.Type), sanitize.Clean(l.Message))
 	}
 }
 
-func hookAddress(h streamHook) string {
+func hookAddress(h rawHook) string {
 	if h.Resource.Addr != "" {
 		return h.Resource.Addr
 	}
-	var action streamActionAddr
-	_ = json.Unmarshal(h.Action, &action)
-	return action.Addr
+	return h.Action.Addr
 }
 
-func convertChange(c streamChange) Change {
-	out := Change{Address: core.Clean(c.Resource.Addr), Action: core.Clean(c.Action), Reason: core.Clean(c.Reason)}
+func convertChange(c rawChange) change {
+	out := change{Address: sanitize.Clean(c.Resource.Addr), Action: sanitize.Clean(c.Action), Reason: sanitize.Clean(c.Reason)}
 	if c.PreviousResource != nil && c.PreviousResource.Addr != c.Resource.Addr {
-		out.PreviousAddress = core.Clean(c.PreviousResource.Addr)
+		out.PreviousAddress = sanitize.Clean(c.PreviousResource.Addr)
 	}
 	if c.Importing != nil {
-		out.ImportID = core.Clean(c.Importing.ID)
+		out.ImportID = sanitize.Clean(c.Importing.ID)
 	}
 	return out
 }
 
-func (b *builder) change(sc streamChange) {
+func (b *builder) change(sc rawChange) {
 	if ephemeralActions[sc.Action] {
 		b.other("ephemeral", "")
 		return
@@ -233,28 +232,28 @@ func (b *builder) change(sc streamChange) {
 	b.r.Changes = append(b.r.Changes, c)
 }
 
-func (b *builder) list(s streamList) *ListBlock {
+func (b *builder) list(s rawList) *listBlock {
 	b.sawQuery = true
-	addr := core.Clean(s.Address)
+	addr := sanitize.Clean(s.Address)
 	i, ok := b.lists[addr]
 	if !ok {
 		i = len(b.r.Lists)
 		b.lists[addr] = i
-		b.r.Lists = append(b.r.Lists, ListBlock{Address: addr})
+		b.r.Lists = append(b.r.Lists, listBlock{Address: addr})
 	}
 	lb := &b.r.Lists[i]
 	if s.ResourceType != "" {
-		lb.ResourceType = core.Clean(s.ResourceType)
+		lb.ResourceType = sanitize.Clean(s.ResourceType)
 	}
 	return lb
 }
 
-func (b *builder) invocation(s streamInvocation) {
-	a := ActionInvocation{Address: core.Clean(s.Action.Addr)}
+func (b *builder) invocation(s rawInvocation) {
+	a := tfdiag.ActionInvocation{Address: sanitize.Clean(s.Action.Addr)}
 	switch {
 	case s.Lifecycle != nil:
-		a.Event = core.Clean(s.Lifecycle.Event)
-		a.Resource = core.Clean(s.Lifecycle.Resource.Addr)
+		a.Event = sanitize.Clean(s.Lifecycle.Event)
+		a.Resource = sanitize.Clean(s.Lifecycle.Resource.Addr)
 	case s.Invoke != nil:
 		a.Invoked = true
 	}
@@ -265,24 +264,22 @@ func (b *builder) invocation(s streamInvocation) {
 	b.r.Actions = append(b.r.Actions, a)
 }
 
-func (b *builder) applied(h streamHook, message string) {
-	var action string
-	_ = json.Unmarshal(h.Action, &action)
-	if action == "read" {
-		b.other("refresh", core.Clean(message))
+func (b *builder) applied(h rawHook, message string) {
+	if h.Action.Name == "read" {
+		b.other("refresh", sanitize.Clean(message))
 		return
 	}
 	b.sawApply = true
 	b.r.Applied.Count++
-	b.timings = append(b.timings, Timing{Address: core.Clean(h.Resource.Addr), Seconds: h.Elapsed})
+	b.timings = append(b.timings, timing{Address: sanitize.Clean(h.Resource.Addr), Seconds: h.Elapsed})
 }
 
-func (b *builder) outputs(outputs map[string]streamOutput) {
+func (b *builder) outputs(outputs map[string]rawOutput) {
 	names := slices.Sorted(maps.Keys(outputs))
-	b.r.Outputs = make([]Output, 0, len(names))
+	b.r.Outputs = make([]output, 0, len(names))
 	for _, name := range names {
 		o := outputs[name]
-		out := Output{Name: core.Clean(name), Action: core.Clean(o.Action), Sensitive: o.Sensitive}
+		out := output{Name: sanitize.Clean(name), Action: sanitize.Clean(o.Action), Sensitive: o.Sensitive}
 		if !o.Sensitive && isScalar(o.Value) {
 			out.Value = o.Value
 		}
@@ -296,10 +293,10 @@ func isScalar(v json.RawMessage) bool {
 }
 
 func (b *builder) diagnostic(d tfdiag.Diagnostic, file, run string) {
-	file, run = core.Clean(file), core.Clean(run)
+	file, run = sanitize.Clean(file), sanitize.Clean(run)
 	switch {
 	case file != "" && run != "":
-		b.testRun(streamTestRun{Path: file, Run: run})
+		b.testRun(rawTestRun{Path: file, Run: run})
 		i := b.runs[[2]string{file, run}]
 		b.r.Tests.Runs[i].Diagnostics = append(b.r.Tests.Runs[i].Diagnostics, d)
 	case file != "":
@@ -316,17 +313,13 @@ func (b *builder) diagnostic(d tfdiag.Diagnostic, file, run string) {
 	}
 }
 
-func (b *builder) finish() Report {
+func (b *builder) finish() report {
 	r := b.r
 	r.Operation = b.operation()
-	sort.SliceStable(r.Changes, func(i, j int) bool { return lessChange(r.Changes[i], r.Changes[j]) })
-	sort.SliceStable(r.Drift, func(i, j int) bool { return lessChange(r.Drift[i], r.Drift[j]) })
-	sort.SliceStable(r.Deferred, func(i, j int) bool {
-		a, c := r.Deferred[i], r.Deferred[j]
-		if rank(a.Action) != rank(c.Action) {
-			return rank(a.Action) < rank(c.Action)
-		}
-		return a.Address < c.Address
+	slices.SortStableFunc(r.Changes, compareChanges)
+	slices.SortStableFunc(r.Drift, compareChanges)
+	slices.SortStableFunc(r.Deferred, func(a, c deferred) int {
+		return cmp.Or(cmp.Compare(rank(a.Action), rank(c.Action)), cmp.Compare(a.Address, c.Address))
 	})
 	if !b.o.All {
 		visible := r.Changes[:0]
@@ -340,7 +333,9 @@ func (b *builder) finish() Report {
 		r.Changes = visible
 	}
 	r.Changes, r.Omitted = core.Limit(r.Changes, b.o.MaxResources)
-	sort.SliceStable(r.Lists, func(i, j int) bool { return r.Lists[i].Address < r.Lists[j].Address })
+	r.Drift, r.DriftOmitted = core.Limit(r.Drift, b.o.MaxResources)
+	r.Deferred, r.DeferredOmitted = core.Limit(r.Deferred, b.o.MaxResources)
+	slices.SortStableFunc(r.Lists, func(a, c listBlock) int { return cmp.Compare(a.Address, c.Address) })
 	for i := range r.Lists {
 		found := b.found[r.Lists[i].Address]
 		if !r.Lists[i].Complete {
@@ -349,7 +344,7 @@ func (b *builder) finish() Report {
 		r.Found = append(r.Found, found...)
 	}
 	r.Found, r.FoundOmitted = core.Limit(r.Found, b.o.MaxResources)
-	sort.SliceStable(b.timings, func(i, j int) bool { return b.timings[i].Seconds > b.timings[j].Seconds })
+	slices.SortStableFunc(b.timings, func(a, c timing) int { return cmp.Compare(c.Seconds, a.Seconds) })
 	for _, t := range b.timings {
 		if len(r.Applied.Slowest) == 3 || t.Seconds <= 0 {
 			break
@@ -371,11 +366,8 @@ func (b *builder) finish() Report {
 	return r
 }
 
-func lessChange(a, b Change) bool {
-	if rank(a.Action) != rank(b.Action) {
-		return rank(a.Action) < rank(b.Action)
-	}
-	return a.Address < b.Address
+func compareChanges(a, b change) int {
+	return cmp.Or(cmp.Compare(rank(a.Action), rank(b.Action)), cmp.Compare(a.Address, b.Address))
 }
 
 func (b *builder) operation() string {
@@ -398,5 +390,5 @@ func (b *builder) operation() string {
 }
 
 func stripPrefix(message, prefix string) string {
-	return core.Clean(strings.TrimPrefix(core.Clean(message), prefix))
+	return sanitize.Clean(strings.TrimPrefix(sanitize.Clean(message), prefix))
 }

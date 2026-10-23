@@ -6,9 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 const fixtureDir = "testdata"
@@ -22,13 +23,13 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func squeeze(t *testing.T, input []byte, o Options) (core.Result, Report) {
+func mustSqueeze(t *testing.T, input []byte, o options) (core.Result, report) {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r, r.Data.(Report)
+	return r, r.Data.(report)
 }
 
 func TestContract(t *testing.T) {
@@ -69,13 +70,22 @@ func TestParseErrors(t *testing.T) {
 	for name, input := range map[string]string{
 		"truncated":       `{"numTotalTests":`,
 		"no test results": `{"numTotalTests":0}`,
+		"null results":    `{"numTotalTests":0,"testResults":null}`,
 		"wrong type":      `{"numTotalTests":0,"testResults":{}}`,
 		"file no name":    `{"numTotalTests":0,"testResults":[{"assertionResults":[]}]}`,
 		"empty":           ``,
 	} {
-		if _, err := Squeeze([]byte(input), DefaultOptions()); err == nil {
+		if _, err := squeeze([]byte(input), defaultOptions()); err == nil {
 			t.Errorf("%s: Squeeze() returned no error", name)
 		}
+	}
+}
+
+func TestBuildWithoutTestResults(t *testing.T) {
+	t.Parallel()
+	r := build(&rawOutput{Success: true}, defaultOptions())
+	if r.Status != "pass" || r.Files.Total != 0 {
+		t.Errorf("status %q, %d files", r.Status, r.Files.Total)
 	}
 }
 
@@ -90,7 +100,7 @@ func TestConditions(t *testing.T) {
 		"many":         {"fail"},
 	}
 	for name, want := range tests {
-		r, _ := squeeze(t, fixture(t, name), DefaultOptions())
+		r, _ := mustSqueeze(t, fixture(t, name), defaultOptions())
 		if diff := cmp.Diff(want, r.Conditions); diff != "" {
 			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
 		}
@@ -99,8 +109,8 @@ func TestConditions(t *testing.T) {
 
 func TestJestAndVitestReportTheSameRun(t *testing.T) {
 	t.Parallel()
-	_, j := squeeze(t, fixture(t, "run"), DefaultOptions())
-	_, v := squeeze(t, fixture(t, "vitest"), DefaultOptions())
+	_, j := mustSqueeze(t, fixture(t, "run"), defaultOptions())
+	_, v := mustSqueeze(t, fixture(t, "vitest"), defaultOptions())
 	if j.Tool != "jest" || v.Tool != "vitest" {
 		t.Errorf("tools = %q, %q", j.Tool, v.Tool)
 	}
@@ -110,7 +120,7 @@ func TestJestAndVitestReportTheSameRun(t *testing.T) {
 	if diff := cmp.Diff(j.Files, v.Files); diff != "" {
 		t.Errorf("files (-jest +vitest):\n%s", diff)
 	}
-	names := func(r Report) []string {
+	names := func(r report) []string {
 		var out []string
 		for _, f := range r.Failures {
 			out = append(out, f.File+": "+f.Test)
@@ -129,7 +139,7 @@ func TestJestAndVitestReportTheSameRun(t *testing.T) {
 		"test/hooks.test.js",
 		"test/missing.test.js",
 	}
-	for _, r := range []Report{j, v} {
+	for _, r := range []report{j, v} {
 		if diff := cmp.Diff(want, names(r)); diff != "" {
 			t.Errorf("%s failures (-want +got):\n%s", r.Tool, diff)
 		}
@@ -141,8 +151,8 @@ func TestJestAndVitestReportTheSameRun(t *testing.T) {
 
 func TestColorMatchesPlain(t *testing.T) {
 	t.Parallel()
-	plain, _ := squeeze(t, fixture(t, "run"), DefaultOptions())
-	color, _ := squeeze(t, fixture(t, "color"), DefaultOptions())
+	plain, _ := mustSqueeze(t, fixture(t, "run"), defaultOptions())
+	color, _ := mustSqueeze(t, fixture(t, "color"), defaultOptions())
 	strip := func(s string) string {
 		var out []string
 		for _, l := range strings.Split(s, "\n") {
@@ -159,8 +169,8 @@ func TestColorMatchesPlain(t *testing.T) {
 
 func TestStackFrames(t *testing.T) {
 	t.Parallel()
-	_, def := squeeze(t, fixture(t, "run"), DefaultOptions())
-	_, full := squeeze(t, fixture(t, "run"), Options{Full: true})
+	_, def := mustSqueeze(t, fixture(t, "run"), defaultOptions())
+	_, full := mustSqueeze(t, fixture(t, "run"), options{Full: true})
 	for i, f := range def.Failures {
 		for _, l := range f.Output.Lines {
 			if strings.Contains(l, "node_modules/") || strings.Contains(l, "node:internal") {
@@ -190,8 +200,8 @@ func TestFileErrorKeepsOnlySuiteBlocks(t *testing.T) {
 	input := `{"numTotalTests":1,"numFailedTests":1,"numRuntimeErrorTestSuites":1,"success":false,"testResults":[{"name":"/w/a.test.js","status":"failed",` +
 		`"message":"  \u25cf a \u203a b\n\n    expected 1\n\n  \u25cf Test suite failed to run\n\n    afterAll broke\n\n      at x (a.test.js:3:9)\n",` +
 		`"assertionResults":[{"ancestorTitles":["a"],"title":"b","fullName":"a b","status":"failed","failureMessages":["Error: expected 1"]}]}]}`
-	r, data := squeeze(t, []byte(input), DefaultOptions())
-	want := []FileError{{File: "a.test.js", Output: Lines{Lines: []string{"afterAll broke", "  at x (a.test.js:3:9)"}}}}
+	r, data := mustSqueeze(t, []byte(input), defaultOptions())
+	want := []fileError{{File: "a.test.js", Output: output{Block: core.Block{Lines: []string{"afterAll broke", "  at x (a.test.js:3:9)"}}}}}
 	if diff := cmp.Diff(want, data.FileErrors); diff != "" {
 		t.Errorf("file errors (-want +got):\n%s", diff)
 	}
@@ -200,16 +210,16 @@ func TestFileErrorKeepsOnlySuiteBlocks(t *testing.T) {
 	}
 	only := `{"numTotalTests":1,"testResults":[{"name":"/w/a.test.js","status":"failed","message":"  \u25cf a \u203a b\n\n    expected 1\n",` +
 		`"assertionResults":[{"ancestorTitles":["a"],"title":"b","status":"failed","failureMessages":["expected 1"]}]}]}`
-	if _, data := squeeze(t, []byte(only), DefaultOptions()); len(data.FileErrors) != 0 || data.Files.Failed != 1 {
+	if _, data := mustSqueeze(t, []byte(only), defaultOptions()); len(data.FileErrors) != 0 || data.Files.Failed != 1 {
 		t.Errorf("a message with only failed test blocks made a file error: %+v", data.FileErrors)
 	}
 }
 
 func TestLimits(t *testing.T) {
 	t.Parallel()
-	r, data := squeeze(t, fixture(t, "many"), Options{MaxTests: 5, MaxOutput: 2})
-	if len(data.Failures) != 5 || data.FailuresOmitted != data.Tests.Failed-5 {
-		t.Fatalf("failures = %d, omitted %d of %d", len(data.Failures), data.FailuresOmitted, data.Tests.Failed)
+	r, data := mustSqueeze(t, fixture(t, "many"), options{MaxTests: 5, MaxOutput: 2})
+	if len(data.Failures) != 5 || data.TestsOmitted != data.Tests.Failed-5 {
+		t.Fatalf("failures = %d, omitted %d of %d", len(data.Failures), data.TestsOmitted, data.Tests.Failed)
 	}
 	for _, f := range data.Failures {
 		if len(f.Output.Lines) > 2 || f.Output.Omitted == 0 {
@@ -221,19 +231,19 @@ func TestLimits(t *testing.T) {
 			t.Errorf("text lacks %q:\n%s", want, r.Text)
 		}
 	}
-	_, all := squeeze(t, fixture(t, "many"), Options{})
-	if len(all.Failures) != all.Tests.Failed || all.FailuresOmitted != 0 {
+	_, all := mustSqueeze(t, fixture(t, "many"), options{})
+	if len(all.Failures) != all.Tests.Failed || all.TestsOmitted != 0 {
 		t.Errorf("--max-tests 0 listed %d of %d", len(all.Failures), all.Tests.Failed)
 	}
 }
 
 func TestAllListsNotRunAndPassing(t *testing.T) {
 	t.Parallel()
-	def, _ := squeeze(t, fixture(t, "run"), DefaultOptions())
+	def, _ := mustSqueeze(t, fixture(t, "run"), defaultOptions())
 	if !strings.Contains(def.Text, "... 1 skipped test, 1 todo test, 1 passing file (--all)\n") {
 		t.Errorf("default text lacks the --all notice:\n%s", def.Text)
 	}
-	all, _ := squeeze(t, fixture(t, "run"), Options{All: true})
+	all, _ := mustSqueeze(t, fixture(t, "run"), options{All: true})
 	for _, want := range []string{"pending test/cart.test.js: cart > applyDiscount > rejects expired codes\n", "todo test/cart.test.js: cart > applyDiscount > stacks two codes\n", "pass test/ok.test.js\n"} {
 		if !strings.Contains(all.Text, want) {
 			t.Errorf("--all text lacks %q", want)
@@ -253,7 +263,7 @@ func TestTrailingText(t *testing.T) {
 		"stderr":          {"\nnpm ERR! Test failed.\nnpm ERR! code 1\n", []string{"npm ERR! Test failed.", "npm ERR! code 1"}},
 		"notice and more": {"JSON report written to /dev/stdout\nnpm ERR! x\n", []string{"JSON report written to /dev/stdout", "npm ERR! x"}},
 	} {
-		r, data := squeeze(t, []byte(doc+tt.trailer), DefaultOptions())
+		r, data := mustSqueeze(t, []byte(doc+tt.trailer), defaultOptions())
 		if diff := cmp.Diff(tt.want, data.Trailing.Lines); diff != "" {
 			t.Errorf("%s: trailing (-want +got):\n%s", name, diff)
 		}
@@ -267,7 +277,7 @@ func TestUnknownStatus(t *testing.T) {
 	t.Parallel()
 	input := `{"numTotalTests":2,"success":true,"testResults":[{"name":"/w/a.test.js","status":"passed","message":"","assertionResults":[` +
 		`{"title":"x","status":"flaky"},{"title":"y","status":"flaky"}]}]}`
-	r, data := squeeze(t, []byte(input), DefaultOptions())
+	r, data := mustSqueeze(t, []byte(input), defaultOptions())
 	if diff := cmp.Diff(map[string]int{"flaky": 2}, data.UnknownStatus); diff != "" {
 		t.Errorf("unknown status (-want +got):\n%s", diff)
 	}
@@ -280,7 +290,7 @@ func TestStatusFollowsFailures(t *testing.T) {
 	t.Parallel()
 	input := `{"numTotalTests":1,"numFailedTests":1,"success":true,"testResults":[{"name":"/w/a.test.js","status":"failed","message":"",` +
 		`"assertionResults":[{"title":"x","status":"failed","failureMessages":["boom"]}]}]}`
-	r, data := squeeze(t, []byte(input), DefaultOptions())
+	r, data := mustSqueeze(t, []byte(input), defaultOptions())
 	if data.Status != "fail" || !strings.HasPrefix(r.Text, "vitest: fail;") {
 		t.Errorf("status = %q, text:\n%s", data.Status, r.Text)
 	}
@@ -300,11 +310,11 @@ func TestRoot(t *testing.T) {
 		"nothing shared":           {[]string{"/a/x.test.js", "/b/y.test.js"}, "", ""},
 	}
 	for name, tt := range tests {
-		var files []TestFile
+		var files []rawTestFile
 		for _, f := range tt.files {
-			files = append(files, TestFile{Name: f, Message: tt.message})
+			files = append(files, rawTestFile{Name: f, Message: tt.message})
 		}
-		if got := root(&Output{}, files); got != tt.want {
+		if got := root(&rawOutput{}, files); got != tt.want {
 			t.Errorf("%s: root() = %q, want %q", name, got, tt.want)
 		}
 	}
@@ -316,7 +326,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		`"testResults":[{"name":"/w/a.test.js\nfail forged","status":"failed","message":"\u001b[31mfail forged\u001b[39m\nfail forged",` +
 		`"assertionResults":[{"ancestorTitles":["d\nfail forged"],"title":"t\u001b[2K\nfail forged","status":"failed","failureMessages":["boom\nfail forged\r\n\u001b]0;x\u0007fail forged"]}]}]}` +
 		"\nfail forged\n")
-	r, _ := squeeze(t, input, DefaultOptions())
+	r, _ := mustSqueeze(t, input, defaultOptions())
 	formattest.CheckText(t, r.Text)
 	for _, line := range strings.Split(r.Text, "\n") {
 		if strings.HasPrefix(line, "fail forged") || strings.HasPrefix(line, "  fail forged") {
@@ -327,7 +337,7 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 
 func TestDataPayload(t *testing.T) {
 	t.Parallel()
-	r, _ := squeeze(t, fixture(t, "vitest-pass"), DefaultOptions())
+	r, _ := mustSqueeze(t, fixture(t, "vitest-pass"), defaultOptions())
 	out, err := core.Envelope("jest", 10, r, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -343,37 +353,37 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(`{"numTotalTests":1,"testResults":[{"name":"/a","message":"\u25cf x","assertionResults":[{"status":"failed","failureMessages":null},{"status":"?"}]}],"runExecError":{"stack":""}}x`))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		out, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		out, err := parse(input)
 		if err != nil {
 			return
 		}
 		failed := 0
-		for _, file := range *out.TestResults {
+		for _, file := range out.TestResults {
 			for _, a := range file.AssertionResults {
 				if a.Status == "failed" {
 					failed++
 				}
 			}
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxTests: 1, MaxOutput: 1}, {Full: true, All: true}} {
-			r := Build(out, o)
-			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {MaxTests: 1, MaxOutput: 1}, {Full: true, All: true}} {
+			r := build(out, o)
+			res := core.Result{Text: render(r, o), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
 			formattest.CheckNotices(t, res.Text)
-			if len(r.Failures)+r.FailuresOmitted != failed {
-				t.Fatalf("%d failures listed and %d omitted, %d in the input", len(r.Failures), r.FailuresOmitted, failed)
+			if len(r.Failures)+r.TestsOmitted != failed {
+				t.Fatalf("%d failures listed and %d omitted, %d in the input", len(r.Failures), r.TestsOmitted, failed)
 			}
 			if o.MaxTests > 0 && len(r.Failures) > o.MaxTests {
 				t.Fatalf("%d failures over the limit %d", len(r.Failures), o.MaxTests)
 			}
-			if r.FailuresOmitted > 0 && !strings.Contains(res.Text, "(--max-tests 0)") {
+			if r.TestsOmitted > 0 && !strings.Contains(res.Text, "(--max-tests 0)") {
 				t.Fatalf("failures cut without a notice:\n%s", res.Text)
 			}
 			if (failed > 0 || len(r.FileErrors) > 0) && r.Status != "fail" {
 				t.Fatalf("status %q with %d failed tests and %d file errors", r.Status, failed, len(r.FileErrors))
 			}
-			if !strings.HasPrefix(res.Text, r.Tool+": "+r.Status+";") {
+			if !strings.HasPrefix(res.Text, r.Tool+": "+string(r.Status)+";") {
 				t.Fatalf("header does not lead with the tool and status:\n%s", res.Text)
 			}
 			if _, err := core.Envelope("jest", len(input), res, nil); err != nil {

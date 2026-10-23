@@ -35,7 +35,7 @@ Two shapes are read:
 
 ```
 $ squeeze < internal/formats/trivy/testdata/image/input.json
-trivy 0.75.0: registry.example.com/shop/api:1.4.0 (container_image, debian 12.7): 5 vulnerabilities, 1 misconfiguration, 2 licenses; 1 CRITICAL, 5 HIGH, 2 LOW, 1 UNKNOWN; 3 fixable; 40 misconfiguration checks passed
+trivy 0.75.0: registry.example.com/shop/api:1.4.0 (container_image, debian 12.7): 5 vulnerabilities, 1 misconfiguration, 2 licenses; 1 CRITICAL, 4 HIGH, 1 LOW, 1 UNKNOWN; 3 fixable; 40 misconfiguration checks passed
 registry.example.com/shop/api:1.4.0 (debian 12.7) (debian):
   CRITICAL CVE-2024-45491 libexpat1 2.5.0-1 -> 2.5.0-1+deb12u1: libexpat: Integer Overflow or Wraparound
   HIGH CVE-2023-52425 libexpat1 2.5.0-1 (affected): expat: parsing large tokens can trigger a denial of service
@@ -50,7 +50,7 @@ OS Packages (license):
 ... 1 misconfiguration exception, 1 license below HIGH (--all)
 ```
 
-- The header names the artifact, its type and, for an image, its OS. It then counts vulnerabilities, misconfigurations, secrets and licenses, and the findings by severity, hidden exceptions and licenses included. It ends with how many vulnerabilities have a fixed version and how many misconfiguration checks passed.
+- The header names the artifact, its type and, for an image, its OS. It then counts vulnerabilities, misconfigurations, secrets and licenses, and the listed findings by severity, those cut by `--max-findings` included; misconfiguration exceptions and licenses below `HIGH` are not in these severity counts, the same findings the `critical` and `high` conditions leave out. It ends with how many vulnerabilities have a fixed version and how many misconfiguration checks passed.
 - Findings are grouped by Trivy's results, in Trivy's order, with the target name and type; two results with the same target name, such as a `requirements.txt` scanned for packages and for secrets, stay apart. Inside a target they are sorted by kind, severity, package or resource, line and ID.
 - A vulnerability prints its package, the installed version and `-> fixed versions`, or Trivy's status (`affected`, `will not fix`, ...) when there is no fix.
 - A misconfiguration prints its resource and lines from Trivy's cause metadata. Passed checks are counted in the header; checks with status `EXCEPTION` are counted in `... N misconfiguration exceptions (--all)`.
@@ -110,7 +110,7 @@ fixes:
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `cluster` and `resources` (`name`, `findings`, `error`) for a k8s report, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity`, `targets` (`name`, `resource` for a k8s report, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity`, `hidden` (exceptions and licenses below HIGH) and, when lines after the JSON read as errors or warnings, `diagnostics` (`severity`, `summary`, `count`). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `target_index` (into `targets`), `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `resolution`, `start_line`, `end_line` and `url`.
+`data` holds `tool`, `tool_version`, `cluster` and `resources` (`name`, `findings`, `error`) for a k8s report, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity` (listed and cut findings), `targets` (`name`, `resource` for a k8s report, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity`, `hidden` (exceptions and licenses below HIGH), `hidden_by_severity` and, when lines after the JSON read as errors or warnings, `diagnostics` (`severity`, `summary`, `count`). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `target_index` (into `targets`), `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `resolution`, `start_line`, `end_line` and `url`.
 
 ## Limitations
 

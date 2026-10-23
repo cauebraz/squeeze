@@ -4,32 +4,34 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
-func Build(input []byte, o Options) (Report, bool) {
-	p := parser{r: Report{
-		Tool:         "pytest",
-		Failures:     []Failure{},
-		Warnings:     []Warning{},
-		Notes:        []string{},
-		Outcomes:     []string{},
-		Sections:     map[string]int{},
-		sectionLines: map[string][]string{},
+func build(input []byte, o options) (report, bool) {
+	p := parser{r: report{
+		Tool:              "pytest",
+		Failures:          []failure{},
+		WarningMessages:   []warningMessage{},
+		Notes:             []string{},
+		Outcomes:          []string{},
+		OtherSections:     map[string]int{},
+		OtherSectionLines: []sectionLines{},
 	}}
 	p.r.Summary.Other = map[string]int{}
 	for raw := range core.SplitLines(string(input)) {
-		p.line(core.Line(raw))
+		p.line(sanitize.Line(raw))
 	}
 	p.closeEntry()
 	if !p.found {
-		return Report{}, false
+		return report{}, false
 	}
 	p.finish(o)
 	return p.r, true
 }
 
-func (p *parser) finish(o Options) {
-	var failures []Failure
+func (p *parser) finish(o options) {
+	p.index = indexRecords(p.records)
+	var failures []failure
 	for _, e := range p.entries {
 		f := p.failure(e, o)
 		if f.Test == "" && len(f.Lines) == 0 {
@@ -41,28 +43,24 @@ func (p *parser) finish(o Options) {
 		if rec.used {
 			continue
 		}
-		kind := "failed"
-		if rec.word == "ERROR" {
-			kind = "error"
-		}
-		failures = append(failures, Failure{Kind: kind, Test: rec.test, Subtest: rec.label, Message: rec.message, Lines: []string{}, Untracked: true})
+		failures = append(failures, failure{Kind: rec.kind, Test: rec.test, Subtest: rec.label, Message: rec.message, Block: core.HeadBlock(nil, 0), FromSummaryOnly: true})
 	}
 	if !o.NoFold {
 		failures, p.r.FailuresFolded = foldFailures(failures)
 	}
-	failures, p.r.FailuresOmitted = core.Limit(failures, o.MaxTests)
+	failures, p.r.TestsOmitted = core.Limit(failures, o.MaxTests)
 	if failures != nil {
 		p.r.Failures = failures
 	}
-	p.r.Warnings = p.warnings.result()
-	p.r.Warnings, p.r.WarningsOmitted = core.Limit(p.r.Warnings, o.MaxWarnings)
+	p.r.WarningMessages = p.warnings.result()
+	p.r.WarningMessages, p.r.WarningsOmitted = core.Limit(p.r.WarningMessages, o.MaxWarnings)
 	p.r.Notes, p.r.NotesOmitted = core.LimitTail(p.r.Notes, o.MaxOutput)
 }
 
-func (p *parser) failure(e *entry, o Options) Failure {
-	f := Failure{Kind: "failed", Test: e.title}
+func (p *parser) failure(e *entry, o options) failure {
+	f := failure{Kind: kindFailed, Test: e.title}
 	if e.section == "ERRORS" {
-		f.Kind = "error"
+		f.Kind = kindError
 		switch {
 		case strings.HasPrefix(e.title, "ERROR collecting "):
 			f.When, f.Test = "collection", strings.TrimPrefix(e.title, "ERROR collecting ")
@@ -73,15 +71,14 @@ func (p *parser) failure(e *entry, o Options) Failure {
 			}
 		}
 	}
-	if rec := p.match(f); rec != nil {
+	if rec := p.index.match(f); rec != nil {
 		f.Test, f.Subtest, f.Message = rec.test, rec.label, rec.message
 	}
-	f.Lines, f.Hidden = selectLines(e.body, o.Full)
-	f.Location = lastLocation(f.Lines)
-	f.Lines, f.Omitted = core.LimitTail(f.Lines, o.MaxOutput)
+	lines, hidden := selectLines(e.body, o.Full)
+	f.Hidden, f.Location = hidden, lastLocation(lines)
+	f.Block = core.TailBlock(lines, o.MaxOutput)
 	for _, c := range e.captured {
-		kept, omitted := core.LimitTail(nonNil(c.lines), o.MaxOutput)
-		f.Captured = append(f.Captured, Captured{Name: c.name, Lines: kept, Omitted: omitted})
+		f.Captured = append(f.Captured, capturedSection{Name: c.name, Block: core.TailBlock(c.lines, o.MaxOutput)})
 	}
 	return f
 }
@@ -95,25 +92,73 @@ func lastLocation(lines []string) string {
 	return ""
 }
 
-func (p *parser) match(f Failure) *record {
-	word := "FAILED"
-	if f.Kind == "error" {
-		word = "ERROR"
+type recordName struct {
+	kind failureKind
+	name string
+}
+
+type recordQueue struct {
+	records []*record
+	next    int
+}
+
+func (q *recordQueue) first() *record {
+	if q == nil {
+		return nil
 	}
-	for _, rec := range p.records {
-		if rec.used || rec.word != word {
-			continue
+	for q.next < len(q.records) && q.records[q.next].used {
+		q.next++
+	}
+	if q.next == len(q.records) {
+		return nil
+	}
+	return q.records[q.next]
+}
+
+type recordIndex struct {
+	byKind map[failureKind]*recordQueue
+	byName map[recordName]*recordQueue
+}
+
+func indexRecords(records []*record) recordIndex {
+	idx := recordIndex{byKind: map[failureKind]*recordQueue{}, byName: map[recordName]*recordQueue{}}
+	push := func(m map[recordName]*recordQueue, key recordName, rec *record) {
+		q := m[key]
+		if q == nil {
+			q = &recordQueue{}
+			m[key] = q
 		}
+		if n := len(q.records); n == 0 || q.records[n-1] != rec {
+			q.records = append(q.records, rec)
+		}
+	}
+	for _, rec := range records {
+		q := idx.byKind[rec.kind]
+		if q == nil {
+			q = &recordQueue{}
+			idx.byKind[rec.kind] = q
+		}
+		q.records = append(q.records, rec)
 		short := domain(rec.test)
 		if rec.label != "" {
 			short += " " + rec.label
 		}
-		if f.Test == "" || rec.test == f.Test || short == f.Test {
-			rec.used = true
-			return rec
-		}
+		push(idx.byName, recordName{rec.kind, rec.test}, rec)
+		push(idx.byName, recordName{rec.kind, short}, rec)
 	}
-	return nil
+	return idx
+}
+
+func (idx recordIndex) match(f failure) *record {
+	q := idx.byName[recordName{f.Kind, f.Test}]
+	if f.Test == "" {
+		q = idx.byKind[f.Kind]
+	}
+	rec := q.first()
+	if rec != nil {
+		rec.used = true
+	}
+	return rec
 }
 
 func domain(nodeid string) string {

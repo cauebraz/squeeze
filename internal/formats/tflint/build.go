@@ -1,23 +1,23 @@
 package tflint
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxRulesInNotice = 5
 
-type Issue struct {
+type issue struct {
 	tfdiag.Diagnostic
 	Rule    string `json:"rule"`
 	Fixable bool   `json:"fixable,omitempty"`
 	Fixed   bool   `json:"fixed,omitempty"`
 }
 
-type Report struct {
+type report struct {
 	Tool          string              `json:"tool"`
 	ToolVersion   string              `json:"tool_version"`
 	Errors        int                 `json:"errors"`
@@ -28,7 +28,7 @@ type Report struct {
 	Fixed         int                 `json:"fixed"`
 	Rules         []core.Count        `json:"rules"`
 	Problems      []tfdiag.Diagnostic `json:"problems"`
-	Issues        []Issue             `json:"issues"`
+	Issues        []issue             `json:"issues"`
 	IssuesOmitted int                 `json:"issues_omitted"`
 	OmittedByRule []core.Count        `json:"omitted_by_rule"`
 }
@@ -44,25 +44,21 @@ func severity(s string) string {
 	}
 }
 
-func location(r Range) (string, int, int) {
-	return core.Clean(r.Filename), r.Start.Line, r.Start.Column
+func location(r tfdiag.Range) (file string, line, column int) {
+	return sanitize.Clean(r.Filename), r.Start.Line, r.Start.Column
 }
 
-func where(r Range) string {
-	file, line, col := location(r)
-	if line > 0 {
-		return fmt.Sprintf("%s:%d:%d", file, line, col)
-	}
-	return file
+func where(r tfdiag.Range) string {
+	return tfdiag.Position(location(r))
 }
 
-func Build(out *Output, o Options) Report {
-	r := Report{Tool: "tflint", Rules: []core.Count{}, Problems: []tfdiag.Diagnostic{}, Issues: []Issue{}, OmittedByRule: []core.Count{}}
+func build(out *rawOutput, o options) report {
+	r := report{Tool: "tflint", Rules: []core.Count{}, Problems: []tfdiag.Diagnostic{}, Issues: []issue{}, OmittedByRule: []core.Count{}}
 	var problems []tfdiag.Diagnostic
 	for _, e := range *out.Errors {
-		d := tfdiag.Diagnostic{Severity: severity(e.Severity), Summary: core.Clean(e.Summary), Detail: strings.TrimSpace(e.Message), Address: "tflint"}
+		d := tfdiag.Diagnostic{Severity: severity(e.Severity), Summary: sanitize.Clean(e.Summary), Detail: strings.TrimSpace(e.Message), Address: "tflint"}
 		if d.Summary == "" {
-			d.Summary, d.Detail = core.Clean(e.Message), ""
+			d.Summary, d.Detail = sanitize.Clean(e.Message), ""
 		}
 		if e.Range != nil {
 			d.File, d.Line, d.Column = location(*e.Range)
@@ -73,20 +69,16 @@ func Build(out *Output, o Options) Report {
 		r.ToolErrors++
 		problems = append(problems, d)
 	}
-	for _, l := range out.Trailing {
-		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text, Address: "tflint"}
-		if l.Error {
-			d.Severity = "error"
-			r.ToolErrors++
-		}
-		problems = append(problems, d)
-	}
+	trailing := tfdiag.FromLines(out.Trailing, "tflint")
+	trailingErrors, _ := tfdiag.Count(trailing)
+	r.ToolErrors += trailingErrors
+	problems = append(problems, trailing...)
 	r.Problems = append(r.Problems, tfdiag.Normalize(problems)...)
 	counts := map[string]int{}
-	var issues []Issue
+	var issues []issue
 	for _, is := range *out.Issues {
-		name := core.Clean(is.Rule.Name)
-		d := tfdiag.Diagnostic{Severity: severity(is.Rule.Severity), Summary: core.Clean(is.Message), Address: name}
+		name := sanitize.Clean(is.Rule.Name)
+		d := tfdiag.Diagnostic{Severity: severity(is.Rule.Severity), Summary: sanitize.Clean(is.Message), Address: name}
 		d.File, d.Line, d.Column = location(is.Range)
 		if chain := callers(is); len(chain) > 0 {
 			d.Detail = "evaluated in " + strings.Join(chain, " -> ")
@@ -105,7 +97,7 @@ func Build(out *Output, o Options) Report {
 			r.Fixable++
 		}
 		counts[name]++
-		issues = append(issues, Issue{Diagnostic: d, Rule: name, Fixable: is.Fixable && !is.Fixed, Fixed: is.Fixed})
+		issues = append(issues, issue{Diagnostic: d, Rule: name, Fixable: is.Fixable && !is.Fixed, Fixed: is.Fixed})
 	}
 	r.Rules = core.SortedCounts(counts)
 	issues = fold(issues)
@@ -120,12 +112,12 @@ func Build(out *Output, o Options) Report {
 	return r
 }
 
-func callers(is RawIssue) []string {
+func callers(is rawIssue) []string {
 	issueAt := where(is.Range)
 	var chain []string
 	for i, c := range is.Callers {
 		at := where(c)
-		if i == 0 && at == issueAt {
+		if at == "" || (i == 0 && at == issueAt) {
 			continue
 		}
 		chain = append(chain, at)
@@ -133,17 +125,19 @@ func callers(is RawIssue) []string {
 	return chain
 }
 
-func fold(issues []Issue) []Issue {
+func fold(issues []issue) []issue {
 	var ds []tfdiag.Diagnostic
 	meta := map[string][2]bool{}
 	for _, is := range issues {
 		ds = append(ds, is.Diagnostic)
-		meta[tfdiag.Key(is.Diagnostic)] = [2]bool{is.Fixable, is.Fixed}
+		key := tfdiag.Key(is.Diagnostic)
+		m := meta[key]
+		meta[key] = [2]bool{m[0] || is.Fixable, m[1] || is.Fixed}
 	}
-	out := make([]Issue, 0, len(ds))
+	out := make([]issue, 0, len(ds))
 	for _, d := range tfdiag.Normalize(ds) {
 		m := meta[tfdiag.Key(d)]
-		out = append(out, Issue{Diagnostic: d, Rule: d.Address, Fixable: m[0], Fixed: m[1]})
+		out = append(out, issue{Diagnostic: d, Rule: d.Address, Fixable: m[0], Fixed: m[1]})
 	}
 	return out
 }

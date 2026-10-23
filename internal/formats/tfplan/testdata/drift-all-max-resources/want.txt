@@ -1,0 +1,9 @@
+terraform 1.9.5 plan: 0 to add, 1 to change, 0 to destroy; 1 drifted
+~ aws_s3_bucket.assets
+  - tags.Owner: "someone"
+= aws_s3_bucket.static
+drift:
+- aws_instance.bastion (does not affect this plan)
+~ aws_s3_bucket.assets
+  + tags.Owner: "someone"
+... 1 more drifted resource (--max-resources 0)

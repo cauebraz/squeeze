@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"flag"
 	"regexp"
+	"slices"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-type Options struct {
+type options struct {
 	MaxOutputs   int
 	MaxResources int
 }
 
-func DefaultOptions() Options {
-	return Options{MaxOutputs: 50, MaxResources: 200}
+func defaultOptions() options {
+	return options{MaxOutputs: 50, MaxResources: 200}
 }
 
 type Format struct{}
@@ -27,7 +28,7 @@ func (Format) Description() string {
 
 var conditionNames = []string{"error", "fail", "warning"}
 
-func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+func (Format) Conditions() []string { return slices.Clone(conditionNames) }
 
 var showStart = regexp.MustCompile(`^[ \t\r\n]*\{[ \t\r\n]*"format_version"[ \t\r\n]*:[ \t\r\n]*"(?:[^"\\]|\\.)*"[ \t\r\n]*,[ \t\r\n]*"resource"[ \t\r\n]*:[ \t\r\n]*\{`)
 
@@ -50,21 +51,21 @@ func (Format) Detect(head []byte) bool {
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
-	o := DefaultOptions()
+	o := defaultOptions()
 	core.CountFlag(fs, &o.MaxOutputs, "max-outputs", "outputs listed, 0 for all")
 	core.CountFlag(fs, &o.MaxResources, "max-resources", "state resources listed, 0 for all")
 	return func(input []byte) (core.Result, error) {
-		return Squeeze(input, o)
+		return squeeze(input, o)
 	}
 }
 
-func Squeeze(input []byte, o Options) (core.Result, error) {
-	in, err := Parse(input)
+func squeeze(input []byte, o options) (core.Result, error) {
+	in, err := parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r := Build(in, o)
-	return core.Result{Text: Text(r), Data: r, Conditions: core.Conditions(map[string]bool{
+	r := build(in, o)
+	return core.Result{Text: text(r), Data: r, Conditions: core.Conditions(map[string]bool{
 		"error":   r.Errors > 0,
 		"fail":    r.Errors > 0,
 		"warning": r.Warnings > 0,

@@ -107,10 +107,10 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `summary_found`, `summary`, `interrupted`, `stopped` and `internal_error` when set, `failures`, `failures_folded`, `tests_omitted`, `warning_messages` (`message`, `count`), `warnings_omitted`, `notes`, `notes_omitted`, `outcomes` (the other short summary lines) and `other_sections` (line counts by section title).
+`data` holds `tool`, `tool_version`, `summary_found`, `summary`, `interrupted`, `stopped` and `internal_error` when set, `failures`, `failures_folded`, `tests_omitted`, `warning_messages` (`message`, `count`), `warnings_omitted`, `notes`, `notes_omitted`, `outcomes` (the other short summary lines), `other_sections` (line counts by section title) and `other_section_lines` (one object per section in report order, with `name` and the `lines` that `--all` prints).
 
 - `summary`: `failed`, `passed`, `skipped`, `deselected`, `xfailed`, `xpassed`, `warnings`, `errors`, `other` (counts of types pytest or a plugin adds, such as `subtests passed` or `rerun`), `duration` and `line`.
-- `failures`: `kind` (`failed` or `error`), `test`, `lines` and, when set, `subtest`, `when`, `message`, `hidden` (traceback lines not shown), `captured` (one object per section with `name`, `lines` and `omitted`), `omitted`, `from_summary_only`, `location` (the last `path:line` of the traceback) and `same_location_tests` (the node IDs folded into this entry).
+- `failures`: `kind` (`failed` or `error`), `test`, `lines`, `lines_omitted` (earlier lines past `--max-output`) and, when set, `subtest`, `when`, `message`, `hidden` (traceback lines not shown), `captured` (one object per section with `name`, `lines` and `lines_omitted`), `from_summary_only`, `location` (the last `path:line` of the traceback) and `same_location_tests` (the node IDs folded into this entry).
 
 ## Limitations
 
@@ -118,3 +118,4 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 - `-qq` prints no summary line, and an error that stops pytest before the session starts, such as a `conftest.py` that fails to import, prints no session header. Neither is detected, and both go to `generic`, which keeps the error lines.
 - The short summary shortens its messages to the terminal width unless pytest runs on CI or with `-vv`; a message that only the summary carries keeps pytest's `...`.
 - Under `-q` the final summary line is not `=`-framed, so a test that prints such a line to captured output and runs with `-q` and `-rN` (no short summary) can end its own entry early.
+- A count in the summary line or the warnings summary above 2147483647 reads as 2147483647, so sums of counts cannot overflow.

@@ -9,13 +9,13 @@ import (
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-type Options struct {
+type options struct {
 	MaxIssues int
 	NoDetail  bool
 }
 
-func DefaultOptions() Options {
-	return Options{MaxIssues: 50}
+func defaultOptions() options {
+	return options{MaxIssues: 50}
 }
 
 type Format struct{}
@@ -26,7 +26,7 @@ func (Format) Description() string { return "TFLint findings from tflint --forma
 
 var conditionNames = []string{"error", "fail", "fixable", "notice", "warning"}
 
-func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
+func (Format) Conditions() []string { return slices.Clone(conditionNames) }
 
 func (Format) Detect(head []byte) bool {
 	trimmed := bytes.TrimLeft(head, " \t\r\n")
@@ -37,24 +37,24 @@ func (Format) Detect(head []byte) bool {
 }
 
 func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
-	o := DefaultOptions()
+	o := defaultOptions()
 	core.CountFlag(fs, &o.MaxIssues, "max-issues", "issues listed, 0 for all")
 	fs.BoolVar(&o.NoDetail, "no-detail", false, "print the issue, its location and rule only")
 	return func(input []byte) (core.Result, error) {
-		return Squeeze(input, o)
+		return squeeze(input, o)
 	}
 }
 
-func Squeeze(input []byte, o Options) (core.Result, error) {
-	out, err := Parse(input)
+func squeeze(input []byte, o options) (core.Result, error) {
+	out, err := parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r := Build(out, o)
-	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}, nil
+	r := build(out, o)
+	return core.Result{Text: text(r, o), Data: r, Conditions: conditions(r)}, nil
 }
 
-func conditions(r Report) []string {
+func conditions(r report) []string {
 	return core.Conditions(map[string]bool{
 		"error":   r.Errors > 0 || r.ToolErrors > 0,
 		"fail":    r.Errors+r.Warnings+r.Notices+r.ToolErrors > 0,

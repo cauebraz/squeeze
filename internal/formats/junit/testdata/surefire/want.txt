@@ -10,7 +10,7 @@ fail com.example.shop.CartTest totalAppliesQuantity: expected: <4> but was: <2>
       at com.example.shop.CartTest.totalAppliesQuantity(CartTest.java:27)
       at java.base/java.lang.reflect.Method.invoke(Method.java:580)
       at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-  ... 2 more lines (--max-lines 0)
+  ... 2 more lines (--max-output 0)
   stdout:
     cart has 1 line
     price list loaded from /home/dev/shop/prices.csv

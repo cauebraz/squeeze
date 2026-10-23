@@ -12,9 +12,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
+	"github.com/cauebraz/squeeze/internal/sanitize"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const fixtureDir = "testdata"
@@ -73,17 +76,17 @@ func TestParseErrors(t *testing.T) {
 		msg   string
 	}{
 		"truncated":       {`{"format_version":"1.0",`, nil, "decode"},
-		"no version":      {`{"valid":true,"diagnostics":[]}`, ErrMissingVersion, ""},
+		"no version":      {`{"valid":true,"diagnostics":[]}`, tfdiag.ErrMissingVersion, ""},
 		"major 2":         {`{"format_version":"2.0","valid":true,"diagnostics":[]}`, nil, "unsupported format_version"},
-		"no valid":        {`{"format_version":"1.0","diagnostics":[]}`, ErrMissingValid, ""},
+		"no valid":        {`{"format_version":"1.0","diagnostics":[]}`, errMissingValid, ""},
 		"bad diagnostics": {`{"format_version":"1.0","valid":true,"diagnostics":{}}`, nil, "decode"},
 	}
 	for name, tt := range tests {
-		_, err := Parse([]byte(tt.input))
+		_, err := parse([]byte(tt.input))
 		if err == nil || (tt.err != nil && !errors.Is(err, tt.err)) || !strings.Contains(err.Error(), tt.msg) {
 			t.Errorf("%s: Parse() error = %v", name, err)
 		}
-		if _, err := Squeeze([]byte(tt.input), DefaultOptions()); err == nil {
+		if _, err := squeeze([]byte(tt.input), defaultOptions()); err == nil {
 			t.Errorf("%s: Squeeze() returned no error", name)
 		}
 	}
@@ -91,11 +94,11 @@ func TestParseErrors(t *testing.T) {
 
 func TestBuild(t *testing.T) {
 	t.Parallel()
-	v, err := Parse(fixture(t, "errors-and-warnings"))
+	v, err := parse(fixture(t, "errors-and-warnings"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := Build(v, DefaultOptions())
+	r := build(v, defaultOptions())
 	var got []string
 	for _, d := range r.Diagnostics {
 		got = append(got, d.Severity+" "+d.File)
@@ -107,7 +110,7 @@ func TestBuild(t *testing.T) {
 	if r.Valid || r.Errors != 2 || r.Warnings != 2 || r.Omitted != 0 {
 		t.Errorf("report = %+v", r)
 	}
-	limited := Build(v, Options{MaxDiagnostics: 1})
+	limited := build(v, options{MaxDiagnostics: 1})
 	if len(limited.Diagnostics) != 1 || limited.Omitted != 3 || limited.Errors != 2 {
 		t.Errorf("limited = %+v", limited)
 	}
@@ -116,14 +119,14 @@ func TestBuild(t *testing.T) {
 func TestHeader(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
-		r    Report
+		r    report
 		want string
 	}{
-		"valid":            {Report{Tool: "terraform", Valid: true}, "terraform validate: valid"},
-		"valid warnings":   {Report{Tool: "terraform", Valid: true, Warnings: 2}, "terraform validate: valid, 2 warnings"},
-		"invalid":          {Report{Tool: "terraform", Errors: 1}, "terraform validate: invalid, 1 error"},
-		"invalid both":     {Report{Tool: "terraform", Errors: 2, Warnings: 1}, "terraform validate: invalid, 2 errors, 1 warning"},
-		"invalid no count": {Report{Tool: "terraform"}, "terraform validate: invalid, 0 errors"},
+		"valid":            {report{Tool: "terraform", Valid: true}, "terraform validate: valid"},
+		"valid warnings":   {report{Tool: "terraform", Valid: true, Warnings: 2}, "terraform validate: valid, 2 warnings"},
+		"invalid":          {report{Tool: "terraform", Errors: 1}, "terraform validate: invalid, 1 error"},
+		"invalid both":     {report{Tool: "terraform", Errors: 2, Warnings: 1}, "terraform validate: invalid, 2 errors, 1 warning"},
+		"invalid no count": {report{Tool: "terraform"}, "terraform validate: invalid, 0 errors"},
 	}
 	for name, tt := range tests {
 		if got := header(tt.r); got != tt.want {
@@ -141,7 +144,7 @@ func TestConditions(t *testing.T) {
 		"errors-and-warnings": {"error", "fail", "invalid", "warning"},
 	}
 	for name, want := range tests {
-		r, err := Squeeze(fixture(t, name), DefaultOptions())
+		r, err := squeeze(fixture(t, name), defaultOptions())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -153,7 +156,7 @@ func TestConditions(t *testing.T) {
 
 func TestDuplicatesAreFolded(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "duplicates"), DefaultOptions())
+	r, err := squeeze(fixture(t, "duplicates"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,13 +169,13 @@ func TestCountsCoverDiagnostics(t *testing.T) {
 	t.Parallel()
 	input := []byte(`{"format_version":"1.0","valid":false,"error_count":0,"warning_count":0,"diagnostics":[` +
 		`{"severity":"error","summary":"a"},{"severity":"error","summary":"b"},{"severity":"warning","summary":"c"}]}`)
-	r, err := Squeeze(input, Options{MaxDiagnostics: 1})
+	r, err := squeeze(input, options{MaxDiagnostics: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := r.Data.(Report)
-	if report.Errors != 2 || report.Warnings != 1 {
-		t.Errorf("errors = %d, warnings = %d, want 2 and 1", report.Errors, report.Warnings)
+	rep := r.Data.(report)
+	if rep.Errors != 2 || rep.Warnings != 1 {
+		t.Errorf("errors = %d, warnings = %d, want 2 and 1", rep.Errors, rep.Warnings)
 	}
 	if diff := cmp.Diff([]string{"error", "fail", "invalid", "warning"}, r.Conditions); diff != "" {
 		t.Errorf("conditions (-want +got):\n%s", diff)
@@ -181,12 +184,12 @@ func TestCountsCoverDiagnostics(t *testing.T) {
 		t.Errorf("text:\n%s", r.Text)
 	}
 	more := []byte(`{"format_version":"1.0","valid":false,"error_count":5,"warning_count":0,"diagnostics":[{"severity":"error","summary":"a"}]}`)
-	r, err = Squeeze(more, DefaultOptions())
+	r, err = squeeze(more, defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report := r.Data.(Report); report.Errors != 5 {
-		t.Errorf("errors = %d, want Terraform's count 5", report.Errors)
+	if rep := r.Data.(report); rep.Errors != 5 {
+		t.Errorf("errors = %d, want Terraform's count 5", rep.Errors)
 	}
 }
 
@@ -209,7 +212,7 @@ func TestTrailingLines(t *testing.T) {
 		},
 	}
 	for name, tc := range tests {
-		r, err := Squeeze([]byte(tc.input), DefaultOptions())
+		r, err := squeeze([]byte(tc.input), defaultOptions())
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
@@ -247,7 +250,7 @@ func TestConfigureFlags(t *testing.T) {
 
 func TestDataPayload(t *testing.T) {
 	t.Parallel()
-	r, err := Squeeze(fixture(t, "valid"), DefaultOptions())
+	r, err := squeeze(fixture(t, "valid"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,9 +276,9 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte(`{"format_version":"1.0","valid":false,"diagnostics":[{"severity":"error","summary":"\u001b[31mx","snippet":{"code":"a\nb","highlight_start_offset":-4}}]}`))
 	f.Add([]byte("{\"format_version\":\"1.0\",\"valid\":true,\"diagnostics\":[]}\nError: x\nWarning: y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		for _, o := range []Options{DefaultOptions(), {MaxDiagnostics: 1, NoDetail: true}} {
-			r, err := Squeeze(input, o)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		for _, o := range []options{defaultOptions(), {MaxDiagnostics: 1, NoDetail: true}} {
+			r, err := squeeze(input, o)
 			if err != nil {
 				return
 			}
@@ -283,25 +286,25 @@ func FuzzSqueeze(f *testing.F) {
 			if _, err := core.Envelope("tfvalidate", len(input), r, nil); err != nil {
 				t.Fatalf("Envelope() error: %v", err)
 			}
-			report := r.Data.(Report)
-			if v, err := Parse(input); err == nil {
+			rep := r.Data.(report)
+			if v, err := parse(input); err == nil {
 				raw := 0
 				for _, d := range v.Diagnostics {
-					if core.Clean(d.Severity) != "warning" {
+					if sanitize.Clean(d.Severity) != "warning" {
 						raw++
 					}
 				}
-				if report.Errors < raw || (raw > 0 && !slices.Contains(r.Conditions, "error")) {
-					t.Fatalf("%d error diagnostics in the input, %d counted, conditions %v", raw, report.Errors, r.Conditions)
+				if rep.Errors < raw || (raw > 0 && !slices.Contains(r.Conditions, "error")) {
+					t.Fatalf("%d error diagnostics in the input, %d counted, conditions %v", raw, rep.Errors, r.Conditions)
 				}
 				for _, l := range v.Trailing {
-					if l.Error && (report.Errors == 0 || report.Valid) {
-						t.Fatalf("error line %q after the JSON left errors=%d valid=%v", l.Text, report.Errors, report.Valid)
+					if l.Error && (rep.Errors == 0 || rep.Valid) {
+						t.Fatalf("error line %q after the JSON left errors=%d valid=%v", l.Text, rep.Errors, rep.Valid)
 					}
 				}
 			}
-			if o.MaxDiagnostics > 0 && len(report.Diagnostics) > o.MaxDiagnostics {
-				t.Fatalf("%d diagnostics over the limit %d", len(report.Diagnostics), o.MaxDiagnostics)
+			if o.MaxDiagnostics > 0 && len(rep.Diagnostics) > o.MaxDiagnostics {
+				t.Fatalf("%d diagnostics over the limit %d", len(rep.Diagnostics), o.MaxDiagnostics)
 			}
 		}
 	})

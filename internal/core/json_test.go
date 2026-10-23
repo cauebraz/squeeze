@@ -48,32 +48,3 @@ func TestDecodeJSON(t *testing.T) {
 		})
 	}
 }
-
-func TestFlaggedLines(t *testing.T) {
-	tests := map[string]struct {
-		input string
-		want  []FlaggedLine
-	}{
-		"empty":          {input: "", want: nil},
-		"blank lines":    {input: "\n  \n", want: nil},
-		"plain text":     {input: "done\nwrote report.json\n", want: nil},
-		"error prefix":   {input: "Error: Failed to load plugin\n", want: []FlaggedLine{{Text: "Failed to load plugin", Error: true}}},
-		"warning prefix": {input: "WARNING: deprecated flag\r\n", want: []FlaggedLine{{Text: "deprecated flag"}}},
-		"no prefix":      {input: "panic: runtime error\n", want: []FlaggedLine{{Text: "panic: runtime error", Error: true}}},
-		"prefix only":    {input: "error:\n", want: []FlaggedLine{{Text: "error:", Error: true}}},
-		"error wins":     {input: "warning: build failed", want: []FlaggedLine{{Text: "build failed", Error: true}}},
-		"negated":        {input: "0 errors, no warnings\n", want: nil},
-		"escapes":        {input: "\x1b[31mError:\x1b[0m bad\tthing\n", want: []FlaggedLine{{Text: "bad thing", Error: true}}},
-		"several": {
-			input: "ok\nError: a\nnote\nWarning: b\n",
-			want:  []FlaggedLine{{Text: "a", Error: true}, {Text: "b"}},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			if diff := cmp.Diff(tc.want, FlaggedLines([]byte(tc.input))); diff != "" {
-				t.Errorf("FlaggedLines() (-want +got):\n%s", diff)
-			}
-		})
-	}
-}

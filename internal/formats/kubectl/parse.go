@@ -5,23 +5,27 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
 )
 
-var ErrNotKubectl = errors.New("input is not a Kubernetes object or list")
+var errNotKubectl = errors.New("input is not a Kubernetes object or list")
 
-type Meta struct {
+type rawMeta struct {
 	Name              string `json:"name"`
 	Namespace         string `json:"namespace"`
 	DeletionTimestamp string `json:"deletionTimestamp"`
 }
 
-type Raw struct {
+type rawObject struct {
 	Kind   string
-	Meta   Meta
+	Meta   rawMeta
 	Fields map[string]json.RawMessage
+	Doc    json.RawMessage
 }
 
-func text(raw json.RawMessage) string {
+func jsonString(raw json.RawMessage) string {
 	var s string
 	if json.Unmarshal(raw, &s) != nil {
 		return ""
@@ -29,45 +33,60 @@ func text(raw json.RawMessage) string {
 	return s
 }
 
-func Parse(input []byte) ([]Raw, error) {
-	var top map[string]json.RawMessage
-	if err := json.Unmarshal(input, &top); err != nil {
-		return nil, fmt.Errorf("decode: %w", err)
-	}
-	if top == nil || text(top["apiVersion"]) == "" || text(top["kind"]) == "" {
-		return nil, ErrNotKubectl
-	}
-	var out []Raw
-	if err := flatten(top, "", &out); err != nil {
-		return nil, err
-	}
-	return out, nil
+type document struct {
+	Objects  []rawObject
+	Trailing []logscan.FlaggedLine
 }
 
-func flatten(fields map[string]json.RawMessage, defaultKind string, out *[]Raw) error {
-	kind := text(fields["kind"])
+func parse(input []byte) (document, error) {
+	lead, body := logscan.LeadingLines(input)
+	var doc json.RawMessage
+	rest, err := core.DecodeJSON(body, &doc)
+	if err != nil {
+		return document{}, fmt.Errorf("decode: %w", err)
+	}
+	var top map[string]json.RawMessage
+	if err := json.Unmarshal(doc, &top); err != nil {
+		return document{}, fmt.Errorf("decode: %w", err)
+	}
+	if top == nil || jsonString(top["apiVersion"]) == "" || jsonString(top["kind"]) == "" {
+		return document{}, errNotKubectl
+	}
+	var out []rawObject
+	if err := flatten(doc, top, "", &out); err != nil {
+		return document{}, err
+	}
+	return document{Objects: out, Trailing: append(logscan.FlaggedLines(lead), logscan.FlaggedLines(rest)...)}, nil
+}
+
+func flatten(doc json.RawMessage, fields map[string]json.RawMessage, defaultKind string, out *[]rawObject) error {
+	kind := jsonString(fields["kind"])
 	if kind == "" {
 		kind = defaultKind
 	}
 	if kind == "" {
-		return ErrNotKubectl
+		return errNotKubectl
 	}
 	if items, ok := fields["items"]; ok && strings.HasSuffix(kind, "List") {
-		var list []map[string]json.RawMessage
+		var list []json.RawMessage
 		if err := json.Unmarshal(items, &list); err != nil {
 			return fmt.Errorf("decode %s items: %w", kind, err)
 		}
 		for _, item := range list {
-			if item == nil {
-				return ErrNotKubectl
+			var fields map[string]json.RawMessage
+			if err := json.Unmarshal(item, &fields); err != nil {
+				return fmt.Errorf("decode %s items: %w", kind, err)
 			}
-			if err := flatten(item, strings.TrimSuffix(kind, "List"), out); err != nil {
+			if fields == nil {
+				return errNotKubectl
+			}
+			if err := flatten(item, fields, strings.TrimSuffix(kind, "List"), out); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
-	r := Raw{Kind: kind, Fields: fields}
+	r := rawObject{Kind: kind, Fields: fields, Doc: doc}
 	if m, ok := fields["metadata"]; ok {
 		if err := json.Unmarshal(m, &r.Meta); err != nil {
 			return fmt.Errorf("decode %s metadata: %w", kind, err)
@@ -77,7 +96,7 @@ func flatten(fields map[string]json.RawMessage, defaultKind string, out *[]Raw) 
 	return nil
 }
 
-func (r Raw) decode(field string, v any) error {
+func (r rawObject) decode(field string, v any) error {
 	raw, ok := r.Fields[field]
 	if !ok {
 		return nil
@@ -88,7 +107,7 @@ func (r Raw) decode(field string, v any) error {
 	return nil
 }
 
-func (r Raw) keys(fields ...string) []string {
+func (r rawObject) keys(fields ...string) []string {
 	seen := map[string]bool{}
 	var keys []string
 	for _, f := range fields {

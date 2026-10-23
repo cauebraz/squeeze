@@ -1,9 +1,10 @@
 pre-commit: 2 hooks, 1 failed, 1 skipped
 fail unit (unit checks): exit code 2
+  ... 4 lines cut (--max-lines 0)
   FAIL pre_commit_hooks/check_json.py::test_main - AssertionError: 1 != 0
       assert main(['bad.json']) == 0
   5 checks, 1 failed
   PASS tests/__init__.py
+  ... 115 lines cut (--max-lines 0)
   3 checks, 1 failed
-  ... 119 lines cut (--max-lines 0)
 ... 1 passed or skipped hook (--all)

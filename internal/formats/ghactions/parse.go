@@ -9,23 +9,23 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-var ErrNoLog = errors.New("no GitHub Actions log lines in the input")
+var errNoLog = errors.New("no GitHub Actions log lines in the input")
 
 var (
-	stamp    = regexp.MustCompile(`^\x{FEFF}?\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z ?`)
-	columns  = regexp.MustCompile(`^([^\t]+)\t([^\t]*)\t(\x{FEFF}?\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z ?.*)$`)
-	detected = 3
+	stamp   = regexp.MustCompile(`^\x{FEFF}?\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z ?`)
+	columns = regexp.MustCompile(`^([^\t]+)\t[^\t]*\t(\x{FEFF}?\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z ?.*)$`)
 )
 
-type Line struct {
-	Job  string
-	Step string
-	Text string
+const detected = 3
+
+type rawLine struct {
+	job  string
+	text string
 }
 
-type Job struct {
-	Name  string
-	Lines []Line
+type job struct {
+	name  string
+	lines []rawLine
 }
 
 func detect(head []byte) bool {
@@ -46,32 +46,32 @@ func detect(head []byte) bool {
 	return seen > 0
 }
 
-func Parse(input []byte) ([]Job, error) {
-	var jobs []Job
+func parse(input []byte) ([]job, error) {
+	var jobs []job
 	index := map[string]int{}
 	found := false
 	for raw := range core.SplitLines(string(input)) {
 		if strings.TrimSpace(raw) == "" {
 			continue
 		}
-		l := Line{Text: raw}
+		l := rawLine{text: raw}
 		if m := columns.FindStringSubmatch(raw); m != nil {
-			l = Line{Job: m[1], Step: m[2], Text: m[3]}
+			l = rawLine{job: m[1], text: m[2]}
 		}
-		if loc := stamp.FindStringIndex(l.Text); loc != nil {
-			l.Text = l.Text[loc[1]:]
+		if loc := stamp.FindStringIndex(l.text); loc != nil {
+			l.text = l.text[loc[1]:]
 			found = true
 		}
-		i, ok := index[l.Job]
+		i, ok := index[l.job]
 		if !ok {
 			i = len(jobs)
-			index[l.Job] = i
-			jobs = append(jobs, Job{Name: l.Job})
+			index[l.job] = i
+			jobs = append(jobs, job{name: l.job})
 		}
-		jobs[i].Lines = append(jobs[i].Lines, l)
+		jobs[i].lines = append(jobs[i].lines, l)
 	}
 	if !found {
-		return nil, ErrNoLog
+		return nil, errNoLog
 	}
 	return jobs, nil
 }

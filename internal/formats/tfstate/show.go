@@ -9,18 +9,20 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const sensitiveText = "(sensitive)"
 
-type RawShow struct {
+type rawShow struct {
 	FormatVersion string       `json:"format_version"`
-	Resource      *RawInstance `json:"resource"`
+	Resource      *rawInstance `json:"resource"`
 	Diagnostics   []tfdiag.Raw `json:"diagnostics"`
 }
 
-type RawInstance struct {
+type rawInstance struct {
 	Address         string          `json:"address"`
 	Mode            string          `json:"mode"`
 	Type            string          `json:"type"`
@@ -28,9 +30,10 @@ type RawInstance struct {
 	Values          json.RawMessage `json:"values"`
 	SensitiveValues json.RawMessage `json:"sensitive_values"`
 	Tainted         bool            `json:"tainted"`
+	values          map[string]json.RawMessage
 }
 
-type Instance struct {
+type instance struct {
 	Address      string      `json:"address"`
 	Mode         string      `json:"mode"`
 	Type         string      `json:"type"`
@@ -38,10 +41,10 @@ type Instance struct {
 	Tainted      bool        `json:"tainted,omitempty"`
 	Sensitive    int         `json:"sensitive"`
 	Null         int         `json:"null"`
-	Attributes   []Attribute `json:"attributes"`
+	Attributes   []attribute `json:"attributes"`
 }
 
-type Attribute struct {
+type attribute struct {
 	Name            string          `json:"name"`
 	Sensitive       bool            `json:"sensitive,omitempty"`
 	Value           json.RawMessage `json:"value,omitempty"`
@@ -49,28 +52,27 @@ type Attribute struct {
 	Text            string          `json:"-"`
 }
 
-func parseShow(input []byte) (Input, error) {
-	var s RawShow
+func parseShow(input []byte) (document, error) {
+	var s rawShow
 	if err := json.NewDecoder(bytes.NewReader(input)).Decode(&s); err != nil {
-		return Input{}, fmt.Errorf("decode: %w", err)
+		return document{}, fmt.Errorf("decode: %w", err)
 	}
-	if major, _, _ := strings.Cut(s.FormatVersion, "."); major != "1" {
-		return Input{}, fmt.Errorf("unsupported format_version %q", s.FormatVersion)
+	if err := tfdiag.CheckFormatVersion(s.FormatVersion); err != nil {
+		return document{}, err
 	}
 	if r := s.Resource; r != nil && !isNull(r.Values) {
-		var vals map[string]json.RawMessage
-		if err := json.Unmarshal(r.Values, &vals); err != nil {
-			return Input{}, fmt.Errorf("decode values: %w", err)
+		if err := json.Unmarshal(r.Values, &r.values); err != nil {
+			return document{}, fmt.Errorf("decode values: %w", err)
 		}
 		if len(r.SensitiveValues) == 0 {
-			return Input{}, fmt.Errorf("resource %q: %w", core.Line(r.Address), ErrMissingSensitive)
+			return document{}, fmt.Errorf("resource %q: %w", sanitize.Clean(r.Address), errMissingSensitive)
 		}
 	}
-	return Input{Show: &s}, nil
+	return document{Show: &s}, nil
 }
 
-func buildShow(r *Report, s *RawShow, lines []core.FlaggedLine) {
-	r.Source = "resource"
+func buildShow(r *report, s *rawShow, lines []logscan.FlaggedLine) {
+	r.Source = sourceResource
 	ds := make([]tfdiag.Diagnostic, 0, len(s.Diagnostics))
 	for _, raw := range s.Diagnostics {
 		ds = append(ds, tfdiag.Convert(raw))
@@ -81,15 +83,15 @@ func buildShow(r *Report, s *RawShow, lines []core.FlaggedLine) {
 	if raw == nil || (raw.Address == "" && isNull(raw.Values)) {
 		return
 	}
-	in := &Instance{
-		Address:      core.Line(raw.Address),
-		Mode:         core.Clean(raw.Mode),
-		Type:         core.Clean(raw.Type),
-		ProviderName: core.Clean(raw.ProviderName),
+	in := &instance{
+		Address:      sanitize.Clean(raw.Address),
+		Mode:         sanitize.Clean(raw.Mode),
+		Type:         sanitize.Clean(raw.Type),
+		ProviderName: sanitize.Clean(raw.ProviderName),
 		Tainted:      raw.Tainted,
-		Attributes:   []Attribute{},
+		Attributes:   []attribute{},
 	}
-	attrs := attributes(raw.Values, raw.SensitiveValues)
+	attrs := attributes(raw.values, raw.SensitiveValues)
 	for _, a := range attrs {
 		switch {
 		case a.Sensitive || a.SensitiveValues != nil:
@@ -102,28 +104,74 @@ func buildShow(r *Report, s *RawShow, lines []core.FlaggedLine) {
 	r.Resource = in
 }
 
-func attributes(values, mask json.RawMessage) []Attribute {
-	var vals map[string]json.RawMessage
-	_ = json.Unmarshal(values, &vals)
-	masks := map[string]json.RawMessage{}
-	if err := json.Unmarshal(mask, &masks); err != nil {
-		masks = nil
-		if !clean(mask) {
-			masks = map[string]json.RawMessage{}
-			for name := range vals {
-				masks[name] = json.RawMessage("true")
-			}
+type mask struct {
+	raw   json.RawMessage
+	clean bool
+	obj   map[string]*mask
+	arr   []*mask
+}
+
+var sensitiveMask = &mask{raw: json.RawMessage("true")}
+
+func parseMask(raw json.RawMessage) *mask {
+	m := &mask{raw: raw}
+	if isNull(raw) {
+		m.clean = true
+		return m
+	}
+	var b bool
+	if json.Unmarshal(raw, &b) == nil {
+		m.clean = !b
+		return m
+	}
+	var obj map[string]json.RawMessage
+	if json.Unmarshal(raw, &obj) == nil {
+		m.obj, m.clean = make(map[string]*mask, len(obj)), true
+		for k, v := range obj {
+			child := parseMask(v)
+			m.obj[k] = child
+			m.clean = m.clean && child.clean
+		}
+		return m
+	}
+	var arr []json.RawMessage
+	if json.Unmarshal(raw, &arr) == nil {
+		m.arr, m.clean = make([]*mask, 0, len(arr)), true
+		for _, v := range arr {
+			child := parseMask(v)
+			m.arr = append(m.arr, child)
+			m.clean = m.clean && child.clean
 		}
 	}
+	return m
+}
+
+func (m *mask) isClean() bool { return m == nil || m.clean }
+
+func (m *mask) field(k string) *mask {
+	if m == nil {
+		return nil
+	}
+	return m.obj[k]
+}
+
+func attributes(vals map[string]json.RawMessage, raw json.RawMessage) []attribute {
+	root := parseMask(raw)
 	names := slices.Sorted(maps.Keys(vals))
-	out := make([]Attribute, 0, len(names))
+	out := make([]attribute, 0, len(names))
 	for _, name := range names {
-		a := Attribute{Name: name}
-		m := masks[name]
+		a := attribute{Name: name}
+		var m *mask
+		switch {
+		case root.obj != nil:
+			m = root.obj[name]
+		case !root.clean:
+			m = sensitiveMask
+		}
 		var text, data bytes.Buffer
 		redact(&text, &data, vals[name], m)
 		switch {
-		case clean(m):
+		case m.isClean():
 			a.Value = compact(vals[name])
 			if a.Value == nil {
 				a.Value = json.RawMessage("null")
@@ -134,7 +182,7 @@ func attributes(values, mask json.RawMessage) []Attribute {
 			a.Text = sensitiveText
 		default:
 			a.Value = data.Bytes()
-			a.SensitiveValues = compact(m)
+			a.SensitiveValues = compact(m.raw)
 			a.Text = text.String()
 		}
 		out = append(out, a)
@@ -142,8 +190,8 @@ func attributes(values, mask json.RawMessage) []Attribute {
 	return out
 }
 
-func redact(text, data *bytes.Buffer, raw, mask json.RawMessage) {
-	if clean(mask) {
+func redact(text, data *bytes.Buffer, raw json.RawMessage, m *mask) {
+	if m.isClean() {
 		v := compact(raw)
 		if v == nil {
 			v = json.RawMessage("null")
@@ -152,8 +200,8 @@ func redact(text, data *bytes.Buffer, raw, mask json.RawMessage) {
 		data.Write(v)
 		return
 	}
-	var maskObj, rawObj map[string]json.RawMessage
-	if json.Unmarshal(mask, &maskObj) == nil && json.Unmarshal(raw, &rawObj) == nil && maskObj != nil && rawObj != nil {
+	var rawObj map[string]json.RawMessage
+	if m.obj != nil && json.Unmarshal(raw, &rawObj) == nil && rawObj != nil {
 		keys := slices.Sorted(maps.Keys(rawObj))
 		text.WriteByte('{')
 		data.WriteByte('{')
@@ -162,19 +210,22 @@ func redact(text, data *bytes.Buffer, raw, mask json.RawMessage) {
 				text.WriteByte(',')
 				data.WriteByte(',')
 			}
-			key, _ := json.Marshal(k)
+			key, err := json.Marshal(k)
+			if err != nil {
+				key = []byte(`""`)
+			}
 			text.Write(key)
 			text.WriteByte(':')
 			data.Write(key)
 			data.WriteByte(':')
-			redact(text, data, rawObj[k], maskObj[k])
+			redact(text, data, rawObj[k], m.field(k))
 		}
 		text.WriteByte('}')
 		data.WriteByte('}')
 		return
 	}
-	var maskArr, rawArr []json.RawMessage
-	if json.Unmarshal(mask, &maskArr) == nil && json.Unmarshal(raw, &rawArr) == nil && maskArr != nil && rawArr != nil && len(maskArr) == len(rawArr) {
+	var rawArr []json.RawMessage
+	if m.arr != nil && json.Unmarshal(raw, &rawArr) == nil && rawArr != nil && len(m.arr) == len(rawArr) {
 		text.WriteByte('[')
 		data.WriteByte('[')
 		for i := range rawArr {
@@ -182,7 +233,7 @@ func redact(text, data *bytes.Buffer, raw, mask json.RawMessage) {
 				text.WriteByte(',')
 				data.WriteByte(',')
 			}
-			redact(text, data, rawArr[i], maskArr[i])
+			redact(text, data, rawArr[i], m.arr[i])
 		}
 		text.WriteByte(']')
 		data.WriteByte(']')
@@ -192,41 +243,12 @@ func redact(text, data *bytes.Buffer, raw, mask json.RawMessage) {
 	data.WriteString("null")
 }
 
-func clean(mask json.RawMessage) bool {
-	if isNull(mask) {
-		return true
-	}
-	var b bool
-	if json.Unmarshal(mask, &b) == nil {
-		return !b
-	}
-	var obj map[string]json.RawMessage
-	if json.Unmarshal(mask, &obj) == nil {
-		for _, m := range obj {
-			if !clean(m) {
-				return false
-			}
-		}
-		return true
-	}
-	var arr []json.RawMessage
-	if json.Unmarshal(mask, &arr) == nil {
-		for _, m := range arr {
-			if !clean(m) {
-				return false
-			}
-		}
-		return true
-	}
-	return false
-}
-
 func isNull(raw json.RawMessage) bool {
 	t := bytes.TrimSpace(raw)
 	return len(t) == 0 || string(t) == "null"
 }
 
-func showText(r Report) string {
+func showText(r report) string {
 	var b strings.Builder
 	b.WriteString(showHeader(r))
 	b.WriteByte('\n')
@@ -235,7 +257,7 @@ func showText(r Report) string {
 			if !a.Sensitive && a.SensitiveValues == nil && string(a.Value) == "null" {
 				continue
 			}
-			fmt.Fprintf(&b, "%s = %s\n", core.Line(a.Name), core.Ellipsis(core.Line(a.Text), maxValueBytes))
+			fmt.Fprintf(&b, "%s = %s\n", sanitize.Clean(a.Name), core.Ellipsis(sanitize.Line(a.Text), maxValueBytes))
 		}
 		if in.Null > 0 {
 			fmt.Fprintf(&b, "... %d null %s (--output json)\n", in.Null, core.Plural(in.Null, "attribute", "attributes"))
@@ -247,7 +269,7 @@ func showText(r Report) string {
 	return b.String()
 }
 
-func showHeader(r Report) string {
+func showHeader(r report) string {
 	line := r.Tool + " state show"
 	var parts []string
 	if in := r.Resource; in != nil {
@@ -260,12 +282,7 @@ func showHeader(r Report) string {
 			parts = append(parts, fmt.Sprintf("%d sensitive", in.Sensitive))
 		}
 	}
-	if r.Errors > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Errors, core.Plural(r.Errors, "error", "errors")))
-	}
-	if r.Warnings > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Warnings, core.Plural(r.Warnings, "warning", "warnings")))
-	}
+	parts = append(parts, tfdiag.CountWords(r.Errors, r.Warnings)...)
 	if len(parts) == 0 {
 		return line + ": no resource"
 	}

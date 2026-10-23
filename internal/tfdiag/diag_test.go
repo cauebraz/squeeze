@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	"github.com/cauebraz/squeeze/internal/logscan"
 )
 
 func TestConvert(t *testing.T) {
@@ -65,10 +67,25 @@ func TestConvert(t *testing.T) {
 	}
 }
 
+func TestFromLines(t *testing.T) {
+	t.Parallel()
+	got := FromLines([]logscan.FlaggedLine{{Text: "boom", Error: true}, {Text: "careful"}}, "tool")
+	want := []Diagnostic{
+		{Severity: "error", Summary: "boom", Address: "tool"},
+		{Severity: "warning", Summary: "careful", Address: "tool"},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("FromLines() mismatch (-want +got):\n%s", diff)
+	}
+	if got := FromLines(nil, ""); len(got) != 0 {
+		t.Errorf("FromLines(nil) = %v, want empty", got)
+	}
+}
+
 func TestCodeLineTruncated(t *testing.T) {
 	t.Parallel()
 	long := strings.Repeat("a", 200)
-	d := Convert(Raw{Summary: "s", Snippet: &Snippet{Code: long}})
+	d := Convert(Raw{Summary: "s", Snippet: &rawSnippet{Code: long}})
 	if len(d.Code) != maxCodeBytes || !strings.HasSuffix(d.Code, "...") {
 		t.Errorf("Code = %d bytes %q", len(d.Code), d.Code[len(d.Code)-5:])
 	}
@@ -125,7 +142,7 @@ func TestSortTieBreakers(t *testing.T) {
 		{Severity: "error", Summary: "b", Address: "x"},
 		{Severity: "error", Summary: "a", Address: "z"},
 	}
-	Sort(ds)
+	sortDiagnostics(ds)
 	got := []string{ds[0].Summary + ds[0].Address, ds[1].Summary + ds[1].Address, ds[2].Summary + ds[2].Address}
 	if diff := cmp.Diff([]string{"az", "bx", "by"}, got); diff != "" {
 		t.Errorf("Sort() (-want +got):\n%s", diff)
@@ -211,7 +228,7 @@ func TestFoldKeepsDistinctValues(t *testing.T) {
 	c := Diagnostic{Severity: "error", Summary: "s", Values: []string{"var.a is 1"}}
 	d := c
 	d.Values = []string{"var.a is 2"}
-	got := Fold([]Diagnostic{a, b, a, c, d})
+	got := fold([]Diagnostic{a, b, a, c, d})
 	if len(got) != 4 || got[0].Count != 2 || got[1].Count != 0 {
 		t.Errorf("Fold() = %+v", got)
 	}
@@ -253,5 +270,42 @@ func TestWrapAndTruncate(t *testing.T) {
 	}
 	if got := cut("abc", 0); got != "" {
 		t.Errorf("cut(0) = %q", got)
+	}
+}
+
+func TestPosition(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		file         string
+		line, column int
+		want         string
+	}{
+		{"main.tf", 3, 5, "main.tf:3:5"},
+		{"main.tf", 3, 0, "main.tf:3"},
+		{"main.tf", 0, 5, "main.tf"},
+		{"", 3, 5, ""},
+	}
+	for _, tt := range tests {
+		if got := Position(tt.file, tt.line, tt.column); got != tt.want {
+			t.Errorf("Position(%q, %d, %d) = %q, want %q", tt.file, tt.line, tt.column, got, tt.want)
+		}
+	}
+}
+
+func TestCountWords(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		errorCount, warningCount int
+		want                     []string
+	}{
+		{0, 0, nil},
+		{1, 0, []string{"1 error"}},
+		{0, 1, []string{"1 warning"}},
+		{2, 3, []string{"2 errors", "3 warnings"}},
+	}
+	for _, tt := range tests {
+		if diff := cmp.Diff(tt.want, CountWords(tt.errorCount, tt.warningCount)); diff != "" {
+			t.Errorf("CountWords(%d, %d) mismatch (-want +got):\n%s", tt.errorCount, tt.warningCount, diff)
+		}
 	}
 }

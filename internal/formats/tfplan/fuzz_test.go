@@ -22,17 +22,14 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a.b","change":{"actions":["no-op"],"importing":{"id":"x"},"generated_config":"resource \"a\" \"b\" {\r\n\tk = \"\u001b[31mv\"\n}\n"}}]}`))
 	f.Add([]byte("{\"format_version\":\"1.2\"}\nError: x\nWarning: y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		p, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		p, err := parse(input)
 		if err != nil {
 			return
 		}
-		for _, o := range []Options{DefaultOptions(), {IncludeNoop: true, ListDrift: true}} {
-			r, err := Build(p, o)
-			if err != nil {
-				return
-			}
-			res := core.Result{Text: Text(r, o), Data: r}
+		for _, o := range []options{defaultOptions(), {IncludeNoop: true, ListDrift: true}} {
+			r := build(p, o)
+			res := core.Result{Text: text(r, o), Data: r}
 			formattest.CheckText(t, res.Text)
 			for _, c := range r.Changes {
 				if c.GeneratedConfig == "" {
@@ -55,7 +52,7 @@ func FuzzSqueeze(f *testing.F) {
 				t.Fatalf("Envelope() error after successful Build: %v", err)
 			}
 		}
-		for _, list := range [][]PlanResource{p.ResourceChanges, p.ResourceDrift} {
+		for _, list := range [][]rawResource{p.ResourceChanges, p.ResourceDrift} {
 			for _, rc := range list {
 				attrs, _ := diffAttrs(rc.Change, true)
 				for _, a := range attrs {

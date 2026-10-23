@@ -1,4 +1,4 @@
-trivy 0.75.0: registry.example.com/shop/api:1.4.0 (container_image, debian 12.7): 5 vulnerabilities, 1 misconfiguration, 2 licenses; 1 CRITICAL, 5 HIGH, 2 LOW, 1 UNKNOWN; 3 fixable; 40 misconfiguration checks passed
+trivy 0.75.0: registry.example.com/shop/api:1.4.0 (container_image, debian 12.7): 5 vulnerabilities, 1 misconfiguration, 2 licenses; 1 CRITICAL, 4 HIGH, 1 LOW, 1 UNKNOWN; 3 fixable; 40 misconfiguration checks passed
 registry.example.com/shop/api:1.4.0 (debian 12.7) (debian):
   CRITICAL CVE-2024-45491 libexpat1 2.5.0-1 -> 2.5.0-1+deb12u1: libexpat: Integer Overflow or Wraparound
   HIGH CVE-2023-52425 libexpat1 2.5.0-1 (affected): expat: parsing large tokens can trigger a denial of service

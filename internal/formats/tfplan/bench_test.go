@@ -50,7 +50,7 @@ func BenchmarkSqueeze2000(b *testing.B) {
 	b.ReportAllocs()
 	var textBytes int
 	for b.Loop() {
-		r, err := Squeeze(input, DefaultOptions())
+		r, err := squeeze(input, defaultOptions())
 		if err != nil {
 			b.Fatal(err)
 		}

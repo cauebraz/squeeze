@@ -1,16 +1,17 @@
 package tfplan
 
 import (
+	"cmp"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
-func conditions(r Report) []string {
+func conditions(r report) []string {
 	s := r.Summary
 	checkBlock, otherCheck := false, false
 	for _, c := range r.Checks {
@@ -20,16 +21,16 @@ func conditions(r Report) []string {
 			otherCheck = true
 		}
 	}
-	errors, warnings := tfdiag.Count(r.Diagnostics)
+	errorCount, warningCount := tfdiag.Count(r.Diagnostics)
 	return core.Conditions(map[string]bool{
-		"change":     s.Changed(),
+		"change":     s.changed(),
 		"check":      len(r.Checks) > 0,
 		"deferred":   s.Deferred+s.DeferredActions > 0,
 		"destroy":    s.Destroy > 0,
 		"drift":      s.Drift > 0,
-		"error":      s.Errored || errors > 0,
-		"warning":    checkBlock || (otherCheck && !s.Errored) || warnings > 0,
-		"fail":       s.Errored || !s.Complete || errors > 0,
+		"error":      s.Errored || errorCount > 0,
+		"warning":    checkBlock || (otherCheck && !s.Errored) || warningCount > 0,
+		"fail":       s.Errored || !s.Complete || errorCount > 0,
 		"forget":     s.Forget > 0,
 		"import":     s.Import > 0,
 		"incomplete": !s.Complete,
@@ -38,36 +39,26 @@ func conditions(r Report) []string {
 	})
 }
 
-func Build(p *Plan, o Options) (Report, error) {
-	r := Report{
+func build(p *rawPlan, o options) report {
+	r := report{
 		Tool:        "terraform",
-		ToolVersion: core.Clean(p.TerraformVersion),
-		Summary: Summary{
+		ToolVersion: sanitize.Clean(p.TerraformVersion),
+		Summary: summary{
 			Errored:  p.Errored,
 			Complete: p.Complete == nil || *p.Complete,
 		},
-		Changes:         []ResourceChange{},
-		Drift:           []ResourceChange{},
-		Deferred:        []DeferredChange{},
-		DeferredActions: []DeferredAction{},
-		Actions:         []ActionInvocation{},
-		Outputs:         []OutputChange{},
+		Changes:         []resourceChange{},
+		Drift:           []resourceChange{},
+		Deferred:        []deferredChange{},
+		DeferredActions: []deferredAction{},
+		Actions:         []tfdiag.ActionInvocation{},
+		Outputs:         []outputChange{},
 	}
-	for _, l := range p.Trailing {
-		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
-		if l.Error {
-			d.Severity = "error"
-		}
-		r.Diagnostics = append(r.Diagnostics, d)
-	}
-	r.Diagnostics = tfdiag.Normalize(r.Diagnostics)
+	r.Diagnostics = tfdiag.Normalize(tfdiag.FromLines(p.Trailing, ""))
 	for _, pr := range p.ResourceChanges {
-		c, err := convert(pr, o, nil)
-		if err != nil {
-			return Report{}, err
-		}
+		c := convert(pr, o, nil)
 		count(&r.Summary, c)
-		if c.Action == Noop && !moved(c) && !o.IncludeNoop {
+		if c.Action == actionNoop && !moved(c) && !o.IncludeNoop {
 			r.NoopHidden++
 			continue
 		}
@@ -75,41 +66,34 @@ func Build(p *Plan, o Options) (Report, error) {
 	}
 	sortChanges(r.Changes)
 	r.Changes, r.Omitted = core.Limit(r.Changes, o.MaxResources)
-	if err := buildDrift(&r, p, o); err != nil {
-		return Report{}, err
-	}
-	if err := buildDeferred(&r, p); err != nil {
-		return Report{}, err
-	}
+	buildDrift(&r, p, o)
+	buildDeferred(&r, p, o)
 	r.Actions = convertActions(p.ActionInvocations)
 	r.Summary.Actions = len(r.Actions)
 	for _, d := range p.DeferredActions {
-		r.DeferredActions = append(r.DeferredActions, DeferredAction{ActionInvocation: convertAction(d.ActionInvocation), Reason: core.Clean(d.Reason)})
+		r.DeferredActions = append(r.DeferredActions, deferredAction{ActionInvocation: convertAction(d.ActionInvocation), Reason: sanitize.Clean(d.Reason)})
 	}
 	r.Summary.DeferredActions = len(r.DeferredActions)
-	outputs, err := convertOutputs(p.OutputChanges, o.IncludeNoop)
-	if err != nil {
-		return Report{}, err
-	}
+	outputs := convertOutputs(p.OutputChanges, o.IncludeNoop)
 	r.Outputs = outputs
 	for _, out := range outputs {
-		if out.Action != Noop {
+		if out.Action != actionNoop {
 			r.Summary.Outputs++
 		}
 	}
 	r.Checks = convertChecks(p.Checks)
 	r.Summary.ChecksFailed = len(r.Checks)
-	return r, nil
+	return r
 }
 
-func convertChecks(checks []PlanCheck) []CheckResult {
-	out := []CheckResult{}
+func convertChecks(checks []rawCheck) []checkResult {
+	out := []checkResult{}
 	for _, c := range checks {
-		kind := core.Clean(c.Address.Kind)
-		object := core.Clean(c.Address.ToDisplay)
+		kind := sanitize.Clean(c.Address.Kind)
+		object := sanitize.Clean(c.Address.ToDisplay)
 		if len(c.Instances) == 0 {
 			if checkFailed(c.Status) {
-				out = append(out, CheckResult{Address: object, Kind: kind, Status: core.Clean(c.Status)})
+				out = append(out, checkResult{Address: object, Kind: kind, Status: sanitize.Clean(c.Status)})
 			}
 			continue
 		}
@@ -117,12 +101,12 @@ func convertChecks(checks []PlanCheck) []CheckResult {
 			if !checkFailed(in.Status) {
 				continue
 			}
-			r := CheckResult{Address: core.Clean(in.Address.ToDisplay), Kind: kind, Status: core.Clean(in.Status)}
+			r := checkResult{Address: sanitize.Clean(in.Address.ToDisplay), Kind: kind, Status: sanitize.Clean(in.Status)}
 			if r.Address == "" {
 				r.Address = object
 			}
 			for _, p := range in.Problems {
-				if m := core.Clean(p.Message); m != "" {
+				if m := sanitize.Clean(p.Message); m != "" {
 					r.Problems = append(r.Problems, m)
 				}
 			}
@@ -141,7 +125,7 @@ type relevance struct {
 	global     []path
 }
 
-func newRelevance(attrs []PlanRelevantAttr) relevance {
+func newRelevance(attrs []rawRelevantAttr) relevance {
 	rel := relevance{byResource: map[string][]path{}}
 	for _, a := range attrs {
 		p, ok := toPath(a.Attribute)
@@ -159,10 +143,10 @@ func newRelevance(attrs []PlanRelevantAttr) relevance {
 }
 
 func (rel relevance) paths(address string) []path {
-	return append(append([]path(nil), rel.global...), rel.byResource[address]...)
+	return slices.Concat(rel.global, rel.byResource[address])
 }
 
-func buildDrift(r *Report, p *Plan, o Options) error {
+func buildDrift(r *report, p *rawPlan, o options) {
 	rel := newRelevance(p.RelevantAttributes)
 	for _, pr := range p.ResourceDrift {
 		paths := rel.paths(pr.Address)
@@ -174,10 +158,7 @@ func buildDrift(r *Report, p *Plan, o Options) error {
 			}
 			return false
 		}
-		c, err := convert(pr, o, keep)
-		if err != nil {
-			return err
-		}
+		c := convert(pr, o, keep)
 		relevant := len(paths) > 0 && (len(c.Attrs) > 0 || !hasAttrDiff(c.Action))
 		if relevant {
 			r.Drift = append(r.Drift, c)
@@ -186,81 +167,71 @@ func buildDrift(r *Report, p *Plan, o Options) error {
 		}
 		r.Summary.DriftIgnored++
 		if !o.IncludeNoop {
-			r.DriftOmitted++
+			r.DriftHidden++
 			continue
 		}
-		all, err := convert(pr, o, nil)
-		if err != nil {
-			return err
-		}
+		all := convert(pr, o, nil)
 		all.Irrelevant = true
 		r.Drift = append(r.Drift, all)
 	}
 	sortChanges(r.Drift)
-	return nil
+	r.Drift, r.DriftOmitted = core.Limit(r.Drift, o.MaxResources)
 }
 
-func buildDeferred(r *Report, p *Plan) error {
+func buildDeferred(r *report, p *rawPlan, o options) {
 	for _, d := range p.DeferredChanges {
 		rc := d.ResourceChange
-		action, err := mapAction(rc.Change.Actions, rc.Change.Importing != nil)
-		if err != nil {
-			return err
-		}
+		action := mapAction(rc.Change.Actions, rc.Change.Importing != nil)
 		isMoved := rc.PreviousAddress != "" && rc.PreviousAddress != rc.Address
-		if action == Noop && !isMoved {
+		if action == actionNoop && !isMoved {
 			continue
 		}
-		r.Deferred = append(r.Deferred, DeferredChange{Address: core.Clean(rc.Address), Action: action, Reason: core.Clean(d.Reason)})
+		r.Deferred = append(r.Deferred, deferredChange{
+			Address: sanitize.Clean(rc.Address), Action: action, Actions: rawActions(rc.Change.Actions, action), Reason: sanitize.Clean(d.Reason),
+		})
 	}
-	sort.SliceStable(r.Deferred, func(i, j int) bool {
-		a, b := r.Deferred[i], r.Deferred[j]
-		if a.Action.Rank() != b.Action.Rank() {
-			return a.Action.Rank() < b.Action.Rank()
-		}
-		return a.Address < b.Address
+	slices.SortStableFunc(r.Deferred, func(a, b deferredChange) int {
+		return cmp.Or(cmp.Compare(a.Action.rank(), b.Action.rank()), cmp.Compare(a.Address, b.Address))
 	})
 	r.Summary.Deferred = len(r.Deferred)
-	return nil
+	r.Deferred, r.DeferredOmitted = core.Limit(r.Deferred, o.MaxResources)
 }
 
-func convertActions(actions []PlanAction) []ActionInvocation {
-	out := make([]ActionInvocation, 0, len(actions))
+func convertActions(actions []rawAction) []tfdiag.ActionInvocation {
+	out := make([]tfdiag.ActionInvocation, 0, len(actions))
 	for _, a := range actions {
 		out = append(out, convertAction(a))
 	}
 	return out
 }
 
-func convertAction(a PlanAction) ActionInvocation {
-	inv := ActionInvocation{Address: core.Clean(a.Address)}
+func convertAction(a rawAction) tfdiag.ActionInvocation {
+	inv := tfdiag.ActionInvocation{Address: sanitize.Clean(a.Address)}
 	switch {
 	case a.LifecycleActionTrigger != nil:
-		inv.Event = core.Clean(a.LifecycleActionTrigger.ActionTriggerEvent)
-		inv.Resource = core.Clean(a.LifecycleActionTrigger.TriggeringResourceAddress)
+		inv.Event = sanitize.Clean(a.LifecycleActionTrigger.ActionTriggerEvent)
+		inv.Resource = sanitize.Clean(a.LifecycleActionTrigger.TriggeringResourceAddress)
 	case a.InvokeActionTrigger != nil:
 		inv.Invoked = true
 	}
 	return inv
 }
 
-func hasAttrDiff(a Action) bool {
-	return a == Update || a.IsReplace()
+func hasAttrDiff(a action) bool {
+	return a == actionUpdate || a.isReplace()
 }
 
-func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, error) {
+func convert(pr rawResource, o options, keep func(path) bool) resourceChange {
 	importing := pr.Change.Importing != nil
-	action, err := mapAction(pr.Change.Actions, importing)
-	if err != nil {
-		return ResourceChange{}, err
-	}
-	c := ResourceChange{
-		Address:         core.Clean(pr.Address),
-		PreviousAddress: core.Clean(pr.PreviousAddress),
-		Deposed:         core.Clean(pr.Deposed),
+	action := mapAction(pr.Change.Actions, importing)
+	c := resourceChange{
+		Address:         sanitize.Clean(pr.Address),
+		PreviousAddress: sanitize.Clean(pr.PreviousAddress),
+		Deposed:         sanitize.Clean(pr.Deposed),
 		Action:          action,
+		Actions:         rawActions(pr.Change.Actions, action),
 		Importing:       importing,
-		Reason:          core.Clean(pr.ActionReason),
+		Reason:          sanitize.Clean(pr.ActionReason),
 	}
 	if hcl := generatedConfig(pr.Change.GeneratedConfig); hcl != "" {
 		c.GeneratedLines = strings.Count(hcl, "\n") + 1
@@ -281,40 +252,42 @@ func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, 
 		c.Attrs = kept
 	}
 	c.Attrs, c.AttrsOmitted = core.Limit(c.Attrs, o.MaxAttrs)
-	return c, nil
+	return c
 }
 
 func generatedConfig(s string) string {
 	var lines []string
 	for l := range core.SplitLines(s) {
-		lines = append(lines, core.Line(l))
+		lines = append(lines, sanitize.Line(l))
 	}
 	return strings.Trim(strings.Join(lines, "\n"), "\n")
 }
 
-func count(s *Summary, c ResourceChange) {
+func count(s *summary, c resourceChange) {
 	switch c.Action {
-	case Create:
+	case actionCreate:
 		s.Add++
-	case Update:
+	case actionUpdate:
 		s.Change++
-	case Delete:
+	case actionDelete:
 		s.Destroy++
-	case Replace, ReplaceCBD:
+	case actionReplace, actionReplaceCBD:
 		s.Add++
 		s.Destroy++
 		s.Replace++
-	case ForgetThenCreate, CreateThenForget:
+	case actionForgetThenCreate, actionCreateThenForget:
 		s.Add++
 		s.Replace++
 		s.Forget++
-	case Forget:
+	case actionForget:
 		s.Forget++
-	case Read:
+	case actionRead:
 		s.Read++
-	case Noop:
+	case actionNoop:
 		s.Noop++
-	case Import:
+	case actionUnknown:
+		s.Unknown++
+	case actionImport:
 	}
 	if c.Importing {
 		s.Import++
@@ -324,41 +297,32 @@ func count(s *Summary, c ResourceChange) {
 	}
 }
 
-func moved(c ResourceChange) bool {
+func moved(c resourceChange) bool {
 	return c.PreviousAddress != "" && c.PreviousAddress != c.Address
 }
 
-func sortChanges(cs []ResourceChange) {
-	sort.SliceStable(cs, func(i, j int) bool {
-		a, b := cs[i], cs[j]
-		if a.Action.Rank() != b.Action.Rank() {
-			return a.Action.Rank() < b.Action.Rank()
-		}
-		if a.Address != b.Address {
-			return a.Address < b.Address
-		}
-		return a.Deposed < b.Deposed
+func sortChanges(cs []resourceChange) {
+	slices.SortStableFunc(cs, func(a, b resourceChange) int {
+		return cmp.Or(cmp.Compare(a.Action.rank(), b.Action.rank()), cmp.Compare(a.Address, b.Address), cmp.Compare(a.Deposed, b.Deposed))
 	})
 }
 
-func convertOutputs(changes map[string]PlanChange, includeNoop bool) ([]OutputChange, error) {
+func convertOutputs(changes map[string]rawChange, includeNoop bool) []outputChange {
 	names := slices.Sorted(maps.Keys(changes))
-	out := []OutputChange{}
+	out := []outputChange{}
 	for _, name := range names {
 		ch := changes[name]
-		action, err := mapAction(ch.Actions, false)
-		if err != nil {
-			return nil, err
-		}
-		if action == Noop && !includeNoop {
+		action := mapAction(ch.Actions, false)
+		if action == actionNoop && !includeNoop {
 			continue
 		}
-		out = append(out, OutputChange{
-			Name:      core.Clean(name),
+		out = append(out, outputChange{
+			Name:      sanitize.Clean(name),
 			Action:    action,
+			Actions:   rawActions(ch.Actions, action),
 			Unknown:   isTrue(ch.AfterUnknown),
 			Sensitive: marked(ch.BeforeSensitive) || marked(ch.AfterSensitive),
 		})
 	}
-	return out, nil
+	return out
 }

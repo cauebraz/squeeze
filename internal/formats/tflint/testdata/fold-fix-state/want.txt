@@ -1,0 +1,2 @@
+tflint: 2 issues, 2 warnings; 1 fixable
+warning: List items should be accessed using square brackets (main.tf:28:31, terraform_deprecated_index, fixable) (x2)

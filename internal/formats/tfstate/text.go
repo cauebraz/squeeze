@@ -5,14 +5,17 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxValueBytes = 200
 
-func Text(r Report) string {
-	if r.Source == "resource" {
+func text(r report) string {
+	switch r.Source {
+	case sourceResource:
 		return showText(r)
+	case sourceOutput, sourceState:
 	}
 	var b strings.Builder
 	b.WriteString(header(r))
@@ -41,9 +44,9 @@ func Text(r Report) string {
 	for _, o := range r.Outputs {
 		value := "(sensitive)"
 		if !o.Sensitive {
-			value = core.Ellipsis(core.Line(string(o.Value)), maxValueBytes)
+			value = core.Ellipsis(sanitize.Line(string(o.Value)), maxValueBytes)
 		}
-		fmt.Fprintf(&b, "%s = %s\n", core.Line(o.Name), value)
+		fmt.Fprintf(&b, "%s = %s\n", sanitize.Clean(o.Name), value)
 	}
 	if r.Omitted > 0 {
 		fmt.Fprintf(&b, "... %d more %s (--max-outputs 0)\n", r.Omitted, core.Plural(r.Omitted, "output", "outputs"))
@@ -51,7 +54,7 @@ func Text(r Report) string {
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	outputs := fmt.Sprintf("%d %s", r.Total, core.Plural(r.Total, "output", "outputs"))
 	if r.Sensitive > 0 {
 		outputs += fmt.Sprintf(", %d sensitive", r.Sensitive)
@@ -77,14 +80,8 @@ func header(r Report) string {
 	return line + problems(r)
 }
 
-func problems(r Report) string {
-	var parts []string
-	if r.Errors > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Errors, core.Plural(r.Errors, "error", "errors")))
-	}
-	if r.Warnings > 0 {
-		parts = append(parts, fmt.Sprintf("%d %s", r.Warnings, core.Plural(r.Warnings, "warning", "warnings")))
-	}
+func problems(r report) string {
+	parts := tfdiag.CountWords(r.Errors, r.Warnings)
 	if len(parts) == 0 {
 		return ""
 	}

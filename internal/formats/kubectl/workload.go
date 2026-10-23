@@ -5,12 +5,12 @@ import (
 	"fmt"
 )
 
-type replicas struct {
+type rawReplicas struct {
 	Replicas *int `json:"replicas"`
 }
 
-func desired(r Raw) (int, error) {
-	var spec replicas
+func desired(r rawObject) (int, error) {
+	var spec rawReplicas
 	if err := r.decode("spec", &spec); err != nil {
 		return 0, err
 	}
@@ -20,23 +20,23 @@ func desired(r Raw) (int, error) {
 	return *spec.Replicas, nil
 }
 
-type workloadStatus struct {
-	Replicas               int         `json:"replicas"`
-	ReadyReplicas          int         `json:"readyReplicas"`
-	UpdatedReplicas        int         `json:"updatedReplicas"`
-	AvailableReplicas      int         `json:"availableReplicas"`
-	CurrentReplicas        int         `json:"currentReplicas"`
-	DesiredNumberScheduled int         `json:"desiredNumberScheduled"`
-	CurrentNumberScheduled int         `json:"currentNumberScheduled"`
-	NumberReady            int         `json:"numberReady"`
-	UpdatedNumberScheduled int         `json:"updatedNumberScheduled"`
-	NumberAvailable        int         `json:"numberAvailable"`
-	NumberMisscheduled     int         `json:"numberMisscheduled"`
-	Conditions             []condition `json:"conditions"`
+type rawWorkloadStatus struct {
+	Replicas               int            `json:"replicas"`
+	ReadyReplicas          int            `json:"readyReplicas"`
+	UpdatedReplicas        int            `json:"updatedReplicas"`
+	AvailableReplicas      int            `json:"availableReplicas"`
+	CurrentReplicas        int            `json:"currentReplicas"`
+	DesiredNumberScheduled int            `json:"desiredNumberScheduled"`
+	CurrentNumberScheduled int            `json:"currentNumberScheduled"`
+	NumberReady            int            `json:"numberReady"`
+	UpdatedNumberScheduled int            `json:"updatedNumberScheduled"`
+	NumberAvailable        int            `json:"numberAvailable"`
+	NumberMisscheduled     int            `json:"numberMisscheduled"`
+	Conditions             []rawCondition `json:"conditions"`
 }
 
-func workload(r Raw, o *Object) error {
-	var st workloadStatus
+func workload(r rawObject, o *object) error {
+	var st rawWorkloadStatus
 	if err := r.decode("status", &st); err != nil {
 		return err
 	}
@@ -52,15 +52,15 @@ func workload(r Raw, o *Object) error {
 	case "Deployment":
 		o.Details = append(o.Details, fmt.Sprintf("%d/%d ready", st.ReadyReplicas, want), fmt.Sprintf("%d updated", st.UpdatedReplicas), fmt.Sprintf("%d available", st.AvailableReplicas))
 		o.Unhealthy = st.ReadyReplicas < want || st.UpdatedReplicas < want || st.AvailableReplicas < want
-		failing(o, st.Conditions, "Progressing", "False")
-		failing(o, st.Conditions, "ReplicaFailure", "True")
+		failing(o, st.Conditions, "Progressing", conditionFalse)
+		failing(o, st.Conditions, "ReplicaFailure", conditionTrue)
 	case "StatefulSet":
 		o.Details = append(o.Details, fmt.Sprintf("%d/%d ready", st.ReadyReplicas, want), fmt.Sprintf("%d updated", st.UpdatedReplicas))
 		o.Unhealthy = st.ReadyReplicas < want
 	case "ReplicaSet", "ReplicationController":
 		o.Details = append(o.Details, fmt.Sprintf("%d/%d ready", st.ReadyReplicas, want), fmt.Sprintf("%d current", st.Replicas))
 		o.Unhealthy = st.ReadyReplicas < want
-		failing(o, st.Conditions, "ReplicaFailure", "True")
+		failing(o, st.Conditions, "ReplicaFailure", conditionTrue)
 	default:
 		o.Details = append(o.Details, fmt.Sprintf("%d/%d ready", st.NumberReady, want), fmt.Sprintf("%d updated", st.UpdatedNumberScheduled), fmt.Sprintf("%d available", st.NumberAvailable))
 		o.Unhealthy = st.NumberReady < want || st.NumberAvailable < want
@@ -72,38 +72,40 @@ func workload(r Raw, o *Object) error {
 	return nil
 }
 
-type jobSpec struct {
+type rawJobSpec struct {
 	Completions *int `json:"completions"`
 	Parallelism *int `json:"parallelism"`
 }
 
-type jobStatus struct {
-	Succeeded  int         `json:"succeeded"`
-	Failed     int         `json:"failed"`
-	Active     int         `json:"active"`
-	Conditions []condition `json:"conditions"`
+type rawJobStatus struct {
+	Succeeded  int            `json:"succeeded"`
+	Failed     int            `json:"failed"`
+	Active     int            `json:"active"`
+	Conditions []rawCondition `json:"conditions"`
 }
 
-func job(r Raw, o *Object) error {
-	var spec jobSpec
-	var st jobStatus
+func job(r rawObject, o *object) error {
+	var spec rawJobSpec
+	var st rawJobStatus
 	if err := r.decode("spec", &spec); err != nil {
 		return err
 	}
 	if err := r.decode("status", &st); err != nil {
 		return err
 	}
+	failed, failureTarget := trueCondition(st.Conditions, "Failed"), trueCondition(st.Conditions, "FailureTarget")
+	var failure *rawCondition
 	switch {
 	case isTrue(st.Conditions, "Complete"):
 		o.Status = "Complete"
-	case isTrue(st.Conditions, "Failed"):
-		o.Status = "Failed"
+	case failed != nil:
+		o.Status, failure = "Failed", failed
 	case r.Meta.DeletionTimestamp != "":
 		o.Status = "Terminating"
 	case isTrue(st.Conditions, "Suspended"):
 		o.Status = "Suspended"
-	case isTrue(st.Conditions, "FailureTarget"):
-		o.Status = "FailureTarget"
+	case failureTarget != nil:
+		o.Status, failure = "FailureTarget", failureTarget
 	default:
 		o.Status = "Running"
 	}
@@ -121,16 +123,15 @@ func job(r Raw, o *Object) error {
 	if st.Active > 0 {
 		o.Details = append(o.Details, fmt.Sprintf("%d active", st.Active))
 	}
-	if o.Status == "Failed" || o.Status == "FailureTarget" {
+	if failure != nil {
 		o.Unhealthy = true
-		c := find(st.Conditions, o.Status)
-		o.Details = append(o.Details, orUnknown(c.Reason))
-		o.Message = c.Message
+		o.Details = append(o.Details, orUnknown(failure.Reason))
+		o.Message = failure.Message
 	}
 	return nil
 }
 
-func cronJob(r Raw, o *Object) error {
+func cronJob(r rawObject, o *object) error {
 	var spec struct {
 		Suspend bool `json:"suspend"`
 	}

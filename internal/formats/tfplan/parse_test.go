@@ -5,13 +5,15 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 func TestParseAcceptsFormatVersions(t *testing.T) {
 	t.Parallel()
 	for _, v := range []string{"1.0", "1.1", "1.2", "1"} {
 		input := `{"format_version":"` + v + `","terraform_version":"1.9.5","planned_values":{},"resource_changes":[]}`
-		p, err := Parse([]byte(input))
+		p, err := parse([]byte(input))
 		if err != nil {
 			t.Errorf("Parse(format_version %s) error = %v", v, err)
 			continue
@@ -34,17 +36,17 @@ func TestParseErrors(t *testing.T) {
 		{"truncated", `{"format_version":"1.2","resource_changes":[`, nil, "decode"},
 		{"array", `[1,2]`, nil, "decode"},
 		{"string", `"plan"`, nil, "decode"},
-		{"null", `null`, ErrMissingVersion, ""},
-		{"no version", `{"resource_changes":[]}`, ErrMissingVersion, ""},
+		{"null", `null`, tfdiag.ErrMissingVersion, ""},
+		{"no version", `{"resource_changes":[]}`, tfdiag.ErrMissingVersion, ""},
 		{"wrong type", `{"format_version":1.2}`, nil, "decode"},
 		{"major 2", `{"format_version":"2.0","planned_values":{}}`, nil, "unsupported format_version"},
-		{"state", `{"format_version":"1.0","terraform_version":"1.9.5","values":{"root_module":{}}}`, ErrStateNotPlan, ""},
+		{"state", `{"format_version":"1.0","terraform_version":"1.9.5","values":{"root_module":{}}}`, errStateNotPlan, ""},
 		{"bad actions type", `{"format_version":"1.2","resource_changes":[{"change":{"actions":"create"}}]}`, nil, "decode"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, err := Parse([]byte(tt.input))
+			_, err := parse([]byte(tt.input))
 			if err == nil {
 				t.Fatal("Parse() returned no error")
 			}
@@ -60,7 +62,7 @@ func TestParseErrors(t *testing.T) {
 
 func TestParseWithoutResourceChanges(t *testing.T) {
 	t.Parallel()
-	p, err := Parse([]byte(`{"format_version":"1.2","planned_values":{}}`))
+	p, err := parse([]byte(`{"format_version":"1.2","planned_values":{}}`))
 	if err != nil {
 		t.Fatalf("Parse() error = %v", err)
 	}
@@ -72,7 +74,7 @@ func TestParseWithoutResourceChanges(t *testing.T) {
 func TestParseKeepsNumbersExact(t *testing.T) {
 	t.Parallel()
 	input := `{"format_version":"1.2","planned_values":{},"resource_changes":[{"address":"a","change":{"actions":["update"],"before":{"n":12345678901234567890},"after":{"n":1.50}}}]}`
-	p, err := Parse([]byte(input))
+	p, err := parse([]byte(input))
 	if err != nil {
 		t.Fatalf("Parse() error = %v", err)
 	}
@@ -86,7 +88,7 @@ func TestParseKeepsNumbersExact(t *testing.T) {
 func TestParseFixtures(t *testing.T) {
 	t.Parallel()
 	for name, data := range fixtures(t) {
-		if _, err := Parse(data); err != nil {
+		if _, err := parse(data); err != nil {
 			t.Errorf("Parse(%s) error = %v", name, err)
 		}
 	}

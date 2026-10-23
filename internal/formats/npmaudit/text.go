@@ -6,14 +6,18 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxSeveritiesInNotice = 5
 
-func Text(r Report) string {
+func text(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
+	for _, d := range r.Diagnostics {
+		tfdiag.Write(&b, d, tfdiag.WriteOptions{})
+	}
 	for _, e := range r.Vulnerabilities {
 		b.WriteString(line(e))
 		b.WriteByte('\n')
@@ -26,7 +30,7 @@ func Text(r Report) string {
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	s := fmt.Sprintf("npm audit: %d %s", r.Total, core.Plural(r.Total, "vulnerability", "vulnerabilities"))
 	if r.Total > 0 {
 		parts := make([]string, 0, len(r.BySeverity))
@@ -57,7 +61,7 @@ func header(r Report) string {
 	return s + "; fix: " + strings.Join(fixes, ", ")
 }
 
-func fix(f Fix) string {
+func fixText(f fix) string {
 	switch {
 	case !f.Available:
 		return "no fix"
@@ -71,7 +75,7 @@ func fix(f Fix) string {
 	return s + ")"
 }
 
-func line(e Entry) string {
+func line(e entry) string {
 	s := e.Severity + " " + e.Name
 	if e.Range != "" {
 		s += " " + e.Range
@@ -79,7 +83,7 @@ func line(e Entry) string {
 	if e.Direct {
 		s += " direct"
 	}
-	s += ": " + fix(e.Fix)
+	s += ": " + fixText(e.Fix)
 	var ids []string
 	for _, a := range e.Advisories {
 		if !slices.Contains(ids, a.ID) {

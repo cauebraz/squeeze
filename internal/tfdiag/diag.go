@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
 const (
@@ -18,44 +20,44 @@ const (
 	maxDetailLines = 3
 )
 
-type Pos struct {
+type pos struct {
 	Line   int `json:"line"`
 	Column int `json:"column"`
 }
 
 type Range struct {
 	Filename string `json:"filename"`
-	Start    Pos    `json:"start"`
-	End      Pos    `json:"end"`
+	Start    pos    `json:"start"`
+	End      pos    `json:"end"`
 }
 
-type Snippet struct {
+type rawSnippet struct {
 	Code                 string            `json:"code"`
 	StartLine            int               `json:"start_line"`
 	HighlightStartOffset int               `json:"highlight_start_offset"`
 	HighlightEndOffset   int               `json:"highlight_end_offset"`
-	Values               []RawValue        `json:"values"`
-	TestAssertionExpr    *RawTestAssertion `json:"test_assertion_expr"`
+	Values               []rawValue        `json:"values"`
+	TestAssertionExpr    *rawTestAssertion `json:"test_assertion_expr"`
 }
 
-type RawValue struct {
+type rawValue struct {
 	Traversal string `json:"traversal"`
 	Statement string `json:"statement"`
 }
 
-type RawTestAssertion struct {
+type rawTestAssertion struct {
 	LHS     string `json:"lhs"`
 	RHS     string `json:"rhs"`
 	Warning string `json:"warning"`
 }
 
 type Raw struct {
-	Severity string   `json:"severity"`
-	Summary  string   `json:"summary"`
-	Detail   string   `json:"detail"`
-	Address  string   `json:"address"`
-	Range    *Range   `json:"range"`
-	Snippet  *Snippet `json:"snippet"`
+	Severity string      `json:"severity"`
+	Summary  string      `json:"summary"`
+	Detail   string      `json:"detail"`
+	Address  string      `json:"address"`
+	Range    *Range      `json:"range"`
+	Snippet  *rawSnippet `json:"snippet"`
 }
 
 type Diagnostic struct {
@@ -76,16 +78,16 @@ type Diagnostic struct {
 
 func Convert(r Raw) Diagnostic {
 	d := Diagnostic{
-		Severity: core.Clean(r.Severity),
-		Summary:  core.Clean(r.Summary),
+		Severity: sanitize.Clean(r.Severity),
+		Summary:  sanitize.Clean(r.Summary),
 		Detail:   strings.TrimSpace(r.Detail),
-		Address:  core.Clean(r.Address),
+		Address:  sanitize.Clean(r.Address),
 	}
 	if d.Severity != "warning" {
 		d.Severity = "error"
 	}
 	if r.Range != nil {
-		d.File = core.Clean(r.Range.Filename)
+		d.File = sanitize.Clean(r.Range.Filename)
 		d.Line = r.Range.Start.Line
 		d.Column = r.Range.Start.Column
 	}
@@ -94,10 +96,10 @@ func Convert(r Raw) Diagnostic {
 		if a := s.TestAssertionExpr; a != nil {
 			d.LHS = strings.TrimSpace(a.LHS)
 			d.RHS = strings.TrimSpace(a.RHS)
-			d.Mismatch = core.Clean(a.Warning)
+			d.Mismatch = sanitize.Clean(a.Warning)
 		} else {
 			for _, v := range s.Values {
-				if line := core.Clean(v.Traversal + " " + v.Statement); line != "" {
+				if line := sanitize.Clean(v.Traversal + " " + v.Statement); line != "" {
 					d.Values = append(d.Values, line)
 				}
 			}
@@ -106,7 +108,7 @@ func Convert(r Raw) Diagnostic {
 	return d
 }
 
-func codeLine(s *Snippet) string {
+func codeLine(s *rawSnippet) string {
 	lines := strings.Split(s.Code, "\n")
 	idx := 0
 	if off := s.HighlightStartOffset; off > 0 && off <= len(s.Code) {
@@ -115,10 +117,10 @@ func codeLine(s *Snippet) string {
 	if idx >= len(lines) {
 		idx = len(lines) - 1
 	}
-	return truncate(core.Clean(lines[idx]), maxCodeBytes)
+	return truncate(sanitize.Clean(lines[idx]), maxCodeBytes)
 }
 
-func Fold(ds []Diagnostic) []Diagnostic {
+func fold(ds []Diagnostic) []Diagnostic {
 	out := make([]Diagnostic, 0, len(ds))
 	index := map[string]int{}
 	for _, d := range ds {
@@ -151,7 +153,7 @@ func severityRank(s string) int {
 	}
 }
 
-func Sort(ds []Diagnostic) {
+func sortDiagnostics(ds []Diagnostic) {
 	slices.SortStableFunc(ds, func(a, b Diagnostic) int {
 		return cmp.Or(
 			cmp.Compare(severityRank(a.Severity), severityRank(b.Severity)),
@@ -164,9 +166,21 @@ func Sort(ds []Diagnostic) {
 	})
 }
 
+func FromLines(lines []logscan.FlaggedLine, address string) []Diagnostic {
+	ds := make([]Diagnostic, 0, len(lines))
+	for _, l := range lines {
+		d := Diagnostic{Severity: "warning", Summary: l.Text, Address: address}
+		if l.Error {
+			d.Severity = "error"
+		}
+		ds = append(ds, d)
+	}
+	return ds
+}
+
 func Normalize(ds []Diagnostic) []Diagnostic {
-	out := Fold(ds)
-	Sort(out)
+	out := fold(ds)
+	sortDiagnostics(out)
 	return out
 }
 
@@ -179,17 +193,28 @@ func Limit(ds []Diagnostic, n int) ([]Diagnostic, int) {
 	return kept, omitted
 }
 
-func Count(ds []Diagnostic) (errors, warnings int) {
+func Count(ds []Diagnostic) (errorCount, warningCount int) {
 	for _, d := range ds {
 		n := max(d.Count, 1)
 		switch d.Severity {
 		case "error":
-			errors += n
+			errorCount += n
 		case "warning":
-			warnings += n
+			warningCount += n
 		}
 	}
-	return errors, warnings
+	return errorCount, warningCount
+}
+
+func CountWords(errorCount, warningCount int) []string {
+	var parts []string
+	if errorCount > 0 {
+		parts = append(parts, fmt.Sprintf("%d %s", errorCount, core.Plural(errorCount, "error", "errors")))
+	}
+	if warningCount > 0 {
+		parts = append(parts, fmt.Sprintf("%d %s", warningCount, core.Plural(warningCount, "warning", "warnings")))
+	}
+	return parts
 }
 
 type WriteOptions struct {
@@ -251,21 +276,24 @@ func writeValue(b *strings.Builder, indent, label, value string) {
 func oneLine(s string) string {
 	var buf bytes.Buffer
 	if json.Compact(&buf, []byte(s)) == nil {
-		return core.Clean(buf.String())
+		return sanitize.Clean(buf.String())
 	}
-	return strings.Join(strings.Fields(core.Clean(s)), " ")
+	return strings.Join(strings.Fields(sanitize.Clean(s)), " ")
+}
+
+func Position(file string, line, column int) string {
+	if file == "" || line <= 0 {
+		return file
+	}
+	if column <= 0 {
+		return fmt.Sprintf("%s:%d", file, line)
+	}
+	return fmt.Sprintf("%s:%d:%d", file, line, column)
 }
 
 func location(d Diagnostic) string {
 	var parts []string
-	if d.File != "" {
-		pos := d.File
-		if d.Line > 0 {
-			pos += fmt.Sprintf(":%d", d.Line)
-			if d.Column > 0 {
-				pos += fmt.Sprintf(":%d", d.Column)
-			}
-		}
+	if pos := Position(d.File, d.Line, d.Column); pos != "" {
 		parts = append(parts, pos)
 	}
 	if d.Address != "" {
@@ -275,7 +303,7 @@ func location(d Diagnostic) string {
 }
 
 func wrap(text string, width, maxLines int) []string {
-	words := strings.Fields(core.Clean(text))
+	words := strings.Fields(sanitize.Clean(text))
 	var lines []string
 	var cur strings.Builder
 	for _, w := range words {

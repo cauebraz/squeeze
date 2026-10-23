@@ -7,9 +7,16 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-var words = map[string]string{"failed": "fail", "canceled": "canceled", "cached": "cached", "done": "done", "running": "running"}
+func word(s stepStatus) string {
+	switch s {
+	case statusFailed:
+		return "fail"
+	case statusCanceled, statusCached, statusDone, statusRunning:
+	}
+	return string(s)
+}
 
-func Text(r Report) string {
+func text(r report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -17,7 +24,7 @@ func Text(r Report) string {
 		b.WriteString("warning: " + w.Message + "\n")
 	}
 	for _, s := range r.Steps {
-		fmt.Fprintf(&b, "%s %s\n", words[s.Status], s.Name)
+		fmt.Fprintf(&b, "%s %s\n", word(s.Status), s.Name)
 		for _, l := range s.Output {
 			b.WriteString("  " + l + "\n")
 		}
@@ -46,7 +53,7 @@ func repeated(err string, final []string) bool {
 	return false
 }
 
-func header(r Report) string {
+func header(r report) string {
 	line := fmt.Sprintf("buildkit: %d %s", r.TotalSteps, core.Plural(r.TotalSteps, "step", "steps"))
 	for _, c := range []struct {
 		n    int

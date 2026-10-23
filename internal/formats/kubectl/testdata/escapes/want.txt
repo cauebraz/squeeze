@@ -1,0 +1,3 @@
+kubectl: 1 object (Pod 1), 1 unhealthy; 1 event, 1 warning
+unhealthy Pod shop/api-7d4b9c red: ImagePullBackOff, 0/1 ready; api waiting ImagePullBackOff; first line second line
+warning Pod shop/api-7d4b9c red BackOff: Back-off pulling image "registry.example.com/api:1.0" (x2)

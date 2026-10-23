@@ -3,15 +3,16 @@ package tfplan
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cauebraz/squeeze/internal/core"
-	"github.com/cauebraz/squeeze/internal/tfdiag"
 	"strconv"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxValueBytes = 48
 
-func Text(r Report, o Options) string {
+func text(r report, o options) string {
 	var b strings.Builder
 	if r.Summary.Errored {
 		b.WriteString("plan errored\n")
@@ -32,18 +33,18 @@ func Text(r Report, o Options) string {
 	}
 	writeChecks(&b, r.Checks)
 	writeDrift(&b, r, o.ListDrift)
-	writeDeferred(&b, r.Deferred)
-	writeActions(&b, r.Actions)
+	writeDeferred(&b, r.Deferred, r.DeferredOmitted)
+	tfdiag.WriteActions(&b, r.Actions)
 	writeDeferredActions(&b, r.DeferredActions)
 	writeOutputs(&b, r.Outputs)
 	return b.String()
 }
 
-func header(r Report) string {
+func header(r report) string {
 	s := r.Summary
 	tool := core.ToolLabel(r.Tool, r.ToolVersion)
 	var parts []string
-	if s.Changed() {
+	if s.changed() {
 		if s.Import > 0 {
 			parts = append(parts, fmt.Sprintf("%d to import", s.Import))
 		}
@@ -60,6 +61,7 @@ func header(r Report) string {
 			{s.Forget, "to forget"},
 			{s.Move, "to move"},
 			{s.Read, "to read"},
+			{s.Unknown, "with unknown actions"},
 		}
 		for _, p := range optional {
 			if p.n > 0 {
@@ -94,7 +96,7 @@ func header(r Report) string {
 	return line
 }
 
-func writeChecks(b *strings.Builder, checks []CheckResult) {
+func writeChecks(b *strings.Builder, checks []checkResult) {
 	if len(checks) == 0 {
 		return
 	}
@@ -111,8 +113,8 @@ func writeChecks(b *strings.Builder, checks []CheckResult) {
 	}
 }
 
-func writeResource(b *strings.Builder, c ResourceChange) {
-	b.WriteString(c.Action.Symbol())
+func writeResource(b *strings.Builder, c resourceChange) {
+	b.WriteString(c.Action.symbol())
 	b.WriteByte(' ')
 	b.WriteString(c.Address)
 	if n := notes(c); len(n) > 0 {
@@ -131,7 +133,7 @@ func writeResource(b *strings.Builder, c ResourceChange) {
 	}
 }
 
-func notes(c ResourceChange) []string {
+func notes(c resourceChange) []string {
 	var n []string
 	if c.Deposed != "" {
 		n = append(n, "deposed object "+c.Deposed)
@@ -139,7 +141,7 @@ func notes(c ResourceChange) []string {
 	if c.PreviousAddress != "" && c.PreviousAddress != c.Address {
 		n = append(n, "moved from "+c.PreviousAddress)
 	}
-	if c.Importing && c.Action != Import {
+	if c.Importing && c.Action != actionImport {
 		n = append(n, "import")
 	}
 	if c.GeneratedLines > 0 {
@@ -150,11 +152,13 @@ func notes(c ResourceChange) []string {
 		n = append(n, g)
 	}
 	switch c.Action {
-	case Forget:
+	case actionForget:
 		n = append(n, "removed from state, not destroyed")
-	case ForgetThenCreate, CreateThenForget:
+	case actionForgetThenCreate, actionCreateThenForget:
 		n = append(n, "existing object not destroyed")
-	case Noop, Create, Read, Update, Delete, Replace, ReplaceCBD, Import:
+	case actionUnknown:
+		n = append(n, unknownNote(c.Actions))
+	case actionNoop, actionCreate, actionRead, actionUpdate, actionDelete, actionReplace, actionReplaceCBD, actionImport:
 	}
 	if len(c.ReplacedBy) > 0 {
 		n = append(n, "replacement forced by "+strings.Join(c.ReplacedBy, ", "))
@@ -168,7 +172,11 @@ func notes(c ResourceChange) []string {
 	return n
 }
 
-func renderScalar(s *Scalar) (string, bool) {
+func unknownNote(actions []string) string {
+	return "unknown actions [" + strings.Join(actions, ", ") + "]"
+}
+
+func renderScalar(s *scalar) (string, bool) {
 	if s == nil {
 		return "", false
 	}
@@ -190,8 +198,8 @@ func renderScalar(s *Scalar) (string, bool) {
 	return out, len(out) <= maxValueBytes
 }
 
-func attrLine(a AttrChange) string {
-	sym := a.Kind.Symbol()
+func attrLine(a attrChange) string {
+	sym := a.Kind.symbol()
 	if a.ForcesReplacement {
 		sym = "!"
 	}
@@ -209,96 +217,76 @@ func attrLine(a AttrChange) string {
 		return prefix + ": " + before + " -> (known after apply)"
 	case a.Unknown:
 		return prefix + ": (known after apply)"
-	case a.Kind == Added && hasAfter:
+	case a.Kind == attrAdded && hasAfter:
 		return prefix + ": " + after
-	case a.Kind == Removed && hasBefore:
+	case a.Kind == attrRemoved && hasBefore:
 		return prefix + ": " + before
-	case a.Kind == Modified && hasBefore && hasAfter:
+	case a.Kind == attrModified && hasBefore && hasAfter:
 		return prefix + ": " + before + " -> " + after
 	default:
 		return prefix
 	}
 }
 
-func writeDrift(b *strings.Builder, r Report, list bool) {
-	if n := len(r.Drift); n > 0 {
+func writeDrift(b *strings.Builder, r report, list bool) {
+	if n := len(r.Drift) + r.DriftOmitted; n > 0 {
 		if list {
 			b.WriteString("drift:\n")
 			for _, c := range r.Drift {
 				writeResource(b, c)
 			}
+			if r.DriftOmitted > 0 {
+				fmt.Fprintf(b, "... %d more drifted %s (--max-resources 0)\n", r.DriftOmitted, core.Plural(r.DriftOmitted, "resource", "resources"))
+			}
 		} else {
 			fmt.Fprintf(b, "... %d drifted %s (--drift)\n", n, core.Plural(n, "resource", "resources"))
 		}
 	}
-	if r.DriftOmitted > 0 {
-		fmt.Fprintf(b, "... %d drifted %s not affecting this plan (--all)\n", r.DriftOmitted, core.Plural(r.DriftOmitted, "resource", "resources"))
+	if r.DriftHidden > 0 {
+		fmt.Fprintf(b, "... %d drifted %s not affecting this plan (--all)\n", r.DriftHidden, core.Plural(r.DriftHidden, "resource", "resources"))
 	}
 }
 
-func writeDeferred(b *strings.Builder, deferred []DeferredChange) {
+func writeDeferred(b *strings.Builder, deferred []deferredChange, omitted int) {
 	if len(deferred) == 0 {
 		return
 	}
 	b.WriteString("deferred:\n")
 	for _, d := range deferred {
-		fmt.Fprintf(b, "%s %s (%s)\n", d.Action.Symbol(), d.Address, d.Reason)
+		reason := d.Reason
+		if d.Action == actionUnknown {
+			reason += "; " + unknownNote(d.Actions)
+		}
+		fmt.Fprintf(b, "%s %s (%s)\n", d.Action.symbol(), d.Address, reason)
+	}
+	if omitted > 0 {
+		fmt.Fprintf(b, "... %d more deferred %s (--max-resources 0)\n", omitted, core.Plural(omitted, "resource", "resources"))
 	}
 }
 
-func writeActions(b *strings.Builder, actions []ActionInvocation) {
-	if len(actions) == 0 {
-		return
-	}
-	items := make([]string, 0, len(actions))
-	for _, a := range actions {
-		items = append(items, actionItem(a, ""))
-	}
-	b.WriteString("actions: ")
-	b.WriteString(strings.Join(items, ", "))
-	b.WriteByte('\n')
-}
-
-func writeDeferredActions(b *strings.Builder, deferred []DeferredAction) {
+func writeDeferredActions(b *strings.Builder, deferred []deferredAction) {
 	if len(deferred) == 0 {
 		return
 	}
 	items := make([]string, 0, len(deferred))
 	for _, d := range deferred {
-		items = append(items, actionItem(d.ActionInvocation, d.Reason))
+		items = append(items, d.Item(d.Reason))
 	}
 	b.WriteString("deferred actions: ")
 	b.WriteString(strings.Join(items, ", "))
 	b.WriteByte('\n')
 }
 
-func actionItem(a ActionInvocation, reason string) string {
-	var n []string
-	switch {
-	case a.Event != "" && a.Resource != "":
-		n = append(n, a.Event+" "+a.Resource)
-	case a.Event != "":
-		n = append(n, a.Event)
-	case a.Invoked:
-		n = append(n, "invoked")
-	}
-	if reason != "" {
-		n = append(n, reason)
-	}
-	if len(n) == 0 {
-		return a.Address
-	}
-	return a.Address + " (" + strings.Join(n, "; ") + ")"
-}
-
-func writeOutputs(b *strings.Builder, outputs []OutputChange) {
+func writeOutputs(b *strings.Builder, outputs []outputChange) {
 	if len(outputs) == 0 {
 		return
 	}
 	items := make([]string, 0, len(outputs))
 	for _, o := range outputs {
-		item := o.Action.Symbol() + " " + o.Name
+		item := o.Action.symbol() + " " + o.Name
 		switch {
+		case o.Action == actionUnknown:
+			item += " (" + unknownNote(o.Actions) + ")"
 		case o.Sensitive:
 			item += " (sensitive)"
 		case o.Unknown:

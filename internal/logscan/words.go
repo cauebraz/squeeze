@@ -1,4 +1,4 @@
-package core
+package logscan
 
 import "regexp"
 

@@ -13,9 +13,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/formattest"
-	"github.com/google/go-cmp/cmp"
 )
 
 const formatsDir = "../formats"
@@ -765,9 +766,9 @@ func TestSharedConditionsAreAcceptedEverywhere(t *testing.T) {
 			t.Errorf("%s: code = %d, stderr = %q", f.Name(), r.code, r.stderr)
 		}
 	}
-	r := runCLI(t, nil, "npmaudit", "-h")
-	if !strings.Contains(r.stdout, "  critical, fail, fixable, high, info, low, moderate\n  error, warning: accepted, never present for this format\n") {
-		t.Errorf("npmaudit help:\n%s", r.stdout)
+	r := runCLI(t, nil, "junit", "-h")
+	if !strings.Contains(r.stdout, "  error, fail, flaky, skip\n  warning: accepted, never present for this format\n") {
+		t.Errorf("junit help:\n%s", r.stdout)
 	}
 }
 

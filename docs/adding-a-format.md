@@ -41,7 +41,7 @@ A flag variant is a new case with an `args` file and a symlinked input, so every
 
 ## Checklist
 
-1. Create `internal/formats/<name>/` with the format and its unit tests. Use `github.com/google/go-cmp` for structural comparisons in tests.
+1. Create `internal/formats/<name>/` with the format and its unit tests. The package exports only `Format`; its files follow `format.go` (the `core.Format` methods and `squeeze`), `parse.go` (raw input types named `raw<Thing>`), `build.go` (the report that becomes `data`) and `text.go`. A string with a fixed set of values is a named type with constants. Use `github.com/google/go-cmp` for structural comparisons in tests.
 2. Add one case directory per scenario, from the tool's real output or its published schema. Never use private or employer material, and never copy test data from a source whose license is not compatible with MIT.
 3. Add a contract test; it checks detection, determinism, plain text, the cut-notice shape (`... N <what> (<flag>)`), that every declared condition appears in some case, the JSON envelope (one line of plain text, like the text output) and the golden files of every case:
 
@@ -58,6 +58,11 @@ A flag variant is a new case with an `args` file and a symlinked input, so every
 8. Add `docs/formats/<name>.md` and a row in the README's format table, in registry order.
    - The page reads, in order: an `Input:` line; `## Agent line`, the line a project pastes into its `AGENTS.md`, with the exact command and any caveat; `## Example`, with what the format saves and a `Detection:` bullet; then `## Output`, `## Flags`, `## Conditions for --fail-on`, `## JSON data` and `## Limitations`.
    - A test in `internal/cli` compares the flags table with `squeeze <name> -h` and the conditions table with `Conditions()`.
-9. `data` always holds `tool` and `tool_version`, empty when the tool prints none. The noun in `--max-<items>`, in the cut notice and in the `<items>_omitted` key is the same word; a breakdown of the cut items is `omitted_by_<dimension>`. Use the shared helpers in `internal/core` (`CountFlag`, `Plural`, `Limit`, `LimitTail`, `TailLines`, `Truncate`, `Ellipsis`, `ToolLabel`, `Seconds`, `Clean`, `Line`, `DecodeJSON`, `FlaggedLines`, `NoticeName`, `Dedent`, `SplitLines`, `SharedConditions()`) and `internal/jsonl` for line-delimited JSON input, instead of local copies. Flags that mean the same thing keep the same name across formats: `--max-<items>`, `--full`, `--all`.
+9. `data` always holds `tool` and `tool_version`, empty when the tool prints none. The noun in `--max-<items>`, in the cut notice and in the `<items>_omitted` key is the same word; a breakdown of the cut items is `omitted_by_<dimension>`. Use the shared helpers instead of local copies:
+   - `internal/core`: `CountFlag`, `Plural`, `Limit`, `LimitTail`, `Truncate`, `Ellipsis`, `ToolLabel`, `Seconds`, `DecodeJSON`, `HasJSONPrefix`, `NoticeName`, `Dedent`, `SplitLines`, `TrimRoot`, `Block` (`HeadBlock`, `TailBlock`), `JoinCounts`, `UnknownNotice`, `SortedCounts`, `TopCounts`, `SeverityOrder` and `SharedConditions()`.
+   - `internal/sanitize`: `Clean` for a single-line value, `Line` and `NarrowLine` for a line of tool output.
+   - `internal/logscan`: `ErrorLine`, `WarningLine`, `FlaggedLines` for error and warning lines after a JSON document, `LeadingLines` for the ones before it, and `TailLines`.
+   - `internal/tfdiag` for diagnostics with file and line: `Convert`, `FromLines`, `Normalize`, `Write`, `CountWords`, `CheckFormatVersion`.
+   - `internal/jsonl` for line-delimited JSON input. Flags that mean the same thing keep the same name across formats: `--max-<items>`, `--full`, `--all`.
 
 Commit a `testdata/fuzz/` corpus entry only for an input the fuzzer found that crashed or broke an invariant; the seeds come from the fixtures. Real tool output that must stay private goes in `internal/formats/<name>/testdata/real/`, which git ignores. `formattest.Real` runs over every file there that the format detects, or over the directory named by `SQUEEZE_REAL_DIR`. An empty `testdata/real/` skips the test; a `SQUEEZE_REAL_DIR` with no input the format detects fails it, so `just conformance` cannot pass on a corpus that moved.

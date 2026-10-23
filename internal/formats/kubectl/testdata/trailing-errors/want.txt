@@ -1,0 +1,4 @@
+kubectl: 1 object (Pod 1), 1 unhealthy
+error: the server doesn't have a resource type "widgets"
+warning: policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+unhealthy Pod shop/worker-56bff96fc9-c8xj6: CrashLoopBackOff, 0/1 ready, 3 restarts; worker waiting CrashLoopBackOff, last Error exit 1

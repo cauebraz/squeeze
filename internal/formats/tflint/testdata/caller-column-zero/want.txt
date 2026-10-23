@@ -1,0 +1,3 @@
+tflint: 1 issue, 1 error
+error: "t9.micro" is an invalid value as instance_type (main.tf:12, aws_instance_invalid_type)
+  evaluated in modules/app/main.tf:4

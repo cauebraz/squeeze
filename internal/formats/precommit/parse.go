@@ -8,57 +8,58 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
-var ErrNoRun = errors.New("no pre-commit hook status line or message in the input")
+var errNoRun = errors.New("no pre-commit hook status line or message in the input")
 
-type Status string
+type hookStatus string
 
 const (
-	Passed     Status = "passed"
-	Failed     Status = "failed"
-	Skipped    Status = "skipped"
-	Unfinished Status = "unfinished"
+	statusPassed     hookStatus = "passed"
+	statusFailed     hookStatus = "failed"
+	statusSkipped    hookStatus = "skipped"
+	statusUnfinished hookStatus = "unfinished"
 )
 
 const (
-	minWidth = 79
-	endLen   = 6
-	noFiles  = "(no files to check)"
-)
-
-var (
-	statusLine   = regexp.MustCompile(`^(\S.*?)\.{3,}(\(no files to check\))?(Passed|Failed|Skipped)$`)
-	fatalLine    = regexp.MustCompile(`^(An error has occurred|An unexpected error has occurred|Interrupted \(\^C\)): `)
-	startedLine  = regexp.MustCompile(`^(\S.*?)\.{3,}((?:An error has occurred|An unexpected error has occurred|Interrupted \(\^C\)): .*)$`)
-	hookID       = regexp.MustCompile(`^- hook id: (.*)$`)
-	duration     = regexp.MustCompile(`^- duration: (\d+(?:\.\d+)?)s$`)
-	exitCode     = regexp.MustCompile(`^- exit code: (-?\d+)$`)
-	diffFile     = regexp.MustCompile(`^diff --git a/(.*) b/`)
-	noHook       = regexp.MustCompile("^No hook with id `.*` in stage `.*`$")
+	minWidth     = 79
+	endLen       = 6
+	noFiles      = "(no files to check)"
 	modifiedLine = "- files were modified by this hook"
 	madeChanges  = "pre-commit hook(s) made changes."
 	allChanges   = "All changes made by hooks:"
 )
 
-type Hook struct {
-	Name     string  `json:"name"`
-	ID       string  `json:"id"`
-	Status   Status  `json:"status"`
-	NoFiles  bool    `json:"no_files"`
-	ExitCode int     `json:"exit_code"`
-	Modified bool    `json:"files_modified"`
-	Duration float64 `json:"duration_seconds"`
+var (
+	statusLine  = regexp.MustCompile(`^(\S.*?)\.{3,}(\(no files to check\))?(Passed|Failed|Skipped)$`)
+	fatalLine   = regexp.MustCompile(`^(An error has occurred|An unexpected error has occurred|Interrupted \(\^C\)): `)
+	startedLine = regexp.MustCompile(`^(\S.*?)\.{3,}((?:An error has occurred|An unexpected error has occurred|Interrupted \(\^C\)): .*)$`)
+	hookID      = regexp.MustCompile(`^- hook id: (.*)$`)
+	duration    = regexp.MustCompile(`^- duration: (\d+(?:\.\d+)?)s$`)
+	exitCode    = regexp.MustCompile(`^- exit code: (-?\d+)$`)
+	diffFile    = regexp.MustCompile(`^diff --git a/(.*) b/`)
+	noHook      = regexp.MustCompile("^No hook with id `.*` in stage `.*`$")
+)
+
+type hook struct {
+	Name     string     `json:"name"`
+	ID       string     `json:"id"`
+	Status   hookStatus `json:"status"`
+	NoFiles  bool       `json:"no_files"`
+	ExitCode int        `json:"exit_code"`
+	Modified bool       `json:"files_modified"`
+	Duration float64    `json:"duration_seconds"`
 	lines    []string
 }
 
-type Run struct {
-	Hooks        []Hook
-	Errors       []string
-	Warnings     []string
-	Other        []string
-	ChangedFiles []string
-	Diff         []string
+type parsed struct {
+	hooks        []hook
+	errors       []string
+	warnings     []string
+	other        []string
+	changedFiles []string
+	diff         []string
 }
 
 func width(s string) int {
@@ -89,7 +90,7 @@ func clean(raw []byte) (string, bool) {
 	if bytes.IndexByte(raw, '\t') >= 0 {
 		return "", false
 	}
-	return core.Line(string(raw)), true
+	return sanitize.Line(string(raw)), true
 }
 
 func detect(head []byte) bool {
@@ -119,14 +120,14 @@ const (
 )
 
 type parser struct {
-	run   Run
+	run   parsed
 	cols  int
 	state state
 	found bool
 }
 
-func (p *parser) hook() *Hook {
-	return &p.run.Hooks[len(p.run.Hooks)-1]
+func (p *parser) current() *hook {
+	return &p.run.hooks[len(p.run.hooks)-1]
 }
 
 func (p *parser) status(l string) bool {
@@ -139,8 +140,8 @@ func (p *parser) status(l string) bool {
 		return false
 	}
 	p.cols = w
-	h := Hook{Name: core.Clean(m[1]), Status: Status(strings.ToLower(m[3])), NoFiles: m[2] == noFiles}
-	p.run.Hooks = append(p.run.Hooks, h)
+	h := hook{Name: sanitize.Clean(m[1]), Status: hookStatus(strings.ToLower(m[3])), NoFiles: m[2] == noFiles}
+	p.run.hooks = append(p.run.hooks, h)
 	p.state = meta
 	return true
 }
@@ -154,20 +155,30 @@ func (p *parser) started(l string) bool {
 	if (p.cols == 0 && w < minWidth-endLen) || (p.cols != 0 && w != p.cols-endLen) {
 		return false
 	}
-	p.run.Hooks = append(p.run.Hooks, Hook{Name: core.Clean(l[m[2]:m[3]]), Status: Unfinished})
-	p.run.Errors = append(p.run.Errors, core.Clean(l[m[4]:m[5]]))
+	p.run.hooks = append(p.run.hooks, hook{Name: sanitize.Clean(l[m[2]:m[3]]), Status: statusUnfinished})
+	p.run.errors = append(p.run.errors, sanitize.Clean(l[m[4]:m[5]]))
 	p.state = top
 	return true
 }
 
 func (p *parser) meta(l string) bool {
-	h := p.hook()
+	h := p.current()
 	if m := hookID.FindStringSubmatch(l); m != nil {
-		h.ID = core.Clean(m[1])
+		h.ID = sanitize.Clean(m[1])
 	} else if m := duration.FindStringSubmatch(l); m != nil {
-		h.Duration, _ = strconv.ParseFloat(m[1], 64)
+		d, err := strconv.ParseFloat(m[1], 64)
+		if err != nil {
+			p.run.other = append(p.run.other, l)
+			return true
+		}
+		h.Duration = d
 	} else if m := exitCode.FindStringSubmatch(l); m != nil {
-		h.ExitCode, _ = strconv.Atoi(m[1])
+		c, err := strconv.Atoi(m[1])
+		if err != nil {
+			p.run.other = append(p.run.other, l)
+			return true
+		}
+		h.ExitCode = c
 	} else if l == modifiedLine {
 		h.Modified = true
 	} else {
@@ -183,15 +194,15 @@ func (p *parser) top(l string) {
 		p.found = true
 	case strings.HasPrefix(l, "[WARNING] "):
 		p.found = true
-		p.run.Warnings = append(p.run.Warnings, core.Clean(strings.TrimPrefix(l, "[WARNING] ")))
+		p.run.warnings = append(p.run.warnings, sanitize.Clean(strings.TrimPrefix(l, "[WARNING] ")))
 	case strings.HasPrefix(l, "[ERROR] "):
 		p.found = true
-		p.run.Errors = append(p.run.Errors, core.Clean(strings.TrimPrefix(l, "[ERROR] ")))
+		p.run.errors = append(p.run.errors, sanitize.Clean(strings.TrimPrefix(l, "[ERROR] ")))
 	case noHook.MatchString(l):
 		p.found = true
-		p.run.Errors = append(p.run.Errors, core.Clean(l))
+		p.run.errors = append(p.run.errors, sanitize.Clean(l))
 	default:
-		p.run.Other = append(p.run.Other, l)
+		p.run.other = append(p.run.other, l)
 	}
 }
 
@@ -201,7 +212,7 @@ func (p *parser) line(l string) {
 	}
 	if fatalLine.MatchString(l) {
 		p.found = true
-		p.run.Errors = append(p.run.Errors, core.Clean(l))
+		p.run.errors = append(p.run.errors, sanitize.Clean(l))
 		p.state = top
 		return
 	}
@@ -225,31 +236,31 @@ func (p *parser) line(l string) {
 		p.state = top
 		p.top(l)
 	case output:
-		h := p.hook()
+		h := p.current()
 		h.lines = append(h.lines, l)
 	case trailer:
 	case diff:
 		if m := diffFile.FindStringSubmatch(l); m != nil {
-			p.run.ChangedFiles = append(p.run.ChangedFiles, core.Clean(m[1]))
+			p.run.changedFiles = append(p.run.changedFiles, sanitize.Clean(m[1]))
 		}
-		p.run.Diff = append(p.run.Diff, l)
+		p.run.diff = append(p.run.diff, l)
 	case top:
 		p.top(l)
 	}
 }
 
-func Parse(input []byte) (Run, error) {
-	p := parser{run: Run{Hooks: []Hook{}, Errors: []string{}, Warnings: []string{}, Other: []string{}, ChangedFiles: []string{}, Diff: []string{}}}
+func parse(input []byte) (parsed, error) {
+	p := parser{run: parsed{hooks: []hook{}, errors: []string{}, warnings: []string{}, other: []string{}, changedFiles: []string{}, diff: []string{}}}
 	for raw := range core.SplitLines(string(input)) {
-		p.line(core.Line(raw))
+		p.line(sanitize.Line(raw))
 	}
-	if len(p.run.Hooks) == 0 && !p.found {
-		return Run{}, ErrNoRun
+	if len(p.run.hooks) == 0 && !p.found {
+		return parsed{}, errNoRun
 	}
-	for i := range p.run.Hooks {
-		p.run.Hooks[i].lines = trimBlank(p.run.Hooks[i].lines)
+	for i := range p.run.hooks {
+		p.run.hooks[i].lines = trimBlank(p.run.hooks[i].lines)
 	}
-	p.run.Other = trimBlank(p.run.Other)
+	p.run.other = trimBlank(p.run.other)
 	return p.run, nil
 }
 

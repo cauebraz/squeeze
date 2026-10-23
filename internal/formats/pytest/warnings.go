@@ -1,9 +1,6 @@
 package pytest
 
-import (
-	"strconv"
-	"strings"
-)
+import "strings"
 
 type warningParser struct {
 	locations int
@@ -22,7 +19,7 @@ func (w *warningParser) flush() {
 		if _, seen := w.byMsg[w.message]; !seen {
 			w.order = append(w.order, w.message)
 		}
-		w.byMsg[w.message] += w.locations
+		w.byMsg[w.message] = addCounts(w.byMsg[w.message], w.locations)
 	}
 	w.locations, w.message, w.closed, w.open = 0, "", false, false
 }
@@ -47,10 +44,9 @@ func (w *warningParser) line(l string) {
 		}
 		w.open = true
 		if m := locationCount.FindStringSubmatch(t); m != nil {
-			n, _ := strconv.Atoi(m[1])
-			w.locations += n
+			w.locations = addCounts(w.locations, parseCount(m[1]))
 		} else {
-			w.locations++
+			w.locations = addCounts(w.locations, 1)
 		}
 	case strings.HasPrefix(l, "    "):
 		w.closed = true
@@ -65,11 +61,11 @@ func isWarningLocation(t string) bool {
 	return !strings.Contains(t, " ") || locationCount.MatchString(t)
 }
 
-func (w *warningParser) result() []Warning {
+func (w *warningParser) result() []warningMessage {
 	w.flush()
-	out := make([]Warning, 0, len(w.order))
+	out := make([]warningMessage, 0, len(w.order))
 	for _, msg := range w.order {
-		out = append(out, Warning{Message: msg, Count: w.byMsg[msg]})
+		out = append(out, warningMessage{Message: msg, Count: w.byMsg[msg]})
 	}
 	return out
 }

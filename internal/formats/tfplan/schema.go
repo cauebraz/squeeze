@@ -3,99 +3,99 @@ package tfplan
 import (
 	"encoding/json"
 
-	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/logscan"
 )
 
-type Plan struct {
+type rawPlan struct {
 	FormatVersion      string                `json:"format_version"`
 	TerraformVersion   string                `json:"terraform_version"`
 	PlannedValues      json.RawMessage       `json:"planned_values"`
 	Values             json.RawMessage       `json:"values"`
-	ResourceDrift      []PlanResource        `json:"resource_drift"`
-	ResourceChanges    []PlanResource        `json:"resource_changes"`
-	DeferredChanges    []PlanDeferred        `json:"deferred_changes"`
-	DeferredActions    []PlanDeferredAction  `json:"deferred_action_invocations"`
-	OutputChanges      map[string]PlanChange `json:"output_changes"`
-	ActionInvocations  []PlanAction          `json:"action_invocations"`
-	RelevantAttributes []PlanRelevantAttr    `json:"relevant_attributes"`
-	Checks             []PlanCheck           `json:"checks"`
+	ResourceDrift      []rawResource         `json:"resource_drift"`
+	ResourceChanges    []rawResource         `json:"resource_changes"`
+	DeferredChanges    []rawDeferred         `json:"deferred_changes"`
+	DeferredActions    []rawDeferredAction   `json:"deferred_action_invocations"`
+	OutputChanges      map[string]rawChange  `json:"output_changes"`
+	ActionInvocations  []rawAction           `json:"action_invocations"`
+	RelevantAttributes []rawRelevantAttr     `json:"relevant_attributes"`
+	Checks             []rawCheck            `json:"checks"`
 	Errored            bool                  `json:"errored"`
 	Complete           *bool                 `json:"complete"`
-	Trailing           []core.FlaggedLine    `json:"-"`
+	Trailing           []logscan.FlaggedLine `json:"-"`
 }
 
-type PlanCheck struct {
-	Address   PlanCheckAddress    `json:"address"`
-	Status    string              `json:"status"`
-	Instances []PlanCheckInstance `json:"instances"`
+type rawCheck struct {
+	Address   rawCheckAddress    `json:"address"`
+	Status    string             `json:"status"`
+	Instances []rawCheckInstance `json:"instances"`
 }
 
-type PlanCheckAddress struct {
+type rawCheckAddress struct {
 	Kind      string `json:"kind"`
 	ToDisplay string `json:"to_display"`
 }
 
-type PlanCheckInstance struct {
-	Address  PlanCheckAddress   `json:"address"`
-	Status   string             `json:"status"`
-	Problems []PlanCheckProblem `json:"problems"`
+type rawCheckInstance struct {
+	Address  rawCheckAddress   `json:"address"`
+	Status   string            `json:"status"`
+	Problems []rawCheckProblem `json:"problems"`
 }
 
-type PlanCheckProblem struct {
+type rawCheckProblem struct {
 	Message string `json:"message"`
 }
 
-type PlanResource struct {
-	Address         string     `json:"address"`
-	PreviousAddress string     `json:"previous_address"`
-	Deposed         string     `json:"deposed"`
-	ActionReason    string     `json:"action_reason"`
-	Change          PlanChange `json:"change"`
+type rawResource struct {
+	Address         string    `json:"address"`
+	PreviousAddress string    `json:"previous_address"`
+	Deposed         string    `json:"deposed"`
+	ActionReason    string    `json:"action_reason"`
+	Change          rawChange `json:"change"`
 }
 
-type PlanChange struct {
-	Actions         []string       `json:"actions"`
-	Before          any            `json:"before"`
-	After           any            `json:"after"`
-	AfterUnknown    any            `json:"after_unknown"`
-	BeforeSensitive any            `json:"before_sensitive"`
-	AfterSensitive  any            `json:"after_sensitive"`
-	ReplacePaths    [][]any        `json:"replace_paths"`
-	Importing       *PlanImporting `json:"importing"`
-	GeneratedConfig string         `json:"generated_config"`
+type rawChange struct {
+	Actions         []string      `json:"actions"`
+	Before          any           `json:"before"`
+	After           any           `json:"after"`
+	AfterUnknown    any           `json:"after_unknown"`
+	BeforeSensitive any           `json:"before_sensitive"`
+	AfterSensitive  any           `json:"after_sensitive"`
+	ReplacePaths    [][]any       `json:"replace_paths"`
+	Importing       *rawImporting `json:"importing"`
+	GeneratedConfig string        `json:"generated_config"`
 }
 
-type PlanImporting struct {
+type rawImporting struct {
 	ID       string `json:"id"`
 	Identity any    `json:"identity"`
 }
 
-type PlanDeferred struct {
-	Reason         string       `json:"reason"`
-	ResourceChange PlanResource `json:"resource_change"`
+type rawDeferred struct {
+	Reason         string      `json:"reason"`
+	ResourceChange rawResource `json:"resource_change"`
 }
 
-type PlanDeferredAction struct {
-	Reason           string     `json:"reason"`
-	ActionInvocation PlanAction `json:"action_invocation"`
+type rawDeferredAction struct {
+	Reason           string    `json:"reason"`
+	ActionInvocation rawAction `json:"action_invocation"`
 }
 
-type PlanAction struct {
-	Address                string                   `json:"address"`
-	LifecycleActionTrigger *PlanLifecycleTrigger    `json:"lifecycle_action_trigger"`
-	InvokeActionTrigger    *PlanInvokeActionTrigger `json:"invoke_action_trigger"`
+type rawAction struct {
+	Address                string                  `json:"address"`
+	LifecycleActionTrigger *rawLifecycleTrigger    `json:"lifecycle_action_trigger"`
+	InvokeActionTrigger    *rawInvokeActionTrigger `json:"invoke_action_trigger"`
 }
 
-type PlanLifecycleTrigger struct {
+type rawLifecycleTrigger struct {
 	TriggeringResourceAddress string `json:"triggering_resource_address"`
 	ActionTriggerEvent        string `json:"action_trigger_event"`
 }
 
-type PlanInvokeActionTrigger struct {
+type rawInvokeActionTrigger struct {
 	CallingResourceAddress string `json:"calling_resource_address"`
 }
 
-type PlanRelevantAttr struct {
+type rawRelevantAttr struct {
 	Resource  string `json:"resource"`
 	Attribute []any  `json:"attribute"`
 }

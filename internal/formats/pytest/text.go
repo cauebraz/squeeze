@@ -2,11 +2,12 @@ package pytest
 
 import (
 	"fmt"
-	"github.com/cauebraz/squeeze/internal/core"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
-func Text(r Report, o Options) string {
+func render(r report, o options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -19,10 +20,10 @@ func Text(r Report, o Options) string {
 	for _, f := range r.Failures {
 		writeFailure(&b, f, o.Full)
 	}
-	if r.FailuresOmitted > 0 {
-		fmt.Fprintf(&b, "... %d more %s (--max-tests 0)\n", r.FailuresOmitted, core.Plural(r.FailuresOmitted, "failed or errored test", "failed or errored tests"))
+	if r.TestsOmitted > 0 {
+		fmt.Fprintf(&b, "... %d more %s (--max-tests 0)\n", r.TestsOmitted, core.Plural(r.TestsOmitted, "failed or errored test", "failed or errored tests"))
 	}
-	for _, w := range r.Warnings {
+	for _, w := range r.WarningMessages {
 		fmt.Fprintf(&b, "warning %s", w.Message)
 		if w.Count > 1 {
 			fmt.Fprintf(&b, " (x%d)", w.Count)
@@ -34,20 +35,15 @@ func Text(r Report, o Options) string {
 	}
 	if len(r.Notes) > 0 {
 		b.WriteString("output outside the report sections:\n")
-		if r.NotesOmitted > 0 {
-			fmt.Fprintf(&b, "  ... %d earlier %s (--max-output 0)\n", r.NotesOmitted, core.Plural(r.NotesOmitted, "line", "lines"))
-		}
-		for _, n := range r.Notes {
-			b.WriteString("  " + n + "\n")
-		}
+		core.Block{Lines: r.Notes, Omitted: r.NotesOmitted}.WriteTail(&b, "  ", "--max-output")
 	}
 	if o.All {
 		for _, l := range r.Outcomes {
 			b.WriteString(l + "\n")
 		}
-		for _, title := range r.sectionOrder {
-			fmt.Fprintf(&b, "section %s:\n", title)
-			for _, l := range r.sectionLines[title] {
+		for _, sec := range r.OtherSectionLines {
+			fmt.Fprintf(&b, "section %s:\n", sec.Name)
+			for _, l := range sec.Lines {
 				b.WriteString("  " + l + "\n")
 			}
 		}
@@ -57,88 +53,75 @@ func Text(r Report, o Options) string {
 	return b.String()
 }
 
-func header(r Report) string {
-	tool := core.ToolLabel(r.Tool, r.Version)
-	if !r.Complete {
+func header(r report) string {
+	tool := core.ToolLabel(r.Tool, r.ToolVersion)
+	if !r.SummaryFound {
 		return tool + ": no summary line"
 	}
 	return tool + ": " + r.Summary.Line
 }
 
-func writeFailure(b *strings.Builder, f Failure, full bool) {
-	word := "FAILED"
-	if f.Kind == "error" {
-		word = "ERROR"
-	}
+func writeFailure(b *strings.Builder, f failure, full bool) {
 	name := f.Test
 	if name == "" {
 		name = "(entry without a node id)"
 	}
-	fmt.Fprintf(b, "%s %s", word, name)
+	fmt.Fprintf(b, "%s %s", f.Kind.word(), name)
 	if f.Subtest != "" {
 		b.WriteString(" " + f.Subtest)
 	}
 	if f.When != "" {
 		fmt.Fprintf(b, " (%s)", f.When)
 	}
-	if f.Untracked && f.Message != "" {
+	if f.FromSummaryOnly && f.Message != "" {
 		b.WriteString(" - " + f.Message)
 	}
 	b.WriteByte('\n')
-	if f.Omitted > 0 {
-		fmt.Fprintf(b, "  ... %d earlier %s (--max-output 0)\n", f.Omitted, core.Plural(f.Omitted, "line", "lines"))
-	}
-	for _, l := range f.Lines {
-		b.WriteString("  " + l + "\n")
-	}
-	var hidden []string
+	f.WriteTail(b, "  ", "--max-output")
 	if f.Hidden > 0 {
-		hidden = append(hidden, fmt.Sprintf("%d traceback %s", f.Hidden, core.Plural(f.Hidden, "line", "lines")))
+		fmt.Fprintf(b, "  ... %d traceback %s (--full)\n", f.Hidden, core.Plural(f.Hidden, "line", "lines"))
 	}
-	if len(hidden) > 0 {
-		fmt.Fprintf(b, "  ... %s (--full)\n", strings.Join(hidden, "; "))
-	}
-	defer func() {
-		if n := len(f.Same); n > 0 {
-			fmt.Fprintf(b, "  ... %d more %s from %s (--no-fold)\n", n, core.Plural(n, failureWord(f), failureWord(f)+"s"), f.Location)
-		}
-	}()
-	if !full {
-		names := make([]string, 0, len(f.Captured))
-		count := 0
-		for _, c := range f.Captured {
-			names = append(names, c.Name)
-			count += len(c.Lines) + c.Omitted
-		}
-		if len(f.Captured) > 0 {
-			fmt.Fprintf(b, "  ... %d captured %s in %s (--full)\n", count, core.Plural(count, "line", "lines"), strings.Join(names, " and "))
-		}
-		return
-	}
-	for _, c := range f.Captured {
-		fmt.Fprintf(b, "  captured %s:\n", c.Name)
-		if c.Omitted > 0 {
-			fmt.Fprintf(b, "    ... %d earlier %s (--max-output 0)\n", c.Omitted, core.Plural(c.Omitted, "line", "lines"))
-		}
-		for _, l := range c.Lines {
-			b.WriteString("    " + l + "\n")
-		}
+	writeCaptured(b, f.Captured, full)
+	if n := len(f.SameLocationTests); n > 0 {
+		fmt.Fprintf(b, "  ... %d more %s from %s (--no-fold)\n", n, core.Plural(n, failureWord(f), failureWord(f)+"s"), f.Location)
 	}
 }
 
-func failureWord(f Failure) string {
-	if f.Kind == "error" {
+func writeCaptured(b *strings.Builder, captured []capturedSection, full bool) {
+	if full {
+		for _, c := range captured {
+			fmt.Fprintf(b, "  captured %s:\n", c.Name)
+			c.WriteTail(b, "    ", "--max-output")
+		}
+		return
+	}
+	if len(captured) == 0 {
+		return
+	}
+	names := make([]string, 0, len(captured))
+	count := 0
+	for _, c := range captured {
+		names = append(names, c.Name)
+		count += len(c.Lines) + c.Omitted
+	}
+	fmt.Fprintf(b, "  ... %d captured %s in %s (--full)\n", count, core.Plural(count, "line", "lines"), strings.Join(names, " and "))
+}
+
+func failureWord(f failure) string {
+	switch f.Kind {
+	case kindError:
 		return "error"
+	case kindFailed:
 	}
 	return "failure"
 }
 
-func writeCounted(b *strings.Builder, r Report) {
+func writeCounted(b *strings.Builder, r report) {
 	if n := len(r.Outcomes); n > 0 {
 		fmt.Fprintf(b, "... %d short summary %s for passed, skipped, xfailed or xpassed tests (--all)\n", n, core.Plural(n, "line", "lines"))
 	}
-	for _, title := range r.sectionOrder {
-		n := r.Sections[title]
-		fmt.Fprintf(b, "... %d %s in section %q (--all)\n", n, core.Plural(n, "line", "lines"), title)
+	for _, sec := range r.OtherSectionLines {
+		n := len(sec.Lines)
+		fmt.Fprintf(b, "... %d %s in section %q (--all)\n", n, core.Plural(n, "line", "lines"), sec.Name)
 	}
 }

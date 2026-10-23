@@ -1,0 +1,6 @@
+terraform 1.9.5 plan: 1 to add, 0 to change, 0 to destroy, 1 with unknown actions; 1 deferred; 1 output changed; incomplete
+? aws_s3_bucket.archive (unknown actions [archive, delete])
++ aws_s3_bucket.logs
+deferred:
+? aws_s3_bucket.later (provider_config_unknown; unknown actions [archive])
+outputs: ? bucket (unknown actions [archive])

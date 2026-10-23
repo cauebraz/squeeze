@@ -1,15 +1,18 @@
 package precommit
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/cauebraz/squeeze/internal/core"
-	"github.com/cauebraz/squeeze/internal/formattest"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/formattest"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 )
 
 const fixtureDir = "testdata"
@@ -23,17 +26,17 @@ func fixture(t testing.TB, name string) []byte {
 	return data
 }
 
-func report(t *testing.T, input []byte, o Options) Report {
+func mustReport(t *testing.T, input []byte, o options) report {
 	t.Helper()
-	r, err := Squeeze(input, o)
+	r, err := squeeze(input, o)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r.Data.(Report)
+	return r.Data.(report)
 }
 
 func status(name, postfix, end string) string {
-	return name + strings.Repeat(".", 79-width(core.Line(name))-len(postfix)-len(end)) + postfix + end
+	return name + strings.Repeat(".", 79-width(sanitize.Line(name))-len(postfix)-len(end)) + postfix + end
 }
 
 func TestContract(t *testing.T) {
@@ -76,21 +79,21 @@ func TestDetect(t *testing.T) {
 
 func TestParseFailedRun(t *testing.T) {
 	t.Parallel()
-	run, err := Parse(fixture(t, "failed"))
+	run, err := parse(fixture(t, "failed"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []Hook{
-		{Name: "trim trailing whitespace", ID: "trailing-whitespace", Status: Failed, ExitCode: 1, Modified: true},
-		{Name: "fix end of files", ID: "end-of-file-fixer", Status: Failed, ExitCode: 1, Modified: true},
-		{Name: "check yaml", ID: "check-yaml", Status: Failed, ExitCode: 1},
-		{Name: "check json", Status: Skipped, NoFiles: true},
-		{Name: "check for added large files", Status: Passed},
-		{Name: "expand tabs in markdown", ID: "expand-tabs", Status: Failed, Modified: true},
-		{Name: "forbid TODO markers", ID: "no-todo", Status: Failed, ExitCode: 1},
-		{Name: "go vet", Status: Skipped, NoFiles: true},
+	want := []hook{
+		{Name: "trim trailing whitespace", ID: "trailing-whitespace", Status: statusFailed, ExitCode: 1, Modified: true},
+		{Name: "fix end of files", ID: "end-of-file-fixer", Status: statusFailed, ExitCode: 1, Modified: true},
+		{Name: "check yaml", ID: "check-yaml", Status: statusFailed, ExitCode: 1},
+		{Name: "check json", Status: statusSkipped, NoFiles: true},
+		{Name: "check for added large files", Status: statusPassed},
+		{Name: "expand tabs in markdown", ID: "expand-tabs", Status: statusFailed, Modified: true},
+		{Name: "forbid TODO markers", ID: "no-todo", Status: statusFailed, ExitCode: 1},
+		{Name: "go vet", Status: statusSkipped, NoFiles: true},
 	}
-	if diff := cmp.Diff(want, run.Hooks, cmpopts.IgnoreUnexported(Hook{})); diff != "" {
+	if diff := cmp.Diff(want, run.hooks, cmpopts.IgnoreUnexported(hook{})); diff != "" {
 		t.Errorf("hooks (-want +got):\n%s", diff)
 	}
 	wantLines := [][]string{
@@ -101,38 +104,38 @@ func TestParseFailedRun(t *testing.T) {
 		{"73:# TODO: sort keys", "pre_commit_hooks/check_yaml.py: TODO markers are not allowed", "39:# TODO drop python 3.9 support", "pre_commit_hooks/check_json.py: TODO markers are not allowed"},
 		nil,
 	}
-	for i, h := range run.Hooks {
+	for i, h := range run.hooks {
 		if diff := cmp.Diff(wantLines[i], h.lines, cmpopts.EquateEmpty()); diff != "" {
 			t.Errorf("%s output (-want +got):\n%s", h.Name, diff)
 		}
 	}
-	if len(run.Other) != 0 || len(run.Errors) != 0 {
-		t.Errorf("other %q, errors %q", run.Other, run.Errors)
+	if len(run.other) != 0 || len(run.errors) != 0 {
+		t.Errorf("other %q, errors %q", run.other, run.errors)
 	}
 }
 
 func TestColorAndPipedRunsReadTheSame(t *testing.T) {
 	t.Parallel()
-	plain := report(t, fixture(t, "failed"), DefaultOptions())
-	color := report(t, fixture(t, "color"), DefaultOptions())
-	if diff := cmp.Diff(plain, color, cmpopts.IgnoreUnexported(Hook{})); diff != "" {
+	plain := mustReport(t, fixture(t, "failed"), defaultOptions())
+	color := mustReport(t, fixture(t, "color"), defaultOptions())
+	if diff := cmp.Diff(plain, color, cmp.AllowUnexported(hookReport{}), cmpopts.IgnoreUnexported(hook{})); diff != "" {
 		t.Errorf("color report differs (-plain +color):\n%s", diff)
 	}
 }
 
 func TestSkipEnvAndVerbose(t *testing.T) {
 	t.Parallel()
-	run, err := Parse(fixture(t, "skip-env"))
+	run, err := parse(fixture(t, "skip-env"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if h := run.Hooks[2]; h.Name != "check yaml" || h.Status != Skipped || h.NoFiles {
+	if h := run.hooks[2]; h.Name != "check yaml" || h.Status != statusSkipped || h.NoFiles {
 		t.Errorf("SKIP hook = %+v", h)
 	}
-	r := report(t, fixture(t, "verbose"), Options{All: true})
+	r := mustReport(t, fixture(t, "verbose"), options{All: true})
 	var got []string
 	for _, h := range r.Hooks {
-		got = append(got, verdict(h.Hook))
+		got = append(got, verdict(h.hook))
 	}
 	want := []string{
 		"fail trailing-whitespace (trim trailing whitespace): exit code 1, files modified",
@@ -154,7 +157,7 @@ func TestSkipEnvAndVerbose(t *testing.T) {
 
 func TestShowDiffOnFailure(t *testing.T) {
 	t.Parallel()
-	r := report(t, fixture(t, "show-diff"), DefaultOptions())
+	r := mustReport(t, fixture(t, "show-diff"), defaultOptions())
 	want := []string{".pre-commit-hooks.yaml", "CHANGELOG.md", "README.md", "pre_commit_hooks/check_json.py", "pre_commit_hooks/check_yaml.py", "pre_commit_hooks/removed.py"}
 	if diff := cmp.Diff(want, r.ChangedFiles); diff != "" || len(r.Other) != 0 || r.DiffOmitted == 0 {
 		t.Errorf("other %q, diff omitted %d, changed files (-want +got):\n%s", r.Other, r.DiffOmitted, diff)
@@ -163,11 +166,11 @@ func TestShowDiffOnFailure(t *testing.T) {
 
 func TestInterruptedHookIsAnError(t *testing.T) {
 	t.Parallel()
-	res, err := Squeeze(fixture(t, "interrupted"), DefaultOptions())
+	res, err := squeeze(fixture(t, "interrupted"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := res.Data.(Report)
+	r := res.Data.(report)
 	if r.Unfinished != 1 || r.Hooks[1].Name != "integration tests" || !cmp.Equal(r.Errors, []string{"Interrupted (^C): KeyboardInterrupt:"}) {
 		t.Errorf("unfinished %d, hooks %+v, errors %q", r.Unfinished, r.Hooks, r.Errors)
 	}
@@ -178,7 +181,7 @@ func TestInterruptedHookIsAnError(t *testing.T) {
 
 func TestLogLinesBecomeDiagnostics(t *testing.T) {
 	t.Parallel()
-	res, err := Squeeze(fixture(t, "first-run"), DefaultOptions())
+	res, err := squeeze(fixture(t, "first-run"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +189,7 @@ func TestLogLinesBecomeDiagnostics(t *testing.T) {
 	if !strings.Contains(res.Text, want) || strings.Contains(res.Text, "[INFO]") || !strings.Contains(strings.Join(res.Conditions, ","), "warning") {
 		t.Errorf("conditions %v, text:\n%s", res.Conditions, res.Text)
 	}
-	explicit, err := Squeeze([]byte("[ERROR] Your pre-commit configuration is unstaged.\n`git add .pre-commit-config.yaml` to fix this.\n"), DefaultOptions())
+	explicit, err := squeeze([]byte("[ERROR] Your pre-commit configuration is unstaged.\n`git add .pre-commit-config.yaml` to fix this.\n"), defaultOptions())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,16 +197,39 @@ func TestLogLinesBecomeDiagnostics(t *testing.T) {
 	if explicit.Text != wantText {
 		t.Errorf("text:\n%s\nwant:\n%s", explicit.Text, wantText)
 	}
-	if _, err := Squeeze([]byte("hello\nworld\n"), DefaultOptions()); err != ErrNoRun {
-		t.Errorf("Squeeze() error = %v, want %v", err, ErrNoRun)
+	if _, err := squeeze([]byte("hello\nworld\n"), defaultOptions()); !errors.Is(err, errNoRun) {
+		t.Errorf("Squeeze() error = %v, want %v", err, errNoRun)
 	}
 }
 
 func TestNoHookWithID(t *testing.T) {
 	t.Parallel()
-	r := report(t, []byte("No hook with id `ruff` in stage `pre-commit`\n"), DefaultOptions())
+	r := mustReport(t, []byte("No hook with id `ruff` in stage `pre-commit`\n"), defaultOptions())
 	if !cmp.Equal(r.Errors, []string{"No hook with id `ruff` in stage `pre-commit`"}) {
 		t.Errorf("errors %q", r.Errors)
+	}
+}
+
+func TestOutOfRangeMetaLinesStayVisible(t *testing.T) {
+	t.Parallel()
+	huge := strings.Repeat("9", 400)
+	input := strings.Join([]string{
+		status("slow", "", "Failed"),
+		"- hook id: slow",
+		"- duration: " + huge + "s",
+		"- exit code: " + huge,
+		"",
+	}, "\n")
+	res, err := squeeze([]byte(input), defaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := core.Envelope("precommit", len(input), res, nil); err != nil {
+		t.Errorf("Envelope() error: %v", err)
+	}
+	want := []string{"- duration: " + huge + "s", "- exit code: " + huge}
+	if diff := cmp.Diff(want, res.Data.(report).Other); diff != "" {
+		t.Errorf("other (-want +got):\n%s", diff)
 	}
 }
 
@@ -219,24 +245,24 @@ func TestStatusLinesShareTheRunWidth(t *testing.T) {
 		"",
 		status("last", "", "Passed"),
 	}, "\n")
-	run, err := Parse([]byte(input))
+	run, err := parse([]byte(input))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(run.Hooks) != 2 || len(run.Hooks[0].lines) != 2 {
-		t.Errorf("hooks %+v", run.Hooks)
+	if len(run.hooks) != 2 || len(run.hooks[0].lines) != 2 {
+		t.Errorf("hooks %+v", run.hooks)
 	}
 }
 
 func TestWideNamesCountTwoColumns(t *testing.T) {
 	t.Parallel()
 	input := status("检查 yaml", "", "Failed") + "\n" + status("lint", "", "Passed") + "\n"
-	run, err := Parse([]byte(input))
+	run, err := parse([]byte(input))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !(Format{}).Detect([]byte(input)) || len(run.Hooks) != 2 || run.Hooks[0].Name != "检查 yaml" {
-		t.Errorf("hooks %+v", run.Hooks)
+	if !(Format{}).Detect([]byte(input)) || len(run.hooks) != 2 || run.hooks[0].Name != "检查 yaml" {
+		t.Errorf("hooks %+v", run.hooks)
 	}
 	for _, r := range []rune{'a', 'é', '检', '한', 'ｱ', '🙂', '𠀀', '＊'} {
 		if got, want := width(string(r)), map[bool]int{false: 1, true: 2}[r > 0x1000 && r != 'ｱ']; got != want {
@@ -245,21 +271,25 @@ func TestWideNamesCountTwoColumns(t *testing.T) {
 	}
 }
 
-func TestCutKeepsErrorLinesOrTheHead(t *testing.T) {
+func TestCutPutsNoticesWhereLinesWereCut(t *testing.T) {
 	t.Parallel()
 	lines := []string{"a", "b", "c", "FAIL x - AssertionError", "  assert 1", "d", "FAIL x - AssertionError", "  assert 1", "e", "1 failed"}
-	got, omitted := cut(lines, 2)
-	want := []string{"FAIL x - AssertionError", "  assert 1", "1 failed", "... 7 lines cut (--max-lines 0)"}
+	output := func(lines []string, limit int) ([]string, int) {
+		r := build(parsed{hooks: []hook{{Status: statusFailed, lines: lines}}}, options{MaxLines: limit})
+		return r.Hooks[0].Output, r.Hooks[0].LinesOmitted
+	}
+	got, omitted := output(lines, 2)
+	want := []string{"... 3 lines cut (--max-lines 0)", "FAIL x - AssertionError", "  assert 1", "... 4 lines cut (--max-lines 0)", "1 failed"}
 	if diff := cmp.Diff(want, got); diff != "" || omitted != 7 {
 		t.Errorf("omitted %d, lines (-want +got):\n%s", omitted, diff)
 	}
 	plain := []string{"checking a", "checking b", "checking c", "checking d"}
-	got, omitted = cut(plain, 2)
+	got, omitted = output(plain, 2)
 	want = []string{"checking a", "checking b", "... 2 lines cut (--max-lines 0)"}
 	if diff := cmp.Diff(want, got); diff != "" || omitted != 2 {
 		t.Errorf("no error lines: omitted %d, lines (-want +got):\n%s", omitted, diff)
 	}
-	if got, omitted := cut(lines, 0); len(got) != len(lines) || omitted != 0 {
+	if got, omitted := output(lines, 0); len(got) != len(lines) || omitted != 0 {
 		t.Errorf("--max-lines 0 cut %d lines", omitted)
 	}
 }
@@ -276,8 +306,8 @@ func TestInputStringsCannotForgeLines(t *testing.T) {
 		"[WARNING] w\u009b31m",
 		"tail fail x",
 	}, "\n")
-	for _, o := range []Options{DefaultOptions(), {All: true}} {
-		r, err := Squeeze([]byte(input), o)
+	for _, o := range []options{defaultOptions(), {All: true}} {
+		r, err := squeeze([]byte(input), o)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -296,29 +326,29 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(status("a", "", "Failed") + "\n- hook id: a\n- exit code: 2\n\nx\n\n[ERROR] e\n" + status("b", noFiles, "Skipped") + "\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
-		run, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return squeeze(input, defaultOptions()) })
+		run, err := parse(input)
 		if err != nil {
 			return
 		}
-		for _, o := range []Options{DefaultOptions(), {MaxLines: 1}, {All: true}} {
-			r := Build(run, o)
-			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
+		for _, o := range []options{defaultOptions(), {MaxLines: 1}, {All: true}} {
+			r := build(run, o)
+			res := core.Result{Text: text(r), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
-			if r.Passed+r.Failed+r.Skipped+r.Unfinished != len(run.Hooks) || r.Total != len(run.Hooks) {
-				t.Fatalf("counts %+v for %d hooks", r, len(run.Hooks))
+			if r.Passed+r.Failed+r.Skipped+r.Unfinished != len(run.hooks) || r.Total != len(run.hooks) {
+				t.Fatalf("counts %+v for %d hooks", r, len(run.hooks))
 			}
-			for _, h := range run.Hooks {
-				if (h.Status == Failed || o.All) && !strings.Contains(res.Text, verdict(h)+"\n") {
+			for _, h := range run.hooks {
+				if (h.Status == statusFailed || o.All) && !strings.Contains(res.Text, verdict(h)+"\n") {
 					t.Fatalf("hook %q not printed:\n%s", verdict(h), res.Text)
 				}
 			}
-			for _, e := range run.Errors {
+			for _, e := range run.errors {
 				if !strings.Contains(res.Text, "error: "+e+"\n") {
 					t.Fatalf("error %q not printed:\n%s", e, res.Text)
 				}
 			}
-			for _, w := range run.Warnings {
+			for _, w := range run.warnings {
 				if !strings.Contains(res.Text, "warning: "+w+"\n") {
 					t.Fatalf("warning %q not printed:\n%s", w, res.Text)
 				}

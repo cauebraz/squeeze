@@ -3,9 +3,10 @@ package tfjson
 import (
 	"bytes"
 	"fmt"
-	"github.com/cauebraz/squeeze/internal/core"
-	"sort"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/sanitize"
 
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
@@ -20,14 +21,14 @@ var actionSymbols = map[string]string{
 	"remove": ".", "import": ">>", "move": "=", "noop": "=",
 }
 
-var leftPrefixes = map[string]string{
-	"cleanup_failed": "left in state after", "skip_cleanup": "left in state after",
-	"interrupted": "left in state after", "planned": "maybe created by",
+var leftPrefixes = map[leftReason]string{
+	leftCleanupFailed: "left in state after", leftSkipCleanup: "left in state after",
+	leftInterrupted: "left in state after", leftPlanned: "maybe created by",
 }
 
-var leftLabels = map[string]string{
-	"cleanup_failed": "cleanup failed", "skip_cleanup": "skip_cleanup",
-	"interrupted": "interrupted", "planned": "interrupted",
+var leftLabels = map[leftReason]string{
+	leftCleanupFailed: "cleanup failed", leftSkipCleanup: "skip_cleanup",
+	leftInterrupted: "interrupted", leftPlanned: "interrupted",
 }
 
 func symbol(action string) string {
@@ -37,7 +38,7 @@ func symbol(action string) string {
 	return "?"
 }
 
-func Text(r Report, o Options) string {
+func text(r report, o options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
@@ -51,7 +52,7 @@ func Text(r Report, o Options) string {
 		fmt.Fprintf(&b, "... %d no-op %s (--all)\n", r.NoopHidden, core.Plural(r.NoopHidden, "change", "changes"))
 	}
 	writeLists(&b, r)
-	writeActions(&b, r.Actions)
+	tfdiag.WriteActions(&b, r.Actions)
 	writeApplied(&b, r.Applied)
 	if r.ActionsCompleted > 0 {
 		fmt.Fprintf(&b, "actions completed: %d\n", r.ActionsCompleted)
@@ -71,11 +72,14 @@ func Text(r Report, o Options) string {
 	if r.DiagnosticsOmitted > 0 {
 		fmt.Fprintf(&b, "... %d more %s (--max-diagnostics 0)\n", r.DiagnosticsOmitted, core.Plural(r.DiagnosticsOmitted, "diagnostic", "diagnostics"))
 	}
-	writeDrift(&b, r.Drift, o.ListDrift)
+	writeDrift(&b, r, o.ListDrift)
 	if len(r.Deferred) > 0 {
 		b.WriteString("deferred:\n")
 		for _, d := range r.Deferred {
 			fmt.Fprintf(&b, "%s %s (%s)\n", symbol(d.Action), d.Address, d.Reason)
+		}
+		if r.DeferredOmitted > 0 {
+			fmt.Fprintf(&b, "... %d more deferred %s (--max-resources 0)\n", r.DeferredOmitted, core.Plural(r.DeferredOmitted, "resource", "resources"))
 		}
 	}
 	writeOutputs(&b, r.Outputs)
@@ -84,7 +88,7 @@ func Text(r Report, o Options) string {
 	return b.String()
 }
 
-func policyLine(p PolicyResult) string {
+func policyLine(p policyResult) string {
 	line := "policy:"
 	if p.Policy != "" {
 		line += " " + p.Policy
@@ -99,7 +103,7 @@ func policyLine(p PolicyResult) string {
 	return line
 }
 
-func header(r Report) string {
+func header(r report) string {
 	line := core.ToolLabel(r.Tool, r.ToolVersion)
 	if r.Operation != "" {
 		line += " " + r.Operation
@@ -108,20 +112,13 @@ func header(r Report) string {
 	if words := summaryWords(r); words != "" {
 		segments = append(segments, words)
 	}
-	if n := len(r.Drift); n > 0 {
+	if n := len(r.Drift) + r.DriftOmitted; n > 0 {
 		segments = append(segments, fmt.Sprintf("%d drifted", n))
 	}
-	if n := len(r.Deferred); n > 0 {
+	if n := len(r.Deferred) + r.DeferredOmitted; n > 0 {
 		segments = append(segments, fmt.Sprintf("%d deferred", n))
 	}
-	var diags []string
-	if r.Errors > 0 {
-		diags = append(diags, fmt.Sprintf("%d %s", r.Errors, core.Plural(r.Errors, "error", "errors")))
-	}
-	if r.Warnings > 0 {
-		diags = append(diags, fmt.Sprintf("%d %s", r.Warnings, core.Plural(r.Warnings, "warning", "warnings")))
-	}
-	if len(diags) > 0 {
+	if diags := tfdiag.CountWords(r.Errors, r.Warnings); len(diags) > 0 {
 		segments = append(segments, strings.Join(diags, ", "))
 	}
 	if len(segments) > 0 {
@@ -130,7 +127,7 @@ func header(r Report) string {
 	return line
 }
 
-func summaryWords(r Report) string {
+func summaryWords(r report) string {
 	if s := r.Summary; s != nil {
 		if r.Operation == "apply" && s.Operation == "plan" {
 			return fmt.Sprintf("no apply summary; plan was %d to add, %d to change, %d to destroy", s.Add, s.Change, s.Remove)
@@ -175,7 +172,7 @@ func summaryWords(r Report) string {
 	return ""
 }
 
-func appendInvoked(parts []string, s *Summary) []string {
+func appendInvoked(parts []string, s *summary) []string {
 	if s.ActionInvocation > 0 {
 		parts = append(parts, fmt.Sprintf("%d %s invoked", s.ActionInvocation, core.Plural(s.ActionInvocation, "action", "actions")))
 	}
@@ -185,7 +182,7 @@ func appendInvoked(parts []string, s *Summary) []string {
 	return parts
 }
 
-func writeChange(b *strings.Builder, c Change) {
+func writeChange(b *strings.Builder, c change) {
 	b.WriteString(symbol(c.Action))
 	b.WriteByte(' ')
 	b.WriteString(c.Address)
@@ -213,8 +210,8 @@ func writeChange(b *strings.Builder, c Change) {
 	b.WriteByte('\n')
 }
 
-func writeLists(b *strings.Builder, r Report) {
-	found := map[string][]FoundResource{}
+func writeLists(b *strings.Builder, r report) {
+	found := map[string][]foundResource{}
 	for _, f := range r.Found {
 		found[f.Address] = append(found[f.Address], f)
 	}
@@ -237,29 +234,7 @@ func writeLists(b *strings.Builder, r Report) {
 	}
 }
 
-func writeActions(b *strings.Builder, actions []ActionInvocation) {
-	if len(actions) == 0 {
-		return
-	}
-	items := make([]string, 0, len(actions))
-	for _, a := range actions {
-		item := a.Address
-		switch {
-		case a.Event != "" && a.Resource != "":
-			item += " (" + a.Event + " " + a.Resource + ")"
-		case a.Event != "":
-			item += " (" + a.Event + ")"
-		case a.Invoked:
-			item += " (invoked)"
-		}
-		items = append(items, item)
-	}
-	b.WriteString("actions: ")
-	b.WriteString(strings.Join(items, ", "))
-	b.WriteByte('\n')
-}
-
-func writeApplied(b *strings.Builder, a Applied) {
+func writeApplied(b *strings.Builder, a applied) {
 	if a.Count == 0 {
 		return
 	}
@@ -276,21 +251,25 @@ func writeApplied(b *strings.Builder, a Applied) {
 	b.WriteByte('\n')
 }
 
-func writeDrift(b *strings.Builder, drift []Change, list bool) {
-	if len(drift) == 0 {
+func writeDrift(b *strings.Builder, r report, list bool) {
+	n := len(r.Drift) + r.DriftOmitted
+	if n == 0 {
 		return
 	}
 	if !list {
-		fmt.Fprintf(b, "... %d drifted %s (--drift)\n", len(drift), core.Plural(len(drift), "resource", "resources"))
+		fmt.Fprintf(b, "... %d drifted %s (--drift)\n", n, core.Plural(n, "resource", "resources"))
 		return
 	}
 	b.WriteString("drift:\n")
-	for _, c := range drift {
+	for _, c := range r.Drift {
 		writeChange(b, c)
+	}
+	if r.DriftOmitted > 0 {
+		fmt.Fprintf(b, "... %d more drifted %s (--max-resources 0)\n", r.DriftOmitted, core.Plural(r.DriftOmitted, "resource", "resources"))
 	}
 }
 
-func writeOutputs(b *strings.Builder, outputs []Output) {
+func writeOutputs(b *strings.Builder, outputs []output) {
 	if len(outputs) == 0 {
 		return
 	}
@@ -303,8 +282,10 @@ func writeOutputs(b *strings.Builder, outputs []Output) {
 		switch {
 		case o.Sensitive:
 			item += " (sensitive)"
-		case len(o.Value) > 0 && len(bytes.TrimSpace(o.Value)) <= maxValueBytes:
-			item += " = " + string(bytes.TrimSpace(o.Value))
+		default:
+			if v := sanitize.Line(string(bytes.TrimSpace(o.Value))); v != "" && len(v) <= maxValueBytes {
+				item += " = " + v
+			}
 		}
 		items = append(items, item)
 	}
@@ -313,7 +294,7 @@ func writeOutputs(b *strings.Builder, outputs []Output) {
 	b.WriteByte('\n')
 }
 
-func writeTests(b *strings.Builder, t *Tests, o Options) {
+func writeTests(b *strings.Builder, t *tests, o options) {
 	if t == nil {
 		return
 	}
@@ -360,7 +341,7 @@ func writeTests(b *strings.Builder, t *Tests, o Options) {
 	}
 }
 
-func writeLeft(b *strings.Builder, l LeftInState) {
+func writeLeft(b *strings.Builder, l leftInState) {
 	b.WriteString(leftPrefixes[l.Reason] + " " + l.File)
 	if l.Run != "" {
 		fmt.Fprintf(b, " %q", l.Run)
@@ -380,7 +361,7 @@ func writeLeft(b *strings.Builder, l LeftInState) {
 	fmt.Fprintf(b, " (%s): %s\n", label, strings.Join(items, ", "))
 }
 
-func writeOther(b *strings.Builder, r Report, all bool) {
+func writeOther(b *strings.Builder, r report, all bool) {
 	total := 0
 	for _, n := range r.Other {
 		total += n
@@ -398,19 +379,10 @@ func writeOther(b *strings.Builder, r Report, all bool) {
 		}
 		return
 	}
-	keys := make([]string, 0, len(r.Other))
-	for k := range r.Other {
-		keys = append(keys, k)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		if r.Other[keys[i]] != r.Other[keys[j]] {
-			return r.Other[keys[i]] > r.Other[keys[j]]
-		}
-		return keys[i] < keys[j]
-	})
-	items := make([]string, 0, len(keys))
-	for _, k := range keys {
-		items = append(items, fmt.Sprintf("%s %d", core.NoticeName(k), r.Other[k]))
+	counts := core.SortedCounts(r.Other)
+	items := make([]string, 0, len(counts))
+	for _, c := range counts {
+		items = append(items, fmt.Sprintf("%s %d", core.NoticeName(c.Name), c.Count))
 	}
 	fmt.Fprintf(b, "... %d other %s: %s (--all)\n", total, core.Plural(total, "message", "messages"), strings.Join(items, ", "))
 }
