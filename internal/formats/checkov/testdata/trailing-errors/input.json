@@ -1,0 +1,22 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "passed_checks": [],
+        "failed_checks": [],
+        "skipped_checks": [],
+        "parsing_errors": [
+            "/home/dev/broken/main.tf"
+        ]
+    },
+    "summary": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "parsing_errors": 1,
+        "resource_count": 0,
+        "checkov_version": "3.3.29"
+    },
+    "url": "Add an api key '--bc-api-key <api-key>' to see more detailed insights via https://bridgecrew.cloud"
+}
+2026-05-04 10:12:03,412 [MainThread  ] [WARNING]  Secret scanning: could not process file .env
+2026-05-04 10:12:04,027 [MainThread  ] [ERROR]  Failed to invoke function /usr/lib/python3.12/site-packages/checkov/common/runners/runner_registry.py: Connection error

@@ -243,6 +243,25 @@ func TestDiffAttrs(t *testing.T) {
 			before: `{"a":"x"}`, after: `{"a":"y"}`, beforeSens: `true`,
 			want: []AttrChange{{Path: "(resource)", Sensitive: true}},
 		},
+		"non-bool mark counts as sensitive": {
+			before: `{"pw":"old1","tk":"old2","n":"a"}`, after: `{"pw":"new1","tk":"new2","n":"b"}`,
+			beforeSens: `{"pw":1,"tk":"true","n":false}`, afterSens: `{"pw":1,"tk":"true","n":null}`,
+			want: []AttrChange{
+				{Path: "n", Before: sv("a"), After: sv("b")},
+				{Path: "pw", Sensitive: true},
+				{Path: "tk", Sensitive: true},
+			},
+		},
+		"short list mask masks the whole list": {
+			before: `{"l":["a","s3cret"]}`, after: `{"l":["a","s3cret2"]}`,
+			beforeSens: `{"l":[false]}`, afterSens: `{"l":[false]}`,
+			want: []AttrChange{{Path: "l", Sensitive: true}},
+		},
+		"long list mask masks the whole list": {
+			before: `{"l":["a"]}`, after: `{"l":["b"]}`,
+			afterSens: `{"l":[false,false]}`,
+			want:      []AttrChange{{Path: "l", Sensitive: true}},
+		},
 		"replace path marks and sorts first": {
 			before: `{"a":1,"engine_version":"15"}`, after: `{"a":2,"engine_version":"16"}`,
 			replacePaths: `[["engine_version"]]`,

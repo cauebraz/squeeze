@@ -2,14 +2,14 @@ package core
 
 import "fmt"
 
-func TailLines(lines []string, max int, flag string) ([]string, int) {
+func TailLines(lines []string, limit int, flag string) ([]string, int) {
 	out := []string{}
-	if max <= 0 || len(lines) <= max {
+	if limit <= 0 || len(lines) <= limit {
 		return append(out, lines...), 0
 	}
 	keep := make([]bool, len(lines))
 	for i, l := range lines {
-		if i >= len(lines)-max {
+		if i >= len(lines)-limit {
 			keep[i] = true
 		}
 		if ErrorLine(l) || WarningLine(l) {

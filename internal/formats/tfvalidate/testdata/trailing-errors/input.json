@@ -1,0 +1,4 @@
+{"format_version":"1.0","valid":true,"error_count":0,"warning_count":0,"diagnostics":[]}
+Error: Failed to load plugin schemas
+
+Error while loading schemas for plugin components: Failed to obtain provider schema: Could not load the schema for provider registry.terraform.io/hashicorp/aws: failed to instantiate provider "registry.terraform.io/hashicorp/aws" to obtain schema: unavailable provider "registry.terraform.io/hashicorp/aws"..

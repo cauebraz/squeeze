@@ -3,6 +3,7 @@ package trivy
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -331,7 +332,9 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(`{"ClusterName":"c","Findings":[{"Kind":"Pod","Name":"a","Error":"x","Results":[{"Vulnerabilities":[{}]}]},{"Kind":"Pod","Name":"a"}]}`))
 	f.Add([]byte(`{"SchemaVersion":2,"Results":[{"Misconfigurations":[{"Status":"EXCEPTION"},{"Status":"PASS"},{}],"Licenses":[{"Severity":"x"}],"Secrets":[{}]}]}`))
+	f.Add([]byte("{\"SchemaVersion\":2}\nError: x\nWARN y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		raw, err := Parse(input)
 		if err != nil {
 			return
@@ -347,6 +350,14 @@ func FuzzSqueeze(f *testing.F) {
 			for _, rs := range r.Resources {
 				if rs.Error != "" && !strings.Contains(res.Text, "error: "+rs.Name+": "+rs.Error+"\n") {
 					t.Fatalf("scan error of %q dropped:\n%s", rs.Name, res.Text)
+				}
+			}
+			for _, l := range raw.Trailing {
+				if !strings.Contains(res.Text, l.Text) {
+					t.Fatalf("line after the JSON dropped: %q\n%s", l.Text, res.Text)
+				}
+				if l.Error && !slices.Contains(res.Conditions, "error") {
+					t.Fatalf("error line %q sets no error condition", l.Text)
 				}
 			}
 			if r.FindingsOmitted > 0 && !strings.Contains(res.Text, "(--max-findings 0)") {

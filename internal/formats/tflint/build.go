@@ -73,6 +73,14 @@ func Build(out *Output, o Options) Report {
 		r.ToolErrors++
 		problems = append(problems, d)
 	}
+	for _, l := range out.Trailing {
+		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text, Address: "tflint"}
+		if l.Error {
+			d.Severity = "error"
+			r.ToolErrors++
+		}
+		problems = append(problems, d)
+	}
 	r.Problems = append(r.Problems, tfdiag.Normalize(problems)...)
 	counts := map[string]int{}
 	var issues []Issue

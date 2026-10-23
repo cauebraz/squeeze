@@ -2,6 +2,7 @@ package kubectl
 
 import (
 	"encoding/json"
+	"slices"
 	"sort"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -133,7 +134,7 @@ func Build(raws []Raw, o Options) Report {
 		}
 	}
 	r.Kinds = core.SortedCounts(kinds)
-	all := append(unhealthy, healthy...)
+	all := slices.Concat(unhealthy, healthy)
 	kept, _ := core.Limit(all, o.MaxObjects)
 	r.Objects = append(r.Objects, kept...)
 	cut := map[string]int{}

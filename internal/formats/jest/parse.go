@@ -2,9 +2,10 @@ package jest
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
 var ErrNotJest = errors.New("input is not a jest --json or vitest json report")
@@ -65,9 +66,9 @@ type Output struct {
 }
 
 func Parse(input []byte) (*Output, error) {
-	dec := json.NewDecoder(bytes.NewReader(input))
 	var out Output
-	if err := dec.Decode(&out); err != nil {
+	rest, err := core.DecodeJSON(input, &out)
+	if err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	if out.TestResults == nil {
@@ -78,7 +79,7 @@ func Parse(input []byte) (*Output, error) {
 			return nil, ErrNotJest
 		}
 	}
-	rest := bytes.TrimSpace(input[dec.InputOffset():])
+	rest = bytes.TrimSpace(rest)
 	if bytes.HasPrefix(rest, []byte(vitestNotice)) && !bytes.Contains(rest, []byte("\n")) {
 		rest = nil
 	}

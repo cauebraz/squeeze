@@ -8,9 +8,9 @@ Model: `claude-opus-5-5`. Each task was solved 5 times without squeeze (control)
 
 ## Every task
 
-`bench/run.py --report <file>` prints these tables. Tokens are prompt plus completion, mean per run; `saved` is `1 - squeeze / control`.
+The result files named below are not in the repository: `.gitignore` excludes `bench/results/`. `bench/run.py --report bench/results/<file>.jsonl` regenerates these tables from a run. Tokens are prompt plus completion, mean per run; `saved` is `1 - squeeze / control`.
 
-The chart, `bench/results/20261015T110129Z.jsonl`, 5 runs per arm. All tasks together save 47 percent; without `lint-log`, 28 percent; the median task saves 27 percent.
+The chart, `bench/results/20261015T110129Z.jsonl`, 5 runs per arm. All tasks together save 47 percent; without `lint-log`, 28 percent; the median task saves 27 percent. Across all 13 tasks of both tables the median task, `precommit-hooks`, saves 23 percent.
 
 | Task | Format | Control | Squeeze | Saved |
 |---|---|---|---|---|

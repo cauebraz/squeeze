@@ -410,7 +410,7 @@ func writeOther(b *strings.Builder, r Report, all bool) {
 	})
 	items := make([]string, 0, len(keys))
 	for _, k := range keys {
-		items = append(items, fmt.Sprintf("%s %d", k, r.Other[k]))
+		items = append(items, fmt.Sprintf("%s %d", core.NoticeName(k), r.Other[k]))
 	}
 	fmt.Fprintf(b, "... %d other %s: %s (--all)\n", total, core.Plural(total, "message", "messages"), strings.Join(items, ", "))
 }

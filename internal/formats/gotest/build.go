@@ -1,7 +1,9 @@
 package gotest
 
 import (
+	"maps"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -113,10 +115,6 @@ func (b *builder) appendLine(pkg, test string, l line) {
 		return
 	}
 	p.lines = append(p.lines, l)
-}
-
-func splitOutput(s string) []string {
-	return strings.Split(strings.TrimSuffix(s, "\n"), "\n")
 }
 
 func (b *builder) add(e Event) {
@@ -332,6 +330,7 @@ func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
 			}
 		}
 	}
+	parents := failingParents(failing)
 	var out []Failure
 	for _, k := range keys {
 		if !failing[k] {
@@ -343,7 +342,7 @@ func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
 				continue
 			}
 			output := b.testOutput(t)
-			if len(output.Lines) == 0 && hasFailingChild(failing, k) {
+			if len(output.Lines) == 0 && parents[k] {
 				continue
 			}
 			f := Failure{Package: t.pkg, Test: t.name, Elapsed: t.elapsed, Unfinished: t.status == "", Artifacts: t.artifacts, Output: output}
@@ -362,92 +361,16 @@ func (b *builder) failures(r *Report, failedPkg map[string]bool) []Failure {
 	return out
 }
 
-func hasFailingChild(failing map[[2]string]bool, k [2]string) bool {
-	for other := range failing {
-		if other[0] == k[0] && strings.HasPrefix(other[1], k[1]+"/") {
-			return true
+func failingParents(failing map[[2]string]bool) map[[2]string]bool {
+	parents := map[[2]string]bool{}
+	for k := range failing {
+		for i := range len(k[1]) {
+			if k[1][i] == '/' {
+				parents[[2]string{k[0], k[1][:i]}] = true
+			}
 		}
 	}
-	return false
-}
-
-func (b *builder) isFrame(l line) bool {
-	if b.outputType {
-		return l.typ == "frame"
-	}
-	return frameLine.MatchString(l.text)
-}
-
-func (b *builder) testOutput(t *testState) Output {
-	var all []line
-	errorLines := false
-	for _, l := range t.lines {
-		if b.isFrame(l) {
-			continue
-		}
-		all = append(all, l)
-		if l.typ == "error" || l.typ == "error-continue" {
-			errorLines = true
-		}
-	}
-	if b.o.Full || !b.outputType || !errorLines {
-		return b.output(all, t.pkg)
-	}
-	var kept []line
-	logs := 0
-	panicking, racing := false, false
-	for _, l := range all {
-		text := strings.TrimSpace(l.text)
-		if isPanicStart(l.text) {
-			panicking = true
-		}
-		switch {
-		case text == "WARNING: DATA RACE":
-			racing = true
-		case racing && raceSeparator(text):
-			racing = false
-			continue
-		}
-		switch {
-		case raceSeparator(text):
-		case panicking || racing || l.typ == "error" || l.typ == "error-continue":
-			kept = append(kept, l)
-		case text != "":
-			logs++
-		}
-	}
-	out := b.output(kept, t.pkg)
-	out.Logs = logs
-	return out
-}
-
-func raceSeparator(s string) bool {
-	return len(s) >= 10 && strings.Trim(s, "=") == ""
-}
-
-func isPanicStart(s string) bool {
-	return strings.HasPrefix(s, "panic: ") || strings.HasPrefix(s, "fatal error: ")
-}
-
-func (b *builder) output(lines []line, pkg string) Output {
-	raw := make([]string, 0, len(lines))
-	for _, l := range lines {
-		raw = append(raw, l.text)
-	}
-	out := Output{Lines: []string{}}
-	if !b.o.Full {
-		raw, out.Stack = filterStack(raw, pkg)
-	}
-	var cleaned []string
-	for _, l := range raw {
-		if c := core.Line(l); strings.TrimSpace(c) != "" {
-			cleaned = append(cleaned, c)
-		}
-	}
-	cleaned = dedent(cleaned)
-	cleaned, out.Omitted = core.Limit(cleaned, b.o.MaxOutput)
-	out.Lines = append(out.Lines, cleaned...)
-	return out
+	return parents
 }
 
 func (b *builder) scan(r *Report, lines []line) {
@@ -464,36 +387,6 @@ func (b *builder) scan(r *Report, lines []line) {
 	}
 }
 
-func dedent(lines []string) []string {
-	indent := -1
-	for _, l := range lines {
-		n := len(l) - len(strings.TrimLeft(l, " "))
-		if indent < 0 || n < indent {
-			indent = n
-		}
-	}
-	if indent <= 0 {
-		return lines
-	}
-	for i, l := range lines {
-		lines[i] = l[indent:]
-	}
-	return lines
-}
-
-func toLines(texts []string) []line {
-	out := make([]line, 0, len(texts))
-	for _, t := range texts {
-		out = append(out, line{text: t})
-	}
-	return out
-}
-
 func sortedKeys[V any](m map[string]V) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
+	return slices.Sorted(maps.Keys(m))
 }

@@ -3,8 +3,10 @@ package tflint
 import (
 	"bytes"
 	"flag"
+	"slices"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 type Options struct {
@@ -58,6 +60,6 @@ func conditions(r Report) []string {
 		"fail":    r.Errors+r.Warnings+r.Notices+r.ToolErrors > 0,
 		"fixable": r.Fixable > 0,
 		"notice":  r.Notices > 0,
-		"warning": r.Warnings > 0,
+		"warning": r.Warnings > 0 || slices.ContainsFunc(r.Problems, func(d tfdiag.Diagnostic) bool { return d.Severity == "warning" }),
 	})
 }

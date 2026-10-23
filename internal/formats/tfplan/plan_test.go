@@ -600,6 +600,9 @@ func TestRatioOnFixtures(t *testing.T) {
 	const maxTotal, maxEach = 0.15, 0.25
 	var totalIn, totalOut int
 	for name, data := range fixtures(t) {
+		if !json.Valid(data) {
+			continue
+		}
 		var compact bytes.Buffer
 		if err := json.Compact(&compact, data); err != nil {
 			t.Fatalf("compact %s: %v", name, err)

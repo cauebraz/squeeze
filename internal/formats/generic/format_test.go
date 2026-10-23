@@ -251,6 +251,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte("a\r\rb\n\x1b]0;t\x07x\n\n\nerror 1\nerror 1\nerror 1\n\x1b[1;2"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		for _, o := range []Options{DefaultOptions(), {MaxLines: 3, MaxLineBytes: 2}, {NoFold: true, MaxLines: 1}} {
 			res, err := Squeeze(input, o)
 			if err != nil {

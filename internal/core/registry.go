@@ -44,12 +44,8 @@ func (r *Registry) Fallback() Format {
 	return r.fallback
 }
 
-func (r *Registry) isFallback(f Format) bool {
-	return r.fallback != nil && f.Name() == r.fallback.Name()
-}
-
 func (r *Registry) IsFallback(f Format) bool {
-	return r.isFallback(f)
+	return r.fallback != nil && f.Name() == r.fallback.Name()
 }
 
 func validName(name string) bool {
@@ -87,7 +83,7 @@ func (r *Registry) Detect(input []byte) (Format, error) {
 
 func (r *Registry) detect(input []byte) Format {
 	for _, f := range r.formats {
-		if !r.isFallback(f) && f.Detect(input) {
+		if !r.IsFallback(f) && f.Detect(input) {
 			return f
 		}
 	}

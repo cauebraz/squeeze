@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -95,6 +96,43 @@ func TestConditions(t *testing.T) {
 			t.Fatal(err)
 		}
 		if diff := cmp.Diff(want, r.Conditions); diff != "" {
+			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
+		}
+	}
+}
+
+func TestTrailingLines(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		input string
+		text  string
+		conds []string
+	}{
+		"error after an empty report": {
+			input: "{\"issues\":[],\"errors\":[]}\nError: Failed to load plugin\n",
+			text:  "tflint: 0 issues; 1 tflint error, not every check ran\nerror: Failed to load plugin (tflint)\n",
+			conds: []string{"error", "fail"},
+		},
+		"warning only": {
+			input: "{\"issues\":[],\"errors\":[]}\nWARNING: flag is deprecated\nplain line\n",
+			text:  "tflint: 0 issues\nwarning: flag is deprecated (tflint)\n",
+			conds: []string{"warning"},
+		},
+		"plain lines only": {
+			input: "{\"issues\":[],\"errors\":[]}\ndone\n",
+			text:  "tflint: no issues\n",
+			conds: []string{},
+		},
+	}
+	for name, tc := range tests {
+		r, err := Squeeze([]byte(tc.input), DefaultOptions())
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if diff := cmp.Diff(tc.text, r.Text); diff != "" {
+			t.Errorf("%s: text (-want +got):\n%s", name, diff)
+		}
+		if diff := cmp.Diff(tc.conds, r.Conditions); diff != "" {
 			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
 		}
 	}
@@ -245,7 +283,9 @@ func FuzzSqueeze(f *testing.F) {
 		f.Add(data)
 	}
 	f.Add([]byte(`{"issues":[{"rule":{"severity":""},"range":{},"callers":[{}]}],"errors":[{"range":{}}]}`))
+	f.Add([]byte("{\"issues\":[],\"errors\":[]}\nError: Failed to load plugin\nWarning: x\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		out, err := Parse(input)
 		if err != nil {
 			return
@@ -257,8 +297,17 @@ func FuzzSqueeze(f *testing.F) {
 			if got := r.Errors + r.Warnings + r.Notices; got != len(*out.Issues) {
 				t.Fatalf("%d issues counted, %d in the input", got, len(*out.Issues))
 			}
-			if r.ToolErrors != len(*out.Errors) {
-				t.Fatalf("%d tool errors counted, %d in the input", r.ToolErrors, len(*out.Errors))
+			trailingErrors := 0
+			for _, l := range out.Trailing {
+				if l.Error {
+					trailingErrors++
+				}
+			}
+			if r.ToolErrors != len(*out.Errors)+trailingErrors {
+				t.Fatalf("%d tool errors counted, %d in the input and %d after it", r.ToolErrors, len(*out.Errors), trailingErrors)
+			}
+			if len(out.Trailing) > 0 && !slices.Contains(res.Conditions, "error") && !slices.Contains(res.Conditions, "warning") {
+				t.Fatalf("lines after the JSON set no condition: %v", res.Conditions)
 			}
 			shown := 0
 			for _, is := range r.Issues {

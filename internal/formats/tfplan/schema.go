@@ -1,6 +1,10 @@
 package tfplan
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/cauebraz/squeeze/internal/core"
+)
 
 type Plan struct {
 	FormatVersion      string                `json:"format_version"`
@@ -17,6 +21,7 @@ type Plan struct {
 	Checks             []PlanCheck           `json:"checks"`
 	Errored            bool                  `json:"errored"`
 	Complete           *bool                 `json:"complete"`
+	Trailing           []core.FlaggedLine    `json:"-"`
 }
 
 type PlanCheck struct {

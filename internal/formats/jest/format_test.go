@@ -343,6 +343,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(`{"numTotalTests":1,"testResults":[{"name":"/a","message":"\u25cf x","assertionResults":[{"status":"failed","failureMessages":null},{"status":"?"}]}],"runExecError":{"stack":""}}x`))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		out, err := Parse(input)
 		if err != nil {
 			return

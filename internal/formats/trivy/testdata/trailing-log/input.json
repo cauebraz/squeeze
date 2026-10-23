@@ -1,0 +1,23 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.75.0"
+  },
+  "ReportID": "01a137bf-4b3f-7981-947f-9dbb162c3e15",
+  "CreatedAt": "2026-10-13T21:10:45.951624-03:00",
+  "ArtifactName": "clean",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "Dockerfile",
+      "Class": "config",
+      "Type": "dockerfile",
+      "MisconfSummary": {
+        "Successes": 27,
+        "Failures": 0
+      }
+    }
+  ]
+}
+2026-05-04T10:12:03Z	WARN	[vulndb] Trivy DB may be outdated. Run with --download-db-only to update it
+2026-05-04T10:12:04Z	FATAL	Fatal error	run error: fs scan error: scan error: unable to initialize a scan service: failed to read the cache

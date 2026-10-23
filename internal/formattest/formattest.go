@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -264,7 +263,7 @@ func Real(t *testing.T, f core.Format, defaultDir string) {
 	for p := range inputs {
 		paths = append(paths, p)
 	}
-	sort.Strings(paths)
+	slices.Sort(paths)
 	for _, p := range paths {
 		r, err := Run(t, f, inputs[p])
 		if err != nil {

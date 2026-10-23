@@ -1,6 +1,17 @@
 # tfjson
 
-Input: Terraform's machine-readable UI, one JSON object per line, from `plan`, `apply`, `destroy`, `init`, `test` or `query` run with `-json`. Detected when one of the first five non-blank lines is a JSON object with `@level` and `type`. Lines that are not JSON, such as a state lock notice on the same stream, are counted and kept out of the way. OpenTofu writes the same stream; its `version` line carries the key `tofu` instead of `terraform` (`internal/command/views/json_view.go` in OpenTofu), and the header and `tool` then name `tofu` with its version.
+Input: Terraform's machine-readable UI, one JSON object per line, from `plan`, `apply`, `destroy`, `init`, `test` or `query` run with `-json`, and the same `tofu` commands.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run Terraform with `-json` and pipe it through `squeeze`: `terraform plan -json | squeeze`,
+  `terraform test -json | squeeze`, `terraform query -json | squeeze`; read squeeze's output instead of Terraform's.
+```
+
+## Example
 
 ```
 terraform plan -json | squeeze
@@ -9,7 +20,15 @@ terraform test -json | squeeze --fail-on test_failed
 terraform query -json | squeeze
 ```
 
-The stream repeats a start, progress and completion message for every resource and every ten seconds of work. squeeze keeps the planned changes, the final summary, the failures, the diagnostics, the outputs and the failing tests. On the fixtures run with default flags the text is 4.4 to 25.6 percent of the input; on Terraform's own `*.jsonlog` test outputs (`just conformance`) it is 4 to 44 percent, since those samples hold only a few lines.
+The stream repeats a start, progress and completion message for every resource and every ten seconds of work.
+squeeze keeps the planned changes, the final summary, the failures, the diagnostics, the outputs and the failing tests.
+On the fixtures run with default flags the text is 4.4 to 25.6 percent of the input.
+On Terraform's own `*.jsonlog` test outputs (`just conformance`) it is 4 to 44 percent, since those samples hold only a few lines.
+
+Lines that are not JSON, such as a state lock notice on the same stream, are counted and kept out of the way.
+OpenTofu's `version` line carries the key `tofu` instead of `terraform` (`internal/command/views/json_view.go` in OpenTofu); the header and `tool` then name `tofu` with its version.
+
+- Detection: one of the first five non-blank lines is a JSON object with `@level` and `type`.
 
 ## Output
 
@@ -56,8 +75,7 @@ error tests/network.tftest.hcl
 - Every line at level `error` or `warn` becomes a diagnostic, whatever its type, so a message type squeeze does not know cannot hide a failure. A diagnostic severity other than `warning` counts as an error. Identical diagnostics print once with `(xN)`; `--max-diagnostics` counts printed lines, and `... N more diagnostics` and `diagnostics_omitted` count every cut diagnostic, N for an `(xN)` line.
 - A diagnostic's detail is wrapped to 100 bytes and cut after three lines with `...`; its code line is cut at 120 bytes.
 - A failed `terraform test` assertion that compares two values (`snippet.test_assertion_expr`) prints them after the code line as `lhs:` and `rhs:`, each as compact JSON on one line cut at 200 bytes, and Terraform's warning about different types as `note:`. Terraform redacts sensitive and ephemeral values in both. Other diagnostics print the expression values (`snippet.values`) as `| <expression> <statement>`, cut at 200 bytes; for an assertion with `lhs` and `rhs` they are not printed, as Terraform does without `-verbose`. `--no-detail` hides all of them.
-- Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed, so an address or a name cannot forge a line of output.
-- Everything else is counted in `... N other messages: <type> <count>, ... (--all)`; `--all` prints those messages, each cut at 200 bytes with `...`; `--output json` carries only their counts.
+- Everything else is counted in `... N other messages: <type> <count>, ... (--all)`, with `(` and `)` in a type printed as `[` and `]` so the notice keeps its shape; `--all` prints those messages, each cut at 200 bytes with `...`; `--output json` carries only their counts.
 
 ## Flags
 

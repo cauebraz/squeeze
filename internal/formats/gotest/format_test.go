@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -103,6 +104,26 @@ func TestPlainTextMatchesJSON(t *testing.T) {
 	for _, o := range []Options{DefaultOptions(), {All: true, Full: true}} {
 		if diff := cmp.Diff(summary("plain-twin", o), summary("plain-verbose", o)); diff != "" {
 			t.Errorf("text and JSON of the same run differ (-json +text):\n%s", diff)
+		}
+	}
+}
+
+func TestPlainTextWithoutTests(t *testing.T) {
+	t.Parallel()
+	tests := map[string]string{
+		"ok  \ta\t0.1s\n":                          "go test: pass; 1 package: 1 ok (tests not listed without -v or -json)\n",
+		"FAIL\ta [setup failed]\n":                 "go test: fail; 1 package: 1 failed (tests not listed without -v or -json)\nfail a\n",
+		"?   \ta\t[no test files]\n":               "go test: pass; 0 tests: 0 passed, 0 failed, 0 skipped; 1 package: 1 without tests\n... 1 package without tests (--all)\n",
+		"=== RUN   TestA\nok  \ta\t0.1s\n":         "go test: pass; 0 tests: 0 passed, 0 failed, 0 skipped; 1 package: 1 ok\n... 1 passing package (--all)\n",
+		"--- SKIP: TestA (0.00s)\nok  \ta\t0.1s\n": "go test: pass; 1 test: 0 passed, 0 failed, 1 skipped; 1 package: 1 ok\n... 1 skipped test, 1 passing package (--all)\n",
+	}
+	for input, want := range tests {
+		r, err := Squeeze([]byte(input), DefaultOptions())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(want, r.Text); diff != "" {
+			t.Errorf("%q (-want +got):\n%s", input, diff)
 		}
 	}
 }
@@ -504,12 +525,27 @@ func TestDataPayload(t *testing.T) {
 	}
 }
 
+var flagNotice = regexp.MustCompile(`\((--[a-z-]+( 0)?|--output json|--raw-dir)\)$`)
+
+func checkFlagNotices(t *testing.T, text string) {
+	t.Helper()
+	var notices []string
+	for _, l := range strings.Split(text, "\n") {
+		if flagNotice.MatchString(l) {
+			notices = append(notices, l)
+		}
+	}
+	formattest.CheckNotices(t, strings.Join(notices, "\n"))
+}
+
 func FuzzSqueeze(f *testing.F) {
 	for _, data := range formattest.Inputs(f, fixtureDir) {
 		f.Add(data)
 	}
 	f.Add(stream(`{"Action":"run","Package":"a/b","Test":"T/x"}`, `{"Action":"output","Package":"a/b","Test":"T/x","Output":"goroutine 1 [x]:\nf(\n\tg.go:1\n"}`, `{"Action":"fail","Package":"a/b"}`))
+	f.Add(stream(`{"Action":"weird (x)","Package":"a/b"}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		events, err := Parse(input)
 		if errors.Is(err, ErrNoEvents) {
 			events, err = ParseText(input)
@@ -527,6 +563,7 @@ func FuzzSqueeze(f *testing.F) {
 			r := Build(events, o)
 			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
+			checkFlagNotices(t, res.Text)
 			if failedEvents > 0 && r.Status != "fail" {
 				t.Fatalf("%d fail events but status %q", failedEvents, r.Status)
 			}

@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
 var (
@@ -41,8 +43,8 @@ type plainParser struct {
 
 func ParseText(input []byte) ([]Event, error) {
 	p := plainParser{builds: map[string]string{}}
-	for _, raw := range strings.Split(string(input), "\n") {
-		p.line(strings.TrimRight(raw, "\r"))
+	for raw := range core.SplitLines(string(input)) {
+		p.line(raw)
 	}
 	if !p.found {
 		return nil, ErrNoEvents

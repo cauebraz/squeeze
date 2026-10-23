@@ -1,0 +1,3 @@
+trivy 0.75.0: clean (filesystem): no findings; 27 misconfiguration checks passed
+error: 2026-05-04T10:12:04Z FATAL Fatal error run error: fs scan error: scan error: unable to initialize a scan service: failed to read the cache
+warning: 2026-05-04T10:12:03Z WARN [vulndb] Trivy DB may be outdated. Run with --download-db-only to update it

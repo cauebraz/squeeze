@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -68,13 +69,13 @@ func parseShow(input []byte) (Input, error) {
 	return Input{Show: &s}, nil
 }
 
-func buildShow(r *Report, s *RawShow) {
+func buildShow(r *Report, s *RawShow, lines []core.FlaggedLine) {
 	r.Source = "resource"
 	ds := make([]tfdiag.Diagnostic, 0, len(s.Diagnostics))
 	for _, raw := range s.Diagnostics {
 		ds = append(ds, tfdiag.Convert(raw))
 	}
-	r.Diagnostics = tfdiag.Normalize(ds)
+	r.Diagnostics = trailing(ds, lines)
 	r.Errors, r.Warnings = tfdiag.Count(r.Diagnostics)
 	raw := s.Resource
 	if raw == nil || (raw.Address == "" && isNull(raw.Values)) {
@@ -114,11 +115,7 @@ func attributes(values, mask json.RawMessage) []Attribute {
 			}
 		}
 	}
-	names := make([]string, 0, len(vals))
-	for name := range vals {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := slices.Sorted(maps.Keys(vals))
 	out := make([]Attribute, 0, len(names))
 	for _, name := range names {
 		a := Attribute{Name: name}
@@ -157,11 +154,7 @@ func redact(text, data *bytes.Buffer, raw, mask json.RawMessage) {
 	}
 	var maskObj, rawObj map[string]json.RawMessage
 	if json.Unmarshal(mask, &maskObj) == nil && json.Unmarshal(raw, &rawObj) == nil && maskObj != nil && rawObj != nil {
-		keys := make([]string, 0, len(rawObj))
-		for k := range rawObj {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
+		keys := slices.Sorted(maps.Keys(rawObj))
 		text.WriteByte('{')
 		data.WriteByte('{')
 		for i, k := range keys {

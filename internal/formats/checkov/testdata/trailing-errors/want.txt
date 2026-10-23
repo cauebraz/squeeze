@@ -1,0 +1,4 @@
+checkov 3.3.29: 0 failed, 0 passed, 0 skipped, 1 parsing error; 0 resources
+error: 2026-05-04 10:12:04,027 [MainThread  ] [ERROR]  Failed to invoke function /usr/lib/python3.12/site-packages/checkov/common/runners/runner_registry.py: Connection error
+warning: 2026-05-04 10:12:03,412 [MainThread  ] [WARNING]  Secret scanning: could not process file .env
+parse error: /home/dev/broken/main.tf

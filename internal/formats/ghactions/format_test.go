@@ -165,6 +165,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(line("j", "##[group]Run a") + "\n" + line("j", "##[error]x") + "\n" + line("", "##[warning]") + "\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		jobs, err := Parse(input)
 		if err != nil {
 			return

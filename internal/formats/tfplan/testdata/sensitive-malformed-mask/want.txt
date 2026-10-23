@@ -1,0 +1,7 @@
+terraform 1.9.5 plan: 0 to add, 2 to change, 0 to destroy
+~ aws_db_instance.main
+  ~ instance_class: "db.t3.micro" -> "db.t3.small"
+  ~ master_user_secret: (sensitive)
+  ~ password: (sensitive)
+~ aws_ssm_parameter.keys
+  ~ values: (sensitive)

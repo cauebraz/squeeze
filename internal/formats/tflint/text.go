@@ -33,7 +33,7 @@ func Text(r Report, o Options) string {
 
 func header(r Report) string {
 	total := r.Errors + r.Warnings + r.Notices
-	if total == 0 && r.ToolErrors == 0 {
+	if total == 0 && len(r.Problems) == 0 {
 		return "tflint: no issues"
 	}
 	var parts []string

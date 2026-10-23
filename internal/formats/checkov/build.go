@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxChecksInNotice = 5
@@ -36,22 +37,23 @@ type Framework struct {
 }
 
 type Report struct {
-	Tool           string         `json:"tool"`
-	ToolVersion    string         `json:"tool_version"`
-	Passed         int            `json:"passed"`
-	Failed         int            `json:"failed"`
-	Skipped        int            `json:"skipped"`
-	ParsingErrors  int            `json:"parsing_errors"`
-	Resources      int            `json:"resource_count"`
-	Frameworks     []Framework    `json:"frameworks"`
-	BySeverity     map[string]int `json:"failed_by_severity"`
-	FailedChecks   []Check        `json:"failed_checks"`
-	ChecksOmitted  int            `json:"failed_checks_omitted"`
-	OmittedChecks  []core.Count   `json:"omitted_by_check_id"`
-	SkippedChecks  []Check        `json:"skipped_checks"`
-	ParseErrorPath []string       `json:"parsing_error_files"`
-	CountsOnly     bool           `json:"counts_only,omitempty"`
-	PerResource    map[string]int `json:"-"`
+	Tool           string              `json:"tool"`
+	ToolVersion    string              `json:"tool_version"`
+	Passed         int                 `json:"passed"`
+	Failed         int                 `json:"failed"`
+	Skipped        int                 `json:"skipped"`
+	ParsingErrors  int                 `json:"parsing_errors"`
+	Resources      int                 `json:"resource_count"`
+	Frameworks     []Framework         `json:"frameworks"`
+	BySeverity     map[string]int      `json:"failed_by_severity"`
+	FailedChecks   []Check             `json:"failed_checks"`
+	ChecksOmitted  int                 `json:"failed_checks_omitted"`
+	OmittedChecks  []core.Count        `json:"omitted_by_check_id"`
+	SkippedChecks  []Check             `json:"skipped_checks"`
+	ParseErrorPath []string            `json:"parsing_error_files"`
+	CountsOnly     bool                `json:"counts_only,omitempty"`
+	Diagnostics    []tfdiag.Diagnostic `json:"diagnostics,omitempty"`
+	PerResource    map[string]int      `json:"-"`
 }
 
 func relative(p string) string {
@@ -115,7 +117,7 @@ func rank(s string) int {
 	return len(severityRank)
 }
 
-func Build(reports []RawReport, o Options) Report {
+func Build(in Input, o Options) Report {
 	r := Report{
 		Tool:           "checkov",
 		Frameworks:     []Framework{},
@@ -126,7 +128,15 @@ func Build(reports []RawReport, o Options) Report {
 		ParseErrorPath: []string{},
 	}
 	var failed []Check
-	for _, rep := range reports {
+	for _, l := range in.Trailing {
+		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
+		if l.Error {
+			d.Severity = "error"
+		}
+		r.Diagnostics = append(r.Diagnostics, d)
+	}
+	r.Diagnostics = tfdiag.Normalize(r.Diagnostics)
+	for _, rep := range in.Reports {
 		s, res := rep.Summary, rep.Results
 		if rep.CountsOnly {
 			r.CountsOnly = true
@@ -186,25 +196,33 @@ func (c Check) key() string {
 }
 
 func sortGrouped(checks []Check) {
+	type keyed struct {
+		key   string
+		check Check
+	}
 	worst := map[string]int{}
-	for _, c := range checks {
+	items := make([]keyed, len(checks))
+	for i, c := range checks {
 		k := c.key()
+		items[i] = keyed{key: k, check: c}
 		if r, ok := worst[k]; !ok || rank(c.Severity) < r {
 			worst[k] = rank(c.Severity)
 		}
 	}
-	sort.SliceStable(checks, func(i, j int) bool {
-		a, b := checks[i], checks[j]
-		ka, kb := a.key(), b.key()
-		if worst[ka] != worst[kb] {
-			return worst[ka] < worst[kb]
+	sort.SliceStable(items, func(i, j int) bool {
+		a, b := items[i], items[j]
+		if worst[a.key] != worst[b.key] {
+			return worst[a.key] < worst[b.key]
 		}
-		if ka != kb {
-			return ka < kb
+		if a.key != b.key {
+			return a.key < b.key
 		}
-		if rank(a.Severity) != rank(b.Severity) {
-			return rank(a.Severity) < rank(b.Severity)
+		if rank(a.check.Severity) != rank(b.check.Severity) {
+			return rank(a.check.Severity) < rank(b.check.Severity)
 		}
-		return a.CheckID < b.CheckID
+		return a.check.CheckID < b.check.CheckID
 	})
+	for i, it := range items {
+		checks[i] = it.check
+	}
 }

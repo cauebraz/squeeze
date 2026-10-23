@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -189,6 +190,38 @@ func TestCountsCoverDiagnostics(t *testing.T) {
 	}
 }
 
+func TestTrailingLines(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		input string
+		text  string
+		conds []string
+	}{
+		"warning keeps the run valid": {
+			input: "{\"format_version\":\"1.0\",\"valid\":true,\"diagnostics\":[]}\nWarning: deprecated flag\nplain\n",
+			text:  "terraform validate: valid, 1 warning\nwarning: deprecated flag\n",
+			conds: []string{"warning"},
+		},
+		"plain lines are dropped": {
+			input: "{\"format_version\":\"1.0\",\"valid\":true,\"diagnostics\":[]}\ndone\n",
+			text:  "terraform validate: valid\n",
+			conds: []string{},
+		},
+	}
+	for name, tc := range tests {
+		r, err := Squeeze([]byte(tc.input), DefaultOptions())
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if diff := cmp.Diff(tc.text, r.Text); diff != "" {
+			t.Errorf("%s: text (-want +got):\n%s", name, diff)
+		}
+		if diff := cmp.Diff(tc.conds, r.Conditions); diff != "" {
+			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
+		}
+	}
+}
+
 func TestConfigureFlags(t *testing.T) {
 	t.Parallel()
 	for _, tt := range []struct {
@@ -238,7 +271,9 @@ func FuzzSqueeze(f *testing.F) {
 		f.Add(data)
 	}
 	f.Add([]byte(`{"format_version":"1.0","valid":false,"diagnostics":[{"severity":"error","summary":"\u001b[31mx","snippet":{"code":"a\nb","highlight_start_offset":-4}}]}`))
+	f.Add([]byte("{\"format_version\":\"1.0\",\"valid\":true,\"diagnostics\":[]}\nError: x\nWarning: y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		for _, o := range []Options{DefaultOptions(), {MaxDiagnostics: 1, NoDetail: true}} {
 			r, err := Squeeze(input, o)
 			if err != nil {
@@ -249,6 +284,22 @@ func FuzzSqueeze(f *testing.F) {
 				t.Fatalf("Envelope() error: %v", err)
 			}
 			report := r.Data.(Report)
+			if v, err := Parse(input); err == nil {
+				raw := 0
+				for _, d := range v.Diagnostics {
+					if core.Clean(d.Severity) != "warning" {
+						raw++
+					}
+				}
+				if report.Errors < raw || (raw > 0 && !slices.Contains(r.Conditions, "error")) {
+					t.Fatalf("%d error diagnostics in the input, %d counted, conditions %v", raw, report.Errors, r.Conditions)
+				}
+				for _, l := range v.Trailing {
+					if l.Error && (report.Errors == 0 || report.Valid) {
+						t.Fatalf("error line %q after the JSON left errors=%d valid=%v", l.Text, report.Errors, report.Valid)
+					}
+				}
+			}
 			if o.MaxDiagnostics > 0 && len(report.Diagnostics) > o.MaxDiagnostics {
 				t.Fatalf("%d diagnostics over the limit %d", len(report.Diagnostics), o.MaxDiagnostics)
 			}

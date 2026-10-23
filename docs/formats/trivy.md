@@ -1,6 +1,16 @@
 # trivy
 
-Input: the JSON that `trivy --format json` prints for `trivy fs`, `trivy config`, `trivy image` and the other targets, `SchemaVersion` 2, as `pkg/types/report.go` in Trivy defines it; and the JSON of `trivy k8s --format json`, with `--report all` (the default) or `--report summary`, as `pkg/k8s/report/report.go` defines it at v0.75.0 (lines 39-66): no `SchemaVersion`, a `ClusterName`, and the results of each Kubernetes resource under `Resources` (or `Findings` for the summary report). Detected when the input is a JSON object that contains `"SchemaVersion"` and `"ArtifactName"` or `"Results"`, or `"ClusterName"` and `"Resources"` or `"Findings"`, anywhere in the document.
+Input: the JSON that `trivy fs`, `config`, `image`, `k8s` and the other targets print with `--format json`.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run Trivy as `trivy fs --format json . | squeeze` or `trivy k8s --format json | squeeze`.
+```
+
+## Example
 
 ```
 trivy fs --scanners vuln,secret,misconfig --format json . | squeeze
@@ -8,7 +18,18 @@ trivy image --format json registry.example.com/shop/api:1.4.0 | squeeze --fail-o
 trivy k8s --format json --include-namespaces shop | squeeze --fail-on error,critical
 ```
 
-Trivy's JSON carries, for every vulnerability, its description, references, CVSS vectors, vendor severities and dates, and for every misconfiguration its description, query, references and code. squeeze keeps one line per finding with severity, ID, package or resource, and fix, plus one line per misconfiguration check with Trivy's resolution. On the default-flag fixtures with findings captured from Trivy 0.75.0 the text is 2.0 to 4.5 percent of the input; on the container-image fixture written from the schema, which holds few findings, it is 15 percent.
+Trivy's JSON carries, for every vulnerability, its description, references, CVSS vectors, vendor severities and dates.
+For every misconfiguration it carries the description, query, references and code.
+squeeze keeps one line per finding with severity, ID, package or resource, and fix, plus one line per misconfiguration check with Trivy's resolution.
+On the default-flag fixtures with findings, captured from Trivy 0.75.0, the text is 2.0 to 4.5 percent of the input.
+On the container-image fixture written from the schema, which holds few findings, it is 15 percent.
+
+Two shapes are read:
+
+- `SchemaVersion` 2, as `pkg/types/report.go` in Trivy defines it, for `fs`, `config`, `image` and the other targets.
+- `trivy k8s --format json`, with `--report all` (the default) or `--report summary`, as `pkg/k8s/report/report.go` defines it at v0.75.0 (lines 39-66): no `SchemaVersion`, a `ClusterName`, and the results of each Kubernetes resource under `Resources`, or `Findings` for the summary report.
+
+- Detection: a JSON object that contains `"SchemaVersion"` and `"ArtifactName"` or `"Results"`, or `"ClusterName"` and `"Resources"` or `"Findings"`, anywhere in the document.
 
 ## Output
 
@@ -29,7 +50,7 @@ OS Packages (license):
 ... 1 misconfiguration exception, 1 license below HIGH (--all)
 ```
 
-- The header names the artifact, its type and, for an image, its OS; then the count of vulnerabilities, misconfigurations, secrets and licenses, the count by severity (the hidden exceptions and licenses included), how many vulnerabilities have a fixed version, and how many misconfiguration checks passed.
+- The header names the artifact, its type and, for an image, its OS. It then counts vulnerabilities, misconfigurations, secrets and licenses, and the findings by severity, hidden exceptions and licenses included. It ends with how many vulnerabilities have a fixed version and how many misconfiguration checks passed.
 - Findings are grouped by Trivy's results, in Trivy's order, with the target name and type; two results with the same target name, such as a `requirements.txt` scanned for packages and for secrets, stay apart. Inside a target they are sorted by kind, severity, package or resource, line and ID.
 - A vulnerability prints its package, the installed version and `-> fixed versions`, or Trivy's status (`affected`, `will not fix`, ...) when there is no fix.
 - A misconfiguration prints its resource and lines from Trivy's cause metadata. Passed checks are counted in the header; checks with status `EXCEPTION` are counted in `... N misconfiguration exceptions (--all)`.
@@ -38,7 +59,7 @@ OS Packages (license):
 - A `fixes:` section closes the output with one line per misconfiguration check listed above, `<ID>: <Resolution>`, in the order the checks first appear; findings cut by `--max-findings` add none, and exceptions add theirs with `--all`. Trivy's `Message` is in `--output json` only, as it mostly restates the title.
 - Titles and resolutions are cut at 100 bytes with `...`; `--output json` carries them whole.
 - Past `--max-findings`, squeeze keeps the most severe findings across all targets and counts the rest by severity: `... 16 more findings, 5 HIGH, 10 MEDIUM, 1 LOW (--max-findings 0)`.
-- Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
+- A line after the JSON document that reads as an error or a warning, such as Trivy's `FATAL` or `WARN` log lines when stderr is piped too, prints after the header as `error: <line>` or `warning: <line>`, without an `Error:` or `Warning:` prefix, an error line sets `error` and a warning line sets `warning`. Other lines after the document are dropped.
 
 ## Kubernetes reports
 
@@ -78,17 +99,18 @@ fixes:
 | Condition | Present when |
 |---|---|
 | `critical` | a listed finding, or one cut by `--max-findings`, has severity `CRITICAL`; misconfiguration exceptions and licenses below `HIGH` do not count, as for `fail` |
-| `error` | Trivy could not scan a Kubernetes resource (its `Error` is set) |
+| `error` | Trivy could not scan a Kubernetes resource (its `Error` is set), or an error line follows the JSON |
 | `fail` | a vulnerability, a failed misconfiguration, a secret, or a license of severity `HIGH` or `CRITICAL` |
 | `fixable` | a vulnerability has a fixed version |
 | `high` | the same, with severity `HIGH` or `CRITICAL` |
 | `misconfiguration` | a misconfiguration failed |
 | `secret` | a secret was found |
 | `vulnerability` | a vulnerability was found |
+| `warning` | a warning line follows the JSON |
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `cluster` and `resources` (`name`, `findings`, `error`) for a k8s report, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity`, `targets` (`name`, `resource` for a k8s report, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity` and `hidden` (exceptions and licenses below HIGH). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `target_index` (into `targets`), `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `resolution`, `start_line`, `end_line` and `url`.
+`data` holds `tool`, `tool_version`, `cluster` and `resources` (`name`, `findings`, `error`) for a k8s report, `artifact`, `artifact_type`, `os` when set, `vulnerabilities`, `misconfigurations`, `secrets`, `licenses`, `severe_licenses`, `misconfig_exceptions`, `misconfig_checks_passed`, `fixable`, `by_severity`, `targets` (`name`, `resource` for a k8s report, `class`, `type`, `findings`, `misconfig_checks_passed`), `findings`, `findings_omitted`, `omitted_by_severity`, `hidden` (exceptions and licenses below HIGH) and, when lines after the JSON read as errors or warnings, `diagnostics` (`severity`, `summary`, `count`). Each finding has `kind` (`vulnerability`, `misconfiguration`, `secret`, `license`), `target`, `target_index` (into `targets`), `severity`, `id` and, when set, `title` (in full), `package`, `installed_version`, `fixed_version`, `status`, `resource`, `message`, `resolution`, `start_line`, `end_line` and `url`.
 
 ## Limitations
 

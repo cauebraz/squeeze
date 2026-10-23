@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -45,9 +46,10 @@ type RawResource struct {
 }
 
 type Input struct {
-	State   *RawState
-	Show    *RawShow
-	Outputs map[string]RawOutput
+	State    *RawState
+	Show     *RawShow
+	Outputs  map[string]RawOutput
+	Trailing []core.FlaggedLine
 }
 
 type Output struct {
@@ -90,9 +92,19 @@ type State struct {
 
 func Parse(input []byte) (Input, error) {
 	var top map[string]json.RawMessage
-	if err := json.NewDecoder(bytes.NewReader(input)).Decode(&top); err != nil {
+	rest, err := core.DecodeJSON(input, &top)
+	if err != nil {
 		return Input{}, fmt.Errorf("decode: %w", err)
 	}
+	in, err := parseDocument(input[:len(input)-len(rest)], top)
+	if err != nil {
+		return Input{}, err
+	}
+	in.Trailing = core.FlaggedLines(rest)
+	return in, nil
+}
+
+func parseDocument(input []byte, top map[string]json.RawMessage) (Input, error) {
 	if top == nil {
 		return Input{}, ErrNotObject
 	}
@@ -129,8 +141,8 @@ func parseState(input []byte) (Input, error) {
 }
 
 func checkOutputs(outputs map[string]RawOutput) error {
-	for name, o := range outputs {
-		if o.Sensitive == nil {
+	for _, name := range slices.Sorted(maps.Keys(outputs)) {
+		if outputs[name].Sensitive == nil {
 			return fmt.Errorf("output %q: %w", name, ErrMissingSensitive)
 		}
 	}
@@ -140,10 +152,12 @@ func checkOutputs(outputs map[string]RawOutput) error {
 func Build(in Input, o Options) Report {
 	r := Report{Tool: "terraform", Source: "output"}
 	if in.Show != nil {
-		buildShow(&r, in.Show)
+		buildShow(&r, in.Show, in.Trailing)
 		r.Outputs = []Output{}
 		return r
 	}
+	r.Diagnostics = trailing(nil, in.Trailing)
+	r.Errors, r.Warnings = tfdiag.Count(r.Diagnostics)
 	outputs := in.Outputs
 	if in.State != nil {
 		r.Source = "state"
@@ -159,6 +173,20 @@ func Build(in Input, o Options) Report {
 	r.Outputs = buildOutputs(&r, outputs)
 	r.Outputs, r.Omitted = core.Limit(r.Outputs, o.MaxOutputs)
 	return r
+}
+
+func trailing(ds []tfdiag.Diagnostic, lines []core.FlaggedLine) []tfdiag.Diagnostic {
+	for _, l := range lines {
+		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
+		if l.Error {
+			d.Severity = "error"
+		}
+		ds = append(ds, d)
+	}
+	if len(ds) == 0 {
+		return nil
+	}
+	return tfdiag.Normalize(ds)
 }
 
 func walk(r *State, m RawModule) {
@@ -183,11 +211,7 @@ func walk(r *State, m RawModule) {
 }
 
 func buildOutputs(r *Report, raw map[string]RawOutput) []Output {
-	names := make([]string, 0, len(raw))
-	for name := range raw {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := slices.Sorted(maps.Keys(raw))
 	r.Total = len(names)
 	out := []Output{}
 	for _, name := range names {

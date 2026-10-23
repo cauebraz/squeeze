@@ -1,18 +1,34 @@
 # buildkit
 
-Input: the progress output of a BuildKit build, which `docker buildx build` and `docker build` write to stderr, in either of two modes:
+Input: the progress output that `docker buildx build` and `docker build` write to stderr, with `--progress=plain` or `--progress=rawjson`.
 
-- `--progress=plain`, the text CI logs show (and the default when stderr is not a terminal): `#N <step>` lines, `#N <seconds> <log line>`, `#N DONE`, `#N CACHED`, `#N CANCELED`, `#N ERROR: <message>`, `#N WARN: <message>`, then the `------` log tail, the Dockerfile excerpt and `ERROR: failed to build: ...`.
-- `--progress=rawjson`, one `SolveStatus` JSON object per line (`vertexes`, `statuses`, `logs` with base64 data, `warnings`), as defined in `client/graph.go` of moby/buildkit and written by the `rawjson` display in `util/progress/progressui/display.go`. The lines buildx prints after the stream (the Dockerfile excerpt and `ERROR:`) are read as in plain mode.
+## Agent line
 
-Detected when one of the first three non-blank lines is `#0 building with "...`, a `#N [internal] load build definition|.dockerignore|metadata for|remote build context|git source` line (a Compose service name may precede `internal`), or a JSON object that starts with `{"vertexes":[{"`, `{"statuses":[{"`, `{"logs":[{"` or `{"warnings":[{"`.
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Build images as `docker buildx build --progress=plain . 2>&1 | squeeze`.
+```
+
+## Example
 
 ```
 docker buildx build --progress=plain . 2>&1 | squeeze
 docker buildx build --progress=rawjson . 2>&1 | squeeze buildkit --all
 ```
 
-A plain build log repeats each step's name, prints transfer and export status lines, prints the last lines of the failing step's log twice (in the step and in the `------` tail) and its command five times. squeeze keeps the counts, every BuildKit warning, the failed and canceled steps with the tail of their log, and the final error with its Dockerfile location. On the failing fixtures captured for this format, the text is 24 to 35 percent of the plain log and 3.5 to 10 percent of the rawjson stream; `generic` printed 1,996 bytes of the 2,777-byte `failed-run` log, against 966.
+A plain build log repeats each step's name and prints transfer and export status lines.
+It prints the last lines of the failing step's log twice, in the step and in the `------` tail, and its command five times.
+squeeze keeps the counts, every BuildKit warning, the failed and canceled steps with the tail of their log, and the final error with its Dockerfile location.
+On the failing fixtures captured for this format, the text is 24 to 35 percent of the plain log and 3.5 to 10 percent of the rawjson stream.
+`generic` printed 1,996 bytes of the 2,777-byte `failed-run` log, against 966.
+
+The two modes:
+
+- `--progress=plain`, the text CI logs show and the default when stderr is not a terminal: `#N <step>` lines, `#N <seconds> <log line>`, `#N DONE`, `#N CACHED`, `#N CANCELED`, `#N ERROR: <message>`, `#N WARN: <message>`, then the `------` log tail, the Dockerfile excerpt and `ERROR: failed to build: ...`.
+- `--progress=rawjson`, one `SolveStatus` JSON object per line (`vertexes`, `statuses`, `logs` with base64 data, `warnings`), as defined in `client/graph.go` of moby/buildkit and written by the `rawjson` display in `util/progress/progressui/display.go`. The lines buildx prints after the stream (the Dockerfile excerpt and `ERROR:`) are read as in plain mode.
+
+- Detection: one of the first three non-blank lines is `#0 building with "...`, a `#N [internal] load build definition|.dockerignore|metadata for|remote build context|git source` line (a Compose service name may precede `internal`), or a JSON object that starts with `{"vertexes":[{"`, `{"statuses":[{"`, `{"logs":[{"` or `{"warnings":[{"`.
 
 ## Output
 
@@ -29,7 +45,10 @@ error: Dockerfile:5: failed to build: failed to solve: process "/bin/sh -c echo 
 ... 4 other steps (--all)
 ```
 
-- The header counts the steps BuildKit shows (one per `#N` in plain mode, one per started vertex in rawjson; a vertex in a progress group counts as its group), the cached ones (`CACHED`, `"cached":true`), the failed ones (`ERROR:`, a vertex `error`) and the canceled ones (`CANCELED`, an `error` ending in `context canceled`, the rule of BuildKit's own display), then the warnings.
+- The header counts the steps BuildKit shows, the cached, failed and canceled ones, then the warnings.
+  - A step is one `#N` in plain mode and one started vertex in rawjson; a vertex in a progress group counts as its group.
+  - Cached is `CACHED` or `"cached":true`; failed is `ERROR:` or a vertex `error`.
+  - Canceled is `CANCELED` or an `error` ending in `context canceled`, the rule of BuildKit's own display.
 - Each warning prints as `warning: <message>`: the `#N WARN:` lines or the `short` text of a rawjson warning, buildx's `WARNING:` lines, and any entry of the closing `N warnings found` list that no step printed.
 - A failed or canceled step prints as `fail <step>` or `canceled <step>` with its log cut to the last `--max-lines` lines, keeping every earlier line with an error or warning word and the line after it; each gap prints as `... N lines cut (--max-lines 0)`. The step's error prints as `error: <message>` unless the final error already ends with it.
 - The final `ERROR:` lines print as `error: <message>`, the first one prefixed with the Dockerfile location buildx shows above it (`Dockerfile:5`). A line after the build that squeeze does not know and that holds an error word is printed as an error too.

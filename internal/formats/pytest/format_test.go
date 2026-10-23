@@ -597,6 +597,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add(lines("=== FAILURES ===", "___ ___", "E", "=== warnings summary ===", "x: 3 warnings", "", "=== 1 failed in 0s ==="))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		for _, o := range []Options{DefaultOptions(), {MaxTests: 1, MaxOutput: 1, MaxWarnings: 1, Full: true, All: true}} {
 			res, err := Squeeze(input, o)
 			if err != nil {

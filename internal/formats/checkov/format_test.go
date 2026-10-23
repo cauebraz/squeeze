@@ -3,6 +3,7 @@ package checkov
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -227,21 +228,31 @@ func FuzzSqueeze(f *testing.F) {
 		f.Add(data)
 	}
 	f.Add([]byte(`[{"check_type":"x","summary":{"failed":-3},"results":{"failed_checks":[{"file_line_range":[5]},{"severity":"high"}]}}]`))
+	f.Add([]byte("{\"summary\":{\"checkov_version\":\"3\"}}\nError: x\nWarning: y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		reports, err := Parse(input)
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
+		in, err := Parse(input)
 		if err != nil {
 			return
 		}
 		listed := 0
-		for _, rep := range reports {
+		for _, rep := range in.Reports {
 			listed += len(rep.Results.FailedChecks)
 		}
 		for _, o := range []Options{DefaultOptions(), {MaxChecks: 1, All: true}} {
-			r := Build(reports, o)
+			r := Build(in, o)
 			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}
 			formattest.CheckText(t, res.Text)
 			if got := len(r.FailedChecks) + r.ChecksOmitted; got != listed {
 				t.Fatalf("%d failed checks kept or omitted, %d in the input", got, listed)
+			}
+			for _, l := range in.Trailing {
+				if !strings.Contains(res.Text, l.Text) {
+					t.Fatalf("line after the JSON dropped: %q\n%s", l.Text, res.Text)
+				}
+				if l.Error && !slices.Contains(res.Conditions, "error") {
+					t.Fatalf("error line %q sets no error condition", l.Text)
+				}
 			}
 			if r.ChecksOmitted > 0 && !strings.Contains(res.Text, "(--max-checks 0)") {
 				t.Fatalf("checks cut without a notice:\n%s", res.Text)

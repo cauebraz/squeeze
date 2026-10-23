@@ -152,6 +152,7 @@ func TestConditions(t *testing.T) {
 		"checks":           {"change", "check", "warning"},
 		"import":           {"change", "import"},
 		"moved":            {"change", "forget", "move"},
+		"trailing-errors":  {"change", "error", "fail", "warning"},
 	}
 	for name, want := range tests {
 		r, err := Squeeze(fixture(t, name), DefaultOptions())

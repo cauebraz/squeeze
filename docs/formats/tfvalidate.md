@@ -1,13 +1,28 @@
 # tfvalidate
 
-Input: the JSON that `terraform validate -json` prints, `format_version` 1.x. Detected when the input is a JSON object that contains `"format_version"`, `"valid"` and `"diagnostics"`, and neither `"planned_values"` nor `"resource_changes"`.
+Input: the JSON that `terraform validate -json` prints, `format_version` 1.x.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run `terraform validate -json | squeeze` and read squeeze's output instead of Terraform's.
+```
+
+## Example
 
 ```
 terraform validate -json | squeeze
 terraform validate -json | squeeze tfvalidate --fail-on error
 ```
 
-Validation output is mostly the diagnostics themselves, so the saving comes from structure, not volume: one line per diagnostic with `file:line:column`, the detail wrapped to three lines, and the offending code line. On the fixtures the text is 11 to 56 percent of the input; on Terraform's own `validate-*` test outputs (`just conformance`) it is 24 to 41 percent.
+Validation output is mostly the diagnostics themselves, so the saving comes from structure, not volume.
+squeeze prints one line per diagnostic with `file:line:column`, the detail wrapped to three lines, and the offending code line.
+On the fixtures the text is 11 to 56 percent of the input.
+On Terraform's own `validate-*` test outputs (`just conformance`) it is 24 to 41 percent.
+
+- Detection: a JSON object that contains `"format_version"`, `"valid"` and `"diagnostics"`, and neither `"planned_values"` nor `"resource_changes"`.
 
 ## Output
 
@@ -35,6 +50,7 @@ warning: Argument is deprecated (storage.tf:7:3)
 - A severity other than `warning` counts as an error, so an unexpected value cannot hide a failure.
 - Diagnostics are sorted errors first, then by file, line and column.
 - Identical diagnostics (same severity, summary, detail, location and values) are printed once with `(xN)`. `--max-diagnostics` counts printed lines, so an `(xN)` line takes one; `... N more diagnostics` and `diagnostics_omitted` count every cut diagnostic, N for an `(xN)` line.
+- A line after the JSON document that reads as an error or a warning, such as `Error: Failed to load plugin schemas` when stderr is piped too, becomes a diagnostic without a location, its `Error:` or `Warning:` prefix removed, and counts in the header. An error line makes the run `invalid`, since validation did not complete. Other lines after the document are dropped.
 - A diagnostic without a range prints its summary and detail; the resource address, when Terraform gives one, follows the location.
 - The detail is wrapped to 100 bytes and cut after three lines with `...`; the code line is cut at 120 bytes.
 - The expression values Terraform gives with a diagnostic (`snippet.values`, such as `var.bucket_names is list of string with 2 elements`) follow the code line, one per line as `| <expression> <statement>`, each cut at 200 bytes. `--no-detail` hides them.
@@ -51,13 +67,13 @@ warning: Argument is deprecated (storage.tf:7:3)
 | Condition | Present when |
 |---|---|
 | `error` | at least one error |
-| `fail` | Terraform reports `valid: false` |
-| `invalid` | Terraform reports `valid: false` |
+| `fail` | Terraform reports `valid: false`, or an error line follows the JSON |
+| `invalid` | Terraform reports `valid: false`, or an error line follows the JSON |
 | `warning` | at least one warning |
 
 ## JSON data
 
-`data` holds `tool`, `tool_version` (empty: the validate JSON carries none), `valid`, `errors`, `warnings`, `diagnostics_omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code`, `values` and `count`.
+`data` holds `tool`, `tool_version` (empty: the validate JSON carries none), `valid` (false when an error line follows the JSON), `errors`, `warnings`, `diagnostics_omitted` and `diagnostics`. Each diagnostic has `severity` and `summary` and, when set, `detail` (in full), `address`, `file`, `line`, `column`, `code`, `values` and `count`.
 
 ## Limitations
 

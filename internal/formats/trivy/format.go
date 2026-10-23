@@ -5,6 +5,7 @@ import (
 	"flag"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 type Options struct {
@@ -24,7 +25,7 @@ func (Format) Description() string {
 	return "Trivy findings from trivy --format json, including trivy k8s"
 }
 
-var conditionNames = []string{"critical", "error", "fail", "fixable", "high", "misconfiguration", "secret", "vulnerability"}
+var conditionNames = []string{"critical", "error", "fail", "fixable", "high", "misconfiguration", "secret", "vulnerability", "warning"}
 
 func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
 
@@ -61,6 +62,7 @@ func Squeeze(input []byte, o Options) (core.Result, error) {
 }
 
 func conditions(r Report) []string {
+	errors, warnings := tfdiag.Count(r.Diagnostics)
 	reported := map[string]int{}
 	for _, f := range r.Findings {
 		reported[f.Severity]++
@@ -70,13 +72,14 @@ func conditions(r Report) []string {
 	}
 	return core.Conditions(map[string]bool{
 		"critical":         reported["CRITICAL"] > 0,
-		"error":            scanErrors(r) > 0,
+		"error":            scanErrors(r)+errors > 0,
 		"fail":             r.Vulnerabilities+r.Misconfigurations+r.Secrets+r.SevereLicenses > 0,
 		"fixable":          r.Fixable > 0,
 		"high":             reported["HIGH"]+reported["CRITICAL"] > 0,
 		"misconfiguration": r.Misconfigurations > 0,
 		"secret":           r.Secrets > 0,
 		"vulnerability":    r.Vulnerabilities > 0,
+		"warning":          warnings > 0,
 	})
 }
 

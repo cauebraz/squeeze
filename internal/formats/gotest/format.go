@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"github.com/cauebraz/squeeze/internal/jsonl"
+	"slices"
 
 	"github.com/cauebraz/squeeze/internal/core"
 )
@@ -53,13 +54,15 @@ func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 
 func Squeeze(input []byte, o Options) (core.Result, error) {
 	events, err := Parse(input)
-	if errors.Is(err, ErrNoEvents) {
+	plain := errors.Is(err, ErrNoEvents)
+	if plain {
 		events, err = ParseText(input)
 	}
 	if err != nil {
 		return core.Result{}, err
 	}
 	r := Build(events, o)
+	r.testsUnlisted = plain && !slices.ContainsFunc(events, func(e Event) bool { return e.Action == "run" })
 	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}, nil
 }
 

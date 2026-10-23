@@ -1,6 +1,16 @@
 # junit
 
-Input: a JUnit XML test report, the file that `pytest --junitxml`, `gotestsum --junitfile`, `go-junit-report`, Maven Surefire, `jest-junit`, `checkov -o junitxml` and many CI tools write. JUnit XML has no single official schema; squeeze reads the elements and attributes of the Apache Ant schema (`JUnit.xsd`, https://github.com/windyroad/JUnit-Schema/blob/master/JUnit.xsd), the Surefire test report schema 3.0.2 (https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd) and pytest's writer (`src/_pytest/junitxml.py` at pytest 8.4.2). Detected when the first element of the input, after an optional byte order mark, XML declaration, comments and doctype, is `testsuites` or `testsuite`; any other XML document is not claimed.
+Input: a JUnit XML test report, the file that `pytest --junitxml`, `gotestsum --junitfile`, `go-junit-report`, Maven Surefire, `jest-junit`, `checkov -o junitxml` and many CI tools write.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Read a JUnit XML test report as `squeeze < report.xml`, for example the `TEST-*.xml` files of Maven Surefire.
+```
+
+## Example
 
 ```
 pytest --junitxml=report.xml; squeeze < report.xml
@@ -8,7 +18,15 @@ gotestsum --junitfile report.xml -- ./...; squeeze < report.xml
 squeeze --fail-on fail < target/surefire-reports/TEST-com.example.shop.CartTest.xml
 ```
 
-A JUnit report holds every test case, passed or not, the run's properties, and for each failure the full stack trace and captured output. squeeze keeps the counts and the failing cases with their message and the first lines of their text. On the fixtures captured from pytest 8.4.2, gotestsum 1.12.3, go-junit-report 2.1.0, checkov 3.3.20 and jest 30.0.5 with jest-junit 16.0.0, the text is 27 to 65 percent of these small reports (between 2,029 and 6,365 bytes); `generic` printed 91 to 111 percent of each.
+A JUnit report holds every test case, passed or not, the run's properties, and for each failure the full stack trace and captured output.
+squeeze keeps the counts and the failing cases with their message and the first lines of their text.
+The fixtures were captured from pytest 8.4.2, gotestsum 1.12.3, go-junit-report 2.1.0, checkov 3.3.20 and jest 30.0.5 with jest-junit 16.0.0.
+On these small reports, between 2,029 and 6,365 bytes, the text is 27 to 65 percent of the input; `generic` printed 91 to 111 percent of each.
+
+JUnit XML has no single official schema.
+squeeze reads the elements and attributes of the Apache Ant schema (`JUnit.xsd`, https://github.com/windyroad/JUnit-Schema/blob/master/JUnit.xsd), the Surefire test report schema 3.0.2 (https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd) and pytest's writer (`src/_pytest/junitxml.py` at pytest 8.4.2).
+
+- Detection: the first element of the input, after an optional byte order mark, XML declaration, comments and doctype, is `testsuites` or `testsuite`. Any other XML document is not claimed.
 
 ## Output
 

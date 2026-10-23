@@ -1,13 +1,27 @@
 # pytest
 
-Input: what pytest prints on the terminal, in its default, `-v` or `-q` form, with any `--tb` style and with or without color. Detected when the first 64 KiB hold the `test session starts` line, a `FAILURES`, `ERRORS`, `warnings summary` or `short test summary info` section line, or the final summary line, such as `1 failed, 2 passed in 0.12s`, with at least one of pytest's outcome words in it (`failed`, `passed`, `skipped`, `deselected`, `xfailed`, `xpassed`, `error`) or `no tests ran`.
+Input: what pytest prints on the terminal, in its default, `-v` or `-q` form, with any `--tb` style and with or without color.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run Python tests with `pytest 2>&1 | squeeze`; rerun one failure with `pytest <node id>`, using the node ID it prints.
+```
+
+## Example
 
 ```
 pytest 2>&1 | squeeze
 pytest -x -q 2>&1 | squeeze --fail-on fail
 ```
 
-pytest already prints a summary, so the saving comes from the parts an agent does not read: progress lines, the session header, the source context of every traceback frame and the captured output. On the fixtures, captured from pytest 9.1.1, the text is 7 to 44 percent of the input; the more tests fail, the closer it gets to pytest's own output.
+pytest already prints a summary, so the saving comes from the parts an agent does not read: progress lines, the session header, the source context of every traceback frame and the captured output.
+On the fixtures, captured from pytest 9.1.1, the text is 7 to 44 percent of the input.
+The more tests fail, the closer it gets to pytest's own output.
+
+- Detection: the first 64 KiB hold the `test session starts` line, a `FAILURES`, `ERRORS`, `warnings summary` or `short test summary info` section line, or the final summary line. The summary line, such as `1 failed, 2 passed in 0.12s`, holds at least one of pytest's outcome words (`failed`, `passed`, `skipped`, `deselected`, `xfailed`, `xpassed`, `error`) or `no tests ran`.
 
 ## Output
 
@@ -54,7 +68,7 @@ warning calc.py:9: DeprecationWarning: old_api is deprecated, use add (x3)
 - Every entry of the `ERRORS` and `FAILURES` sections prints as `ERROR` or `FAILED` with the test's node ID, which `pytest <node id>` reruns. pytest titles those entries with the test's name only; squeeze takes the node ID from the matching `short test summary info` line, so the summary needs its default `f` and `E` report characters. An error names its phase: `(setup)`, `(teardown)` or `(collection)`.
 - From a traceback, squeeze keeps the `>` lines (the failing source line of each frame), the `E` lines (the exception and the assertion explanation) and the `path:line:` location lines, with the source line that follows a `--tb=short` location. Other lines, such as the source around the failing line and the local variables, are counted in `... N traceback lines (--full)`, and the captured output sections in `... N captured lines in stdout call and stderr call (--full)`. A traceback with none of those lines, as in `--tb=native` or an `[XPASS(strict)]` entry, prints whole.
 - `--full` prints the captured sections under the traceback, as `captured stderr call:` followed by their lines, so a failure whose only explanation is in captured stdout, stderr or logs stays readable. `--output json` always carries them under `captured`.
-- A report-looking line inside captured output, such as a test that prints `===== running migrations =====` or `1 failed, 2 passed in 0.50s`, stays in the captured section; only an entry title, a `=`-framed summary line or a section title that pytest or pytest-cov writes ends it: `FAILURES`, `ERRORS`, `XFAILURES`, `PASSES`, `XPASSES`, `warnings summary`, `short test summary info` (`_pytest/terminal.py`) and `tests coverage` (`pytest_cov/plugin.py`, pytest-cov 6.1 and later).
+- A report-looking line inside captured output, such as a test that prints `===== running migrations =====` or `1 failed, 2 passed in 0.50s`, stays in the captured section. Only an entry title, a `=`-framed summary line or a section title that pytest or pytest-cov writes ends it: `FAILURES`, `ERRORS`, `XFAILURES`, `PASSES`, `XPASSES`, `warnings summary`, `short test summary info` (`_pytest/terminal.py`) and `tests coverage` (`pytest_cov/plugin.py`, pytest-cov 6.1 and later).
 - With `--tb=line`, each failure is the `E` lines followed by its `path:line: message` line; squeeze pairs them with the short summary in order.
 - pytest's built-in subtests print as `FAILED <node id> [label] (i=1)`, with the label from the `SUBFAILED` summary line; the parent test's `contains N failed subtests` entry follows.
 - Failures of the same kind that fail at the same `path:line` with the same `>` source lines, as the cases of a parametrized test do, print once: the first entry in full, then `... N more failures from tests/test_x.py:23 (--no-fold)`. The folded node IDs are in `--output json` under `same_location_tests`. `--max-tests` counts the entries left after folding. A failure without a location line, as with `--tb=no`, never folds.

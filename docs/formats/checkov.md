@@ -1,13 +1,29 @@
 # checkov
 
-Input: the JSON that `checkov -o json` prints, as `common/output/report.py` and `common/runners/runner_registry.py` in Checkov build it: one report object for one framework, a list of report objects for several, or only the summary when there was nothing to scan. `--quiet` and `--compact` output are read too. Detected when the input is a JSON object or array that contains `"check_type"` and `"results"`, or a summary object with `"checkov_version"` and `"resource_count"`.
+Input: the JSON that `checkov -o json` prints, including `--quiet` and `--compact` output.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run Checkov as `checkov -d . -o json | squeeze`.
+```
+
+## Example
 
 ```
 checkov -d . -o json | squeeze
 checkov -d . --framework terraform dockerfile -o json | squeeze --fail-on high
 ```
 
-Checkov's JSON carries every passed check as well as every failed one, each with its code block, evaluated keys, entity, benchmarks and guideline link. squeeze keeps the counts and one line per failed check, grouped by resource. On the default-flag fixtures with findings, captured from Checkov 3.3.29, the text is 1.2 to 3.1 percent of the input.
+Checkov's JSON carries every passed check as well as every failed one, each with its code block, evaluated keys, entity, benchmarks and guideline link.
+squeeze keeps the counts and one line per failed check, grouped by resource.
+On the default-flag fixtures with findings, captured from Checkov 3.3.29, the text is 1.2 to 3.1 percent of the input.
+
+The JSON is one report object for one framework, a list of report objects for several, or only the summary when there was nothing to scan, as `common/output/report.py` and `common/runners/runner_registry.py` in Checkov build it.
+
+- Detection: a JSON object or array that contains `"check_type"` and `"results"`, or a summary object with `"checkov_version"` and `"resource_count"`.
 
 ## Output
 
@@ -43,11 +59,11 @@ module.store.aws_ebs_volume.data (modules/store/main.tf:1-4, via main.tf:24-26):
 - Failed checks are grouped by resource. A group line gives the resource, `file:start-end` (with Checkov's leading `/` removed), `via file:start-end` for a resource created through a module call, and the number of failed checks on it. Each check prints its ID and Checkov's check name.
 - When Checkov reports a severity, which needs a platform API key, each check starts with it (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`); any other value prints as `UNKNOWN`. Groups are sorted by their worst severity, then by file and line; checks inside a group by severity, then ID.
 - Every file Checkov could not parse prints as `parse error: <path>`, with the path as Checkov gives it, which is absolute where check paths are relative to the scan root.
+- A line after the JSON document that reads as an error or a warning, such as Checkov's `[ERROR]` or `[WARNING]` log lines when stderr is piped too, prints after the header as `error: <line>` or `warning: <line>`, without an `Error:` or `Warning:` prefix; an error line sets `error` and a warning line sets `warning`. Other lines after the document are dropped.
 - A finding of the `secrets` framework prints `secret` in place of the resource: Checkov's resource there is a hash of the secret value, which would reveal that two files hold the same value.
 - Skipped checks are counted in `... N skipped checks (--all)`; `--all` lists them under `skipped:` with the suppression comment in place of the check name.
 - Past `--max-checks`, the notice names the IDs of the cut checks with their counts, so `... 14 more failed checks, CKV_AWS_145 2, CKV_AWS_21 2, ... (--max-checks 0)` tells which check to fix or suppress first.
 - The code block, the evaluated keys, the entity and the evaluations are never read, so a value the secrets framework or a check shows in them never reaches the text or the JSON.
-- Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
 
 ## Flags
 
@@ -61,14 +77,15 @@ module.store.aws_ebs_volume.data (modules/store/main.tf:1-4, via main.tf:24-26):
 | Condition | Present when |
 |---|---|
 | `critical` | a failed check has severity `CRITICAL` |
-| `error` | Checkov could not parse a file |
+| `error` | Checkov could not parse a file, or an error line follows the JSON |
 | `fail` | a check failed; Checkov exits with 1 in that case unless `--soft-fail` or a threshold says otherwise |
 | `high` | a failed check has severity `HIGH` or `CRITICAL` |
 | `skip` | a check was skipped |
+| `warning` | a warning line follows the JSON |
 
 ## JSON data
 
-`data` holds `tool`, `tool_version`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count`, `frameworks` (`check_type`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count` per report), `failed_by_severity`, `failed_checks`, `failed_checks_omitted`, `omitted_by_check_id` (`name`, `count`), `skipped_checks` and `parsing_error_files`. Each check has `framework`, `check_id`, `name`, `resource`, `file` and, when set, `start_line`, `end_line`, `severity`, `caller`, `guideline` and `suppress_comment`.
+`data` holds `tool`, `tool_version`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count`, `frameworks` (`check_type`, `passed`, `failed`, `skipped`, `parsing_errors`, `resource_count` per report), `failed_by_severity`, `failed_checks`, `failed_checks_omitted`, `omitted_by_check_id` (`name`, `count`), `skipped_checks`, `parsing_error_files` and, when lines after the JSON read as errors or warnings, `diagnostics` (`severity`, `summary`, `count`). Each check has `framework`, `check_id`, `name`, `resource`, `file` and, when set, `start_line`, `end_line`, `severity`, `caller`, `guideline` and `suppress_comment`.
 
 ## Limitations
 

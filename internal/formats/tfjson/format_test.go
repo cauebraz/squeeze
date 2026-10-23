@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -212,6 +213,84 @@ func TestSensitiveOutputsNeverPrinted(t *testing.T) {
 	}
 }
 
+const canary = "s3cret"
+
+func canaries(v any) int {
+	n := 0
+	switch t := v.(type) {
+	case string:
+		if strings.Contains(t, canary) {
+			n++
+		}
+	case map[string]any:
+		for k, e := range t {
+			n += canaries(k) + canaries(e)
+		}
+	case []any:
+		for _, e := range t {
+			n += canaries(e)
+		}
+	}
+	return n
+}
+
+func onlyHiddenCanaries(input []byte) bool {
+	all, hidden := 0, 0
+	for _, line := range bytes.Split(input, []byte("\n")) {
+		var doc any
+		if json.Unmarshal(line, &doc) != nil {
+			if bytes.Contains(line, []byte(canary)) {
+				return false
+			}
+			continue
+		}
+		all += canaries(doc)
+		top, _ := doc.(map[string]any)
+		if top["type"] != "outputs" {
+			continue
+		}
+		outputs, _ := top["outputs"].(map[string]any)
+		for _, o := range outputs {
+			if out, _ := o.(map[string]any); out["sensitive"] == true {
+				hidden += canaries(out["value"])
+			}
+		}
+	}
+	return all > 0 && all == hidden
+}
+
+func TestOnlyHiddenCanaries(t *testing.T) {
+	t.Parallel()
+	tests := map[string]bool{
+		`{"type":"outputs","outputs":{"a":{"sensitive":true,"value":"s3cret"}}}`:                       true,
+		`{"type":"outputs","outputs":{"a":{"sensitive":true,"value":{"k":["s3cret"]}}}}`:               true,
+		`{"type":"outputs","outputs":{"a":{"sensitive":false,"value":"s3cret"}}}`:                      false,
+		`{"type":"outputs","outputs":{"a":{"sensitive":"true","value":"s3cret"}}}`:                     false,
+		`{"type":"outputs","outputs":{"s3cret":{"sensitive":true,"value":"s3cret"}}}`:                  false,
+		`{"type":"other","outputs":{"a":{"sensitive":true,"value":"s3cret"}}}`:                         false,
+		"{\"type\":\"outputs\",\"outputs\":{\"a\":{\"sensitive\":true,\"value\":\"s3cret\"}}}\ns3cret": false,
+		`{"type":"outputs","outputs":{"a":{"sensitive":true,"value":"x"}}}`:                            false,
+	}
+	for input, want := range tests {
+		if got := onlyHiddenCanaries([]byte(input)); got != want {
+			t.Errorf("onlyHiddenCanaries(%s) = %v, want %v", input, got, want)
+		}
+	}
+}
+
+var flagNotice = regexp.MustCompile(`\((--[a-z-]+( 0)?|--output json|--raw-dir)\)$`)
+
+func checkFlagNotices(t *testing.T, text string) {
+	t.Helper()
+	var notices []string
+	for _, l := range strings.Split(text, "\n") {
+		if flagNotice.MatchString(l) {
+			notices = append(notices, l)
+		}
+	}
+	formattest.CheckNotices(t, strings.Join(notices, "\n"))
+}
+
 func FuzzSqueeze(f *testing.F) {
 	for _, data := range formattest.Inputs(f, fixtureDir) {
 		f.Add(data)
@@ -219,7 +298,10 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add(stream(`{"@level":"error","@message":"Error: x","type":"planned_change","change":{"resource":{"addr":"a"},"action":"create"}}`))
 	f.Add(stream(`{"@level":"info","type":"apply_complete","hook":{"resource":{"addr":"a"},"action":{"addr":"x"},"elapsed_seconds":"x"}}`))
 	f.Add(stream(`{"@level":"warn","type":"test_run","@testfile":"f","@testrun":"r","test_run":{"path":"f","run":"r","status":"fail"}}`))
+	f.Add(stream(`{"@level":"info","@message":"m","type":"future (x)"}`))
+	f.Add(stream(`{"@level":"info","@message":"Outputs: 2","type":"outputs","outputs":{"token":{"sensitive":true,"type":"string","value":"s3cret"},"obj":{"sensitive":true,"value":{"k":["s3cret"]}},"plain":{"sensitive":false,"value":"x"}}}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		lines, err := Parse(input)
 		if err != nil {
 			return
@@ -237,8 +319,13 @@ func FuzzSqueeze(f *testing.F) {
 			}
 			res := core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r, lines)}
 			formattest.CheckText(t, res.Text)
-			if _, err := core.Envelope("tfjson", len(input), res, nil); err != nil {
+			checkFlagNotices(t, res.Text)
+			envelope, err := core.Envelope("tfjson", len(input), res, nil)
+			if err != nil {
 				t.Fatalf("Envelope() error: %v", err)
+			}
+			if onlyHiddenCanaries(input) && (strings.Contains(res.Text, canary) || bytes.Contains(envelope, []byte(canary))) {
+				t.Fatalf("sensitive value %q reached the output:\n%s\n%s", canary, res.Text, envelope)
 			}
 		}
 	})

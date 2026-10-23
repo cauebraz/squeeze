@@ -1,13 +1,30 @@
 # ghactions
 
-Input: the job logs that `gh run view --log` and `gh run view --log-failed` print, one line per log line as `<job>`, a tab, `<step>`, a tab, then the runner's line: an ISO 8601 UTC timestamp and the text. Detected when the first three non-blank lines, or every line of a shorter input, have that shape. A job log downloaded from the API or the web UI, without the job and step columns, is read too with `squeeze ghactions`.
+Input: the job logs that `gh run view --log` and `gh run view --log-failed` print.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Read a failed CI run as `gh run view <run-id> --log-failed | squeeze`.
+```
+
+## Example
 
 ```
 gh run view <run-id> --log-failed | squeeze
 gh run view <run-id> --job <job-id> --log | squeeze ghactions --all
 ```
 
-A job log repeats the runner, image and token details, every step's script and environment, the checkout and setup commands and the post-job cleanup, with a timestamp on every line. squeeze keeps, for each job, the step that failed with its output and the runner's `##[error]` and `##[warning]` annotations. On the fixtures captured from failed runs of this repository, the text is 1.6 and 3.1 percent of the two logs with full jobs and 37 percent of the one that holds only the failing step; `generic` printed 19,522 bytes of the 74,257-byte `matrix` log, against 2,319.
+A job log repeats the runner, image and token details, every step's script and environment, the checkout and setup commands and the post-job cleanup, with a timestamp on every line.
+squeeze keeps, for each job, the step that failed with its output and the runner's `##[error]` and `##[warning]` annotations.
+On the fixtures captured from failed runs of this repository, the text is 1.6 and 3.1 percent of the two logs with full jobs, and 37 percent of the one that holds only the failing step.
+`generic` printed 19,522 bytes of the 74,257-byte `matrix` log, against 2,319.
+
+A job log downloaded from the API or the web UI, without the job and step columns, is read too with `squeeze ghactions`.
+
+- Detection: the first three non-blank lines, or every line of a shorter input, are `<job>`, a tab, `<step>`, a tab, then the runner's line: an ISO 8601 UTC timestamp and the text.
 
 ## Output
 

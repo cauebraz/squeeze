@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxTitleBytes = 100
@@ -17,6 +18,9 @@ func Text(r Report, o Options) string {
 		if res.Error != "" {
 			b.WriteString("error: " + res.Name + ": " + res.Error + "\n")
 		}
+	}
+	for _, d := range r.Diagnostics {
+		tfdiag.Write(&b, d, tfdiag.WriteOptions{})
 	}
 	writeTargets(&b, r, r.Findings)
 	if r.FindingsOmitted > 0 {

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"a\\n\":{\"\xbb\xbb\xbb\xbbitive\":true,\"type\":\"string\",\"value\":\"secret-value\"},\"b\":{\"\x80\xffnsitive\":false,\"type\":\"string\",\"value\":\"\\u001b[31m\"}}")

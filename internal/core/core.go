@@ -10,7 +10,9 @@ const HeadSize = 64 << 10
 
 var ErrUnknownFormat = errors.New("input matches no known format")
 
-var SharedConditions = []string{"error", "fail", "warning"}
+var sharedConditions = []string{"error", "fail", "warning"}
+
+func SharedConditions() []string { return slices.Clone(sharedConditions) }
 
 type Result struct {
 	Text       string

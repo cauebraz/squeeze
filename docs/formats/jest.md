@@ -1,15 +1,41 @@
 # jest
 
-Input: the JSON report that `jest --json` prints on stdout (`FormattedTestResults` in Jest's `@jest/test-result`, https://jestjs.io/docs/cli#--json), or the report of Vitest's `json` reporter, which Vitest documents as compatible with Jest's (https://vitest.dev/guide/reporters#json-reporter). Detected when the input, ignoring whitespace, starts with `{"num` and holds the keys `numTotalTests`, `numFailedTestSuites` and `testResults`. The report names no version; `data.tool` is `jest` when it carries Jest's `numRuntimeErrorTestSuites` and `vitest` otherwise.
+Input: the JSON report that `jest --json` prints on stdout, or the report of Vitest's `json` reporter.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run Jest as `npx jest --json 2>/dev/null | squeeze` and Vitest as
+  `npx vitest run --reporter=json --outputFile=/dev/stdout | squeeze`; rerun a failing file with the path it prints.
+```
+
+## Example
 
 ```
 npx jest --json 2>/dev/null | squeeze
 npx vitest run --reporter=json --outputFile=/dev/stdout | squeeze
 ```
 
-`jest --json` sends its usual report and the tests' console output to stderr; `2>/dev/null` keeps them out of the pipe, since squeeze reads the JSON only when the input starts with it. Vitest 5 writes the report to `.vitest/json/output.json` unless `--outputFile` names a file, and prints `JSON report written to <file>` on stdout; with `--outputFile=/dev/stdout` that line follows the JSON and squeeze drops it. `squeeze < .vitest/json/output.json` reads the file.
+The report carries every test with its full name and a failure message per failed assertion with the whole stack.
+Jest repeats the same failures in each file's `message` with code frames.
+squeeze keeps the failing tests grouped by file with their messages, the files that failed to run and the counts.
+The fixtures were captured from Jest 30.5.2 and Vitest 5.0.2 on the same scratch project.
+The text is 9.5 percent of the Jest report (2,480 of 26,217 bytes), 19 percent of the Vitest report (1,490 of 7,799) and 8.0 percent of a run with 57 failing tests (12,979 of 162,848).
+Jest's own text report of the same run is 12,479 bytes on stderr, and 12,231 with `AI_AGENT` set.
 
-The report carries every test with its full name, a failure message per failed assertion with the whole stack, and, for Jest, the same failures again in each file's `message` with code frames. squeeze keeps the failing tests grouped by file with their messages, the files that failed to run and the counts. On the fixtures, captured from Jest 30.5.2 and Vitest 5.0.2 on the same scratch project, the text is 9.5 percent of the Jest report (2,480 of 26,217 bytes), 19 percent of the Vitest report (1,490 of 7,799) and 8.0 percent of a run with 57 failing tests (12,979 of 162,848). Jest's own text report of the same run is 12,479 bytes on stderr, and 12,231 with `AI_AGENT` set.
+`jest --json` sends its usual report and the tests' console output to stderr.
+`2>/dev/null` keeps them out of the pipe, since squeeze reads the JSON only when the input starts with it.
+Vitest 5 writes the report to `.vitest/json/output.json` unless `--outputFile` names a file, and prints `JSON report written to <file>` on stdout.
+With `--outputFile=/dev/stdout` that line follows the JSON and squeeze drops it.
+`squeeze < .vitest/json/output.json` reads the file.
+
+Jest's report is `FormattedTestResults` in `@jest/test-result` (https://jestjs.io/docs/cli#--json).
+Vitest documents its report as compatible with Jest's (https://vitest.dev/guide/reporters#json-reporter).
+The report names no version; `data.tool` is `jest` when it carries Jest's `numRuntimeErrorTestSuites` and `vitest` otherwise.
+
+- Detection: the input, ignoring whitespace, starts with `{"num` and holds the keys `numTotalTests`, `numFailedTestSuites` and `testResults`.
 
 ## Output
 

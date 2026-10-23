@@ -20,6 +20,40 @@ func flagged(line string, words *regexp.Regexp) bool {
 	return false
 }
 
-func ErrorLine(line string) bool { return flagged(line, errorWords) || errorName.MatchString(line) }
+var (
+	errorStems   = []string{"err", "fail", "fatal", "panic", "exception", "traceba"}
+	warningStems = []string{"warn"}
+)
 
-func WarningLine(line string) bool { return flagged(line, warningWords) }
+func hasStem(line string, stems []string) bool {
+	for i := range len(line) {
+		for _, stem := range stems {
+			if hasPrefixLower(line[i:], stem) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func hasPrefixLower(s, lower string) bool {
+	if len(s) < len(lower) {
+		return false
+	}
+	for i := range len(lower) {
+		c := s[i]
+		if 'A' <= c && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		if c != lower[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func ErrorLine(line string) bool {
+	return hasStem(line, errorStems) && (flagged(line, errorWords) || errorName.MatchString(line))
+}
+
+func WarningLine(line string) bool { return hasStem(line, warningStems) && flagged(line, warningWords) }

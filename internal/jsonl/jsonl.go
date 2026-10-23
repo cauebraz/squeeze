@@ -4,7 +4,7 @@ import "bytes"
 
 func Lines(input []byte) [][]byte {
 	var out [][]byte
-	for _, raw := range bytes.Split(input, []byte("\n")) {
+	for raw := range bytes.SplitSeq(input, []byte("\n")) {
 		if trimmed := bytes.TrimSpace(raw); len(trimmed) > 0 {
 			out = append(out, trimmed)
 		}
@@ -14,7 +14,7 @@ func Lines(input []byte) [][]byte {
 
 func Detect(head []byte, n int, skip, match func([]byte) bool) bool {
 	seen := 0
-	for _, line := range bytes.Split(head, []byte("\n")) {
+	for line := range bytes.SplitSeq(head, []byte("\n")) {
 		if len(bytes.TrimSpace(line)) == 0 || (skip != nil && skip(line)) {
 			continue
 		}

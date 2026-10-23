@@ -2,9 +2,10 @@ package tfdiag
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
@@ -151,24 +152,15 @@ func severityRank(s string) int {
 }
 
 func Sort(ds []Diagnostic) {
-	sort.SliceStable(ds, func(i, j int) bool {
-		a, b := ds[i], ds[j]
-		if ra, rb := severityRank(a.Severity), severityRank(b.Severity); ra != rb {
-			return ra < rb
-		}
-		if a.File != b.File {
-			return a.File < b.File
-		}
-		if a.Line != b.Line {
-			return a.Line < b.Line
-		}
-		if a.Column != b.Column {
-			return a.Column < b.Column
-		}
-		if a.Summary != b.Summary {
-			return a.Summary < b.Summary
-		}
-		return a.Address < b.Address
+	slices.SortStableFunc(ds, func(a, b Diagnostic) int {
+		return cmp.Or(
+			cmp.Compare(severityRank(a.Severity), severityRank(b.Severity)),
+			cmp.Compare(a.File, b.File),
+			cmp.Compare(a.Line, b.Line),
+			cmp.Compare(a.Column, b.Column),
+			cmp.Compare(a.Summary, b.Summary),
+			cmp.Compare(a.Address, b.Address),
+		)
 	})
 }
 

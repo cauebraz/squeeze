@@ -1,10 +1,13 @@
 package tfplan
 
 import (
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 func conditions(r Report) []string {
@@ -17,15 +20,16 @@ func conditions(r Report) []string {
 			otherCheck = true
 		}
 	}
+	errors, warnings := tfdiag.Count(r.Diagnostics)
 	return core.Conditions(map[string]bool{
 		"change":     s.Changed(),
 		"check":      len(r.Checks) > 0,
 		"deferred":   s.Deferred+s.DeferredActions > 0,
 		"destroy":    s.Destroy > 0,
 		"drift":      s.Drift > 0,
-		"error":      s.Errored,
-		"warning":    checkBlock || (otherCheck && !s.Errored),
-		"fail":       s.Errored || !s.Complete,
+		"error":      s.Errored || errors > 0,
+		"warning":    checkBlock || (otherCheck && !s.Errored) || warnings > 0,
+		"fail":       s.Errored || !s.Complete || errors > 0,
 		"forget":     s.Forget > 0,
 		"import":     s.Import > 0,
 		"incomplete": !s.Complete,
@@ -49,6 +53,14 @@ func Build(p *Plan, o Options) (Report, error) {
 		Actions:         []ActionInvocation{},
 		Outputs:         []OutputChange{},
 	}
+	for _, l := range p.Trailing {
+		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
+		if l.Error {
+			d.Severity = "error"
+		}
+		r.Diagnostics = append(r.Diagnostics, d)
+	}
+	r.Diagnostics = tfdiag.Normalize(r.Diagnostics)
 	for _, pr := range p.ResourceChanges {
 		c, err := convert(pr, o, nil)
 		if err != nil {
@@ -273,9 +285,9 @@ func convert(pr PlanResource, o Options, keep func(path) bool) (ResourceChange, 
 }
 
 func generatedConfig(s string) string {
-	lines := strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n")
-	for i, l := range lines {
-		lines[i] = core.Line(l)
+	var lines []string
+	for l := range core.SplitLines(s) {
+		lines = append(lines, core.Line(l))
 	}
 	return strings.Trim(strings.Join(lines, "\n"), "\n")
 }
@@ -330,11 +342,7 @@ func sortChanges(cs []ResourceChange) {
 }
 
 func convertOutputs(changes map[string]PlanChange, includeNoop bool) ([]OutputChange, error) {
-	names := make([]string, 0, len(changes))
-	for name := range changes {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := slices.Sorted(maps.Keys(changes))
 	out := []OutputChange{}
 	for _, name := range names {
 		ch := changes[name]
@@ -349,7 +357,7 @@ func convertOutputs(changes map[string]PlanChange, includeNoop bool) ([]OutputCh
 			Name:      core.Clean(name),
 			Action:    action,
 			Unknown:   isTrue(ch.AfterUnknown),
-			Sensitive: isTrue(ch.BeforeSensitive) || isTrue(ch.AfterSensitive),
+			Sensitive: marked(ch.BeforeSensitive) || marked(ch.AfterSensitive),
 		})
 	}
 	return out, nil

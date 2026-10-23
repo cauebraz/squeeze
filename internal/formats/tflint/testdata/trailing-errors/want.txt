@@ -1,0 +1,4 @@
+tflint: 1 issue, 1 warning; 1 fixable; 1 tflint error, not every check ran
+error: Failed to load plugin "aws": plugin not found (tflint)
+warning: the --module flag is deprecated, use --call-module-type=all instead (tflint)
+warning: variable "unused" is declared but not used (main.tf:9:1, terraform_unused_declarations, fixable)

@@ -3,6 +3,8 @@ package tfplan
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 type Action int
@@ -225,17 +227,18 @@ type CheckResult struct {
 }
 
 type Report struct {
-	Tool            string             `json:"tool"`
-	ToolVersion     string             `json:"tool_version"`
-	Summary         Summary            `json:"summary"`
-	Changes         []ResourceChange   `json:"changes"`
-	Omitted         int                `json:"resources_omitted"`
-	NoopHidden      int                `json:"noop_hidden"`
-	Drift           []ResourceChange   `json:"drift"`
-	DriftOmitted    int                `json:"drift_omitted"`
-	Deferred        []DeferredChange   `json:"deferred"`
-	DeferredActions []DeferredAction   `json:"deferred_actions"`
-	Actions         []ActionInvocation `json:"actions"`
-	Outputs         []OutputChange     `json:"outputs"`
-	Checks          []CheckResult      `json:"checks"`
+	Tool            string              `json:"tool"`
+	ToolVersion     string              `json:"tool_version"`
+	Summary         Summary             `json:"summary"`
+	Changes         []ResourceChange    `json:"changes"`
+	Omitted         int                 `json:"resources_omitted"`
+	NoopHidden      int                 `json:"noop_hidden"`
+	Drift           []ResourceChange    `json:"drift"`
+	DriftOmitted    int                 `json:"drift_omitted"`
+	Deferred        []DeferredChange    `json:"deferred"`
+	DeferredActions []DeferredAction    `json:"deferred_actions"`
+	Actions         []ActionInvocation  `json:"actions"`
+	Outputs         []OutputChange      `json:"outputs"`
+	Checks          []CheckResult       `json:"checks"`
+	Diagnostics     []tfdiag.Diagnostic `json:"diagnostics,omitempty"`
 }

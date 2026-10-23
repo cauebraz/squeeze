@@ -1,0 +1,3 @@
+ok  	example.com/shop/calc	0.004s
+?   	example.com/shop/docs	[no test files]
+ok  	example.com/shop/text	(cached)

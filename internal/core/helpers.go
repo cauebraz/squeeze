@@ -1,10 +1,11 @@
 package core
 
 import (
+	"cmp"
 	"errors"
 	"flag"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -45,18 +46,18 @@ func Plural(n int, one, many string) string {
 	return many
 }
 
-func Limit[T any](items []T, max int) ([]T, int) {
-	if max <= 0 || len(items) <= max {
+func Limit[T any](items []T, limit int) ([]T, int) {
+	if limit <= 0 || len(items) <= limit {
 		return items, 0
 	}
-	return items[:max], len(items) - max
+	return items[:limit], len(items) - limit
 }
 
-func LimitTail[T any](items []T, max int) ([]T, int) {
-	if max <= 0 || len(items) <= max {
+func LimitTail[T any](items []T, limit int) ([]T, int) {
+	if limit <= 0 || len(items) <= limit {
 		return items, 0
 	}
-	return items[len(items)-max:], len(items) - max
+	return items[len(items)-limit:], len(items) - limit
 }
 
 func Truncate(s string, n int) string {
@@ -82,20 +83,17 @@ func SortedCounts(counts map[string]int) []Count {
 	for name, n := range counts {
 		out = append(out, Count{Name: name, Count: n})
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Count != out[j].Count {
-			return out[i].Count > out[j].Count
-		}
-		return out[i].Name < out[j].Name
+	slices.SortFunc(out, func(a, b Count) int {
+		return cmp.Or(cmp.Compare(b.Count, a.Count), cmp.Compare(a.Name, b.Name))
 	})
 	return out
 }
 
-func TopCounts(counts []Count, max int, one, many string) string {
-	items := make([]string, 0, max+1)
+func TopCounts(counts []Count, limit int, one, many string) string {
+	items := make([]string, 0, limit+1)
 	for i, c := range counts {
-		if i == max {
-			rest := len(counts) - max
+		if i == limit {
+			rest := len(counts) - limit
 			items = append(items, fmt.Sprintf("%d other %s", rest, Plural(rest, one, many)))
 			break
 		}

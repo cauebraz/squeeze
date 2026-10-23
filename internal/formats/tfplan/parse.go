@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
 var (
@@ -29,5 +31,6 @@ func Parse(input []byte) (*Plan, error) {
 	if p.PlannedValues == nil && p.ResourceChanges == nil && p.Values != nil {
 		return nil, ErrStateNotPlan
 	}
+	p.Trailing = core.FlaggedLines(input[dec.InputOffset():])
 	return &p, nil
 }

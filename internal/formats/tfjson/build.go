@@ -3,6 +3,8 @@ package tfjson
 import (
 	"bytes"
 	"encoding/json"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 
@@ -20,22 +22,6 @@ var ephemeralActions = map[string]bool{"open": true, "renew": true, "close": tru
 var failureTypes = map[string]bool{
 	"apply_errored": true, "provision_errored": true, "action_errored": true, "ephemeral_op_errored": true,
 }
-
-var policyOutcomes = map[string]string{
-	"AllowResult": "pass", "pass": "pass", "n/a": "pass",
-	"DenyResult": "fail", "fail": "fail",
-	"UnknownResult": "unknown", "unknown": "unknown",
-	"InvalidResult": "error", "PolicyErrorResult": "error", "SetupErrorResult": "error", "error": "error",
-}
-
-func policyOutcome(result string) string {
-	if o, ok := policyOutcomes[result]; ok {
-		return o
-	}
-	return "error"
-}
-
-var failingTestStatus = map[string]bool{"fail": true, "error": true}
 
 func rank(action string) int {
 	if r, ok := actionRanks[action]; ok {
@@ -203,54 +189,6 @@ func isDiagnostic(l Line) bool {
 	return l.Type == "diagnostic" || (l.Type == "policy_diagnostic" && l.PolicyDiag != nil)
 }
 
-func policyDiagnostic(raw tfdiag.Raw, target string) tfdiag.Diagnostic {
-	d := tfdiag.Convert(raw)
-	if d.Address == "" {
-		d.Address = core.Clean(target)
-	}
-	return d
-}
-
-func (b *builder) policy(name, target, result, enforcement string) bool {
-	outcome := policyOutcome(result)
-	if outcome == "pass" {
-		return false
-	}
-	b.r.Policies = append(b.r.Policies, PolicyResult{
-		Policy: core.Clean(name), Target: core.Clean(target), Result: core.Clean(result),
-		Outcome: outcome, Enforcement: core.Clean(enforcement),
-	})
-	return true
-}
-
-func policyInfo(l Line) string {
-	parts := []string{"policy info:"}
-	if l.PolicyMeta != nil && l.PolicyMeta.PolicyName != "" {
-		parts = append(parts, core.Clean(l.PolicyMeta.PolicyName))
-	}
-	if l.Target != "" {
-		parts = append(parts, "for "+core.Clean(l.Target))
-	}
-	return strings.Join(parts, " ") + ": " + core.Clean(l.PolicyInfo.Message)
-}
-
-func (b *builder) querySummary(results []streamQueryResult) {
-	for _, r := range results {
-		listed := false
-		for _, p := range r.Policies {
-			for _, raw := range p.Diagnostics {
-				b.diagnostic(policyDiagnostic(raw, r.Target), "", "")
-			}
-			if b.policy(p.Meta.PolicyName, r.Target, p.Result, p.Meta.EnforcementLevel) {
-				listed = true
-			}
-		}
-		if !listed {
-			b.policy("", r.Target, r.Result, "")
-		}
-	}
-}
-
 func (b *builder) fallback(l Line) {
 	switch l.Level {
 	case "error":
@@ -340,11 +278,7 @@ func (b *builder) applied(h streamHook, message string) {
 }
 
 func (b *builder) outputs(outputs map[string]streamOutput) {
-	names := make([]string, 0, len(outputs))
-	for name := range outputs {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := slices.Sorted(maps.Keys(outputs))
 	b.r.Outputs = make([]Output, 0, len(names))
 	for _, name := range names {
 		o := outputs[name]
@@ -359,85 +293,6 @@ func (b *builder) outputs(outputs map[string]streamOutput) {
 func isScalar(v json.RawMessage) bool {
 	v = bytes.TrimSpace(v)
 	return len(v) > 0 && v[0] != '{' && v[0] != '[' && json.Valid(v)
-}
-
-func (b *builder) tests() *Tests {
-	if b.r.Tests == nil {
-		b.r.Tests = &Tests{Runs: []TestRun{}, Files: []TestFile{}, Left: []LeftInState{}}
-	}
-	return b.r.Tests
-}
-
-func (b *builder) leftInState(l Line) bool {
-	switch {
-	case l.Type == "test_cleanup" && l.Cleanup != nil:
-		b.left(l, "cleanup_failed", "", l.Cleanup.FailedResources)
-		b.left(l, "skip_cleanup", "", l.Cleanup.SkippedResources)
-	case l.Type == "test_interrupt" && l.Interrupt != nil:
-		b.left(l, "interrupted", "", l.Interrupt.State)
-		keys := make([]string, 0, len(l.Interrupt.States))
-		for k := range l.Interrupt.States {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			b.left(l, "interrupted", k, l.Interrupt.States[k])
-		}
-		planned := make([]streamTestResource, 0, len(l.Interrupt.Planned))
-		for _, p := range l.Interrupt.Planned {
-			planned = append(planned, streamTestResource{Instance: p})
-		}
-		b.left(l, "planned", "", planned)
-	default:
-		return false
-	}
-	return true
-}
-
-func (b *builder) left(l Line, reason, state string, resources []streamTestResource) {
-	if len(resources) == 0 {
-		return
-	}
-	out := make([]LeftResource, 0, len(resources))
-	for _, r := range resources {
-		out = append(out, LeftResource{Address: core.Clean(r.Instance), DeposedKey: core.Clean(r.DeposedKey)})
-	}
-	t := b.tests()
-	t.Left = append(t.Left, LeftInState{
-		File: core.Clean(l.AtTestFile), Run: core.Clean(l.AtTestRun), Reason: reason, State: core.Clean(state), Resources: out,
-	})
-}
-
-func (b *builder) testRun(s streamTestRun) {
-	s.Path, s.Run, s.Status = core.Clean(s.Path), core.Clean(s.Run), core.Clean(s.Status)
-	t := b.tests()
-	key := [2]string{s.Path, s.Run}
-	i, ok := b.runs[key]
-	if !ok {
-		i = len(t.Runs)
-		b.runs[key] = i
-		t.Runs = append(t.Runs, TestRun{File: s.Path, Run: s.Run, Diagnostics: []tfdiag.Diagnostic{}})
-	}
-	if s.Status != "" {
-		t.Runs[i].Status = s.Status
-	}
-	if s.Elapsed != nil {
-		t.Runs[i].ElapsedMs = s.Elapsed
-	}
-}
-
-func (b *builder) testFile(path, status string) *TestFile {
-	t := b.tests()
-	i, ok := b.files[path]
-	if !ok {
-		i = len(t.Files)
-		b.files[path] = i
-		t.Files = append(t.Files, TestFile{File: path, Diagnostics: []tfdiag.Diagnostic{}})
-	}
-	if status != "" {
-		t.Files[i].Status = status
-	}
-	return &t.Files[i]
 }
 
 func (b *builder) diagnostic(d tfdiag.Diagnostic, file, run string) {

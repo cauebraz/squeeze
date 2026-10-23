@@ -13,7 +13,7 @@
 
 ## Docs
 
-<!-- README.md or docs/formats/<name>.md sections updated, or why none describes this change. -->
+<!-- README.md, docs/cli.md or docs/formats/<name>.md sections updated, or why none describes this change. -->
 
 ## Checks
 

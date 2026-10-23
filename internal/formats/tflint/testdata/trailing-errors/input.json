@@ -1,0 +1,4 @@
+{"issues": [{"rule": {"name": "terraform_unused_declarations", "severity": "warning", "link": "https://github.com/terraform-linters/tflint-ruleset-terraform/blob/v0.10.0/docs/rules/terraform_unused_declarations.md"}, "message": "variable \"unused\" is declared but not used", "range": {"filename": "main.tf", "start": {"line": 9, "column": 1}, "end": {"line": 9, "column": 19}}, "callers": [], "fixable": true, "fixed": false}], "errors": []}
+Warning: the --module flag is deprecated, use --call-module-type=all instead
+Error: Failed to load plugin "aws": plugin not found
+Run `tflint --init` to install plugins.

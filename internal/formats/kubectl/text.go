@@ -109,12 +109,10 @@ func line(o Object) string {
 	return b.String()
 }
 
-var noticeName = strings.NewReplacer("(", "[", ")", "]")
-
 func clean(counts []core.Count) []core.Count {
 	out := make([]core.Count, len(counts))
 	for i, c := range counts {
-		out[i] = core.Count{Name: noticeName.Replace(core.Clean(c.Name)), Count: c.Count}
+		out[i] = core.Count{Name: core.NoticeName(core.Clean(c.Name)), Count: c.Count}
 	}
 	return out
 }

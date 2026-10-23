@@ -1,6 +1,17 @@
 # kubectl
 
-Input: the JSON that `kubectl get <resources> -o json` prints, a `List` with the objects under `items`, or a single object when one is named (`kubectl get pod web-0 -o json`). A typed list such as `PodList` from `kubectl get --raw` is read too; its items take the list's kind. Detected when the input, ignoring whitespace, starts with `{"apiVersion":` (kubectl prints the keys of every object sorted) and holds the keys `kind` and `metadata`.
+Input: the JSON that `kubectl get <resources> -o json` prints: a `List` with the objects under `items`, or a single object when one is named.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Read Kubernetes state as `kubectl get pods,deploy,jobs -o json | squeeze` and events as `kubectl get events -o json | squeeze`;
+  Secret and ConfigMap values and annotations are never printed, only their keys.
+```
+
+## Example
 
 ```
 kubectl get pods,deploy,jobs,svc -o json | squeeze
@@ -9,7 +20,15 @@ kubectl get events -o json | squeeze
 kubectl get secret,configmap -n shop -o json | squeeze
 ```
 
-`kubectl get -o json` prints every object whole: the spec, the pod template, the `managedFields`-free metadata with its annotations, the status with every condition and timestamp. squeeze keeps one line per object with the health that matters for its kind, unhealthy objects first, and one line per Warning event. On the fixtures, captured from a kind cluster (kubectl 1.36.1, Kubernetes 1.33.1), the text is 1.0 to 3.0 percent of the input for the lists and 1.1 to 2.2 percent for one node or pod (13 percent for a 768-byte Secret); `generic` printed 8,703 bytes of the 89,165-byte `mixed` list, against 1,184, and printed the Secret values of the `secrets` fixture.
+`kubectl get -o json` prints every object whole: the spec, the pod template, the metadata without `managedFields` but with its annotations, and the status with every condition and timestamp.
+squeeze keeps one line per object with the health that matters for its kind, unhealthy objects first, and one line per Warning event.
+The fixtures were captured from a kind cluster (kubectl 1.36.1, Kubernetes 1.33.1).
+The text is 1.0 to 3.0 percent of the input for the lists, 1.1 to 2.2 percent for one node or pod, and 13 percent for a 768-byte Secret.
+`generic` printed 8,703 bytes of the 89,165-byte `mixed` list, against 1,184, and printed the Secret values of the `secrets` fixture.
+
+A typed list such as `PodList` from `kubectl get --raw` is read too; its items take the list's kind.
+
+- Detection: the input, ignoring whitespace, starts with `{"apiVersion":` and holds the keys `kind` and `metadata`. kubectl prints the keys of every object sorted.
 
 ## Output
 
@@ -54,14 +73,13 @@ Each line is `[unhealthy] <Kind> <namespace>/<name>: <status and counts>`, then 
 | `ConfigMap` | data keys | never |
 | any other kind, custom resources included | `status.phase` and a `Ready` or `Available` condition that is `False` | the phase is `Failed`, or `Ready` or `Available` is `False` |
 
-- Pod, Job and Node statuses follow `printPod`, `printJob` and `printNode` in Kubernetes `pkg/printers/internalversion/printers.go` at v1.33.1, the code behind `kubectl get`'s tables; the ready, updated and available columns follow `printDeployment`, `printStatefulSet`, `printReplicaSet` and `printDaemonSet` in the same file.
+- Pod, Job and Node statuses follow `printPod`, `printJob` and `printNode` in Kubernetes `pkg/printers/internalversion/printers.go` at v1.33.1, the code behind `kubectl get`'s tables. The ready, updated and available columns follow `printDeployment`, `printStatefulSet`, `printReplicaSet` and `printDaemonSet` in the same file.
 - A missing `spec.replicas` counts as 1, the API's default.
 - An object of a known kind whose `spec` or `status` does not have the API's shape prints as `unhealthy ... unreadable status`, so a broken object is not counted healthy.
 - An object with `metadata.deletionTimestamp` shows `Terminating` or `terminating`.
 - `Event` objects are not listed as objects. The header counts them and the Warning ones, and each Warning event prints as `warning <Kind> <namespace>/<name> <reason>: <message> (xN)`, newest first by `series.lastObservedTime`, `lastTimestamp`, `deprecatedLastTimestamp`, `eventTime` or `firstTimestamp`. Warning events with the same object, reason and message print once with their counts summed. Both `v1` events (`involvedObject`, `message`, `count`) and `events.k8s.io/v1` events (`regarding`, `note`, `deprecatedCount`, `series.count`) are read. `Normal` events are counted only.
 - Past `--max-objects`, the notice counts the cut objects, the unhealthy ones among them and their kinds: `... 27 more objects, 3 unhealthy: Pod 12, Deployment 4, ReplicaSet 4, Service 3, DaemonSet 2, 1 other kind (--max-objects 0)`. Past `--max-events`, it counts the cut warning events by reason.
 - Messages (a condition message, `status.message`, an event message) are cut at 200 bytes with `...` in the text; `--output json` keeps them whole.
-- Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
 
 ### Secrets
 
@@ -72,7 +90,7 @@ squeeze never reads or prints a value that can hold a secret:
 - Labels, the pod spec and pod templates, so container `env` values, commands and arguments.
 - A container's `terminated.message`, which holds what the container wrote to its termination log, and `waiting.message`.
 
-A test extracts every Secret and ConfigMap value, base64-decoded too, every annotation value, the values inside a `last-applied-configuration` and every `env` value from the fixtures and asserts that none reaches the text or `--output json`; another changes all of them and asserts that `data` does not change, and the fuzz target checks the same on random input.
+A test extracts every Secret and ConfigMap value, base64-decoded too, every annotation value, the values inside a `last-applied-configuration` and every `env` value from the fixtures and asserts that none reaches the text or `--output json`. Another test changes all of them and asserts that `data` does not change. The fuzz target checks the same on random input.
 
 ## Flags
 

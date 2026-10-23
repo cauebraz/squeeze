@@ -8,8 +8,6 @@ import (
 	"github.com/cauebraz/squeeze/internal/core"
 )
 
-var statusName = strings.NewReplacer("(", "[", ")", "]")
-
 type part struct {
 	n    int
 	what string
@@ -182,7 +180,7 @@ func writeUnknown(b *strings.Builder, unknown map[string]int) {
 	sort.Strings(keys)
 	items := make([]string, 0, len(keys))
 	for _, k := range keys {
-		name := statusName.Replace(k)
+		name := core.NoticeName(k)
 		if name == "" {
 			name = "empty"
 		}

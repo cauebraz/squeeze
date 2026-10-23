@@ -1,12 +1,11 @@
 package tfvalidate
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/cauebraz/squeeze/internal/core"
 	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
@@ -16,11 +15,12 @@ var (
 )
 
 type Validation struct {
-	FormatVersion string       `json:"format_version"`
-	Valid         *bool        `json:"valid"`
-	ErrorCount    int          `json:"error_count"`
-	WarningCount  int          `json:"warning_count"`
-	Diagnostics   []tfdiag.Raw `json:"diagnostics"`
+	FormatVersion string             `json:"format_version"`
+	Valid         *bool              `json:"valid"`
+	ErrorCount    int                `json:"error_count"`
+	WarningCount  int                `json:"warning_count"`
+	Diagnostics   []tfdiag.Raw       `json:"diagnostics"`
+	Trailing      []core.FlaggedLine `json:"-"`
 }
 
 type Report struct {
@@ -35,7 +35,8 @@ type Report struct {
 
 func Parse(input []byte) (*Validation, error) {
 	var v Validation
-	if err := json.NewDecoder(bytes.NewReader(input)).Decode(&v); err != nil {
+	rest, err := core.DecodeJSON(input, &v)
+	if err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	if v.FormatVersion == "" {
@@ -47,6 +48,7 @@ func Parse(input []byte) (*Validation, error) {
 	if v.Valid == nil {
 		return nil, ErrMissingValid
 	}
+	v.Trailing = core.FlaggedLines(rest)
 	return &v, nil
 }
 
@@ -55,14 +57,27 @@ func Build(v *Validation, o Options) Report {
 	for _, raw := range v.Diagnostics {
 		ds = append(ds, tfdiag.Convert(raw))
 	}
-	ds = tfdiag.Normalize(ds)
 	errorCount, warningCount := tfdiag.Count(ds)
+	errorCount, warningCount = max(v.ErrorCount, errorCount), max(v.WarningCount, warningCount)
+	valid := *v.Valid
+	for _, l := range v.Trailing {
+		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
+		if l.Error {
+			d.Severity = "error"
+			errorCount++
+			valid = false
+		} else {
+			warningCount++
+		}
+		ds = append(ds, d)
+	}
+	ds = tfdiag.Normalize(ds)
 	kept, omitted := tfdiag.Limit(ds, o.MaxDiagnostics)
 	return Report{
 		Tool:        "terraform",
-		Valid:       *v.Valid,
-		Errors:      max(v.ErrorCount, errorCount),
-		Warnings:    max(v.WarningCount, warningCount),
+		Valid:       valid,
+		Errors:      errorCount,
+		Warnings:    warningCount,
 		Diagnostics: kept,
 		Omitted:     omitted,
 	}

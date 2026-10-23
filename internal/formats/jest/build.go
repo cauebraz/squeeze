@@ -294,7 +294,7 @@ func (b *builder) lines(raw []string) Lines {
 		}
 		kept = append(kept, c)
 	}
-	kept = dedent(kept)
+	kept = core.Dedent(kept)
 	kept, out.Omitted = core.Limit(kept, b.o.MaxOutput)
 	out.Lines = append(out.Lines, kept...)
 	return out
@@ -305,23 +305,6 @@ func internalFrame(l string) bool {
 		return false
 	}
 	return strings.Contains(l, "node_modules/") || strings.Contains(l, "(node:") || strings.Contains(l, " node:") || strings.HasSuffix(l, "(<anonymous>)")
-}
-
-func dedent(lines []string) []string {
-	indent := -1
-	for _, l := range lines {
-		n := len(l) - len(strings.TrimLeft(l, " "))
-		if indent < 0 || n < indent {
-			indent = n
-		}
-	}
-	if indent <= 0 {
-		return lines
-	}
-	for i, l := range lines {
-		lines[i] = l[indent:]
-	}
-	return lines
 }
 
 func root(out *Output, files []TestFile) string {

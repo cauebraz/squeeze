@@ -1,10 +1,10 @@
 package trivy
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
 var ErrNotTrivy = errors.New("input has no trivy SchemaVersion or ClusterName")
@@ -92,17 +92,20 @@ type RawReport struct {
 			Name   string `json:"Name"`
 		} `json:"OS"`
 	} `json:"Metadata"`
-	Results     []Result      `json:"Results"`
-	ClusterName *string       `json:"ClusterName"`
-	Resources   []K8sResource `json:"Resources"`
-	Findings    []K8sResource `json:"Findings"`
+	Results     []Result           `json:"Results"`
+	ClusterName *string            `json:"ClusterName"`
+	Resources   []K8sResource      `json:"Resources"`
+	Findings    []K8sResource      `json:"Findings"`
+	Trailing    []core.FlaggedLine `json:"-"`
 }
 
 func Parse(input []byte) (*RawReport, error) {
 	var r RawReport
-	if err := json.NewDecoder(bytes.NewReader(input)).Decode(&r); err != nil {
+	rest, err := core.DecodeJSON(input, &r)
+	if err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
+	r.Trailing = core.FlaggedLines(rest)
 	if r.SchemaVersion == 0 {
 		if r.ClusterName == nil {
 			return nil, ErrNotTrivy

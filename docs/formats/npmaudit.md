@@ -1,13 +1,35 @@
 # npmaudit
 
-Input: the JSON that `npm audit --json` prints, `auditReportVersion` 2, as npm 10.9.8 and 11.21.0 write it (the same keys in both). npm publishes no schema for it; the shape comes from npm's source at npm 10.9.8: `workspaces/arborist/lib/audit-report.js` (`toJSON`, lines 29-90) writes `auditReportVersion`, `vulnerabilities` keyed by package name and `metadata` with the counts by severity and by dependency type, and `workspaces/arborist/lib/vuln.js` (`toJSON`, lines 111-130) writes each vulnerability's `name`, `severity`, `isDirect`, `via`, `effects`, `range`, `nodes` and `fixAvailable`. Detected when the input, ignoring whitespace, starts with `{"auditReportVersion":` and holds the key `vulnerabilities`.
+Input: the JSON that `npm audit --json` prints, `auditReportVersion` 2.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run npm audit as `npm audit --json | squeeze`; `--fail-on high` stops where `npm audit --audit-level=high` would.
+```
+
+## Example
 
 ```
 npm audit --json | squeeze
 npm audit --json --omit=dev | squeeze --fail-on high
 ```
 
-npm's JSON carries, for every advisory behind a vulnerable package, its title, URL, CWE list, CVSS vector and vulnerable range, and lists each package's dependents and paths in `node_modules`; its text report repeats the advisories under every dependent. squeeze keeps one line per vulnerable package with severity, range, whether it is a direct dependency, the fix and the advisory IDs. On the fixtures, captured from npm 10.9.8, the text is 7.7 to 7.8 percent of the JSON (2,682 of 34,534 bytes for 25 vulnerabilities), and npm's own text report for the same project is 9,672 bytes.
+npm's JSON carries, for every advisory behind a vulnerable package, its title, URL, CWE list, CVSS vector and vulnerable range.
+It lists each package's dependents and paths in `node_modules`, and npm's text report repeats the advisories under every dependent.
+squeeze keeps one line per vulnerable package with severity, range, whether it is a direct dependency, the fix and the advisory IDs.
+On the fixtures, captured from npm 10.9.8, the text is 7.7 to 7.8 percent of the JSON (2,682 of 34,534 bytes for 25 vulnerabilities).
+npm's own text report for the same project is 9,672 bytes.
+
+npm publishes no schema for this JSON; npm 10.9.8 and 11.21.0 write the same keys.
+The shape comes from npm's source at 10.9.8:
+
+- `workspaces/arborist/lib/audit-report.js` (`toJSON`, lines 29-90) writes `auditReportVersion`, `vulnerabilities` keyed by package name, and `metadata` with the counts by severity and by dependency type.
+- `workspaces/arborist/lib/vuln.js` (`toJSON`, lines 111-130) writes each vulnerability's `name`, `severity`, `isDirect`, `via`, `effects`, `range`, `nodes` and `fixAvailable`.
+
+- Detection: the input, ignoring whitespace, starts with `{"auditReportVersion":` and holds the key `vulnerabilities`.
 
 ## Output
 
@@ -32,7 +54,6 @@ low serve-static <=1.16.0: fix with npm audit fix; GHSA-cm22-4g7w-348p
 - Past `--max-vulnerabilities`, the least severe packages are cut and counted by severity: `... 20 more vulnerabilities, high 11, moderate 4, low 5 (--max-vulnerabilities 0)`.
 - Advisory titles, URLs, CWE lists, CVSS scores and vulnerable ranges, `effects` and `nodes` are in `--output json` only.
 - When npm prints its error object instead of a report, `{"error":{"code","summary","detail"}}` (for example `ENOLOCK` without a lockfile, `lib/utils/output-error.js` lines 16-24) or, when the registry cannot be reached, a `message` beside an empty `error` (`lib/utils/audit-error.js` lines 24-37, merged by `lib/utils/display.js` lines 103-138), `squeeze npmaudit` exits with code 1 and prints npm's code, summary, detail and message on stderr. Auto-detection does not claim npm's error object, which every npm command prints with `--json`; `generic` reads it.
-- Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
 
 ## Flags
 

@@ -291,6 +291,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(audit(`"a":{"severity":"bad","via":[null,"b",{"url":"/"}],"fixAvailable":{"name":"a"}},"b":{"name":"a","severity":"info","fixAvailable":true}`)))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		a, err := Parse(input)
 		if err != nil {
 			return

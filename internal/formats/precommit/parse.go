@@ -240,9 +240,8 @@ func (p *parser) line(l string) {
 
 func Parse(input []byte) (Run, error) {
 	p := parser{run: Run{Hooks: []Hook{}, Errors: []string{}, Warnings: []string{}, Other: []string{}, ChangedFiles: []string{}, Diff: []string{}}}
-	for _, raw := range bytes.Split(input, []byte("\n")) {
-		raw = bytes.TrimRight(raw, "\r")
-		p.line(core.Line(string(raw)))
+	for raw := range core.SplitLines(string(input)) {
+		p.line(core.Line(raw))
 	}
 	if len(p.run.Hooks) == 0 && !p.found {
 		return Run{}, ErrNoRun

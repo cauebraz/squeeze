@@ -603,6 +603,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(`{"apiVersion":"v1","kind":"List","items":[{"apiVersion":"v1","kind":"Secret","metadata":{"name":"s","annotations":{"a":"s"}},"data":{"k":"s"}},{"apiVersion":"v1","kind":"Event","type":"Warning","count":-3}]}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		raws, err := Parse(input)
 		if err != nil {
 			return

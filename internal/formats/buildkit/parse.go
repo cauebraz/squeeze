@@ -76,8 +76,7 @@ func Parse(input []byte) (*build, error) {
 	b := &build{byKey: map[string]*vertex{}}
 	var text []string
 	events := false
-	for _, raw := range strings.Split(string(input), "\n") {
-		raw = strings.TrimRight(raw, "\r")
+	for raw := range core.SplitLines(string(input)) {
 		if strings.HasPrefix(strings.TrimSpace(raw), "{") && b.event([]byte(raw)) {
 			events = true
 			continue

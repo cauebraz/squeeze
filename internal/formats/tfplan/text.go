@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 	"strconv"
 	"strings"
 )
@@ -17,6 +18,9 @@ func Text(r Report, o Options) string {
 	}
 	b.WriteString(header(r))
 	b.WriteByte('\n')
+	for _, d := range r.Diagnostics {
+		tfdiag.Write(&b, d, tfdiag.WriteOptions{})
+	}
 	for _, c := range r.Changes {
 		writeResource(&b, c)
 	}

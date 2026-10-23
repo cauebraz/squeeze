@@ -2,9 +2,7 @@
 
 [![ci](https://github.com/cauebraz/squeeze/actions/workflows/ci.yml/badge.svg)](https://github.com/cauebraz/squeeze/actions/workflows/ci.yml)
 
-squeeze reads a tool's output on stdin and prints the smallest text that still carries every change, failure or decision in it. It is built for coding agents, which pay for every byte they read.
-
-squeeze is experimental. Its purpose is to cut the tokens an agent spends reading tool output; its output shapes, flags, condition names and JSON keys still change between commits, and there is no release yet. Pin a commit if a script depends on them.
+squeeze reads a tool's output on stdin and prints the smallest text that still carries every change, failure or decision in it, for coding agents that pay for every byte they read.
 
 ```
 $ terraform show -json plan.out | squeeze
@@ -22,81 +20,23 @@ terraform 1.9.5 plan: 1 to add, 0 to change, 2 to destroy, 1 to replace
 
 The plan JSON for this example is 6,294 bytes; the output is 485.
 
-On eight agent tasks, an agent that pipes the tool through squeeze fixes the same defects with 47 percent fewer tokens; `lint-log` accounts for most of it, the other seven save 28 percent, and on tasks whose output is a few kilobytes squeeze can cost more than it saves ([bench/README.md](bench/README.md) has every task, losses included):
-
-![Tokens an agent spends per task with and without squeeze](bench/results.svg)
-
-## Why
-
-A coding agent reads tool output as context. That output is written for humans or for other programs, not for a model with a token budget:
-
-- One diagnostics call returned about 580,700 tokens and filled an agent's context window ([anthropics/claude-code#12054](https://github.com/anthropics/claude-code/issues/12054)).
-- A `pytest -v` run printed an estimated 150 lines when 8 carried the decision ([anthropics/claude-code#49048](https://github.com/anthropics/claude-code/issues/49048), closed as not planned); the `pytest` format is squeeze's answer.
-- `terraform show -json` repeats the prior state, the configuration and every unchanged attribute to say that three resources change.
-
-Every token spent on noise costs money, pushes useful context out of the window and gives the model more text to misread. squeeze sits in the pipe between the tool and the agent. It keeps what the agent acts on, drops the rest, never prints a value the tool marks as sensitive, and says what it cut and how to get it back. It works with any agent that runs shell commands, since it needs no integration.
-
-### What makes it different
-
-- **It understands the output; it does not truncate it.** An agent's byte cap or `tail -n 100` cuts blindly, and the failing line is often past the cut. squeeze parses the format and keeps every change, failure or decision, then says what it left out and which flag shows it.
-- **The output is written for a model.** One line per item, no color codes, no box drawing, the same bytes for the same input. Tools such as `tf-summarize` and `tfplan2md` summarize Terraform plans for people, with colors or Markdown tables; the agent still pays for the layout.
-- **Secrets stay out.** Values the tool marks as sensitive never reach stdout or `--output json`, at any nesting depth, and the matched text of a Trivy or Checkov secret finding is never read. A head, tail or byte cap does not know which values those are. The test and lint formats print what the tool printed.
-- **The tool's own semantics.** Each format follows its tool: `tfplan` uses Terraform's counts and symbols and shows drift the way Terraform does, `pytest` prints the node IDs pytest reruns, `checkov` takes its counts from Checkov's summary. For the Terraform formats, `just conformance` runs squeeze against Terraform's own test corpus. An agent reading squeeze sees what the operator would see.
-- **A pipe, not a platform.** No MCP server, no editor plugin, no hook configuration. Any agent or script that can run `tool | squeeze` can use it, and `--output json` gives scripts the same data with the compression ratio.
-- **One binary, more formats.** Each format is a package behind the same interface and contract tests; the agent learns one command.
-
-The name is the action: you squeeze a tool's output to keep the juice and drop the pulp. It is also where the tool sits, in the pipe, `tool | squeeze`, and what the agent is short of, room in its context.
-
 ## Install
 
 ```
 go install github.com/cauebraz/squeeze/cmd/squeeze@latest
-go install github.com/cauebraz/squeeze/cmd/squeeze@<commit>   # pin while there is no release
 ```
 
-## Usage
-
-```
-tool | squeeze [flags]                     detect the format; its own flags work too, as a cut notice names them
-tool | squeeze <format> [flags]            name the format when detection cannot, or to fail early on a wrong flag
-squeeze <format> -h                        list a format's flags
-```
-
-Without a format name, a flag of the detected format, such as `--max-checks 0` from a checkov cut notice, applies to it; a flag that format does not have exits with code 64 and names the format. Text that no format detects goes through `generic`.
+Needs Go 1.27. There is no release yet, so output can change between commits until 1.0.
 
 ## Use from an agent
 
-Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool output. Keep only the lines for the tools the project runs, plus the `$?` and cut-notice lines: the agent reads the block on every turn, the whole block is about 3,000 bytes, and the bench measures a 456-byte block plus one line for the task's tool, so a task whose output is a few kilobytes can cost more with squeeze than without it ([bench/README.md](bench/README.md#where-squeeze-loses)).
+Add these lines to the project's `AGENTS.md` or `CLAUDE.md`; each format page has a line for its tool.
 
 ```
-- Run Terraform with `-json` and pipe it through `squeeze`: `terraform validate -json | squeeze`,
-  `terraform plan -json | squeeze`, `terraform test -json | squeeze`, `terraform query -json | squeeze`,
-  `terraform show -json <planfile> | squeeze`, `terraform show -json | squeeze` for the state (resource addresses only),
-  `terraform state show -json <address> | squeeze` for one resource's attributes and `terraform output -json | squeeze`;
-  sensitive values print as `(sensitive)`.
-  Read squeeze's output instead of Terraform's. Run TFLint as `tflint --format json | squeeze`, Checkov as `checkov -d . -o json | squeeze`, and Trivy as `trivy fs --format json . | squeeze` or `trivy k8s --format json | squeeze`.
-- Read a failed CI run as `gh run view <run-id> --log-failed | squeeze`.
-- Build images as `docker buildx build --progress=plain . 2>&1 | squeeze`.
-- Run Jest as `npx jest --json 2>/dev/null | squeeze` and Vitest as
-  `npx vitest run --reporter=json --outputFile=/dev/stdout | squeeze`; rerun a failing file with the path it prints.
-- Read a JUnit XML test report as `squeeze < report.xml`, for example the `TEST-*.xml` files of Maven Surefire.
-- Read Kubernetes state as `kubectl get pods,deploy,jobs -o json | squeeze` and events as `kubectl get events -o json | squeeze`;
-  Secret and ConfigMap values and annotations are never printed, only their keys.
-- Run npm audit as `npm audit --json | squeeze`; `--fail-on high` stops where `npm audit --audit-level=high` would.
-- Run pre-commit as `pre-commit run --all-files 2>&1 | squeeze`; a hook marked `files modified` changed
-  the files itself, so rerun pre-commit before editing them by hand.
-- Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names, and with the `-test.shuffle` seed it prints after a `-shuffle` run.
-- Run Python tests with `pytest 2>&1 | squeeze`; rerun one failure with `pytest <node id>`, using the node ID it prints.
-- Pipe other long output through `squeeze` too, for example `npm test 2>&1 | squeeze`; text that no format
-  knows goes through `generic`.
-- To stop on a condition, add `--fail-on error,fail`; exit code 3 means it matched. Every format accepts
-  `error`, `fail` and `warning`, and `squeeze <format> -h` lists the format's own names, such as `destroy`.
-- After `tool | squeeze`, `$?` is squeeze's exit code, not the tool's: start the command with `set -o pipefail;`
-  (bash, zsh) to see the tool's failure in the same command, for example `set -o pipefail; go test -json ./... | squeeze; echo $?`.
-- When squeeze reports cut lines and what you need is not in the output, rerun with the flag it names, for example
-  `squeeze tfplan --max-attrs 0`; the kept lines already hold every error and warning.
-- Add `--raw-dir .squeeze` to keep the full input (ignore `.squeeze/` in git) and read that file only when
-  the squeezed output lacks what you need; the raw copy is the tool's output as is, secrets included.
+- Pipe long tool output through `squeeze`, using the tool's JSON mode when it has one:
+  `terraform show -json plan.out | squeeze`, `go test -json ./... 2>&1 | squeeze`, `npm test 2>&1 | squeeze`.
+- squeeze names what it cut and the flag that shows it, such as `--max-attrs 0`; rerun with that flag only when the output lacks what you need.
+- `$?` is squeeze's exit code, not the tool's: add `--fail-on error,fail` to exit 3 on a failure, or start the command with `set -o pipefail;`.
 ```
 
 ## Formats
@@ -121,67 +61,32 @@ Add this to the `AGENTS.md` (or `CLAUDE.md`) of a project whose agent reads tool
 | `gotest` | `go test -json`, or `go test` text with or without `-v` | [docs/formats/gotest.md](docs/formats/gotest.md) |
 | `generic` | any other text, when no format above detects it | [docs/formats/generic.md](docs/formats/generic.md) |
 
-Each format decides what to keep. Every format guarantees:
+## How it differs
 
-- Output is plain text with no control characters or color codes, is the same for the same input, and ends with a newline.
-- Secrets the tool marks as sensitive never reach stdout.
-- Items and lines cut for size are announced with a count and the flag that shows them. Single values (a diagnostic detail, a code line, a title, an attribute value) have fixed limits instead, listed on each format's page, and `--output json` carries them in full where the format's data holds them.
-- Errors and warnings are never dropped, whatever their shape. `generic` has no tool to mark them, so it keeps lines with error or warning words first and counts the ones past its line limit in the cut notice.
-- Names and addresses from the input are printed on one line without control characters or terminal escape sequences, so the input cannot forge a line of output.
+One diagnostics call returned about 580,700 tokens and filled an agent's context window ([anthropics/claude-code#12054](https://github.com/anthropics/claude-code/issues/12054)).
+A `pytest -v` run printed an estimated 150 lines when 8 carried the decision ([anthropics/claude-code#49048](https://github.com/anthropics/claude-code/issues/49048)).
 
-## Common flags
+- It parses instead of truncating. A byte cap or `tail -n 100` cuts blindly; squeeze keeps every change, failure or decision and names what it left out and the flag that shows it.
+- Secrets are never printed. Values the tool marks as sensitive never reach stdout or `--output json`, at any nesting depth.
+- It is a pipe, with no integration. No MCP server, plugin or hook: any agent that runs shell commands can run `tool | squeeze`.
 
-| Flag | Default | Effect |
-|---|---|---|
-| `--output` | `text` | `text`, or `json` for the envelope below |
-| `--raw-dir` | none | save the unmodified input as `<sha256 prefix>` (mode 0600) and print the path on stderr, so the full output stays one read away; the file holds every value the squeezed output hid, secrets included |
-| `--fail-on` | none | exit 3 when the input has any of these comma-separated conditions; each format lists its conditions in `squeeze <format> -h` and on its docs page. Three names are shared and always accepted: `error` (a diagnostic, an operation error or, for `generic`, an error word), `fail` (the run's verdict is a failure) and `warning`; a format whose tool has no such channel lists it in `-h` as never present |
-| `--version` | | print the version; root command only |
+## Bench
 
-`--output json` prints one line:
+Across the 13 agent tasks in [bench/README.md](bench/README.md), the median task used 23 percent fewer tokens with squeeze.
+Small outputs can cost more: `tfvalidate-errors` used 9 percent more tokens and `checkov-findings` 10 percent more.
 
-```
-{"schema_version":1,"format":"tfplan","input_bytes":6294,"text_bytes":485,"ratio":0.0771,"conditions":["change","destroy","replace"],"failed_on":[],"data":{...}}
-```
+![Tokens an agent spends per task with and without squeeze](bench/results.svg)
 
-`data` is the format's own structure, described on its docs page. A value from the input keeps its control characters in `data`, written as JSON escapes (`\n`, `\u007f`, `\u009b`), so the line itself holds none. `ratio` is `text_bytes / input_bytes`. `conditions` lists every condition present in the input and `failed_on` the ones `--fail-on` matched.
+## Reference
 
-Until 1.0.0 the text output and the `data` of a format may change between commits; the envelope keys above and the exit codes do not.
-
-## Exit codes
-
-| Code | Meaning |
-|---|---|
-| 0 | output written; empty or whitespace-only input prints `no output: the command printed nothing`, since many tools print nothing on success |
-| 1 | a read, parse or write error; stdout is empty |
-| 2 | the input matches no known format and is not text; name one |
-| 3 | `--fail-on` matched; stdout holds the full output and stderr names the conditions |
-| 64 | invalid flags or arguments, including an unknown `--fail-on` condition |
-
-Without `--fail-on`, the changes and failures the input reports never change the exit code; only input squeeze cannot read, detect or parse does.
+- [docs/cli.md](docs/cli.md): usage, common flags, the JSON envelope, exit codes and the guarantees every format keeps.
+- [docs/formats/](docs/formats/): one page per format.
+- [CONTRIBUTING.md](CONTRIBUTING.md): branches, commits, pull requests and new formats.
 
 ## Development
 
-```
-just check          # gofmt, go vet, staticcheck, exhaustive, go mod tidy, tests
-just cover          # coverage across packages, fails below 95 percent
-just golden         # rewrite golden files after an intended output change
-just fuzz tfplan 30 # fuzz one format for 30 seconds
-just fuzz-all 20    # fuzz every format; fails for a format without FuzzSqueeze
-just bench          # benchmarks with the output/input ratio (tfplan only)
-just conformance    # run the Terraform formats over Terraform's own command testdata at a pinned commit
-just demo           # the README example, from the replace-forced fixture
-just build          # bin/squeeze with the version from git describe
-just commits        # commit messages and branch name since origin/main
-just check-each     # just check on every commit since origin/main
-just measure <model> # tokens of an agent with and without squeeze, on the provider whose key is set (bench/run.py -h); results in bench/README.md
-just chart <path>   # bench/results.svg from a run, given as bench/results/<timestamp>.jsonl
-```
-
-Go 1.27 or later. Linters run through `go tool`, pinned in `go.mod`; nothing to install besides Go and `just`.
-
-Branches, commits and pull requests follow [CONTRIBUTING.md](CONTRIBUTING.md). New formats follow [docs/adding-a-format.md](docs/adding-a-format.md). Coding agents working on this repository follow [AGENTS.md](AGENTS.md).
-
+`just` lists the recipes.
+Run `just check` before and after a change.
 
 ## License
 

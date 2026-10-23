@@ -1,0 +1,2 @@
+go test: pass; 3 packages: 2 ok, 1 without tests (tests not listed without -v or -json)
+... 1 package without tests (--all)

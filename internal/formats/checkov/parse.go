@@ -2,9 +2,10 @@ package checkov
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
 var ErrNotCheckov = errors.New("input has no checkov report or summary")
@@ -50,39 +51,54 @@ type RawReport struct {
 	Summary    *Summary `json:"summary"`
 }
 
-func Parse(input []byte) ([]RawReport, error) {
+type Input struct {
+	Reports  []RawReport
+	Trailing []core.FlaggedLine
+}
+
+func Parse(input []byte) (Input, error) {
+	reports, rest, err := parseReports(input)
+	if err != nil {
+		return Input{}, err
+	}
+	return Input{Reports: reports, Trailing: core.FlaggedLines(rest)}, nil
+}
+
+func parseReports(input []byte) ([]RawReport, []byte, error) {
 	trimmed := bytes.TrimLeft(input, " \t\r\n")
 	if len(trimmed) == 0 {
-		return nil, ErrNotCheckov
+		return nil, nil, ErrNotCheckov
 	}
 	if trimmed[0] == '[' {
 		var reports []RawReport
-		if err := json.Unmarshal(trimmed, &reports); err != nil {
-			return nil, fmt.Errorf("decode: %w", err)
+		rest, err := core.DecodeJSON(trimmed, &reports)
+		if err != nil {
+			return nil, nil, fmt.Errorf("decode: %w", err)
 		}
 		for i := range reports {
 			if reports[i].Summary == nil {
-				return nil, ErrNotCheckov
+				return nil, nil, ErrNotCheckov
 			}
 			if reports[i].Results == nil {
 				reports[i].Results = &Results{}
 			}
 		}
-		return reports, nil
+		return reports, rest, nil
 	}
 	var probe struct {
 		RawReport
 		Summary
 	}
-	if err := json.NewDecoder(bytes.NewReader(trimmed)).Decode(&probe); err != nil {
-		return nil, fmt.Errorf("decode: %w", err)
+	rest, err := core.DecodeJSON(trimmed, &probe)
+	if err != nil {
+		return nil, nil, fmt.Errorf("decode: %w", err)
 	}
 	if probe.Results != nil && probe.RawReport.Summary != nil {
-		return []RawReport{probe.RawReport}, nil
+		return []RawReport{probe.RawReport}, rest, nil
 	}
 	if probe.Summary.CheckovVersion != "" {
 		s := probe.Summary
-		return []RawReport{{Summary: &s, Results: &Results{}, CountsOnly: true}}, nil
+		return []RawReport{{Summary: &s, Results: &Results{}, CountsOnly: true}}, rest, nil
 	}
-	return nil, ErrNotCheckov
+	return nil, nil, ErrNotCheckov
 }

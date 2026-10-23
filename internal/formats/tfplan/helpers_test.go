@@ -85,7 +85,7 @@ func sensitiveStrings(t testing.TB, input []byte) []string {
 }
 
 func sensitiveLeaves(value, marks any, inherited bool) []string {
-	marked := inherited || isTrue(marks)
+	marked := inherited || masks(marks, value, true)
 	switch v := value.(type) {
 	case map[string]any:
 		var out []string
@@ -131,12 +131,12 @@ func assertNoLeak(t testing.TB, name string, input []byte, outputs ...string) {
 }
 
 func markedAt(marks any, p path) bool {
-	if isTrue(marks) {
+	if marked(marks) {
 		return true
 	}
 	for _, s := range p {
 		marks, _ = lookup(marks, s)
-		if isTrue(marks) {
+		if marked(marks) {
 			return true
 		}
 	}

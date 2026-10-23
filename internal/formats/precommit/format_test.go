@@ -296,6 +296,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(status("a", "", "Failed") + "\n- hook id: a\n- exit code: 2\n\nx\n\n[ERROR] e\n" + status("b", noFiles, "Skipped") + "\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		run, err := Parse(input)
 		if err != nil {
 			return

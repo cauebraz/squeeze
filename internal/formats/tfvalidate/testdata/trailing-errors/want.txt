@@ -1,0 +1,3 @@
+terraform validate: invalid, 2 errors
+error: Error while loading schemas for plugin components: Failed to obtain provider schema: Could not load the schema for provider registry.terraform.io/hashicorp/aws: failed to instantiate provider "registry.terraform.io/hashicorp/aws" to obtain schema: unavailable provider "registry.terraform.io/hashicorp/aws"..
+error: Failed to load plugin schemas

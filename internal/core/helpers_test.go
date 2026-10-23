@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestCountFlag(t *testing.T) {
@@ -107,5 +109,13 @@ func TestSeconds(t *testing.T) {
 	t.Parallel()
 	if Seconds(1.5) != "1.5s" || Seconds(2) != "2s" || Seconds(0.001) != "0.001s" {
 		t.Error("Seconds() format")
+	}
+}
+
+func TestSharedConditionsCannotBeChanged(t *testing.T) {
+	t.Parallel()
+	SharedConditions()[0] = "changed"
+	if diff := cmp.Diff([]string{"error", "fail", "warning"}, SharedConditions()); diff != "" {
+		t.Errorf("SharedConditions() (-want +got):\n%s", diff)
 	}
 }

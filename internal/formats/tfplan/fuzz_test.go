@@ -1,6 +1,7 @@
 package tfplan
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -16,9 +17,12 @@ func FuzzSqueeze(f *testing.F) {
 	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["update"],"before":1,"after":"x","after_unknown":[true],"before_sensitive":{"x":true}}}]}`))
 	f.Add([]byte(`{"format_version":"1.2","resource_drift":[{"address":"a","change":{"actions":["update"],"before":{"t":{"k":"s3cret"}},"after":{"t":{}},"before_sensitive":{"t":{"k":true}}}}],"relevant_attributes":[{"resource":"","attribute":["t"]}]}`))
 	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["update"],"before":{"l":[{"k":"s3cret"},{"k":"x"}]},"after":{"l":[{"k":"x"},{"k":"t"}]},"after_unknown":{},"before_sensitive":{"l":[{"k":true},{}]},"after_sensitive":{"l":[{},{}]}}}]}`))
+	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a","change":{"actions":["update"],"before":{"pw":"s3cret","l":["x","s3cret"]},"after":{"pw":"s3cret2","l":["x","s3cret2"]},"before_sensitive":{"pw":1,"l":[false]},"after_sensitive":{"pw":"true","l":[false]}}}]}`))
 	f.Add([]byte(`{"format_version":"1.2","deferred_action_invocations":[{"reason":"deferred_prereq","action_invocation":{"address":"action.x.y","lifecycle_action_trigger":{"triggering_resource_address":"a.b","action_trigger_event":"AfterCreate"}}},{"reason":"","action_invocation":{"invoke_action_trigger":{}}}],"complete":false}`))
 	f.Add([]byte(`{"format_version":"1.2","resource_changes":[{"address":"a.b","change":{"actions":["no-op"],"importing":{"id":"x"},"generated_config":"resource \"a\" \"b\" {\r\n\tk = \"\u001b[31mv\"\n}\n"}}]}`))
+	f.Add([]byte("{\"format_version\":\"1.2\"}\nError: x\nWarning: y\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		p, err := Parse(input)
 		if err != nil {
 			return
@@ -37,6 +41,14 @@ func FuzzSqueeze(f *testing.F) {
 				formattest.CheckText(t, c.GeneratedConfig+"\n")
 				if n := strings.Count(c.GeneratedConfig, "\n") + 1; n != c.GeneratedLines {
 					t.Fatalf("%s: generated_config_lines = %d, config has %d lines", c.Address, c.GeneratedLines, n)
+				}
+			}
+			for _, l := range p.Trailing {
+				if !strings.Contains(res.Text, l.Text) {
+					t.Fatalf("line after the JSON dropped: %q\n%s", l.Text, res.Text)
+				}
+				if l.Error && !slices.Contains(conditions(r), "error") {
+					t.Fatalf("error line %q sets no error condition", l.Text)
 				}
 			}
 			if _, err := core.Envelope("tfplan", len(input), res, nil); err != nil {

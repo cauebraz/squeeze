@@ -1,0 +1,76 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.main",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "identifier": "main",
+          "instance_class": "db.t3.micro",
+          "password": "old-pass-1",
+          "master_user_secret": "old-token-1"
+        },
+        "after": {
+          "identifier": "main",
+          "instance_class": "db.t3.small",
+          "password": "new-pass-1",
+          "master_user_secret": "new-token-1"
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "password": 1,
+          "master_user_secret": "true"
+        },
+        "after_sensitive": {
+          "password": 1,
+          "master_user_secret": "true"
+        }
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.keys",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "keys",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "keys",
+          "values": [
+            "public-a",
+            "old-key-2"
+          ]
+        },
+        "after": {
+          "name": "keys",
+          "values": [
+            "public-a",
+            "new-key-2"
+          ]
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "values": [
+            false
+          ]
+        },
+        "after_sensitive": {
+          "values": [
+            false
+          ]
+        }
+      }
+    }
+  ]
+}

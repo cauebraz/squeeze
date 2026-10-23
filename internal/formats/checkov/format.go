@@ -5,6 +5,7 @@ import (
 	"flag"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 type Options struct {
@@ -22,7 +23,7 @@ func (Format) Name() string { return "checkov" }
 
 func (Format) Description() string { return "Checkov results from checkov -o json" }
 
-var conditionNames = []string{"critical", "error", "fail", "high", "skip"}
+var conditionNames = []string{"critical", "error", "fail", "high", "skip", "warning"}
 
 func (Format) Conditions() []string { return append([]string(nil), conditionNames...) }
 
@@ -47,20 +48,22 @@ func (Format) Configure(fs *flag.FlagSet) core.Squeezer {
 }
 
 func Squeeze(input []byte, o Options) (core.Result, error) {
-	reports, err := Parse(input)
+	in, err := Parse(input)
 	if err != nil {
 		return core.Result{}, err
 	}
-	r := Build(reports, o)
+	r := Build(in, o)
 	return core.Result{Text: Text(r, o), Data: r, Conditions: conditions(r)}, nil
 }
 
 func conditions(r Report) []string {
+	errors, warnings := tfdiag.Count(r.Diagnostics)
 	return core.Conditions(map[string]bool{
 		"critical": r.BySeverity["CRITICAL"] > 0,
-		"error":    r.ParsingErrors > 0,
+		"error":    r.ParsingErrors+errors > 0,
 		"fail":     r.Failed > 0,
 		"high":     r.BySeverity["HIGH"]+r.BySeverity["CRITICAL"] > 0,
 		"skip":     r.Skipped > 0,
+		"warning":  warnings > 0,
 	})
 }

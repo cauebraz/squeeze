@@ -1,8 +1,17 @@
 # gotest
 
-Input: the JSON stream that `go test -json` prints, one `TestEvent` per line as `go doc cmd/test2json` describes it, with the `BuildEvent` lines of `go help buildjson` mixed in. Detected when one of the first twenty non-blank lines is a JSON object with a known `Action` and a `Package` or `ImportPath`; `go: downloading` and `# package` lines before the stream do not count toward the twenty. Lines that are not JSON, which the go command prints for early errors, are kept.
+Input: the JSON stream that `go test -json` prints, or the text `go test` prints with or without `-v`.
 
-The text `go test` prints without `-json`, with or without `-v`, is read too: squeeze turns it into the same events, as `go tool test2json` does, so the output and `data` are those of a `-json` run. Detected when a line of the first 64 KiB is a package summary (`ok  `, `FAIL` or `?   `, a tab and the package), a `--- PASS:`, `--- FAIL:` or `--- SKIP:` line, or `=== RUN   `.
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run Go tests with `go test -json ./... 2>&1 | squeeze`; rerun one failure with the package and test it names,
+  and with the `-test.shuffle` seed it prints after a `-shuffle` run.
+```
+
+## Example
 
 ```
 go test -json ./... | squeeze
@@ -10,7 +19,17 @@ go test -json -race ./... 2>&1 | squeeze --fail-on fail
 go test -v ./... 2>&1 | squeeze
 ```
 
-A `-json` run prints a run line, a framing line and a result event for every test, and every log line of passing tests. squeeze keeps the failures, the build errors, the benchmark results and the counts. On streams captured from real runs the text is 5.8 to 14.5 percent of the input; on the two hand-written fixtures it is 26 and 48 percent, since they hold only a few events.
+A `-json` run prints a run line, a framing line and a result event for every test, and every log line of passing tests.
+squeeze keeps the failures, the build errors, the benchmark results and the counts.
+On streams captured from real runs the text is 5.8 to 14.5 percent of the input.
+On the two hand-written fixtures it is 26 and 48 percent, since they hold only a few events.
+
+The stream holds one `TestEvent` per line, as `go doc cmd/test2json` describes it, with the `BuildEvent` lines of `go help buildjson` mixed in.
+Lines that are not JSON, which the go command prints for early errors, are kept.
+squeeze turns text output into the same events, as `go tool test2json` does, so the output and `data` are those of a `-json` run.
+
+- Detection of JSON: one of the first twenty non-blank lines is a JSON object with a known `Action` and a `Package` or `ImportPath`. `go: downloading` and `# package` lines before the stream do not count toward the twenty.
+- Detection of text: a line of the first 64 KiB is a package summary (`ok  `, `FAIL` or `?   `, a tab and the package), a `--- PASS:`, `--- FAIL:` or `--- SKIP:` line, or `=== RUN   `.
 
 ## Output
 
@@ -37,7 +56,7 @@ fail example.com/shop/calc TestTable/one
 ... 1 skipped test, 1 passing package, 1 package without tests (--all)
 ```
 
-- The header gives `pass` or `fail`, the test counts and the package counts. A package `without tests` is one the go command reports as `[no test files]`.
+- The header gives `pass` or `fail`, the test counts and the package counts. A package `without tests` is one the go command reports as `[no test files]`. Text without `-v` that names no test, as a run where every test passes prints, has no test count to give: the header reads `go test: pass; 1 package: 1 ok (tests not listed without -v or -json)` and the `... N passing packages (--all)` notice is left out, as the header already counts them.
 - A failure line names the package and the test, so `go test <package> -run '^<test>$'` reruns it; `-run` takes a regular expression per `/`-separated level, so a name with `+`, `(`, `[` or `.` needs those escaped, and a subtest is `-run '^Parent$/^Sub$'`. With `-count`, each failed run is listed with `(run N of M)` and the counts cover every run. A parent test that fails only because a subtest failed is not listed or counted; one with output of its own is.
 - Under a failure, squeeze prints the lines the test reported with `t.Error` or `t.Fatal` (`OutputType` `error` and `error-continue`), every line from a `panic:` or `fatal error:` on, and every data race report. Other log lines are counted in `... N log lines (--full)`. When the stream carries `OutputType`, only `frame` lines are treated as test framing, so an error line that looks like `--- FAIL: ...` stays. A stream from a Go version without `OutputType` keeps every line of the test and drops lines shaped like framing.
 - Stack frames from the Go runtime, the `testing` package and the generated test main are counted in `... N runtime and testing stack lines (--full)`. A frame stays when its package path starts with a domain (a dot in the first element), with the first element of the tested package's path, or with `main.`.
@@ -50,10 +69,9 @@ fail example.com/shop/calc TestTable/one
 - Attributes from `t.Attr` and the directory from `t.ArtifactDir` print under the failure they belong to.
 - A `testing: warning:` line, such as `no tests to run`, prints as `warning <package>: ...` and sets the `warning` condition.
 - Lines that are not JSON print under `output outside the test events:`.
-- An event with an action squeeze does not know is counted in `... N events with an unknown action: <action> <count> (--raw-dir)`; the raw input is the only place to read it.
+- An event with an action squeeze does not know is counted in `... N events with an unknown action: <action> <count> (--raw-dir)`, with `(` and `)` in an action printed as `[` and `]` so the notice keeps its shape; the raw input is the only place to read it, and `other` in `--output json` keeps the action as the stream gives it.
 - Without `--all`, skipped tests, passing packages, packages without tests and the shuffle seeds of passing packages are counted in one `... N skipped tests, N passing packages, N packages without tests, N shuffle seeds (--all)` line.
 - test2json splits a line longer than its 1024-byte output buffer across events; squeeze joins the parts of a test's output before it reads the lines.
-- Strings from the stream are reduced to one line without control characters or terminal escape sequences before they are printed.
 
 ## Flags
 

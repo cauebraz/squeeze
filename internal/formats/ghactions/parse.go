@@ -5,6 +5,8 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+
+	"github.com/cauebraz/squeeze/internal/core"
 )
 
 var ErrNoLog = errors.New("no GitHub Actions log lines in the input")
@@ -48,8 +50,7 @@ func Parse(input []byte) ([]Job, error) {
 	var jobs []Job
 	index := map[string]int{}
 	found := false
-	for _, raw := range strings.Split(string(input), "\n") {
-		raw = strings.TrimRight(raw, "\r")
+	for raw := range core.SplitLines(string(input)) {
 		if strings.TrimSpace(raw) == "" {
 			continue
 		}

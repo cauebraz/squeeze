@@ -92,4 +92,5 @@ type Report struct {
 	Timeouts        int               `json:"timeouts"`
 	Races           int               `json:"races"`
 	Other           map[string]int    `json:"other"`
+	testsUnlisted   bool
 }

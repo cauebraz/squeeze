@@ -2,7 +2,7 @@
 
 squeeze takes changes as small pull requests made of micro commits with Conventional Commits messages, merged by rebase onto `main`. Every commit on `main` builds, passes `just check` and describes one change, so `git log`, `git bisect`, `git revert` and the release changelog work commit by commit.
 
-`README.md` is the user contract and `docs/adding-a-format.md` the guide for a new format. `AGENTS.md` holds the code rules (output invariants, fixtures, tests, no comments in code); they apply to human contributors too.
+`README.md` and `docs/cli.md` are the user contract and `docs/adding-a-format.md` the guide for a new format. `AGENTS.md` holds the code rules (output invariants, fixtures, tests, no comments in code); they apply to human contributors too.
 
 ## Before you start
 
@@ -46,7 +46,7 @@ A micro commit is the smallest change that stands on its own. Each commit:
 
 - does one thing, which its subject states without "and";
 - builds and passes `just check` by itself; CI runs `just check-each`, which checks out every commit of the pull request and runs `just check` on it;
-- carries the tests that prove its behavior, the golden files its code changes (`just golden`) and the docs that describe it (`README.md`, `docs/formats/<name>.md`);
+- carries the tests that prove its behavior, the golden files its code changes (`just golden`) and the docs that describe it (`README.md`, `docs/cli.md`, `docs/formats/<name>.md`);
 - keeps refactoring, renames and moves apart from behavior changes; a refactor commit leaves every golden file unchanged.
 
 A typical order inside one pull request:
@@ -95,7 +95,7 @@ Plain ASCII in every message, as in every document of this repository.
 | Type | Use for |
 |---|---|
 | `feat` | a capability a user sees: a new format, flag, condition or output behavior |
-| `fix` | output, exit code or detection that contradicts the README, a format's docs page or the tool's own semantics |
+| `fix` | output, exit code or detection that contradicts the README, `docs/cli.md`, a format's docs page or the tool's own semantics |
 | `perf` | the same output with less time or memory, with a benchmark in the body |
 | `refactor` | code restructured with no behavior change; golden files unchanged |
 | `test` | tests or fixtures for existing behavior |
@@ -113,7 +113,7 @@ The scope names the part of the repository the commit changes: a format (`tfplan
 
 ### Breaking changes
 
-Until 1.0.0 the text output and a format's `data` may change between commits; that is not a breaking change. A breaking change is one that changes what the README promises to keep: a key of the `--output json` envelope, the meaning of an exit code, or a removed or renamed subcommand or flag.
+Until 1.0.0 the text output and a format's `data` may change between commits; that is not a breaking change. A breaking change is one that changes what `docs/cli.md` promises to keep: a key of the `--output json` envelope, the meaning of an exit code, or a removed or renamed subcommand or flag.
 
 A breaking change has both markers: `!` before the colon and a `BREAKING CHANGE:` footer that says how to migrate. For a hypothetical flag rename:
 
@@ -166,14 +166,16 @@ Merge: "Rebase and merge" only. Every commit of the branch lands on `main` as it
 
 ## Checks
 
+`just` lists every recipe. Four of them gate a merge:
+
 ```
 just check          # gofmt, go vet, staticcheck, exhaustive, go mod tidy, tests
-just cover          # coverage across packages, fails below 95 percent
+just cover          # fails below 95 percent coverage
 just commits        # commit messages and branch name since origin/main; prints the size
 just check-each     # just check on every commit since origin/main, in a temporary worktree
 ```
 
-Both recipes take another base as an argument, for example `just commits origin/alice/feat-x` for a stacked branch.
+`just commits` and `just check-each` take another base as an argument, for example `just commits origin/alice/feat-x` for a stacked branch.
 
 ## Coding agents
 

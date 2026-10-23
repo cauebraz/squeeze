@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"formAt_version\":\"1.\",\"vAlid\":false,\"diAgnostiCs\":[{\"severitY\":\"warning \"}]}")

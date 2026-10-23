@@ -1,0 +1,19 @@
+{
+  "api_url": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://api.example.com/v1"
+  },
+  "db_password": {
+    "sensitive": true,
+    "type": "string",
+    "value": "s3cret-pass"
+  }
+}
+
+Warning: Backend configuration changed
+
+A change in the backend configuration has been detected, which may require
+migrating existing state.
+
+Error: Failed to save state: write lock held by another process

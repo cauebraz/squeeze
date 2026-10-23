@@ -5,12 +5,16 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 func Text(r Report, o Options) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
+	for _, d := range r.Diagnostics {
+		tfdiag.Write(&b, d, tfdiag.WriteOptions{})
+	}
 	for _, p := range r.ParseErrorPath {
 		fmt.Fprintf(&b, "parse error: %s\n", p)
 	}

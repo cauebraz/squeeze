@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 const maxValueBytes = 200
@@ -16,6 +17,9 @@ func Text(r Report) string {
 	var b strings.Builder
 	b.WriteString(header(r))
 	b.WriteByte('\n')
+	for _, d := range r.Diagnostics {
+		tfdiag.Write(&b, d, tfdiag.WriteOptions{})
+	}
 	if s := r.State; s != nil {
 		for _, res := range s.Resources {
 			b.WriteString(res.Address)
@@ -54,7 +58,7 @@ func header(r Report) string {
 	}
 	s := r.State
 	if s == nil {
-		return r.Tool + " output: " + outputs
+		return r.Tool + " output: " + outputs + problems(r)
 	}
 	parts := []string{fmt.Sprintf("%d %s", s.Managed, core.Plural(s.Managed, "resource", "resources"))}
 	if s.DataSources > 0 {
@@ -70,5 +74,19 @@ func header(r Report) string {
 	if r.Total > 0 {
 		line += "; " + outputs
 	}
-	return line
+	return line + problems(r)
+}
+
+func problems(r Report) string {
+	var parts []string
+	if r.Errors > 0 {
+		parts = append(parts, fmt.Sprintf("%d %s", r.Errors, core.Plural(r.Errors, "error", "errors")))
+	}
+	if r.Warnings > 0 {
+		parts = append(parts, fmt.Sprintf("%d %s", r.Warnings, core.Plural(r.Warnings, "warning", "warnings")))
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return "; " + strings.Join(parts, ", ")
 }

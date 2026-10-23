@@ -254,6 +254,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte(`<testsuites tests="x" failures="-1"><testcase name="a"><error/><failure/><skipped/></testcase><testsuite><testsuite><testcase line="-3"><flakyError/></testcase></testsuite></testsuite></testsuites>`))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		root, err := Parse(input)
 		if err != nil {
 			return

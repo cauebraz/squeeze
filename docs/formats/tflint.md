@@ -1,13 +1,28 @@
 # tflint
 
-Input: the JSON that `tflint --format json` prints, as `formatter/json.go` in TFLint defines it: an object with an `issues` array and an `errors` array. Detected when the input is a JSON object that starts with `"issues"` and has an `"errors"` key anywhere in the document.
+Input: the JSON that `tflint --format json` prints, as `formatter/json.go` in TFLint defines it: an `issues` array and an `errors` array.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run TFLint as `tflint --format json | squeeze`.
+```
+
+## Example
 
 ```
 tflint --format json | squeeze
 tflint --recursive --format json | squeeze --fail-on error
 ```
 
-TFLint's JSON repeats each rule's documentation link, the end of every range and the `fixable` and `fixed` flags of every issue. squeeze keeps one line per issue with its location, rule and fix state. On the default-flag fixtures with issues, captured from TFLint 0.64.0 with the bundled `terraform` ruleset, the text is 11 to 35 percent of the input; a run that only reports one HCL error, or no issue at all, gains little, since there is little to remove.
+TFLint's JSON repeats each rule's documentation link, the end of every range and the `fixable` and `fixed` flags of every issue.
+squeeze keeps one line per issue with its location, rule and fix state.
+On the default-flag fixtures with issues, captured from TFLint 0.64.0 with the bundled `terraform` ruleset, the text is 11 to 35 percent of the input.
+A run that reports only one HCL error, or no issue, gains little, since there is little to remove.
+
+- Detection: a JSON object that starts with `"issues"` and has an `"errors"` key anywhere in the document.
 
 ## Output
 
@@ -27,9 +42,9 @@ notice: resource name `LogsBucket` must match the following format: snake_case (
 - Issues are sorted errors first, then warnings, then notices, and by file, line and column. Identical issues print once with `(xN)`.
 - An issue TFLint raises through a module call is reported, as TFLint does, at the root-module expression that set the value; the module expressions it was evaluated in print under it, outermost first: `evaluated in main.tf:20:19 -> modules/app/main.tf:4:19`.
 - Entries of the `errors` array, which TFLint reports when it cannot parse a file or a plugin fails, print first as diagnostics with `tflint` in place of a rule, are never cut by `--max-issues`, and the header says not every check ran. `--no-detail` drops their explanation along with the call chains.
+- A line after the JSON document that reads as an error or a warning, such as `Error: Failed to load plugin` when stderr is piped too, prints as a diagnostic with `tflint` in place of a rule, without its `Error:` or `Warning:` prefix. An error line counts as a TFLint error; a warning line sets `warning`. Other lines after the document are dropped.
 - The call chain of an issue and the explanation of a tool error are wrapped to 100 bytes and cut after three lines with `...`.
 - Past `--max-issues`, the notice names the rules of the cut issues with their counts, so `... 116 more issues, terraform_naming_convention 60, terraform_unused_declarations 56 (--max-issues 0)` tells which rule to fix or disable first. Identical issues print once with `(xN)` and take one line of the limit; the notice and `issues_omitted` count every cut issue, N for an `(xN)` line.
-- Strings from the input are reduced to one line without control characters or terminal escape sequences before they are printed.
 
 ## Flags
 
@@ -42,15 +57,15 @@ notice: resource name `LogsBucket` must match the following format: snake_case (
 
 | Condition | Present when |
 |---|---|
-| `error` | an issue has severity `error`, or TFLint reported an entry in `errors` |
+| `error` | an issue has severity `error`, TFLint reported an entry in `errors`, or an error line follows the JSON |
 | `fail` | any issue or error: TFLint exits with 2 for an issue at any severity unless `--minimum-failure-severity` says otherwise |
 | `fixable` | an issue is fixable with `tflint --fix` |
 | `notice` | an issue has severity `info` |
-| `warning` | an issue has severity `warning` |
+| `warning` | an issue or an entry in `errors` has severity `warning`, or a warning line follows the JSON |
 
 ## JSON data
 
-`data` holds `tool`, `tool_version` (empty: TFLint's JSON carries none), `errors`, `warnings`, `notices`, `tool_errors`, `fixable`, `fixed`, `rules` (`name`, `count` for every rule with an issue, most issues first), `problems` (the entries of TFLint's `errors` array as diagnostics), `issues`, `issues_omitted` and `omitted_by_rule` (`name`, `count` for the issues past `--max-issues`). Each issue has `severity`, `summary`, `rule`, `address` (the rule again, as every diagnostic carries one) and, when set, `detail` (the module chain), `file`, `line`, `column`, `count`, `fixable` and `fixed`.
+`data` holds `tool`, `tool_version` (empty: TFLint's JSON carries none), `errors`, `warnings`, `notices`, `tool_errors`, `fixable`, `fixed`, `rules` (`name`, `count` for every rule with an issue, most issues first), `problems` (the entries of TFLint's `errors` array and the error and warning lines after the JSON, as diagnostics), `issues`, `issues_omitted` and `omitted_by_rule` (`name`, `count` for the issues past `--max-issues`). Each issue has `severity`, `summary`, `rule`, `address` (the rule again, as every diagnostic carries one) and, when set, `detail` (the module chain), `file`, `line`, `column`, `count`, `fixable` and `fixed`.
 
 ## Limitations
 

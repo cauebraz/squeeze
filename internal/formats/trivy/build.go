@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/cauebraz/squeeze/internal/core"
+	"github.com/cauebraz/squeeze/internal/tfdiag"
 )
 
 var severities = []string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"}
@@ -62,27 +63,28 @@ type Resource struct {
 }
 
 type Report struct {
-	Tool              string         `json:"tool"`
-	ToolVersion       string         `json:"tool_version"`
-	Cluster           *string        `json:"cluster,omitempty"`
-	Resources         []Resource     `json:"resources,omitempty"`
-	Artifact          string         `json:"artifact"`
-	ArtifactType      string         `json:"artifact_type"`
-	OS                string         `json:"os,omitempty"`
-	Vulnerabilities   int            `json:"vulnerabilities"`
-	Misconfigurations int            `json:"misconfigurations"`
-	Secrets           int            `json:"secrets"`
-	Licenses          int            `json:"licenses"`
-	SevereLicenses    int            `json:"severe_licenses"`
-	Exceptions        int            `json:"misconfig_exceptions"`
-	ChecksPassed      int            `json:"misconfig_checks_passed"`
-	Fixable           int            `json:"fixable"`
-	BySeverity        map[string]int `json:"by_severity"`
-	Targets           []Target       `json:"targets"`
-	Findings          []Finding      `json:"findings"`
-	FindingsOmitted   int            `json:"findings_omitted"`
-	OmittedBySeverity map[string]int `json:"omitted_by_severity"`
-	Hidden            []Finding      `json:"hidden"`
+	Tool              string              `json:"tool"`
+	ToolVersion       string              `json:"tool_version"`
+	Cluster           *string             `json:"cluster,omitempty"`
+	Resources         []Resource          `json:"resources,omitempty"`
+	Artifact          string              `json:"artifact"`
+	ArtifactType      string              `json:"artifact_type"`
+	OS                string              `json:"os,omitempty"`
+	Vulnerabilities   int                 `json:"vulnerabilities"`
+	Misconfigurations int                 `json:"misconfigurations"`
+	Secrets           int                 `json:"secrets"`
+	Licenses          int                 `json:"licenses"`
+	SevereLicenses    int                 `json:"severe_licenses"`
+	Exceptions        int                 `json:"misconfig_exceptions"`
+	ChecksPassed      int                 `json:"misconfig_checks_passed"`
+	Fixable           int                 `json:"fixable"`
+	BySeverity        map[string]int      `json:"by_severity"`
+	Targets           []Target            `json:"targets"`
+	Findings          []Finding           `json:"findings"`
+	FindingsOmitted   int                 `json:"findings_omitted"`
+	OmittedBySeverity map[string]int      `json:"omitted_by_severity"`
+	Hidden            []Finding           `json:"hidden"`
+	Diagnostics       []tfdiag.Diagnostic `json:"diagnostics,omitempty"`
 }
 
 func Build(raw *RawReport, o Options) Report {
@@ -100,6 +102,14 @@ func Build(raw *RawReport, o Options) Report {
 	if os := raw.Metadata.OS; os != nil {
 		r.OS = strings.TrimSpace(core.Clean(os.Family) + " " + core.Clean(os.Name))
 	}
+	for _, l := range raw.Trailing {
+		d := tfdiag.Diagnostic{Severity: "warning", Summary: l.Text}
+		if l.Error {
+			d.Severity = "error"
+		}
+		r.Diagnostics = append(r.Diagnostics, d)
+	}
+	r.Diagnostics = tfdiag.Normalize(r.Diagnostics)
 	results, owners := raw.Results, make([]int, len(raw.Results))
 	if raw.ClusterName != nil {
 		cluster := core.Clean(*raw.ClusterName)

@@ -1,13 +1,31 @@
 # precommit
 
-Input: what `pre-commit run` prints, with or without `--all-files`, `--verbose`, `--show-diff-on-failure` and color. Detected when a line, without a tab, ends in a run of three or more dots and `Passed`, `Failed`, `Skipped` or `(no files to check)Skipped` and is at least 79 columns wide: pre-commit pads every status line to the same width, at least 80 columns minus one (`pre_commit/commands/run.py`, `_compute_cols` and `_full_msg`, pre-commit 4.6.2).
+Input: what `pre-commit run` prints, with or without `--all-files`, `--verbose`, `--show-diff-on-failure` and color.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Run pre-commit as `pre-commit run --all-files 2>&1 | squeeze`; a hook marked `files modified` changed
+  the files itself, so rerun pre-commit before editing them by hand.
+```
+
+## Example
 
 ```
 pre-commit run --all-files 2>&1 | squeeze
 pre-commit run --all-files --show-diff-on-failure 2>&1 | squeeze precommit --all
 ```
 
-pre-commit prints one dotted status line per hook and, for a hook that failed or ran with `--verbose`, its id, exit code, whether it modified files, and its output. squeeze keeps the failed hooks with their output, counts the passed and skipped ones, and keeps pre-commit's own errors and warnings. On the `failed` fixture the text is 909 of 1,408 bytes; on `limits`, where one hook prints 125 lines, it is 1,450 of 5,250 bytes, and `generic` printed all 5,250. A clean run of eight hooks prints two lines.
+pre-commit prints one dotted status line per hook.
+For a hook that failed or ran with `--verbose`, it also prints the id, exit code, whether the hook modified files, and its output.
+squeeze keeps the failed hooks with their output, counts the passed and skipped ones, and keeps pre-commit's own errors and warnings.
+On the `failed` fixture the text is 909 of 1,408 bytes.
+On `limits`, where one hook prints 125 lines, it is 1,450 of 5,250 bytes, and `generic` printed all 5,250.
+A clean run of eight hooks prints two lines.
+
+- Detection: a line, without a tab, ends in a run of three or more dots and `Passed`, `Failed`, `Skipped` or `(no files to check)Skipped`, and is at least 79 columns wide. pre-commit pads every status line to the same width, at least 80 columns minus one (`pre_commit/commands/run.py`, `_compute_cols` and `_full_msg`, pre-commit 4.6.2).
 
 ## Output
 

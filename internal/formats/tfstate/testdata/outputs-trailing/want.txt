@@ -1,0 +1,5 @@
+terraform output: 2 outputs, 1 sensitive; 1 error, 1 warning
+error: Failed to save state: write lock held by another process
+warning: Backend configuration changed
+api_url = "https://api.example.com/v1"
+db_password = (sensitive)

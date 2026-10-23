@@ -1,0 +1,9 @@
+{"format_version":"1.2","terraform_version":"1.9.5","planned_values":{"root_module":{}},"resource_changes":[{"address":"aws_s3_bucket.logs","mode":"managed","type":"aws_s3_bucket","name":"logs","provider_name":"registry.terraform.io/hashicorp/aws","change":{"actions":["create"],"before":null,"after":{"bucket":"logs-example"},"after_unknown":{"arn":true},"before_sensitive":false,"after_sensitive":{}}}],"complete":true,"errored":false}
+
+Warning: Provider development overrides are in effect
+
+The following provider development overrides are set in the CLI
+configuration:
+ - hashicorp/aws in /home/dev/terraform-provider-aws
+
+Error: Failed to write plan file: open tfplan: permission denied

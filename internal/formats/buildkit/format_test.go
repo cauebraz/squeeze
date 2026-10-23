@@ -233,6 +233,7 @@ func FuzzSqueeze(f *testing.F) {
 	}
 	f.Add([]byte("#1 [internal] load build definition from Dockerfile\n#1 WARN: x\n#2 a\n#2 ERROR: y\nERROR: z\n"))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		b, err := Parse(input)
 		if err != nil {
 			return

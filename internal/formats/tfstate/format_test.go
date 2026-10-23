@@ -566,13 +566,168 @@ func TestConfigureFlags(t *testing.T) {
 	}
 }
 
+func TestTrailingLines(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		input string
+		text  string
+		conds []string
+	}{
+		"state": {
+			input: "{\"format_version\":\"1.0\",\"terraform_version\":\"1.9.5\",\"values\":{\"root_module\":{}}}\nWarning: deprecated\nplain\n",
+			text:  "terraform 1.9.5 state: 0 resources; 1 warning\nwarning: deprecated\n",
+			conds: []string{"warning"},
+		},
+		"show": {
+			input: "{\"format_version\":\"1.0\",\"resource\":null,\"diagnostics\":[{\"severity\":\"warning\",\"summary\":\"w\"}]}\nError: lock held\n",
+			text:  "terraform state show: 1 error, 1 warning\nerror: lock held\nwarning: w\n",
+			conds: []string{"error", "fail", "warning"},
+		},
+		"plain lines": {
+			input: "{}\ndone\n",
+			text:  "terraform output: 0 outputs\n",
+			conds: []string{},
+		},
+	}
+	for name, tc := range tests {
+		r, err := Squeeze([]byte(tc.input), DefaultOptions())
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if diff := cmp.Diff(tc.text, r.Text); diff != "" {
+			t.Errorf("%s: text (-want +got):\n%s", name, diff)
+		}
+		if diff := cmp.Diff(tc.conds, r.Conditions); diff != "" {
+			t.Errorf("%s: conditions (-want +got):\n%s", name, diff)
+		}
+	}
+}
+
+const canary = "s3cret"
+
+func cleanMask(mask any) bool {
+	switch m := mask.(type) {
+	case nil:
+		return true
+	case bool:
+		return !m
+	case map[string]any:
+		for _, v := range m {
+			if !cleanMask(v) {
+				return false
+			}
+		}
+		return true
+	case []any:
+		for _, v := range m {
+			if !cleanMask(v) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
+func canaries(v any) int {
+	n := 0
+	switch t := v.(type) {
+	case string:
+		if strings.Contains(t, canary) {
+			n++
+		}
+	case map[string]any:
+		for k, e := range t {
+			n += canaries(k) + canaries(e)
+		}
+	case []any:
+		for _, e := range t {
+			n += canaries(e)
+		}
+	}
+	return n
+}
+
+func hiddenCanaries(v, mask any) int {
+	if cleanMask(mask) {
+		return 0
+	}
+	if vm, ok := v.(map[string]any); ok {
+		if mm, ok := mask.(map[string]any); ok {
+			n := 0
+			for k, e := range vm {
+				n += hiddenCanaries(e, mm[k])
+			}
+			return n
+		}
+	}
+	if vl, ok := v.([]any); ok {
+		if ml, ok := mask.([]any); ok && len(ml) == len(vl) {
+			n := 0
+			for i, e := range vl {
+				n += hiddenCanaries(e, ml[i])
+			}
+			return n
+		}
+	}
+	return canaries(v)
+}
+
+func onlyHiddenCanaries(input []byte) bool {
+	var doc any
+	rest, err := core.DecodeJSON(input, &doc)
+	if err != nil || bytes.Contains(rest, []byte(canary)) {
+		return false
+	}
+	top, _ := doc.(map[string]any)
+	res, _ := top["resource"].(map[string]any)
+	all := canaries(doc)
+	return all > 0 && all == hiddenCanaries(res["values"], res["sensitive_values"])
+}
+
+func TestOnlyHiddenCanaries(t *testing.T) {
+	t.Parallel()
+	tests := map[string]bool{
+		`{"resource":{"values":{"p":"s3cret"},"sensitive_values":{"p":true}}}`:                true,
+		`{"resource":{"values":{"p":"s3cret"},"sensitive_values":{"p":1}}}`:                   true,
+		`{"resource":{"values":{"l":["a","s3cret"]},"sensitive_values":{"l":[true]}}}`:        true,
+		`{"resource":{"values":{"l":["a","s3cret"]},"sensitive_values":{"l":[false,false]}}}`: false,
+		`{"resource":{"values":{"p":"s3cret"},"sensitive_values":{}}}`:                        false,
+		`{"resource":{"values":{"s3cret":"x"},"sensitive_values":{"s3cret":true}}}`:           false,
+		`{"resource":{"values":{"p":"s3cret"},"sensitive_values":"x"}}`:                       true,
+		`{"resource":{"values":{"p":"x"},"sensitive_values":{"p":true}}}`:                     false,
+		"{\"resource\":{\"values\":{\"p\":\"s3cret\"},\"sensitive_values\":true}}\ns3cret":    false,
+		`{`: false,
+	}
+	for input, want := range tests {
+		if got := onlyHiddenCanaries([]byte(input)); got != want {
+			t.Errorf("onlyHiddenCanaries(%s) = %v, want %v", input, got, want)
+		}
+	}
+}
+
+func TestMissingSensitiveNamesTheFirstOutput(t *testing.T) {
+	t.Parallel()
+	input := []byte(`{"d":{"type":"string","value":"x"},"b":{"type":"string","value":"x"},"c":{"type":"string","value":"x"},"a":{"sensitive":false,"type":"string","value":"x"}}`)
+	for range 20 {
+		_, err := Squeeze(input, DefaultOptions())
+		if err == nil || err.Error() != `output "b": missing sensitive` {
+			t.Fatalf("error = %v", err)
+		}
+	}
+}
+
 func FuzzSqueeze(f *testing.F) {
 	for _, data := range formattest.Inputs(f, fixtureDir) {
 		f.Add(data)
 	}
 	f.Add([]byte(`{"a\n":{"sensitive":true,"type":"string","value":"secret-value"},"b":{"sensitive":false,"type":"string","value":"\u001b[31m"}}`))
 	f.Add([]byte(`{"format_version":"1.0","resource":{"address":"a.b","values":{"p":"secret-value","l":["x","secret-value"]},"sensitive_values":{"p":true,"l":[false,true]}},"diagnostics":[{"severity":"warning","summary":"w"}]}`))
+	f.Add([]byte("{\"format_version\":\"1.0\",\"values\":{\"root_module\":{}}}\nError: x\nWarning: y\n"))
+	f.Add([]byte("{\"format_version\":\"1.0\",\"resource\":null,\"diagnostics\":[]}\nError: x\n"))
+	f.Add([]byte(`{"format_version":"1.0","resource":{"address":"a.b","values":{"p":"s3cret","q":{"k":"s3cret","n":"x"},"l":["x","s3cret"]},"sensitive_values":{"p":1,"q":{"k":true},"l":[false,true]}},"diagnostics":[]}`))
 	f.Fuzz(func(t *testing.T, input []byte) {
+		formattest.CheckStable(t, func() (core.Result, error) { return Squeeze(input, DefaultOptions()) })
 		for _, o := range []Options{DefaultOptions(), {MaxOutputs: 1, MaxResources: 1}} {
 			r, err := Squeeze(input, o)
 			if err != nil {
@@ -584,8 +739,21 @@ func FuzzSqueeze(f *testing.F) {
 				t.Fatalf("Envelope() error: %v", err)
 			}
 			report := r.Data.(Report)
+			if in, err := Parse(input); err == nil {
+				for _, l := range in.Trailing {
+					if !strings.Contains(r.Text, l.Text) {
+						t.Fatalf("line after the JSON dropped: %q\n%s", l.Text, r.Text)
+					}
+					if l.Error && report.Errors == 0 {
+						t.Fatalf("error line %q counts no error", l.Text)
+					}
+				}
+			}
 			if o.MaxOutputs > 0 && len(report.Outputs) > o.MaxOutputs {
 				t.Fatalf("%d outputs over the limit %d", len(report.Outputs), o.MaxOutputs)
+			}
+			if report.Source == "resource" && onlyHiddenCanaries(input) && (strings.Contains(r.Text, canary) || bytes.Contains(envelope, []byte(canary))) {
+				t.Fatalf("sensitive value %q reached the output:\n%s\n%s", canary, r.Text, envelope)
 			}
 			if report.Source == "resource" {
 				attrs := []Attribute{}
@@ -610,7 +778,7 @@ func FuzzSqueeze(f *testing.F) {
 					t.Fatalf("sensitive output %q keeps its value in data: %s", out.Name, envelope)
 				}
 			}
-			listed := len(report.Outputs)
+			listed := len(report.Outputs) + 12*len(report.Diagnostics)
 			if report.State != nil {
 				listed += len(report.State.Resources) + 2
 				if o.MaxResources > 0 && len(report.State.Resources) > o.MaxResources {

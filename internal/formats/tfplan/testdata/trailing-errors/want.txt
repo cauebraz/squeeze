@@ -1,0 +1,4 @@
+terraform 1.9.5 plan: 1 to add, 0 to change, 0 to destroy
+error: Failed to write plan file: open tfplan: permission denied
+warning: Provider development overrides are in effect
++ aws_s3_bucket.logs

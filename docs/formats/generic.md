@@ -1,13 +1,32 @@
 # generic
 
-Input: any text output. squeeze uses it when no other format detects the input, and prints `squeeze: no format detected; used generic` on stderr. Detected when the first 64 KiB hold something other than whitespace, no NUL byte and valid UTF-8, or when they are all whitespace and more follows. Empty or whitespace-only input prints `no output: the command printed nothing` and exits with code 0, as for every format; other input that is not text exits with code 2.
+Input: any text output that no other format detects.
+
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Pipe other long output through `squeeze` too, for example `npm test 2>&1 | squeeze`; text that no format
+  knows goes through `generic`.
+```
+
+## Example
 
 ```
 npm test 2>&1 | squeeze
 docker build . 2>&1 | squeeze generic --max-lines 400
 ```
 
-The format knows nothing about the tool, so it keeps the text and removes what a terminal would hide or repeat. On the fixtures with color codes, repeats or cuts the text is 17 to 52 percent of the input; text with none of those passes through at the same size or smaller, and input with nothing printable gets a 20-byte notice.
+The format knows nothing about the tool, so it keeps the text and removes what a terminal would hide or repeat.
+On the fixtures with color codes, repeats or cuts, the text is 17 to 52 percent of the input.
+Text with none of those passes through at the same size or smaller, and input with nothing printable gets a 20-byte notice.
+
+squeeze prints `squeeze: no format detected; used generic` on stderr when it falls back to this format.
+Empty or whitespace-only input prints `no output: the command printed nothing` and exits with code 0, as for every format.
+Other input that is not text exits with code 2.
+
+- Detection: the first 64 KiB hold something other than whitespace, no NUL byte and valid UTF-8, or they are all whitespace and more follows.
 
 ## Output
 

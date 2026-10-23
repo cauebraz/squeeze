@@ -1,10 +1,18 @@
 # tfstate
 
-Input: three Terraform JSON documents that hold state values.
+Input: `terraform show -json` without a plan file or with a state file, `terraform state show -json <address>` (Terraform 1.16 and later), or `terraform output -json`.
 
-- The state, as `terraform show -json` prints it without a plan file (or with a state file), `format_version` 1.x. Detected when the input is a JSON object that contains `"format_version"` and `"root_module"`, and neither `"planned_values"` nor `"resource_changes"`.
-- One resource instance, as `terraform state show -json <address>` prints it (Terraform 1.16 and later): `format_version` 1.x, `resource` and `diagnostics` (`internal/command/views/show.go`, `ShowJSON.DisplayResourceInstanceState`, at v1.16.4). Detected when the input is a JSON object whose first key is `"format_version"` with a string value and whose second key is `"resource"` holding an object, the order Terraform writes.
-- The outputs, as `terraform output -json` prints them: an object with one entry per root module output holding `sensitive`, `type` and `value`. Detected when the input is a JSON object whose first entry is an object starting with `"sensitive"` (true or false) followed by `"type"`, the order Terraform writes (`internal/command/views/output.go`).
+## Agent line
+
+For the project's `AGENTS.md` or `CLAUDE.md`:
+
+```
+- Read Terraform state as `terraform show -json | squeeze` (resource addresses only), one resource's attributes as
+  `terraform state show -json <address> | squeeze` and outputs as `terraform output -json | squeeze`;
+  sensitive values print as `(sensitive)`.
+```
+
+## Example
 
 ```
 terraform show -json | squeeze
@@ -13,7 +21,14 @@ terraform state show -json aws_db_instance.main | squeeze
 terraform show -json | squeeze tfstate --max-resources 0
 ```
 
-All three print every value in plain text, including the outputs and attributes marked `sensitive`. squeeze prints one line per resource address and per output, never an attribute value of the whole state, and never a sensitive value. For `terraform state show -json` it prints the attributes of the one instance with every value Terraform marks sensitive replaced. On the fixtures the text is 16 percent of the state, 25 percent of the outputs and 41 percent of the `state show` resource.
+The three documents print every value in plain text, including the outputs and attributes marked `sensitive`.
+squeeze prints one line per resource address and per output, never an attribute value of the whole state, and never a sensitive value.
+For `terraform state show -json` it prints the attributes of the one instance, with every value Terraform marks sensitive replaced.
+On the fixtures the text is 16 percent of the state, 25 percent of the outputs and 41 percent of the `state show` resource.
+
+- Detection of the state: a JSON object that contains `"format_version"` (1.x) and `"root_module"`, and neither `"planned_values"` nor `"resource_changes"`.
+- Detection of one resource: a JSON object whose first key is `"format_version"` with a string value and whose second key is `"resource"` holding an object, the order Terraform writes (`internal/command/views/show.go`, `ShowJSON.DisplayResourceInstanceState`, at v1.16.4). The document also holds `diagnostics`.
+- Detection of the outputs: a JSON object whose first entry is an object starting with `"sensitive"` (true or false) followed by `"type"`, the order Terraform writes (`internal/command/views/output.go`). Each entry is one root module output with `sensitive`, `type` and `value`.
 
 ## Output
 
@@ -66,6 +81,7 @@ output = (sensitive)
 - An output marked `sensitive` prints `(sensitive)`, whatever its type. Terraform marks sensitivity per output, so a value not marked holds no sensitive part.
 - An output value is cut at 200 bytes with `...`; `--output json` keeps it whole.
 - A missing `value` prints `null`.
+- A line after the JSON document that reads as an error or a warning, such as `Error: Failed to save state` when stderr is piped too, becomes a diagnostic without a location, its `Error:` or `Warning:` prefix removed, in every input kind. The header counts these diagnostics after the outputs and they print right below it; for `terraform state show -json` they join Terraform's own diagnostics. Other lines after the document are dropped.
 
 For `terraform state show -json`:
 
@@ -84,17 +100,17 @@ For `terraform state show -json`:
 
 ## Conditions for `--fail-on`
 
-A state and its outputs report values, not a verdict, errors or warnings; these conditions come only from `terraform state show -json`.
+A state and its outputs report values, not a verdict, errors or warnings; these conditions come from the diagnostics of `terraform state show -json` and from error and warning lines after the JSON.
 
 | Condition | Present when |
 |---|---|
 | `error` | a diagnostic has severity `error` |
-| `fail` | a diagnostic has severity `error`; Terraform then exits 1 (`internal/command/views/show.go` at v1.16.4) |
+| `fail` | a diagnostic has severity `error`; Terraform then exits 1 (`internal/command/views/show.go` at v1.16.4), and an error line after the JSON comes from a failed command |
 | `warning` | a diagnostic has severity `warning` |
 
 ## JSON data
 
-`data` holds `tool`, `tool_version` (empty for `terraform output -json` and `terraform state show -json`), `source` (`state`, `output` or `resource`), `total`, `sensitive`, `outputs_omitted` and `outputs`. Each output has `name`, `sensitive` and `type` (Terraform's type JSON, such as `["list","string"]`), and, when not sensitive, `value` in full.
+`data` holds `tool`, `tool_version` (empty for `terraform output -json` and `terraform state show -json`), `source` (`state`, `output` or `resource`), `total`, `sensitive`, `outputs_omitted` and `outputs`. Each output has `name`, `sensitive` and `type` (Terraform's type JSON, such as `["list","string"]`), and, when not sensitive, `value` in full. `errors`, `warnings` and `diagnostics` are present when lines after the JSON read as errors or warnings.
 
 For a state, `state` holds `managed`, `data_sources`, `tainted`, `deposed`, `resources_omitted` and `resources`. Each resource has `address`, `mode` (`managed` or `data`) and, when set, `tainted` and `deposed_key`. No attribute value is kept.
 
@@ -107,4 +123,5 @@ For `terraform state show -json`, `source` is `resource`, `outputs` is empty, an
 - `terraform state show` without `-json` goes through `generic`; Terraform already prints `(sensitive value)` there.
 - The state's `checks`, the check results of the last apply, are not read.
 - `terraform output -json <name>` prints the bare value with no sensitivity mark; squeeze cannot tell it from other JSON, and it goes through `generic`. Pipe the full `terraform output -json` instead.
+- An output without `sensitive` exits with code 1 and names the first such output in name order, since squeeze cannot tell whether its value may be printed.
 - An empty state (`{"format_version":"1.0"}`) and an empty outputs object (`{}`) are not detected; `squeeze tfstate` reads them as zero resources or zero outputs.

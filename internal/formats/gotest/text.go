@@ -71,11 +71,15 @@ func Text(r Report, o Options) string {
 		writeOutput(&b, r.Text)
 	}
 	if !o.All {
+		passingNotice := len(r.Passing)
+		if unlisted(r) {
+			passingNotice = 0
+		}
 		var items []string
 		for _, c := range []struct {
 			n          int
 			what, many string
-		}{{len(r.Skipped), "skipped test", "skipped tests"}, {len(r.Passing), "passing package", "passing packages"}, {len(r.NoTests), "package without tests", "packages without tests"}, {hiddenSeeds, "shuffle seed", "shuffle seeds"}} {
+		}{{len(r.Skipped), "skipped test", "skipped tests"}, {passingNotice, "passing package", "passing packages"}, {len(r.NoTests), "package without tests", "packages without tests"}, {hiddenSeeds, "shuffle seed", "shuffle seeds"}} {
 			if c.n > 0 {
 				items = append(items, fmt.Sprintf("%d %s", c.n, core.Plural(c.n, c.what, c.many)))
 			}
@@ -111,6 +115,11 @@ func header(r Report) string {
 	if pkgs == 0 {
 		return line
 	}
+	suffix := ""
+	if unlisted(r) {
+		line = "go test: " + r.Status
+		suffix = " (tests not listed without -v or -json)"
+	}
 	var parts []string
 	for _, c := range []struct {
 		n    int
@@ -120,7 +129,11 @@ func header(r Report) string {
 			parts = append(parts, fmt.Sprintf("%d %s", c.n, c.what))
 		}
 	}
-	return fmt.Sprintf("%s; %d %s: %s", line, pkgs, core.Plural(pkgs, "package", "packages"), strings.Join(parts, ", "))
+	return fmt.Sprintf("%s; %d %s: %s%s", line, pkgs, core.Plural(pkgs, "package", "packages"), strings.Join(parts, ", "), suffix)
+}
+
+func unlisted(r Report) bool {
+	return r.testsUnlisted && r.Tests.Passed+r.Tests.Failed+r.Tests.Skipped == 0 && r.Packages.OK+r.Packages.Failed > 0
 }
 
 func writeOutput(b *strings.Builder, o Output) {
@@ -153,7 +166,7 @@ func writeOther(b *strings.Builder, other map[string]int) {
 	sort.Strings(keys)
 	items := make([]string, 0, len(keys))
 	for _, k := range keys {
-		items = append(items, fmt.Sprintf("%s %d", k, other[k]))
+		items = append(items, fmt.Sprintf("%s %d", core.NoticeName(k), other[k]))
 	}
 	fmt.Fprintf(b, "... %d %s with an unknown action: %s (--raw-dir)\n", total, core.Plural(total, "event", "events"), strings.Join(items, ", "))
 }
